@@ -38,7 +38,7 @@ export default function Subscribe() {
         <div style={{...card(),border:"1px solid rgba(165,214,167,0.15)"}}>
           <div style={{fontSize:13,fontWeight:800,color:"#81c784",marginBottom:10}}>🆓 Gratuit</div>
           {FEATURES_FREE.map(f => (<div key={f} style={{fontSize:11,color:"#e8f5e9",padding:"4px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>{f}</div>))}
-          <button onClick={() => navigate("/")} style={{background:"rgba(255,255,255,0.1)",border:"1px solid rgba(255,255,255,0.2)",borderRadius:10,padding:"10px",color:"#e8f5e9",cursor:"pointer",fontSize:12,fontWeight:700,width:"100%",marginTop:12}}>Continuer gratuit</button>
+          <button onClick={() => navigate("/free")} style={{background:"rgba(255,255,255,0.1)",border:"1px solid rgba(255,255,255,0.2)",borderRadius:10,padding:"10px",color:"#e8f5e9",cursor:"pointer",fontSize:12,fontWeight:700,width:"100%",marginTop:12}}>Continuer gratuit</button>
         </div>
         <div style={{...card(),border:"1px solid rgba(76,175,80,0.4)",background:"rgba(76,175,80,0.1)"}}>
           <div style={{fontSize:13,fontWeight:800,color:"#a5d6a7",marginBottom:10}}>⭐ Premium</div>
