@@ -27,9 +27,13 @@ export default function Today() {
     setAiLoading(true); setAiReco("");
     const prompt = `Tu es un expert greenkeeper. Recommandations concises pour aujourd'hui. Profil: Type=${profile?.pelouse||"?"} Sol=${profile?.sol||"?"} Surface=${profile?.surface||"?"}m² Date: ${today.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"})} — ${plan.label} Météo: ${weather.temp_max}°C / ${weather.temp_min}°C · ${weather.precip}mm · humidité ${weather.humidity}% · vent ${weather.wind}km/h Arrosage: ${arros ? arros.mm+"mm / "+arros.minutes+"min" : "aucun"} 4-5 points max, emojis, français.`;
     try {
-      const res = await fetch("/api/ai_recommendations", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ prompt})});
+      const res = await fetch("/api/ai-recommendations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt })
+      });
       const data = await res.json();
-      setAiReco(data.text||"");
+      setAiReco(data.text || "");
     } catch { setAiReco("Impossible de contacter l'IA."); }
     setAiLoading(false);
   }, [weather, profile, month, arros, isPaid]);
