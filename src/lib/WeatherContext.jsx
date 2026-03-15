@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { computeAlerts } from "./lawn";
 
 export const WeatherContext = createContext(null);
@@ -19,7 +19,7 @@ export function WeatherProvider({ children, isPaid }) {
   useEffect(() => {
     if (!isPaid) return;
     if (location) return; // already have location
-    fetchLocation();
+    const fetchLocation = useCallback(() => { if (!navigator.geolocation) { setError("Géolocalisation non supportée"); return; } setLocLoading(true); navigator.geolocation.getCurrentPosition( async (pos) => { const { latitude: lat, longitude: lon } = pos.coords; const loc = { lat, lon }; setLocation(loc); localStorage.setItem("gk_location", JSON.stringify(loc)); try { const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`); const d = await r.json(); const name = d.address?.city || d.address?.town || d.address?.village || d.address?.county || ""; setLocName(name); localStorage.setItem("gk_location_name", name); } catch {} setLocLoading(false); }, (err) => { setError("Permission refusée: " + err.message); setLocLoading(false); }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 } ); }, []);
   }, [isPaid]);
 
   // Fetch weather whenever location changes
