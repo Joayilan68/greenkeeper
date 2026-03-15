@@ -11,6 +11,11 @@ import SubscribeSuccess from "./pages/SubscribeSuccess";
 import Admin from "./pages/Admin";
 import Free from "./pages/Free";
 import Layout from "./components/Layout";
+import { WeatherProvider } from "./lib/WeatherContext";
+
+function AppWithWeather({ children }) {
+  return <WeatherProvider>{children}</WeatherProvider>;
+}
 
 function ProtectedRoute({ children }) {
   return (
@@ -24,18 +29,20 @@ function ProtectedRoute({ children }) {
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/admin" element={<Admin />} />
-        <Route path="/Free" element={<SignedIn><Layout><Free /></Layout></SignedIn>} />
-        <Route path="/subscribe" element={<SignedIn><Subscribe /></SignedIn>} />
-        <Route path="/subscribe/success" element={<SignedIn><SubscribeSuccess /></SignedIn>} />
-        <Route path="/" element={<ProtectedRoute><Layout><Home /></Layout></ProtectedRoute>} />
-        <Route path="/today" element={<ProtectedRoute><Layout><Today /></Layout></ProtectedRoute>} />
-        <Route path="/week" element={<ProtectedRoute><Layout><Week /></Layout></ProtectedRoute>} />
-        <Route path="/history" element={<ProtectedRoute><Layout><History /></Layout></ProtectedRoute>} />
-        <Route path="/setup" element={<ProtectedRoute><Layout><Setup /></Layout></ProtectedRoute>} />
-      </Routes>
+      <AppWithWeather>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/admin" element={<Admin />} />
+          <Route path="/free" element={<SignedIn><Layout><Free /></Layout></SignedIn>} />
+          <Route path="/subscribe" element={<SignedIn><Subscribe /></SignedIn>} />
+          <Route path="/subscribe/success" element={<SignedIn><SubscribeSuccess /></SignedIn>} />
+          <Route path="/" element={<ProtectedRoute><Layout><Home /></Layout></ProtectedRoute>} />
+          <Route path="/today" element={<ProtectedRoute><Layout><Today /></Layout></ProtectedRoute>} />
+          <Route path="/week" element={<ProtectedRoute><Layout><Week /></Layout></ProtectedRoute>} />
+          <Route path="/history" element={<ProtectedRoute><Layout><History /></Layout></ProtectedRoute>} />
+          <Route path="/setup" element={<ProtectedRoute><Layout><Setup /></Layout></ProtectedRoute>} />
+        </Routes>
+      </AppWithWeather>
     </BrowserRouter>
   );
 }
