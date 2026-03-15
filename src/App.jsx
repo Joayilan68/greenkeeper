@@ -9,7 +9,7 @@ import Login from "./pages/Login";
 import Subscribe from "./pages/Subscribe";
 import SubscribeSuccess from "./pages/SubscribeSuccess";
 import Admin from "./pages/Admin";
-import Free from "./pages/Free";
+import free from "./pages/free";
 import Layout from "./components/Layout";
 
 function ProtectedRoute({ children }) {
