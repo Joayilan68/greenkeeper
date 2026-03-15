@@ -1,13 +1,4 @@
 const Stripe = require("stripe");
-const { createClerkClient } = require("@clerk/backend");
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
-
-const PRICES = {
-  monthly: process.env.STRIPE_PRICE_MONTHLY,
-  yearly: process.env.STRIPE_PRICE_YEARLY,
-};
 
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -16,12 +7,14 @@ module.exports = async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).end();
   try {
-    const token = req.headers.authorization?.replace("Bearer ", "");
-    if (!token) throw new Error("Token manquant");
-    const { sub: userId } = await clerk.verifyToken(token);
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
     const { plan, email } = req.body;
+    const PRICES = {
+      monthly: process.env.STRIPE_PRICE_MONTHLY,
+      yearly: process.env.STRIPE_PRICE_YEARLY,
+    };
     const priceId = PRICES[plan] || PRICES.monthly;
-    if (!priceId) throw new Error("Price ID manquant - vérifiez les variables Stripe");
+    if (!priceId) throw new Error("Price ID manquant");
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       payment_method_types: ["card"],
@@ -29,11 +22,10 @@ module.exports = async function handler(req, res) {
       customer_email: email,
       success_url: `${process.env.VITE_APP_URL}/subscribe/success`,
       cancel_url: `${process.env.VITE_APP_URL}/subscribe`,
-      metadata: { userId },
     });
     res.json({ url: session.url });
   } catch (e) {
-    console.error("Checkout error:", e.message);
+    console.error("Erreur:", e.message);
     res.status(500).json({ error: e.message });
   }
 };
