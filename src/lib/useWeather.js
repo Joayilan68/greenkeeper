@@ -1,5 +1,8 @@
 // This file re-exports useWeather from the global context
 // All components import from here for backward compatibility
+import { useContext } from "react";
+import { WeatherContext } from "./WeatherContext";
+
 export function useWeather() {
   const context = useContext(WeatherContext);
   if (!context) return {

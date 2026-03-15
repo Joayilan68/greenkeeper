@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { computeAlerts } from "./lawn";
 
-const WeatherContext = createContext(null);
+export const WeatherContext = createContext(null);
 
 export function WeatherProvider({ children, isPaid }) {
   const [location, setLocation]     = useState(() => {
