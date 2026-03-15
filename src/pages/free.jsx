@@ -3,7 +3,7 @@ import { useHistory } from "../lib/useHistory";
 import { MONTHLY_PLAN, MONTHS_FR } from "../lib/lawn";
 import { card, cardTitle, btn, scroll, header } from "../lib/styles";
 
-export default function Free() {
+export default function free() {
   const navigate = useNavigate();
   const { history, addEntry, removeEntry } = useHistory();
   const today = new Date();
