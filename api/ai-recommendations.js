@@ -9,6 +9,7 @@ module.exports = async function handler(req, res) {
   try {
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
     const { prompt } = req.body;
+    if (!prompt) throw new Error("Prompt manquant");
     const message = await client.messages.create({
       model: "claude-sonnet-4-20250514",
       max_tokens: 800,
@@ -16,6 +17,7 @@ module.exports = async function handler(req, res) {
     });
     res.json({ text: message.content[0].text });
   } catch (e) {
+    console.error("AI Error:", e.message);
     res.status(500).json({ error: e.message });
   }
 };
