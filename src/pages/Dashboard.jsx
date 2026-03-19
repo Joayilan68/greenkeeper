@@ -6,9 +6,11 @@ import { useHistory } from "../lib/useHistory";
 import { useSubscription } from "../lib/useSubscription";
 import { MONTHLY_PLAN, MONTHS_FR, getWMO } from "../lib/lawn";
 import { calcLawnScore } from "../lib/lawnScore";
+import { generateNotifications } from "../lib/notifications";
+import { usePushNotifications } from "../lib/usePushNotifications";
 import AlertBanner from "../components/AlertBanner";
 import { card, cardTitle, pill, btn, scroll, header } from "../lib/styles";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -18,12 +20,43 @@ export default function Dashboard() {
   const { history = [] } = useHistory();
   const { isPaid = false, isAdmin = false } = useSubscription() || {};
   const [showIssues, setShowIssues] = useState(false);
+  const [dismissedNotifs, setDismissedNotifs] = useState([]);
+  const [pushActivated, setPushActivated] = useState(false);
+
+  const { permission, subscribe, sendTestNotification, sendAlert, isSupported } = usePushNotifications(user?.id);
 
   const today = new Date();
   const month = today.getMonth() + 1;
   const plan = MONTHLY_PLAN[month];
 
   const { score, potential, label, color, issues, strengths } = calcLawnScore({ weather, profile, history, month });
+  const notifications = generateNotifications({ weather, profile, history, month, score, location })
+    .filter(n => !dismissedNotifs.includes(n.id));
+
+  const dangers = notifications.filter(n => n.type === "danger").length;
+  const warnings = notifications.filter(n => n.type === "warning").length;
+
+  // Envoyer les alertes urgentes en push si abonné
+  useEffect(() => {
+    if (permission !== "granted") return;
+    notifications
+      .filter(n => n.type === "danger" || n.type === "warning")
+      .forEach(n => sendAlert(n));
+  }, [notifications.length, permission]);
+
+  const handleActivatePush = async () => {
+    const success = await subscribe();
+    if (success) {
+      setPushActivated(true);
+      await sendTestNotification();
+    }
+  };
+
+  const NOTIF_COLORS = {
+    danger:  { bg:"rgba(183,28,28,0.2)",  border:"rgba(229,57,53,0.4)",  badge:"#c62828" },
+    warning: { bg:"rgba(230,81,0,0.2)",   border:"rgba(239,108,0,0.4)",  badge:"#e65100" },
+    info:    { bg:"rgba(21,101,192,0.15)", border:"rgba(66,165,245,0.3)", badge:"#1565c0" },
+  };
 
   return (
     <div>
@@ -42,6 +75,7 @@ export default function Dashboard() {
 
       <div style={scroll}>
 
+        {/* ── SCORE ── */}
         <div style={{ ...card(), background:"linear-gradient(135deg, rgba(27,94,32,0.4), rgba(13,43,26,0.6))", border:`1px solid ${color}44` }}>
           <div style={{ fontSize:11, color:"#81c784", fontWeight:700, letterSpacing:1.2, textTransform:"uppercase", marginBottom:12, textAlign:"center" }}>
             🌿 Score Santé du Gazon
@@ -97,8 +131,73 @@ export default function Dashboard() {
           )}
         </div>
 
+        {/* ── NOTIFICATIONS INTELLIGENTES ── */}
+        {notifications.length > 0 && (
+          <div style={{ marginBottom:4 }}>
+            <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8, padding:"0 2px" }}>
+              <span style={{ fontSize:13, fontWeight:700 }}>🔔 Alertes</span>
+              {dangers > 0 && <span style={{ background:"#c62828", color:"#fff", borderRadius:20, padding:"2px 8px", fontSize:11, fontWeight:700 }}>{dangers} urgent{dangers>1?"s":""}</span>}
+              {warnings > 0 && <span style={{ background:"#e65100", color:"#fff", borderRadius:20, padding:"2px 8px", fontSize:11, fontWeight:700 }}>{warnings} warning{warnings>1?"s":""}</span>}
+            </div>
+            {(isPaid ? notifications : notifications.slice(0,1)).map(n => {
+              const c = NOTIF_COLORS[n.type] || NOTIF_COLORS.info;
+              return (
+                <div key={n.id} style={{ background:c.bg, border:`1px solid ${c.border}`, borderRadius:14, padding:"12px 14px", marginBottom:8, position:"relative" }}>
+                  <button onClick={() => setDismissedNotifs(p => [...p, n.id])} style={{ position:"absolute", top:8, right:10, background:"none", border:"none", color:"rgba(255,255,255,0.4)", cursor:"pointer", fontSize:16 }}>×</button>
+                  <div style={{ display:"flex", gap:10, alignItems:"flex-start", paddingRight:20 }}>
+                    <span style={{ fontSize:22, minWidth:28 }}>{n.icon}</span>
+                    <div style={{ flex:1 }}>
+                      <div style={{ fontWeight:700, fontSize:13, marginBottom:4 }}>
+                        {n.title}
+                        {n.impact < 0 && <span style={{ marginLeft:8, fontSize:11, color:"#ef9a9a", fontWeight:600 }}>{n.impact} pts</span>}
+                        {n.impact > 0 && <span style={{ marginLeft:8, fontSize:11, color:"#a5d6a7", fontWeight:600 }}>+{n.impact} pts</span>}
+                      </div>
+                      <div style={{ fontSize:12, color:"#81c784", lineHeight:1.5, marginBottom:8 }}>{n.message}</div>
+                      {n.action && (
+                        <button onClick={() => navigate(n.actionRoute)} style={{ background:c.badge, border:"none", borderRadius:8, padding:"6px 14px", color:"#fff", fontSize:12, fontWeight:700, cursor:"pointer" }}>
+                          {n.action} →
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+            {!isPaid && notifications.length > 1 && (
+              <div style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:14, padding:"10px 14px", textAlign:"center", fontSize:12, color:"#81c784" }}>
+                🔒 {notifications.length - 1} alerte{notifications.length-1>1?"s":""} supplémentaire{notifications.length-1>1?"s":""} —
+                <span style={{ color:"#a5d6a7", cursor:"pointer", textDecoration:"underline", marginLeft:4 }} onClick={() => navigate("/subscribe")}>Passer Premium</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── PUSH NOTIFICATIONS ── */}
+        {isSupported && isPaid && permission !== "granted" && (
+          <div style={{ ...card(), background:"rgba(76,175,80,0.1)", border:"1px solid rgba(76,175,80,0.3)", textAlign:"center", padding:16 }}>
+            <div style={{ fontSize:22, marginBottom:8 }}>🔔</div>
+            <div style={{ fontSize:13, fontWeight:700, color:"#a5d6a7", marginBottom:6 }}>
+              Activez les alertes sur votre téléphone
+            </div>
+            <div style={{ fontSize:12, color:"#81c784", marginBottom:12, lineHeight:1.5 }}>
+              Recevez des alertes même quand l'app est fermée — canicule, gel, tonte en retard...
+            </div>
+            <button onClick={handleActivatePush} style={{ ...btn.primary, width:"auto", padding:"10px 24px" }}>
+              🔔 Activer les notifications
+            </button>
+          </div>
+        )}
+
+        {isSupported && isPaid && permission === "granted" && !pushActivated && (
+          <div style={{ ...card(), background:"rgba(76,175,80,0.08)", border:"1px solid rgba(76,175,80,0.2)", textAlign:"center", padding:12 }}>
+            <div style={{ fontSize:12, color:"#a5d6a7" }}>✅ Notifications activées — Alertes max 1x/semaine</div>
+          </div>
+        )}
+
+        {/* ── ALERTES MÉTÉO ── */}
         {isPaid && alerts.map((a, i) => <AlertBanner key={i} alert={a} />)}
 
+        {/* ── MÉTÉO ── */}
         {isPaid ? (
           <div style={{ ...card(), background:"linear-gradient(135deg,rgba(46,125,50,0.3),rgba(27,94,32,0.2))", border:"1px solid rgba(165,214,167,0.2)" }}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
@@ -137,6 +236,7 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* ── ACTIONS RAPIDES ── */}
         <div style={card()}>
           <div style={cardTitle}><span>⚡ Actions rapides</span></div>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
@@ -159,6 +259,7 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* ── PROFIL ── */}
         <div style={card()}>
           <div style={cardTitle}>
             <span>👤 Mon profil</span>
