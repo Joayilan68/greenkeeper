@@ -1,159 +1,184 @@
-// ─── LAWN HEALTH SCORE ENGINE ────────────────────────────────────────────────
-// Score sur 100 basé sur météo, profil, historique et état visuel
+// ─── LAWN HEALTH SCORE ENGINE v2 ─────────────────────────────────────────────
+// Score basé sur : météo + profil + respect du plan d'entretien conseillé
+// Les émojis visuels seront intégrés en Phase 2 (diagnostic photo)
 
-export function calcLawnScore({ weather, profile, history, month, visualScore = null }) {
-  let score = 100;
+import { MONTHLY_PLAN } from "./lawn";
+
+function daysSince(dateStr) {
+  const parts = dateStr?.split('/');
+  if (!parts || parts.length !== 3) return 999;
+  const date = new Date(parts[2], parts[1]-1, parts[0]);
+  return Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+function lastAction(history, keyword) {
+  const found = history?.filter(h => h.action.toLowerCase().includes(keyword.toLowerCase()));
+  if (!found?.length) return 999;
+  return Math.min(...found.map(h => daysSince(h.date)));
+}
+
+export function calcLawnScore({ weather, profile, history = [], month }) {
+  const plan = MONTHLY_PLAN[month];
   const issues = [];
   const strengths = [];
+  let score = 100;
 
-  // ── 1. STRESS HYDRIQUE (25 pts) ──────────────────────────────────────────
-  let hydroScore = 25;
-  if (weather) {
-    if (weather.temp_max >= 33) {
-      hydroScore -= 12;
-      issues.push({ icon: "🔥", label: "Canicule détectée", impact: -12 });
-    } else if (weather.temp_max >= 28) {
-      hydroScore -= 6;
-      issues.push({ icon: "☀️", label: "Chaleur élevée", impact: -6 });
-    }
-    if (weather.humidity < 40) {
-      hydroScore -= 8;
-      issues.push({ icon: "💧", label: "Air très sec", impact: -8 });
-    } else if (weather.humidity < 55) {
-      hydroScore -= 4;
-      issues.push({ icon: "💧", label: "Humidité faible", impact: -4 });
-    }
-    if (weather.precip === 0 && weather.temp_max > 20) {
-      hydroScore -= 5;
-      issues.push({ icon: "🌵", label: "Aucune pluie aujourd'hui", impact: -5 });
-    }
-    // Arrosages récents dans l'historique
-    const recentWatering = history?.filter(h =>
-      h.action.includes("Arrosage") &&
-      daysSince(h.date) <= 3
-    ).length || 0;
-    if (recentWatering > 0) {
-      hydroScore = Math.min(25, hydroScore + recentWatering * 4);
-      strengths.push({ icon: "💧", label: "Arrosage récent ✓" });
+  // ── 1. RESPECT DU PLAN D'ENTRETIEN (40 pts) ──────────────────────────────
+  // Tonte
+  const tonteFreq = month >= 4 && month <= 9 ? 5 : 14;
+  const derniereTonte = lastAction(history, "tonte");
+  if (derniereTonte > tonteFreq * 2) {
+    score -= 15;
+    issues.push({ icon:"✂️", label:`Tonte non effectuée depuis ${derniereTonte}j`, impact:-15 });
+  } else if (derniereTonte > tonteFreq) {
+    score -= 7;
+    issues.push({ icon:"✂️", label:"Tonte en retard", impact:-7 });
+  } else if (derniereTonte <= tonteFreq) {
+    strengths.push({ icon:"✂️", label:"Tonte régulière ✓" });
+  }
+
+  // Engrais (si plan du mois le recommande)
+  if (plan?.engrais) {
+    const dernierEngrais = lastAction(history, "engrais");
+    if (dernierEngrais > 45) {
+      score -= 10;
+      issues.push({ icon:"🌱", label:"Engrais du mois non appliqué", impact:-10 });
+    } else {
+      strengths.push({ icon:"🌱", label:"Engrais appliqué ✓" });
     }
   }
-  score = score - 25 + Math.max(0, hydroScore);
 
-  // ── 2. RISQUE MALADIE (20 pts) ───────────────────────────────────────────
-  let diseaseScore = 20;
-  if (weather) {
-    // Conditions favorables aux champignons : chaud + humide
-    if (weather.temp_max > 20 && weather.humidity > 75) {
-      diseaseScore -= 10;
-      issues.push({ icon: "🦠", label: "Risque fongique élevé", impact: -10 });
-    } else if (weather.temp_max > 18 && weather.humidity > 65) {
-      diseaseScore -= 5;
-      issues.push({ icon: "🦠", label: "Risque fongique modéré", impact: -5 });
+  // Aération (si plan le recommande)
+  if (plan?.aeration) {
+    const derniereAeration = lastAction(history, "aération");
+    if (derniereAeration > 60) {
+      score -= 8;
+      issues.push({ icon:"🌀", label:"Aération recommandée ce mois", impact:-8 });
+    } else {
+      strengths.push({ icon:"🌀", label:"Aération effectuée ✓" });
     }
+  }
+
+  // Verticut (si plan le recommande)
+  if (plan?.verticut) {
+    const dernierVerticut = lastAction(history, "verticut");
+    if (dernierVerticut > 90) {
+      score -= 5;
+      issues.push({ icon:"🔧", label:"Verticut recommandé ce mois", impact:-5 });
+    } else {
+      strengths.push({ icon:"🔧", label:"Verticut effectué ✓" });
+    }
+  }
+
+  // Arrosage (mois chauds)
+  if (plan?.arrosage_base > 0) {
+    const dernierArrosage = lastAction(history, "arrosage");
+    if (dernierArrosage > 7) {
+      score -= 8;
+      issues.push({ icon:"💧", label:"Arrosage insuffisant", impact:-8 });
+    } else if (dernierArrosage <= 3) {
+      strengths.push({ icon:"💧", label:"Arrosage régulier ✓" });
+    }
+  }
+
+  // ── 2. MÉTÉO (35 pts) ─────────────────────────────────────────────────────
+  if (weather) {
+    // Canicule
+    if (weather.temp_max >= 33) {
+      score -= 12;
+      issues.push({ icon:"🔥", label:`Canicule ${weather.temp_max}°C`, impact:-12 });
+    } else if (weather.temp_max >= 28) {
+      score -= 5;
+      issues.push({ icon:"☀️", label:"Chaleur élevée", impact:-5 });
+    }
+
     // Gel
     if (weather.temp_min <= 0) {
-      diseaseScore -= 8;
-      issues.push({ icon: "❄️", label: "Gel — stress racinaire", impact: -8 });
+      score -= 10;
+      issues.push({ icon:"❄️", label:"Gel — stress racinaire", impact:-10 });
+    } else if (weather.temp_min <= 3) {
+      score -= 4;
+      issues.push({ icon:"🌡️", label:"Risque de gel", impact:-4 });
     }
-    // Traitement récent
-    const recentTreatment = history?.filter(h =>
-      h.action.includes("fongicide") && daysSince(h.date) <= 14
-    ).length || 0;
-    if (recentTreatment > 0) {
-      diseaseScore = Math.min(20, diseaseScore + 8);
-      strengths.push({ icon: "💊", label: "Traitement récent ✓" });
+
+    // Sécheresse
+    if (weather.precip === 0 && weather.temp_max > 22 && lastAction(history, "arrosage") > 3) {
+      score -= 8;
+      issues.push({ icon:"🌵", label:"Sécheresse sans arrosage", impact:-8 });
+    }
+
+    // Risque fongique
+    if (weather.humidity > 75 && weather.temp_max > 18) {
+      score -= 8;
+      issues.push({ icon:"🦠", label:"Risque fongique élevé", impact:-8 });
+    } else if (weather.humidity > 65 && weather.temp_max > 15) {
+      score -= 3;
+      issues.push({ icon:"🦠", label:"Risque fongique modéré", impact:-3 });
+    }
+
+    // Traitement fongicide récent = bonus
+    if (lastAction(history, "fongicide") <= 14) {
+      score += 5;
+      strengths.push({ icon:"💊", label:"Traitement fongicide récent ✓" });
+    }
+
+    // Conditions idéales
+    if (weather.temp_max >= 15 && weather.temp_max <= 22 && weather.humidity >= 50 && weather.humidity <= 70) {
+      strengths.push({ icon:"🌤️", label:"Conditions météo idéales ✓" });
     }
   }
-  score = score - 20 + Math.max(0, diseaseScore);
 
-  // ── 3. TYPE DE SOL (15 pts) ──────────────────────────────────────────────
-  let soilScore = 15;
+  // ── 3. PROFIL SOL (15 pts) ────────────────────────────────────────────────
   if (profile?.sol) {
-    // Sol argileux en été = risque compaction
     if (profile.sol === "argileux" && month >= 6 && month <= 8) {
-      soilScore -= 5;
-      issues.push({ icon: "🏔️", label: "Sol argileux — risque compaction", impact: -5 });
+      score -= 5;
+      issues.push({ icon:"🏔️", label:"Sol argileux — risque compaction estivale", impact:-5 });
+      if (lastAction(history, "aération") <= 30) {
+        score += 5;
+        strengths.push({ icon:"🌀", label:"Aération récente — compaction évitée ✓" });
+      }
     }
-    // Sol sableux = sèche vite
     if (profile.sol === "sableux" && weather?.temp_max > 25) {
-      soilScore -= 6;
-      issues.push({ icon: "🏖️", label: "Sol sableux — sèche rapidement", impact: -6 });
+      score -= 4;
+      issues.push({ icon:"🏖️", label:"Sol sableux — sèche rapidement", impact:-4 });
     }
-    // Aération récente = bonus
-    const recentAeration = history?.filter(h =>
-      (h.action.includes("Aération") || h.action.includes("carottage")) &&
-      daysSince(h.date) <= 30
-    ).length || 0;
-    if (recentAeration > 0) {
-      soilScore = Math.min(15, soilScore + 5);
-      strengths.push({ icon: "🌀", label: "Aération récente ✓" });
+    if (profile.sol === "calcaire") {
+      score -= 2;
+      issues.push({ icon:"🪨", label:"Sol calcaire — surveiller le pH", impact:-2 });
     }
   }
-  score = score - 15 + Math.max(0, soilScore);
 
-  // ── 4. HISTORIQUE INTERVENTIONS (10 pts) ────────────────────────────────
-  let histScore = 10;
-  if (history?.length > 0) {
-    const recentActions = history.filter(h => daysSince(h.date) <= 14).length;
-    if (recentActions === 0) {
-      histScore -= 8;
-      issues.push({ icon: "📋", label: "Aucune intervention récente", impact: -8 });
-    } else if (recentActions >= 3) {
-      strengths.push({ icon: "✅", label: "Entretien régulier ✓" });
-    }
-    // Engrais récent
-    const recentFert = history.filter(h =>
-      h.action.includes("Engrais") && daysSince(h.date) <= 30
-    ).length;
-    if (recentFert > 0) {
-      strengths.push({ icon: "🌱", label: "Engrais récent ✓" });
-    } else if (month >= 3 && month <= 9) {
-      histScore -= 3;
-      issues.push({ icon: "🌱", label: "Engrais recommandé", impact: -3 });
-    }
-  } else {
-    histScore -= 8;
-    issues.push({ icon: "📋", label: "Commencez à journaliser", impact: -8 });
-  }
-  score = score - 10 + Math.max(0, histScore);
-
-  // ── 5. ÉTAT VISUEL (30 pts) ──────────────────────────────────────────────
-  let visualPts = 0;
-  if (visualScore !== null) {
-    visualPts = Math.round((visualScore / 5) * 30);
-    if (visualScore <= 2) issues.push({ icon: "🌿", label: "État visuel dégradé", impact: -(30 - visualPts) });
-    else if (visualScore >= 4) strengths.push({ icon: "🌿", label: "Bel aspect visuel ✓" });
-  } else {
-    // Sans évaluation visuelle, score neutre (15/30)
-    visualPts = 15;
-  }
-  score = score - (visualScore !== null ? 0 : 0) + 0;
-  // Recalcul propre avec visual
-  score = Math.max(0, Math.min(100, score));
-  if (visualScore !== null) {
-    score = Math.round(score * 0.7 + visualPts * (70/100));
+  // ── 4. ACTIVITÉ GÉNÉRALE (10 pts) ─────────────────────────────────────────
+  const actionsRecentes = history.filter(h => daysSince(h.date) <= 14).length;
+  if (actionsRecentes === 0) {
+    score -= 8;
+    issues.push({ icon:"📋", label:"Aucune intervention depuis 2 semaines", impact:-8 });
+  } else if (actionsRecentes >= 4) {
+    strengths.push({ icon:"✅", label:"Entretien très régulier ✓" });
+  } else if (actionsRecentes >= 2) {
+    strengths.push({ icon:"✅", label:"Entretien régulier ✓" });
   }
 
   // Score final
   const finalScore = Math.max(0, Math.min(100, Math.round(score)));
 
-  // Potentiel (toujours plus élevé pour créer la frustration)
-  const potential = Math.min(100, finalScore + 15 + Math.floor(Math.random() * 10));
+  // Potentiel (toujours supérieur pour créer la motivation)
+  const potential = Math.min(100, finalScore + 10 + Math.min(15, issues.reduce((a, i) => a + Math.abs(i.impact), 0) / 2));
 
-  // Label
-  let label, color;
-  if (finalScore >= 80) { label = "Excellent"; color = "#43a047"; }
-  else if (finalScore >= 65) { label = "Bon"; color = "#7cb342"; }
-  else if (finalScore >= 50) { label = "Moyen"; color = "#f9a825"; }
-  else if (finalScore >= 35) { label = "Faible"; color = "#ef6c00"; }
-  else { label = "Critique"; color = "#c62828"; }
+  // Label et couleur
+  let labelText, color;
+  if (finalScore >= 85)      { labelText = "Excellent 🏆"; color = "#43a047"; }
+  else if (finalScore >= 70) { labelText = "Bon";          color = "#7cb342"; }
+  else if (finalScore >= 55) { labelText = "Moyen";        color = "#f9a825"; }
+  else if (finalScore >= 40) { labelText = "Faible";       color = "#ef6c00"; }
+  else                       { labelText = "Critique";     color = "#c62828"; }
 
-  return { score: finalScore, potential, label, color, issues, strengths };
-}
-
-function daysSince(dateStr) {
-  const parts = dateStr.split('/');
-  if (parts.length !== 3) return 999;
-  const date = new Date(parts[2], parts[1]-1, parts[0]);
-  return Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));
+  return {
+    score: finalScore,
+    potential: Math.round(potential),
+    label: labelText,
+    color,
+    issues: issues.slice(0, 5),
+    strengths: strengths.slice(0, 4),
+  };
 }
