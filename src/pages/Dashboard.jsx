@@ -49,3 +49,64 @@ export default function Dashboard() {
         {isPaid && alerts.map((a, i) => <AlertBanner key={i} alert={a} />)}
 
         {/* MÉTÉO */
+        );
+            })() : (
+              <div style={{ textAlign:"center", color:"#81c784", fontSize:13, padding:"8px 0" }}>
+                {loading || locLoading ? "🌿 Détection..." : "🔄 Actualiser"}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div style={{ ...card(), textAlign:"center", padding:14 }}>
+            <div style={{ fontSize:13, color:"#81c784", marginBottom:8 }}>🔒 Météo temps réel — Premium uniquement</div>
+            <button onClick={() => navigate("/subscribe")} style={{ ...btn.primary, width:"auto", padding:"8px 20px", fontSize:13 }}>Passer Premium</button>
+          </div>
+        )}
+
+        <div style={card()}>
+          <div style={cardTitle}><span>⚡ Actions rapides</span></div>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+            {[
+              { icon:"🔬", label:"Diagnostic",  route:"/diagnostic", color:"rgba(33,150,243,0.2)" },
+              { icon:"📅", label:"Aujourd'hui", route:"/today",      color:"rgba(76,175,80,0.2)" },
+              { icon:"🌿", label:"Mon Gazon",   route:"/my-lawn",    color:"rgba(46,125,50,0.2)" },
+              { icon:"🛒", label:"Produits",    route:"/products",   color:"rgba(255,152,0,0.2)" },
+            ].map(({ icon, label, route, color }) => (
+              <button key={route} onClick={() => navigate(route)} style={{
+                background: color, border:"1px solid rgba(255,255,255,0.1)",
+                borderRadius:14, padding:"14px 8px", cursor:"pointer",
+                color:"#e8f5e9", fontWeight:700, fontSize:13,
+                display:"flex", flexDirection:"column", alignItems:"center", gap:6,
+              }}>
+                <span style={{ fontSize:24 }}>{icon}</span>
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div style={card()}>
+          <div style={cardTitle}>
+            <span>👤 Mon profil</span>
+            <button onClick={() => navigate("/setup")} style={{ background:"rgba(76,175,80,0.2)", border:"none", borderRadius:8, padding:"4px 10px", color:"#a5d6a7", fontSize:11, cursor:"pointer" }}>
+              {profile ? "Modifier" : "Configurer"}
+            </button>
+          </div>
+          {profile ? (
+            <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+              {[`🌿 ${profile.pelouse}`, `🏔️ Sol ${profile.sol}`, `📐 ${profile.surface}m²`].map(t => (
+                <span key={t} style={pill()}>{t}</span>
+              ))}
+            </div>
+          ) : (
+            <div style={{ textAlign:"center", padding:"10px 0" }}>
+              <div style={{ fontSize:13, color:"#81c784", marginBottom:10 }}>Configurez votre profil pour un score précis</div>
+              <button onClick={() => navigate("/setup")} style={{ ...btn.primary, width:"auto", padding:"8px 24px" }}>Configurer</button>
+            </div>
+          )}
+        </div>
+
+      </div>
+    </div>
+  );
+}
