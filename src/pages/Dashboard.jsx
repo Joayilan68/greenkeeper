@@ -13,7 +13,7 @@ import { useState } from "react";
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useUser();
-  const { weather, locationName, alerts = [], loading, locLoading, refreshLocation } = useWeather() || {};
+  const { weather, location, locationName, alerts = [], loading, locLoading, refreshLocation } = useWeather() || {};
   const { profile } = useProfile();
   const { history = [] } = useHistory();
   const { isPaid = false, isAdmin = false } = useSubscription() || {};

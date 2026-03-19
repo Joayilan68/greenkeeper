@@ -3,9 +3,8 @@
 
 import { MONTHLY_PLAN } from "./lawn";
 
-export function generateNotifications({ weather, profile, history, month, score }) {
+export function generateNotifications({ weather, profile, history, month, score, location }) {
   const notifications = [];
-  const now = new Date();
 
   // ── HELPERS ──────────────────────────────────────────────────────────────
   const daysSince = (dateStr) => {
@@ -22,6 +21,53 @@ export function generateNotifications({ weather, profile, history, month, score 
   };
 
   const plan = MONTHLY_PLAN[month];
+
+  // ── 0. NOTIFICATIONS UNIVERSELLES (toujours visibles) ────────────────────
+
+  // Pas de géolocalisation
+  if (!location) {
+    notifications.push({
+      id: "no_location",
+      type: "warning",
+      icon: "📍",
+      title: "Géolocalisation inactive",
+      message: "Activez la géolocalisation pour recevoir des alertes météo personnalisées et un score précis.",
+      action: "Activer",
+      actionRoute: "/",
+      impact: -10,
+      priority: 1,
+    });
+  }
+
+  // Historique vide
+  if (!history || history.length === 0) {
+    notifications.push({
+      id: "no_history",
+      type: "info",
+      icon: "📋",
+      title: "Commencez à journaliser !",
+      message: "Enregistrez vos interventions (tonte, arrosage, engrais...) pour que GreenKeeper calcule votre score avec précision.",
+      action: "Journaliser maintenant",
+      actionRoute: "/today",
+      impact: -8,
+      priority: 2,
+    });
+  }
+
+  // Profil non configuré
+  if (!profile) {
+    notifications.push({
+      id: "no_profile",
+      type: "info",
+      icon: "👤",
+      title: "Profil gazon incomplet",
+      message: "Configurez votre profil (type de pelouse, sol, surface) pour des recommandations personnalisées.",
+      action: "Configurer mon profil",
+      actionRoute: "/setup",
+      impact: -5,
+      priority: 2,
+    });
+  }
 
   // ── 1. ALERTES MÉTÉO IMMINENTES ──────────────────────────────────────────
   if (weather) {
@@ -70,7 +116,7 @@ export function generateNotifications({ weather, profile, history, month, score 
 
   // ── 2. ALERTES ENTRETIEN EN RETARD ───────────────────────────────────────
   // Tonte
-  const tonteFreq = month >= 4 && month <= 9 ? 4 : 10; // jours entre tontes
+  const tonteFreq = month >= 4 && month <= 9 ? 4 : 10;
   if (lastAction("tonte") > tonteFreq) {
     const retard = lastAction("tonte") - tonteFreq;
     notifications.push({
@@ -101,7 +147,7 @@ export function generateNotifications({ weather, profile, history, month, score 
     });
   }
 
-  // Aération (recommandée en mars et septembre)
+  // Aération
   if (plan?.aeration && lastAction("aération") > 180) {
     notifications.push({
       id: "aeration_due",
@@ -174,7 +220,6 @@ export function generateNotifications({ weather, profile, history, month, score 
   }
 
   // ── 4. ALERTES SAISONNIÈRES ──────────────────────────────────────────────
-  // Préparation hiver (octobre)
   if (month === 10 && lastAction("engrais") > 30) {
     notifications.push({
       id: "winter_prep",
@@ -189,7 +234,6 @@ export function generateNotifications({ weather, profile, history, month, score 
     });
   }
 
-  // Rénovation septembre
   if (month === 9 && lastAction("regarnissage") > 180) {
     notifications.push({
       id: "sept_renovation",
@@ -207,5 +251,5 @@ export function generateNotifications({ weather, profile, history, month, score 
   // ── TRIER par priorité ───────────────────────────────────────────────────
   return notifications
     .sort((a, b) => a.priority - b.priority)
-    .slice(0, 5); // max 5 notifications
+    .slice(0, 5);
 }
