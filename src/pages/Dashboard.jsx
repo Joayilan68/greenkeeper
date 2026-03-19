@@ -11,10 +11,10 @@ import { card, cardTitle, pill, btn, scroll, header } from "../lib/styles";
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useUser();
-  const { weather, locationName, alerts, loading, locLoading, refreshLocation } = useWeather();
+  const { weather = null,, locationName = "", alerts = [], loading = false, locLoading = false, refreshLocation = () => {} } = useWeather() || {};
   const { profile } = useProfile();
   const { history } = useHistory();
-  const { isPaid, isAdmin } = useSubscription();
+  const { isPaid = false, isAdmin = false } = useSubscription() || {};
 
   const today = new Date();
   const month = today.getMonth() + 1;
