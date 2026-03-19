@@ -1,6 +1,6 @@
 import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/clerk-react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Home from "./pages/Home";
+
 import Today from "./pages/Today";
 import Week from "./pages/Week";
 import History from "./pages/History";
