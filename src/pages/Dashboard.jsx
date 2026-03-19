@@ -5,10 +5,6 @@ import { useProfile } from "../lib/useProfile";
 import { useHistory } from "../lib/useHistory";
 import { useSubscription } from "../lib/useSubscription";
 import { MONTHLY_PLAN, MONTHS_FR, calcArrosage, getWMO } from "../lib/lawn";
-import { calcLawnScore } from "../lib/lawnScore";
-import { generateNotifications } from "../lib/notifications";
-import LawnScoreCard from "../components/LawnScoreCard";
-import NotificationsPanel from "../components/NotificationsPanel";
 import AlertBanner from "../components/AlertBanner";
 import { card, cardTitle, pill, btn, scroll, header } from "../lib/styles";
 
@@ -18,14 +14,11 @@ export default function Dashboard() {
   const { weather, locationName, alerts, loading, locLoading, refreshLocation } = useWeather();
   const { profile } = useProfile();
   const { history } = useHistory();
-  const { isPaid, isFree, isAdmin } = useSubscription();
+  const { isPaid, isAdmin } = useSubscription();
 
   const today = new Date();
   const month = today.getMonth() + 1;
   const plan  = MONTHLY_PLAN[month];
-  const arros = profile && weather ? calcArrosage(month, profile, weather) : null;
-  const scoreResult = calcLawnScore({ weather, profile, history, month });
-  const smartNotifs = generateNotifications({ weather, profile, history, month, score: scoreResult.score });
 
   return (
     <div>
@@ -44,25 +37,18 @@ export default function Dashboard() {
 
       <div style={scroll}>
 
-        {/* ── SCORE SANTÉ ── */}
-        <LawnScoreCard
-          weather={weather}
-          profile={profile}
-          history={history}
-          month={month}
-          isPaid={isPaid}
-        />
+        {/* SCORE PROVISOIRE */}
+        <div style={{ ...card(), textAlign:"center", padding:24 }}>
+          <div style={{ fontSize:11, color:"#81c784", fontWeight:700, letterSpacing:1, marginBottom:8 }}>🌿 SCORE SANTÉ DU GAZON</div>
+          <div style={{ fontSize:64, fontWeight:800, color:"#43a047" }}>72</div>
+          <div style={{ fontSize:14, color:"#43a047", fontWeight:700 }}>Bon</div>
+          <div style={{ fontSize:12, color:"#81c784", marginTop:6 }}>Score dynamique bientôt actif</div>
+        </div>
 
-        {/* ── NOTIFICATIONS INTELLIGENTES ── */}
-        <NotificationsPanel
-          notifications={smartNotifs}
-          isPaid={isPaid}
-        />
-
-        {/* ── ALERTES MÉTÉO ── */}
+        {/* ALERTES */}
         {isPaid && alerts.map((a, i) => <AlertBanner key={i} alert={a} />)}
 
-        {/* ── MÉTÉO ── */}
+        {/* MÉTÉO */}
         {isPaid ? (
           <div style={{ ...card(), background:"linear-gradient(135deg,rgba(46,125,50,0.3),rgba(27,94,32,0.2))", border:"1px solid rgba(165,214,167,0.2)" }}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
@@ -80,8 +66,8 @@ export default function Dashboard() {
                 <div style={{ display:"flex", gap:8 }}>
                   {[
                     { icon:w.icon, val:`${Math.round(weather.temp_max)}°C`, label:w.label },
-                    { icon:"💧",   val:`${weather.precip}mm`,               label:"Pluie" },
-                    { icon:"💨",   val:`${weather.wind}km/h`,               label:"Vent" },
+                    { icon:"💧", val:`${weather.precip}mm`, label:"Pluie" },
+                    { icon:"💨", val:`${weather.wind}km/h`, label:"Vent" },
                   ].map(({ icon, val, label }) => (
                     <div key={label} style={{ flex:1, background:"rgba(255,255,255,0.06)", borderRadius:12, padding:"8px 6px", textAlign:"center" }}>
                       <div style={{ fontSize:20 }}>{icon}</div>
@@ -100,21 +86,19 @@ export default function Dashboard() {
         ) : (
           <div style={{ ...card(), textAlign:"center", padding:14 }}>
             <div style={{ fontSize:13, color:"#81c784", marginBottom:8 }}>🔒 Météo temps réel — Premium uniquement</div>
-            <button onClick={() => navigate("/subscribe")} style={{ ...btn.primary, width:"auto", padding:"8px 20px", fontSize:13 }}>
-              Passer Premium
-            </button>
+            <button onClick={() => navigate("/subscribe")} style={{ ...btn.primary, width:"auto", padding:"8px 20px", fontSize:13 }}>Passer Premium</button>
           </div>
         )}
 
-        {/* ── ACTIONS RAPIDES ── */}
+        {/* ACTIONS RAPIDES */}
         <div style={card()}>
           <div style={cardTitle}><span>⚡ Actions rapides</span></div>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
             {[
-              { icon:"🔬", label:"Diagnostic", route:"/diagnostic", color:"rgba(33,150,243,0.2)" },
-              { icon:"📅", label:"Aujourd'hui", route:"/today", color:"rgba(76,175,80,0.2)" },
-              { icon:"🌿", label:"Mon Gazon", route:"/my-lawn", color:"rgba(46,125,50,0.2)" },
-              { icon:"🛒", label:"Produits", route:"/products", color:"rgba(255,152,0,0.2)" },
+              { icon:"🔬", label:"Diagnostic",  route:"/diagnostic", color:"rgba(33,150,243,0.2)" },
+              { icon:"📅", label:"Aujourd'hui", route:"/today",      color:"rgba(76,175,80,0.2)" },
+              { icon:"🌿", label:"Mon Gazon",   route:"/my-lawn",    color:"rgba(46,125,50,0.2)" },
+              { icon:"🛒", label:"Produits",    route:"/products",   color:"rgba(255,152,0,0.2)" },
             ].map(({ icon, label, route, color }) => (
               <button key={route} onClick={() => navigate(route)} style={{
                 background: color, border:"1px solid rgba(255,255,255,0.1)",
@@ -129,7 +113,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* ── PROFIL ── */}
+        {/* PROFIL */}
         <div style={card()}>
           <div style={cardTitle}>
             <span>👤 Mon profil</span>
