@@ -48,7 +48,7 @@ export default function Dashboard() {
         {/* ALERTES */}
         {isPaid && alerts.map((a, i) => <AlertBanner key={i} alert={a} />)}
 
-        {/* MÉTÉO */
+        {/* MÉTÉO */}
         );
             })() : (
               <div style={{ textAlign:"center", color:"#81c784", fontSize:13, padding:"8px 0" }}>
