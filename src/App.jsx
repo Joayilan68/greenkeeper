@@ -33,7 +33,7 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/admin" element={<Admin />} />
-          <Route path="/free" element={<SignedIn><Layout><Free /></Layout></SignedIn>} />
+          <Route path="/Free" element={<SignedIn><Layout><Free /></Layout></SignedIn>} />
           <Route path="/subscribe" element={<SignedIn><Subscribe /></SignedIn>} />
           <Route path="/subscribe/success" element={<SignedIn><SubscribeSuccess /></SignedIn>} />
           <Route path="/" element={<ProtectedRoute><Layout><Home /></Layout></ProtectedRoute>} />
