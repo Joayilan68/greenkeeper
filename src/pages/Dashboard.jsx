@@ -4,7 +4,7 @@ import { useWeather } from "../lib/useWeather";
 import { useProfile } from "../lib/useProfile";
 import { useHistory } from "../lib/useHistory";
 import { useSubscription } from "../lib/useSubscription";
-import { MONTHLY_PLAN, MONTHS_FR, calcArrosage, getWMO } from "../lib/lawn";
+import { MONTHLY_PLAN, MONTHS_FR, getWMO } from "../lib/lawn";
 import AlertBanner from "../components/AlertBanner";
 import { card, cardTitle, pill, btn, scroll, header } from "../lib/styles";
 
@@ -13,12 +13,11 @@ export default function Dashboard() {
   const { user } = useUser();
   const { weather, locationName, alerts = [], loading, locLoading, refreshLocation } = useWeather() || {};
   const { profile } = useProfile();
-  const { history } = useHistory();
   const { isPaid = false, isAdmin = false } = useSubscription() || {};
 
   const today = new Date();
   const month = today.getMonth() + 1;
-  const plan  = MONTHLY_PLAN[month];
+  const plan = MONTHLY_PLAN[month];
 
   return (
     <div>
@@ -37,20 +36,41 @@ export default function Dashboard() {
 
       <div style={scroll}>
 
-        {/* SCORE */}
         <div style={{ ...card(), textAlign:"center", padding:24 }}>
           <div style={{ fontSize:11, color:"#81c784", fontWeight:700, letterSpacing:1, marginBottom:8 }}>🌿 SCORE SANTÉ DU GAZON</div>
           <div style={{ fontSize:64, fontWeight:800, color:"#43a047" }}>72</div>
           <div style={{ fontSize:14, color:"#43a047", fontWeight:700 }}>Bon</div>
-          <div style={{ fontSize:12, color:"#81c784", marginTop:6 }}>Score dynamique — bientôt actif</div>
+          <div style={{ fontSize:12, color:"#81c784", marginTop:6 }}>Score dynamique bientôt actif</div>
         </div>
 
-        {/* ALERTES */}
         {isPaid && alerts.map((a, i) => <AlertBanner key={i} alert={a} />)}
 
-        {/* MÉTÉO */}
-        );
-            })() : (
+        {isPaid ? (
+          <div style={{ ...card(), background:"linear-gradient(135deg,rgba(46,125,50,0.3),rgba(27,94,32,0.2))", border:"1px solid rgba(165,214,167,0.2)" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+              <div>
+                <div style={{ fontSize:11, color:"#81c784", fontWeight:700, letterSpacing:1 }}>📍 {locationName || "Localisation"}</div>
+                <div style={{ fontSize:12, color:"#81c784", opacity:0.7 }}>{MONTHS_FR[month]} — {plan.label}</div>
+              </div>
+              <button onClick={refreshLocation} style={{ background:"rgba(255,255,255,0.1)", border:"1px solid rgba(255,255,255,0.2)", borderRadius:10, padding:"6px 12px", color:"#e8f5e9", fontSize:12, cursor:"pointer" }}>
+                {locLoading ? "⌛" : "🔄"}
+              </button>
+            </div>
+            {weather ? (
+              <div style={{ display:"flex", gap:8 }}>
+                {[
+                  { icon: getWMO(weather.code).icon, val:`${Math.round(weather.temp_max)}°C`, label: getWMO(weather.code).label },
+                  { icon:"💧", val:`${weather.precip}mm`, label:"Pluie" },
+                  { icon:"💨", val:`${weather.wind}km/h`, label:"Vent" },
+                ].map(({ icon, val, label }) => (
+                  <div key={label} style={{ flex:1, background:"rgba(255,255,255,0.06)", borderRadius:12, padding:"8px 6px", textAlign:"center" }}>
+                    <div style={{ fontSize:20 }}>{icon}</div>
+                    <div style={{ fontSize:15, fontWeight:800 }}>{val}</div>
+                    <div style={{ fontSize:10, color:"#81c784" }}>{label}</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
               <div style={{ textAlign:"center", color:"#81c784", fontSize:13, padding:"8px 0" }}>
                 {loading || locLoading ? "🌿 Détection..." : "🔄 Actualiser"}
               </div>
