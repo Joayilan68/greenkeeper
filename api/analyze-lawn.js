@@ -1,5 +1,5 @@
 // api/analyze-lawn.js
-// Upload image sur Cloudinary puis analyse avec Anthropic Claude Haiku Vision
+// Upload image sur Cloudinary puis analyse avec Groq Llama Vision (gratuit)
 
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -39,7 +39,7 @@ module.exports = async function handler(req, res) {
     const imageUrl = uploadData.secure_url;
     const publicId = uploadData.public_id;
 
-    // ── 2. ANALYSE CLAUDE HAIKU VISION ───────────────────────────────────
+    // ── 2. ANALYSE GROQ VISION ────────────────────────────────────────────
     const profileCtx = profile.pelouse
       ? `Type : ${profile.pelouse}, Sol : ${profile.sol}, Surface : ${profile.surface}m²`
       : "Profil non renseigné";
@@ -75,22 +75,22 @@ Réponds UNIQUEMENT avec ce JSON valide (sans balises markdown, sans texte avant
 Problèmes à détecter : oïdium, helminthosporiose, fusariose, anthracnose, mousse, mauvaises herbes, zones mortes, manque eau, brûlures azote, sol compacté, tallage excessif, hauteur tonte incorrecte.
 Si la photo ne montre pas du gazon, retourne score_visuel à 0 et explique dans resume.`;
 
-    const claudeRes = await fetch("https://api.anthropic.com/v1/messages", {
+    const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Content-Type":      "application/json",
-        "x-api-key":         process.env.ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01"
+        "Content-Type":  "application/json",
+        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
       },
       body: JSON.stringify({
-        model:      "claude-haiku-4-5-20251001",
-        max_tokens: 1500,
+        model:       "llama-3.2-11b-vision-preview",
+        max_tokens:  1500,
+        temperature: 0.2,
         messages: [{
           role: "user",
           content: [
             {
-              type:   "image",
-              source: { type: "base64", media_type: mimeType, data: imageBase64 }
+              type:      "image_url",
+              image_url: { url: `data:${mimeType};base64,${imageBase64}` }
             },
             { type: "text", text: prompt }
           ]
@@ -98,10 +98,10 @@ Si la photo ne montre pas du gazon, retourne score_visuel à 0 et explique dans 
       })
     });
 
-    const claudeData = await claudeRes.json();
-    if (claudeData.error) throw new Error("Claude: " + (claudeData.error.message || JSON.stringify(claudeData.error)));
+    const groqData = await groqRes.json();
+    if (groqData.error) throw new Error("Groq: " + (groqData.error.message || JSON.stringify(groqData.error)));
 
-    const rawText = claudeData.content?.[0]?.text || "";
+    const rawText = groqData.choices?.[0]?.message?.content || "";
     let analysis;
     try {
       analysis = JSON.parse(rawText.replace(/```json|```/g, "").trim());
