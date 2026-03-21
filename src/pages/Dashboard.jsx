@@ -109,7 +109,7 @@ export default function Dashboard() {
                   <div style={{ fontSize:11, fontWeight:700, color:"#90caf9" }}>📸 Diagnostic photo pris en compte</div>
                   <div style={{ fontSize:10, color:"#81c784" }}>
                     Score visuel : {diagScore}/100 · Il y a {diagAge}j
-                    {diagAge < DIAG_MAX_AGE && <span style={{ color:"#f9a825" }}> · Valide encore {7 - diagAge}j</span>}
+                    {diagAge < 7 && <span style={{ color:"#f9a825" }}> · Valide encore {7 - diagAge}j</span>}
                   </div>
                 </div>
               </div>
