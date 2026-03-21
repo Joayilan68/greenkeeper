@@ -1,8 +1,11 @@
-// ─── LAWN HEALTH SCORE ENGINE v2 ─────────────────────────────────────────────
-// Score basé sur : météo + profil + respect du plan d'entretien conseillé
-// Les émojis visuels seront intégrés en Phase 2 (diagnostic photo)
+// ─── LAWN HEALTH SCORE ENGINE v3 ─────────────────────────────────────────────
+// Score basé sur : météo + profil + respect du plan d'entretien + diagnostic photo
+// Phase 2 : le score visuel du dernier diagnostic influence le score final (70/30)
 
 import { MONTHLY_PLAN } from "./lawn";
+
+const DIAG_KEY     = "gk_diagnostics";
+const DIAG_MAX_AGE = 7; // jours max d'influence
 
 function daysSince(dateStr) {
   const parts = dateStr?.split('/');
@@ -11,10 +14,29 @@ function daysSince(dateStr) {
   return Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));
 }
 
+function daysSinceISO(isoStr) {
+  if (!isoStr) return 999;
+  return Math.floor((Date.now() - new Date(isoStr).getTime()) / (1000 * 60 * 60 * 24));
+}
+
 function lastAction(history, keyword) {
   const found = history?.filter(h => h.action.toLowerCase().includes(keyword.toLowerCase()));
   if (!found?.length) return 999;
   return Math.min(...found.map(h => daysSince(h.date)));
+}
+
+function getLastDiagnostic() {
+  try {
+    const saved = localStorage.getItem(DIAG_KEY);
+    if (!saved) return null;
+    const diags = JSON.parse(saved);
+    if (!diags?.length) return null;
+    const last = diags[0];
+    if (daysSinceISO(last.date) > DIAG_MAX_AGE) return null;
+    return last;
+  } catch {
+    return null;
+  }
 }
 
 export function calcLawnScore({ weather, profile, history = [], month }) {
@@ -24,7 +46,6 @@ export function calcLawnScore({ weather, profile, history = [], month }) {
   let score = 100;
 
   // ── 1. RESPECT DU PLAN D'ENTRETIEN (40 pts) ──────────────────────────────
-  // Tonte
   const tonteFreq = month >= 4 && month <= 9 ? 5 : 14;
   const derniereTonte = lastAction(history, "tonte");
   if (derniereTonte > tonteFreq * 2) {
@@ -37,7 +58,6 @@ export function calcLawnScore({ weather, profile, history = [], month }) {
     strengths.push({ icon:"✂️", label:"Tonte régulière ✓" });
   }
 
-  // Engrais (si plan du mois le recommande)
   if (plan?.engrais) {
     const dernierEngrais = lastAction(history, "engrais");
     if (dernierEngrais > 45) {
@@ -48,7 +68,6 @@ export function calcLawnScore({ weather, profile, history = [], month }) {
     }
   }
 
-  // Aération (si plan le recommande)
   if (plan?.aeration) {
     const derniereAeration = lastAction(history, "aération");
     if (derniereAeration > 60) {
@@ -59,7 +78,6 @@ export function calcLawnScore({ weather, profile, history = [], month }) {
     }
   }
 
-  // Verticut (si plan le recommande)
   if (plan?.verticut) {
     const dernierVerticut = lastAction(history, "verticut");
     if (dernierVerticut > 90) {
@@ -70,7 +88,6 @@ export function calcLawnScore({ weather, profile, history = [], month }) {
     }
   }
 
-  // Arrosage (mois chauds)
   if (plan?.arrosage_base > 0) {
     const dernierArrosage = lastAction(history, "arrosage");
     if (dernierArrosage > 7) {
@@ -83,7 +100,6 @@ export function calcLawnScore({ weather, profile, history = [], month }) {
 
   // ── 2. MÉTÉO (35 pts) ─────────────────────────────────────────────────────
   if (weather) {
-    // Canicule
     if (weather.temp_max >= 33) {
       score -= 12;
       issues.push({ icon:"🔥", label:`Canicule ${weather.temp_max}°C`, impact:-12 });
@@ -92,7 +108,6 @@ export function calcLawnScore({ weather, profile, history = [], month }) {
       issues.push({ icon:"☀️", label:"Chaleur élevée", impact:-5 });
     }
 
-    // Gel
     if (weather.temp_min <= 0) {
       score -= 10;
       issues.push({ icon:"❄️", label:"Gel — stress racinaire", impact:-10 });
@@ -101,13 +116,11 @@ export function calcLawnScore({ weather, profile, history = [], month }) {
       issues.push({ icon:"🌡️", label:"Risque de gel", impact:-4 });
     }
 
-    // Sécheresse
     if (weather.precip === 0 && weather.temp_max > 22 && lastAction(history, "arrosage") > 3) {
       score -= 8;
       issues.push({ icon:"🌵", label:"Sécheresse sans arrosage", impact:-8 });
     }
 
-    // Risque fongique
     if (weather.humidity > 75 && weather.temp_max > 18) {
       score -= 8;
       issues.push({ icon:"🦠", label:"Risque fongique élevé", impact:-8 });
@@ -116,13 +129,11 @@ export function calcLawnScore({ weather, profile, history = [], month }) {
       issues.push({ icon:"🦠", label:"Risque fongique modéré", impact:-3 });
     }
 
-    // Traitement fongicide récent = bonus
     if (lastAction(history, "fongicide") <= 14) {
       score += 5;
       strengths.push({ icon:"💊", label:"Traitement fongicide récent ✓" });
     }
 
-    // Conditions idéales
     if (weather.temp_max >= 15 && weather.temp_max <= 22 && weather.humidity >= 50 && weather.humidity <= 70) {
       strengths.push({ icon:"🌤️", label:"Conditions météo idéales ✓" });
     }
@@ -159,13 +170,50 @@ export function calcLawnScore({ weather, profile, history = [], month }) {
     strengths.push({ icon:"✅", label:"Entretien régulier ✓" });
   }
 
-  // Score final
+  // ── 5. DIAGNOSTIC PHOTO — PONDÉRATION 70/30 ──────────────────────────────
+  const lastDiag    = getLastDiagnostic();
+  let diagScore     = null;
+  let diagEmoji     = null;
+  let diagAge       = null;
+  let diagInfluence = 0;
+
+  if (lastDiag?.analysis?.score_visuel !== undefined) {
+    const scoreVisuel  = lastDiag.analysis.score_visuel;
+    diagAge            = daysSinceISO(lastDiag.date);
+    diagEmoji          = lastDiag.analysis.emoji;
+
+    // Poids décroissant : 100% à J0 → 0% à J7
+    const poids        = Math.max(0, 1 - diagAge / DIAG_MAX_AGE);
+    const scoreCalcule = Math.max(0, Math.min(100, Math.round(score)));
+    const scoreCombine = Math.round(
+      scoreCalcule * (1 - 0.3 * poids) + scoreVisuel * 0.3 * poids
+    );
+
+    diagScore     = scoreVisuel;
+    diagInfluence = scoreCombine - scoreCalcule;
+    score         = scoreCombine;
+
+    // Remonter les problèmes critiques du diagnostic dans les issues
+    lastDiag.analysis.problemes
+      ?.filter(p => p.severite === "elevee" || p.severite === "critique")
+      .slice(0, 2)
+      .forEach(p => {
+        issues.push({ icon:"🔬", label:`[Photo] ${p.nom}`, impact: p.impact_score || -5 });
+      });
+
+    // Mention positive si beau gazon
+    if (scoreVisuel >= 70) {
+      strengths.push({ icon:"📸", label:`Diagnostic photo : ${lastDiag.analysis.etat_general} ✓` });
+    }
+  }
+
+  // ── SCORE FINAL ───────────────────────────────────────────────────────────
   const finalScore = Math.max(0, Math.min(100, Math.round(score)));
+  const potential  = Math.min(
+    100,
+    finalScore + 10 + Math.min(15, issues.reduce((a, i) => a + Math.abs(i.impact), 0) / 2)
+  );
 
-  // Potentiel (toujours supérieur pour créer la motivation)
-  const potential = Math.min(100, finalScore + 10 + Math.min(15, issues.reduce((a, i) => a + Math.abs(i.impact), 0) / 2));
-
-  // Label et couleur
   let labelText, color;
   if (finalScore >= 85)      { labelText = "Excellent 🏆"; color = "#43a047"; }
   else if (finalScore >= 70) { labelText = "Bon";          color = "#7cb342"; }
@@ -174,11 +222,17 @@ export function calcLawnScore({ weather, profile, history = [], month }) {
   else                       { labelText = "Critique";     color = "#c62828"; }
 
   return {
-    score: finalScore,
+    score:    finalScore,
     potential: Math.round(potential),
-    label: labelText,
+    label:    labelText,
     color,
-    issues: issues.slice(0, 5),
+    issues:   issues.slice(0, 6),
     strengths: strengths.slice(0, 4),
+    // Données diagnostic pour affichage dans Dashboard
+    diagScore,
+    diagEmoji,
+    diagAge,
+    diagInfluence,
+    hasDiag: lastDiag !== null,
   };
 }

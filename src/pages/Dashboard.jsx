@@ -27,13 +27,15 @@ export default function Dashboard() {
 
   const today = new Date();
   const month = today.getMonth() + 1;
-  const plan = MONTHLY_PLAN[month];
+  const plan  = MONTHLY_PLAN[month];
 
-  const { score, potential, label, color, issues, strengths } = calcLawnScore({ weather, profile, history, month });
+  const { score, potential, label, color, issues, strengths, diagScore, diagEmoji, diagAge, diagInfluence, hasDiag }
+    = calcLawnScore({ weather, profile, history, month });
+
   const notifications = generateNotifications({ weather, profile, history, month, score, location })
     .filter(n => !dismissedNotifs.includes(n.id));
 
-  const dangers = notifications.filter(n => n.type === "danger").length;
+  const dangers  = notifications.filter(n => n.type === "danger").length;
   const warnings = notifications.filter(n => n.type === "warning").length;
 
   useEffect(() => {
@@ -45,10 +47,7 @@ export default function Dashboard() {
 
   const handleActivatePush = async () => {
     const success = await subscribe();
-    if (success) {
-      setPushActivated(true);
-      await sendTestNotification();
-    }
+    if (success) { setPushActivated(true); await sendTestNotification(); }
   };
 
   const NOTIF_COLORS = {
@@ -100,6 +99,36 @@ export default function Dashboard() {
               </div>
             )}
           </div>
+
+          {/* ── BADGE DIAGNOSTIC PHOTO ── */}
+          {isPaid && hasDiag && diagScore !== null && (
+            <div style={{ background:"rgba(33,150,243,0.12)", border:"1px solid rgba(66,165,245,0.3)", borderRadius:10, padding:"8px 12px", marginBottom:10, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                <span style={{ fontSize:20 }}>{diagEmoji}</span>
+                <div>
+                  <div style={{ fontSize:11, fontWeight:700, color:"#90caf9" }}>📸 Diagnostic photo pris en compte</div>
+                  <div style={{ fontSize:10, color:"#81c784" }}>
+                    Score visuel : {diagScore}/100 · Il y a {diagAge}j
+                    {diagAge < DIAG_MAX_AGE && <span style={{ color:"#f9a825" }}> · Valide encore {7 - diagAge}j</span>}
+                  </div>
+                </div>
+              </div>
+              <div style={{ textAlign:"right" }}>
+                <div style={{ fontSize:12, fontWeight:700, color: diagInfluence >= 0 ? "#a5d6a7" : "#ef9a9a" }}>
+                  {diagInfluence >= 0 ? "+" : ""}{diagInfluence} pts
+                </div>
+                <div style={{ fontSize:10, color:"#81c784" }}>influence</div>
+              </div>
+            </div>
+          )}
+
+          {/* Lien vers diagnostic si pas encore fait */}
+          {isPaid && !hasDiag && (
+            <div onClick={() => navigate("/diagnostic")} style={{ background:"rgba(33,150,243,0.08)", border:"1px dashed rgba(66,165,245,0.3)", borderRadius:10, padding:"8px 12px", marginBottom:10, cursor:"pointer", textAlign:"center" }}>
+              <div style={{ fontSize:11, color:"#90caf9" }}>📸 Faire un diagnostic photo pour affiner le score</div>
+              <div style={{ fontSize:10, color:"#81c784", marginTop:2 }}>Influence jusqu'à 30% du score · Valide 7 jours</div>
+            </div>
+          )}
 
           {strengths.length > 0 && (
             <div style={{ marginBottom:8 }}>
@@ -238,29 +267,6 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* ── ACTIONS RAPIDES ── */}
-        <div style={card()}>
-          <div style={cardTitle}><span>⚡ Actions rapides</span></div>
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
-            {[
-              { icon:"🔬", label:"Diagnostic",  route:"/diagnostic", color:"rgba(33,150,243,0.2)" },
-              { icon:"📅", label:"Aujourd'hui", route:"/today",      color:"rgba(76,175,80,0.2)" },
-              { icon:"🌿", label:"Mon Gazon",   route:"/my-lawn",    color:"rgba(46,125,50,0.2)" },
-              { icon:"🛒", label:"Produits",    route:"/products",   color:"rgba(255,152,0,0.2)" },
-            ].map(({ icon, label, route, color }) => (
-              <button key={route} onClick={() => navigate(route)} style={{
-                background:color, border:"1px solid rgba(255,255,255,0.1)",
-                borderRadius:14, padding:"14px 8px", cursor:"pointer",
-                color:"#e8f5e9", fontWeight:700, fontSize:13,
-                display:"flex", flexDirection:"column", alignItems:"center", gap:6,
-              }}>
-                <span style={{ fontSize:24 }}>{icon}</span>
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-
         {/* ── PROFIL ── */}
         <div style={card()}>
           <div style={cardTitle}>
@@ -292,9 +298,9 @@ export default function Dashboard() {
         <div style={{ display:"flex", justifyContent:"center", flexWrap:"wrap", gap:12, padding:"8px 0 24px" }}>
           {[
             { label:"Mentions légales", route:"/mentions-legales" },
-            { label:"Confidentialité", route:"/confidentialite" },
-            { label:"CGU", route:"/cgu" },
-            { label:"CGV", route:"/cgv" },
+            { label:"Confidentialité",  route:"/confidentialite" },
+            { label:"CGU",              route:"/cgu" },
+            { label:"CGV",              route:"/cgv" },
           ].map(({ label, route }) => (
             <span key={route} onClick={() => navigate(route)} style={{ fontSize:10, color:"#4a7c5c", cursor:"pointer", textDecoration:"underline" }}>
               {label}
