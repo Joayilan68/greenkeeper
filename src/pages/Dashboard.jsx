@@ -36,7 +36,6 @@ export default function Dashboard() {
   const dangers = notifications.filter(n => n.type === "danger").length;
   const warnings = notifications.filter(n => n.type === "warning").length;
 
-  // Envoyer les alertes urgentes en push si abonné
   useEffect(() => {
     if (permission !== "granted") return;
     notifications
@@ -65,7 +64,12 @@ export default function Dashboard() {
           <div style={{ fontSize:11, color:"#81c784" }}>
             {today.toLocaleDateString("fr-FR", { weekday:"long", day:"numeric", month:"long" })}
           </div>
-          <UserButton appearance={{ variables: { colorPrimary:"#43a047" } }} />
+          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+            <button onClick={() => navigate("/parametres")} style={{ background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.15)", borderRadius:8, padding:"4px 10px", color:"#81c784", fontSize:11, cursor:"pointer" }}>
+              ⚙️
+            </button>
+            <UserButton appearance={{ variables: { colorPrimary:"#43a047" } }} />
+          </div>
         </div>
         <div style={{ fontSize:24, fontWeight:800, color:"#a5d6a7" }}>
           Bonjour {user?.firstName || ""} 👋
@@ -176,9 +180,7 @@ export default function Dashboard() {
         {isSupported && isPaid && permission !== "granted" && (
           <div style={{ ...card(), background:"rgba(76,175,80,0.1)", border:"1px solid rgba(76,175,80,0.3)", textAlign:"center", padding:16 }}>
             <div style={{ fontSize:22, marginBottom:8 }}>🔔</div>
-            <div style={{ fontSize:13, fontWeight:700, color:"#a5d6a7", marginBottom:6 }}>
-              Activez les alertes sur votre téléphone
-            </div>
+            <div style={{ fontSize:13, fontWeight:700, color:"#a5d6a7", marginBottom:6 }}>Activez les alertes sur votre téléphone</div>
             <div style={{ fontSize:12, color:"#81c784", marginBottom:12, lineHeight:1.5 }}>
               Recevez des alertes même quand l'app est fermée — canicule, gel, tonte en retard...
             </div>
@@ -263,9 +265,14 @@ export default function Dashboard() {
         <div style={card()}>
           <div style={cardTitle}>
             <span>👤 Mon profil</span>
-            <button onClick={() => navigate("/setup")} style={{ background:"rgba(76,175,80,0.2)", border:"none", borderRadius:8, padding:"4px 10px", color:"#a5d6a7", fontSize:11, cursor:"pointer" }}>
-              {profile ? "Modifier" : "Configurer"}
-            </button>
+            <div style={{ display:"flex", gap:6 }}>
+              <button onClick={() => navigate("/setup")} style={{ background:"rgba(76,175,80,0.2)", border:"none", borderRadius:8, padding:"4px 10px", color:"#a5d6a7", fontSize:11, cursor:"pointer" }}>
+                {profile ? "Modifier" : "Configurer"}
+              </button>
+              <button onClick={() => navigate("/parametres")} style={{ background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.15)", borderRadius:8, padding:"4px 10px", color:"#81c784", fontSize:11, cursor:"pointer" }}>
+                ⚙️ Données
+              </button>
+            </div>
           </div>
           {profile ? (
             <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
@@ -279,6 +286,20 @@ export default function Dashboard() {
               <button onClick={() => navigate("/setup")} style={{ ...btn.primary, width:"auto", padding:"8px 24px" }}>Configurer</button>
             </div>
           )}
+        </div>
+
+        {/* ── LIENS LÉGAUX ── */}
+        <div style={{ display:"flex", justifyContent:"center", flexWrap:"wrap", gap:12, padding:"8px 0 24px" }}>
+          {[
+            { label:"Mentions légales", route:"/mentions-legales" },
+            { label:"Confidentialité", route:"/confidentialite" },
+            { label:"CGU", route:"/cgu" },
+            { label:"CGV", route:"/cgv" },
+          ].map(({ label, route }) => (
+            <span key={route} onClick={() => navigate(route)} style={{ fontSize:10, color:"#4a7c5c", cursor:"pointer", textDecoration:"underline" }}>
+              {label}
+            </span>
+          ))}
         </div>
 
       </div>
