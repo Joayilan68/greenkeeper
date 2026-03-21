@@ -1,5 +1,5 @@
 // api/analyze-lawn.js
-// Upload image sur Cloudinary puis analyse avec Gemini Vision
+// Upload image sur Cloudinary puis analyse avec Anthropic Claude Haiku Vision
 
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -19,7 +19,7 @@ module.exports = async function handler(req, res) {
     const timestamp = Math.floor(Date.now() / 1000);
     const folder    = "mg360-diagnostics";
 
-    const crypto = require("crypto");
+    const crypto     = require("crypto");
     const signString = `folder=${folder}&timestamp=${timestamp}${apiSecret}`;
     const signature  = crypto.createHash("sha1").update(signString).digest("hex");
 
@@ -39,7 +39,7 @@ module.exports = async function handler(req, res) {
     const imageUrl = uploadData.secure_url;
     const publicId = uploadData.public_id;
 
-    // ── 2. ANALYSE GEMINI VISION ──────────────────────────────────────────
+    // ── 2. ANALYSE CLAUDE HAIKU VISION ───────────────────────────────────
     const profileCtx = profile.pelouse
       ? `Type : ${profile.pelouse}, Sol : ${profile.sol}, Surface : ${profile.surface}m²`
       : "Profil non renseigné";
@@ -51,7 +51,7 @@ module.exports = async function handler(req, res) {
 Analyse cette photo de gazon et fournis un diagnostic complet.
 Contexte : ${profileCtx}. ${weatherCtx}. Score actuel : ${score}/100.
 
-Réponds UNIQUEMENT avec ce JSON valide (sans balises markdown) :
+Réponds UNIQUEMENT avec ce JSON valide (sans balises markdown, sans texte avant ou après) :
 {
   "etat_general": "excellent|bon|moyen|mauvais|critique",
   "score_visuel": <0-100>,
@@ -72,26 +72,36 @@ Réponds UNIQUEMENT avec ce JSON valide (sans balises markdown) :
   "actions_prochaines": ["Action prochaine 1"]
 }
 
-Problèmes à détecter : oïdium, helminthosporiose, fusariose, anthracnose, mousse, mauvaises herbes, zones mortes, manque eau, brûlures azote, sol compacté, tallage excessif, hauteur tonte incorrecte.`;
+Problèmes à détecter : oïdium, helminthosporiose, fusariose, anthracnose, mousse, mauvaises herbes, zones mortes, manque eau, brûlures azote, sol compacté, tallage excessif, hauteur tonte incorrecte.
+Si la photo ne montre pas du gazon, retourne score_visuel à 0 et explique dans resume.`;
 
-    const gemRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [
-            { inline_data: { mime_type: mimeType, data: imageBase64 } },
-            { text: prompt }
-          ]}],
-          generationConfig: { maxOutputTokens: 1200, temperature: 0.2 }
-        })
-      }
-    );
-    const gemData = await gemRes.json();
-    if (gemData.error) throw new Error("Gemini: " + gemData.error.message);
+    const claudeRes = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type":      "application/json",
+        "x-api-key":         process.env.ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01"
+      },
+      body: JSON.stringify({
+        model:      "claude-haiku-4-5-20251001",
+        max_tokens: 1500,
+        messages: [{
+          role: "user",
+          content: [
+            {
+              type:   "image",
+              source: { type: "base64", media_type: mimeType, data: imageBase64 }
+            },
+            { type: "text", text: prompt }
+          ]
+        }]
+      })
+    });
 
-    const rawText = gemData.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    const claudeData = await claudeRes.json();
+    if (claudeData.error) throw new Error("Claude: " + (claudeData.error.message || JSON.stringify(claudeData.error)));
+
+    const rawText = claudeData.content?.[0]?.text || "";
     let analysis;
     try {
       analysis = JSON.parse(rawText.replace(/```json|```/g, "").trim());
