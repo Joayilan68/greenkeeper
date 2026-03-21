@@ -45,17 +45,26 @@ export default function Diagnostic() {
   const canUse = isPaid || isAdmin;
 
   const handleFile = (file) => {
-    if (!file) return;
-    setMimeType(file.type || "image/jpeg");
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const full = e.target.result;
-      setPreview(full);
-      setImageB64(full.split(",")[1]);
-      setView("camera");
-    };
-    reader.readAsDataURL(file);
+  if (!file) return;
+  setMimeType("image/jpeg");
+  const canvas = document.createElement("canvas");
+  const img = new Image();
+  const url = URL.createObjectURL(file);
+  img.onload = () => {
+    const MAX = 800;
+    let w = img.width, h = img.height;
+    if (w > h && w > MAX) { h = h * MAX / w; w = MAX; }
+    else if (h > MAX) { w = w * MAX / h; h = MAX; }
+    canvas.width = w; canvas.height = h;
+    canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+    const full = canvas.toDataURL("image/jpeg", 0.7);
+    setPreview(full);
+    setImageB64(full.split(",")[1]);
+    setView("camera");
+    URL.revokeObjectURL(url);
   };
+  img.src = url;
+};
 
   const handleInputChange = (e) => { handleFile(e.target.files[0]); e.target.value = ""; };
 
