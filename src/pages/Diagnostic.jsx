@@ -27,42 +27,38 @@ export default function Diagnostic() {
   const { weather }  = useWeather() || {};
   const { isPaid, isAdmin } = useSubscription() || {};
   const { history = [] } = useHistory();
-  const { diagnostics, save, remove } = useDiagnostic();
+  const { diagnostics, save } = useDiagnostic();
 
-  const [view, setView]       = useState("home");   // home | camera | result | history
-  const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState("");
-  const [preview, setPreview] = useState(null);     // base64 preview
-  const [imageB64, setImageB64] = useState(null);   // base64 to send
+  const [view, setView]         = useState("home");
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState("");
+  const [preview, setPreview]   = useState(null);
+  const [imageB64, setImageB64] = useState(null);
   const [mimeType, setMimeType] = useState("image/jpeg");
-  const [result, setResult]   = useState(null);
-  const [selected, setSelected] = useState(null);   // diagnostic historique sélectionné
+  const [result, setResult]     = useState(null);
+  const [selected, setSelected] = useState(null);
 
-  const fileRef = useRef();
-  const camRef  = useRef();
+  const fileRef    = useRef(); // caméra (capture="environment")
+  const galleryRef = useRef(); // galerie (sans capture)
 
   const { score } = calcLawnScore({ weather, profile, history, month: new Date().getMonth()+1 });
-
   const canUse = isPaid || isAdmin;
 
-  // Lire le fichier image et le convertir en base64
   const handleFile = (file) => {
     if (!file) return;
     setMimeType(file.type || "image/jpeg");
     const reader = new FileReader();
     reader.onload = (e) => {
-      const full   = e.target.result;
+      const full = e.target.result;
       setPreview(full);
-      const b64 = full.split(",")[1];
-      setImageB64(b64);
+      setImageB64(full.split(",")[1]);
       setView("camera");
     };
     reader.readAsDataURL(file);
   };
 
-  const handleInputChange = (e) => handleFile(e.target.files[0]);
+  const handleInputChange = (e) => { handleFile(e.target.files[0]); e.target.value = ""; };
 
-  // Lancer l'analyse
   const analyze = async () => {
     if (!imageB64) return;
     setLoading(true);
@@ -71,24 +67,11 @@ export default function Diagnostic() {
       const res = await fetch("/api/analyze-lawn", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          imageBase64: imageB64,
-          mimeType,
-          profile: profile || {},
-          weather: weather || {},
-          score
-        })
+        body: JSON.stringify({ imageBase64: imageB64, mimeType, profile: profile || {}, weather: weather || {}, score })
       });
       const data = await res.json();
       if (!res.ok || data.error) throw new Error(data.error || "Erreur serveur");
-
-      const diag = {
-        id:       Date.now().toString(),
-        date:     data.date,
-        imageUrl: data.imageUrl,
-        analysis: data.analysis,
-        scoreAvant: score,
-      };
+      const diag = { id: Date.now().toString(), date: data.date, imageUrl: data.imageUrl, analysis: data.analysis, scoreAvant: score };
       save(diag);
       setResult(diag);
       setView("result");
@@ -99,15 +82,25 @@ export default function Diagnostic() {
     }
   };
 
-  const reset = () => {
-    setView("home");
-    setPreview(null);
-    setImageB64(null);
-    setResult(null);
-    setError("");
-  };
+  const reset = () => { setView("home"); setPreview(null); setImageB64(null); setResult(null); setError(""); };
 
-  // ── VUE ACCUEIL ────────────────────────────────────────────────────────
+  // Inputs cachés partagés entre toutes les vues
+  const hiddenInputs = (
+    <>
+      <input ref={fileRef}    type="file" accept="image/*" capture="environment" onChange={handleInputChange} style={{ display:"none" }} />
+      <input ref={galleryRef} type="file" accept="image/*"                       onChange={handleInputChange} style={{ display:"none" }} />
+    </>
+  );
+
+  // Boutons photo réutilisables
+  const photoButtons = (label1="📷 Prendre une photo", label2="🖼️ Choisir depuis la galerie") => (
+    <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+      <button onClick={() => fileRef.current.click()}    style={{ ...btn.primary, fontSize:14, padding:"14px" }}>{label1}</button>
+      <button onClick={() => galleryRef.current.click()} style={{ ...btn.ghost,   fontSize:14, padding:"14px" }}>{label2}</button>
+    </div>
+  );
+
+  // ── VUE ACCUEIL ──────────────────────────────────────────────────────────
   if (view === "home") return (
     <div>
       <div style={header}>
@@ -115,13 +108,12 @@ export default function Diagnostic() {
         <div style={{ fontSize:12, color:"#81c784", marginTop:4 }}>Analyse IA de votre gazon</div>
       </div>
       <div style={scroll}>
+        {hiddenInputs}
 
         {!canUse ? (
           <div style={{ ...card(), textAlign:"center", padding:24 }}>
             <div style={{ fontSize:48, marginBottom:12 }}>🔒</div>
-            <div style={{ fontSize:16, fontWeight:800, color:"#a5d6a7", marginBottom:8 }}>
-              Diagnostic Photo — Premium
-            </div>
+            <div style={{ fontSize:16, fontWeight:800, color:"#a5d6a7", marginBottom:8 }}>Diagnostic Photo — Premium</div>
             <div style={{ fontSize:13, color:"#81c784", lineHeight:1.6, marginBottom:16 }}>
               Prenez une photo de votre gazon et laissez l'IA détecter les maladies, carences et problèmes en quelques secondes.
             </div>
@@ -136,41 +128,30 @@ export default function Diagnostic() {
           </div>
         ) : (
           <>
-            {/* CTA principal */}
             <div style={{ ...card(), background:"linear-gradient(135deg,rgba(27,94,32,0.4),rgba(13,43,26,0.6))", border:"1px solid rgba(165,214,167,0.3)", textAlign:"center", padding:24 }}>
               <div style={{ fontSize:52, marginBottom:12 }}>📸</div>
-              <div style={{ fontSize:16, fontWeight:800, color:"#a5d6a7", marginBottom:8 }}>
-                Photographiez votre gazon
-              </div>
+              <div style={{ fontSize:16, fontWeight:800, color:"#a5d6a7", marginBottom:8 }}>Photographiez votre gazon</div>
               <div style={{ fontSize:12, color:"#81c784", lineHeight:1.6, marginBottom:20 }}>
                 Prenez une photo en pleine lumière à environ 1m du sol pour un diagnostic précis.
               </div>
-              <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-                <button onClick={() => fileRef.current.click()} style={{ ...btn.primary, fontSize:14, padding:"14px" }}>
-                  📷 Prendre une photo / Choisir depuis la galerie
-                </button>
-                <input ref={fileRef} type="file" accept="image/*" capture="environment"
-                  onChange={handleInputChange} style={{ display:"none" }} />
-              </div>
+              {photoButtons()}
             </div>
 
-            {/* Conseils */}
             <div style={card()}>
               <div style={cardTitle}><span>💡 Pour un meilleur diagnostic</span></div>
               {[
-                ["☀️ Lumière naturelle","Photographiez en plein jour, sans ombre portée"],
-                ["📐 Distance","À environ 50cm-1m du sol, gazon visible en entier"],
-                ["🎯 Cadrage","Incluez la zone problématique bien centrée"],
-                ["🔍 Netteté","Photo nette et bien exposée — pas de flou"],
-              ].map(([icon, tip]) => (
+                ["☀️","Lumière naturelle","Photographiez en plein jour, sans ombre portée"],
+                ["📐","Distance","À environ 50cm-1m du sol, gazon visible en entier"],
+                ["🎯","Cadrage","Incluez la zone problématique bien centrée"],
+                ["🔍","Netteté","Photo nette et bien exposée — pas de flou"],
+              ].map(([icon, label, tip]) => (
                 <div key={icon} style={{ display:"flex", gap:10, padding:"6px 0", borderBottom:"1px solid rgba(255,255,255,0.05)", fontSize:12 }}>
                   <span style={{ fontSize:16, minWidth:24 }}>{icon}</span>
-                  <span style={{ color:"#81c784" }}>{tip}</span>
+                  <div><span style={{ fontWeight:700 }}>{label} — </span><span style={{ color:"#81c784" }}>{tip}</span></div>
                 </div>
               ))}
             </div>
 
-            {/* Historique rapide */}
             {diagnostics.length > 0 && (
               <div style={card()}>
                 <div style={cardTitle}>
@@ -200,13 +181,14 @@ export default function Diagnostic() {
     </div>
   );
 
-  // ── VUE CAMÉRA / PREVIEW ───────────────────────────────────────────────
+  // ── VUE PREVIEW ──────────────────────────────────────────────────────────
   if (view === "camera") return (
     <div>
       <div style={header}>
         <div style={{ fontSize:20, fontWeight:800, color:"#a5d6a7" }}>📸 Vérification photo</div>
       </div>
       <div style={scroll}>
+        {hiddenInputs}
         {error && (
           <div style={{ background:"rgba(198,40,40,0.2)", border:"1px solid #c62828", borderRadius:12, padding:"12px 16px", marginBottom:12, fontSize:13, color:"#ef9a9a" }}>
             ⚠️ {error}
@@ -219,29 +201,24 @@ export default function Diagnostic() {
         )}
         <div style={{ ...card(), textAlign:"center", padding:16 }}>
           <div style={{ fontSize:13, color:"#81c784", marginBottom:16, lineHeight:1.6 }}>
-            La photo est-elle nette et bien exposée ?{"\n"}Le gazon est-il bien visible ?
+            La photo est-elle nette et bien exposée ?
           </div>
           <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
             <button onClick={analyze} disabled={loading} style={{ ...btn.primary, fontSize:14, padding:"14px", opacity: loading ? 0.7 : 1 }}>
               {loading ? "🔍 Analyse en cours..." : "🔬 Lancer le diagnostic IA"}
             </button>
-            <button onClick={() => fileRef.current.click()} style={{ ...btn.ghost, fontSize:13 }}>
-              📷 Changer de photo
-            </button>
-            <input ref={fileRef} type="file" accept="image/*" capture="environment"
-              onChange={handleInputChange} style={{ display:"none" }} />
-            <button onClick={reset} style={{ background:"none", border:"none", color:"#81c784", fontSize:12, cursor:"pointer", padding:"4px" }}>
-              ← Retour
-            </button>
+            <button onClick={() => fileRef.current.click()}    style={{ ...btn.ghost, fontSize:13 }}>📷 Reprendre une photo</button>
+            <button onClick={() => galleryRef.current.click()} style={{ ...btn.ghost, fontSize:13 }}>🖼️ Choisir depuis la galerie</button>
+            <button onClick={reset} style={{ background:"none", border:"none", color:"#81c784", fontSize:12, cursor:"pointer", padding:"4px" }}>← Retour</button>
           </div>
         </div>
         {loading && (
           <div style={{ ...card(), textAlign:"center", padding:20 }}>
             <div style={{ fontSize:32, marginBottom:12 }}>🌿</div>
             <div style={{ fontSize:14, fontWeight:700, color:"#a5d6a7", marginBottom:8 }}>Analyse en cours...</div>
-            <div style={{ fontSize:12, color:"#81c784", lineHeight:1.6 }}>
-              1. Upload de la photo sur le serveur{"\n"}
-              2. Analyse par Gemini Vision IA{"\n"}
+            <div style={{ fontSize:12, color:"#81c784", lineHeight:1.8 }}>
+              1. Upload de la photo sur le serveur<br/>
+              2. Analyse par Gemini Vision IA<br/>
               3. Génération du rapport
             </div>
           </div>
@@ -250,21 +227,22 @@ export default function Diagnostic() {
     </div>
   );
 
-  // ── VUE RÉSULTAT ───────────────────────────────────────────────────────
+  // ── VUE RÉSULTAT ──────────────────────────────────────────────────────────
   if (view === "result" && result) {
     const { analysis, imageUrl, scoreAvant } = result;
     const scoreDiff = analysis.score_visuel - scoreAvant;
     const etatColor = ETAT_COLORS[analysis.etat_general] || "#a5d6a7";
-
     return (
       <div>
         <div style={header}>
           <div style={{ fontSize:20, fontWeight:800, color:"#a5d6a7" }}>🔬 Résultat du diagnostic</div>
-          <div style={{ fontSize:11, color:"#81c784", marginTop:4 }}>{new Date(result.date).toLocaleDateString("fr-FR", { day:"numeric", month:"long", hour:"2-digit", minute:"2-digit" })}</div>
+          <div style={{ fontSize:11, color:"#81c784", marginTop:4 }}>
+            {new Date(result.date).toLocaleDateString("fr-FR", { day:"numeric", month:"long", hour:"2-digit", minute:"2-digit" })}
+          </div>
         </div>
         <div style={scroll}>
+          {hiddenInputs}
 
-          {/* Score visuel */}
           <div style={{ ...card(), background:"linear-gradient(135deg,rgba(27,94,32,0.4),rgba(13,43,26,0.6))", border:`1px solid ${etatColor}44`, textAlign:"center" }}>
             <div style={{ fontSize:52, marginBottom:8 }}>{analysis.emoji}</div>
             <div style={{ fontSize:32, fontWeight:800, color:etatColor }}>{analysis.score_visuel}<span style={{ fontSize:18 }}>/100</span></div>
@@ -274,29 +252,22 @@ export default function Diagnostic() {
                 {scoreDiff > 0 ? "+" : ""}{scoreDiff} pts vs score calculé ({scoreAvant}/100)
               </div>
             )}
-            <div style={{ fontSize:13, color:"#81c784", lineHeight:1.6, fontStyle:"italic" }}>
-              "{analysis.resume}"
-            </div>
+            <div style={{ fontSize:13, color:"#81c784", lineHeight:1.6, fontStyle:"italic" }}>"{analysis.resume}"</div>
           </div>
 
-          {/* Photo */}
           <div style={{ borderRadius:16, overflow:"hidden" }}>
             <img src={imageUrl} alt="gazon analysé" style={{ width:"100%", maxHeight:200, objectFit:"cover", display:"block" }} />
           </div>
 
-          {/* Points positifs */}
           {analysis.points_positifs?.length > 0 && (
             <div style={{ ...card(), background:"rgba(76,175,80,0.08)", border:"1px solid rgba(76,175,80,0.25)" }}>
               <div style={cardTitle}><span>✅ Points positifs</span></div>
               {analysis.points_positifs.map((p, i) => (
-                <div key={i} style={{ fontSize:12, color:"#a5d6a7", padding:"4px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
-                  ✓ {p}
-                </div>
+                <div key={i} style={{ fontSize:12, color:"#a5d6a7", padding:"4px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>✓ {p}</div>
               ))}
             </div>
           )}
 
-          {/* Problèmes détectés */}
           {analysis.problemes?.length > 0 && (
             <div style={card()}>
               <div style={cardTitle}><span>⚠️ Problèmes détectés ({analysis.problemes.length})</span></div>
@@ -307,9 +278,7 @@ export default function Diagnostic() {
                     <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:6 }}>
                       <div style={{ fontWeight:700, fontSize:13, color:c.text }}>{prob.nom}</div>
                       <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-                        <span style={{ background:c.badge, color:"#fff", borderRadius:20, padding:"2px 8px", fontSize:10, fontWeight:700 }}>
-                          {prob.severite}
-                        </span>
+                        <span style={{ background:c.badge, color:"#fff", borderRadius:20, padding:"2px 8px", fontSize:10, fontWeight:700 }}>{prob.severite}</span>
                         <span style={{ fontSize:11, color:"#ef9a9a", fontWeight:700 }}>{prob.impact_score} pts</span>
                       </div>
                     </div>
@@ -321,7 +290,6 @@ export default function Diagnostic() {
             </div>
           )}
 
-          {/* Actions urgentes */}
           {analysis.actions_urgentes?.length > 0 && (
             <div style={{ ...card(), background:"rgba(198,40,40,0.08)", border:"1px solid rgba(198,40,40,0.25)" }}>
               <div style={cardTitle}><span>🚨 Actions urgentes</span></div>
@@ -333,7 +301,6 @@ export default function Diagnostic() {
             </div>
           )}
 
-          {/* Actions prochaines */}
           {analysis.actions_prochaines?.length > 0 && (
             <div style={card()}>
               <div style={cardTitle}><span>📅 Prochainement</span></div>
@@ -345,27 +312,22 @@ export default function Diagnostic() {
             </div>
           )}
 
-          {/* Actions */}
           <div style={{ display:"flex", flexDirection:"column", gap:10, paddingBottom:24 }}>
-            <button onClick={() => { setPreview(null); setImageB64(null); setView("camera"); fileRef.current.click(); }}
-              style={{ ...btn.primary, fontSize:14, padding:"14px" }}>
-              📷 Nouveau diagnostic
-            </button>
-            <button onClick={() => setView("history")} style={{ ...btn.ghost, fontSize:13 }}>
-              🕐 Voir l'historique
-            </button>
+            <button onClick={() => { setPreview(null); setImageB64(null); fileRef.current.click(); }}
+              style={{ ...btn.primary, fontSize:14, padding:"14px" }}>📷 Nouveau diagnostic — photo</button>
+            <button onClick={() => { setPreview(null); setImageB64(null); galleryRef.current.click(); }}
+              style={{ ...btn.ghost, fontSize:14, padding:"14px" }}>🖼️ Nouveau diagnostic — galerie</button>
+            <button onClick={() => setView("history")} style={{ ...btn.ghost, fontSize:13 }}>🕐 Voir l'historique</button>
             <button onClick={reset} style={{ background:"none", border:"none", color:"#81c784", fontSize:12, cursor:"pointer" }}>
               ← Retour à l'accueil diagnostic
             </button>
           </div>
-          <input ref={fileRef} type="file" accept="image/*" capture="environment"
-            onChange={handleInputChange} style={{ display:"none" }} />
         </div>
       </div>
     );
   }
 
-  // ── VUE HISTORIQUE ─────────────────────────────────────────────────────
+  // ── VUE HISTORIQUE ────────────────────────────────────────────────────────
   if (view === "history") {
     if (selected) {
       const { analysis, imageUrl } = selected;
