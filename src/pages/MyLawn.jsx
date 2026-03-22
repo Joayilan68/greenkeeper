@@ -15,8 +15,134 @@ const PRODUCTS = [
   { name:"Biostimulant racinaire", score:"+8",  price:"29,90€", icon:"💧", reason:"Stress hydrique" },
 ];
 
+// ── Composant partage ──────────────────────────────────────────────────────
+function ShareScore({ score, label, profile }) {
+  const [copied, setCopied] = useState(false);
+  const [showPanel, setShowPanel] = useState(false);
+
+  const appUrl  = "https://greenkeeper-five.vercel.app";
+  const emoji   = score >= 85 ? "🏆" : score >= 70 ? "😊" : score >= 55 ? "😐" : score >= 40 ? "😟" : "😰";
+  const gazon   = profile?.pelouse ? ` Mon ${profile.pelouse}` : " Mon gazon";
+  const surface = profile?.surface ? ` (${profile.surface}m²)` : "";
+
+  const message = `${emoji}${gazon}${surface} a un score de santé de ${score}/100 sur Mon Gazon 360 !\n🌿 "${label}"\n\nSuivez votre gazon en temps réel :\n${appUrl}`;
+  const messageEncoded = encodeURIComponent(message);
+  const urlEncoded     = encodeURIComponent(appUrl);
+  const titleEncoded   = encodeURIComponent(`Mon score gazon : ${score}/100 ${emoji}`);
+
+  const SHARE_OPTIONS = [
+    {
+      id:"whatsapp",
+      icon:"💬",
+      label:"WhatsApp",
+      color:"#25D366",
+      bg:"rgba(37,211,102,0.15)",
+      border:"rgba(37,211,102,0.35)",
+      action: () => window.open(`https://wa.me/?text=${messageEncoded}`, "_blank"),
+    },
+    {
+      id:"facebook",
+      icon:"📘",
+      label:"Facebook",
+      color:"#1877F2",
+      bg:"rgba(24,119,242,0.15)",
+      border:"rgba(24,119,242,0.35)",
+      action: () => window.open(`https://www.facebook.com/sharer/sharer.php?u=${urlEncoded}&quote=${messageEncoded}`, "_blank"),
+    },
+    {
+      id:"twitter",
+      icon:"🐦",
+      label:"Twitter / X",
+      color:"#1DA1F2",
+      bg:"rgba(29,161,242,0.15)",
+      border:"rgba(29,161,242,0.35)",
+      action: () => window.open(`https://twitter.com/intent/tweet?text=${messageEncoded}`, "_blank"),
+    },
+    {
+      id:"instagram",
+      icon:"📸",
+      label:"Instagram",
+      color:"#E1306C",
+      bg:"rgba(225,48,108,0.15)",
+      border:"rgba(225,48,108,0.35)",
+      action: () => {
+        navigator.clipboard.writeText(message);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 3000);
+      },
+    },
+    {
+      id:"copy",
+      icon:"🔗",
+      label:"Copier le lien",
+      color:"#a5d6a7",
+      bg:"rgba(165,214,167,0.1)",
+      border:"rgba(165,214,167,0.25)",
+      action: () => {
+        navigator.clipboard.writeText(`${message}`);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 3000);
+      },
+    },
+  ];
+
+  return (
+    <div style={{ marginTop:12 }}>
+      <button
+        onClick={() => setShowPanel(!showPanel)}
+        style={{ ...btn.ghost, fontSize:13, display:"flex", alignItems:"center", gap:8, justifyContent:"center" }}
+      >
+        📤 Partager mon score {showPanel ? "▲" : "▼"}
+      </button>
+
+      {showPanel && (
+        <div style={{ marginTop:10 }}>
+          {/* Aperçu du message */}
+          <div style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:12, padding:"12px 14px", marginBottom:12 }}>
+            <div style={{ fontSize:10, color:"#81c784", fontWeight:700, marginBottom:6, letterSpacing:1 }}>APERÇU DU MESSAGE</div>
+            <div style={{ fontSize:12, color:"#e8f5e9", lineHeight:1.7, whiteSpace:"pre-line" }}>{message}</div>
+          </div>
+
+          {/* Feedback copié */}
+          {copied && (
+            <div style={{ background:"rgba(67,160,71,0.2)", border:"1px solid rgba(67,160,71,0.4)", borderRadius:10, padding:"8px 12px", marginBottom:10, fontSize:12, color:"#a5d6a7", textAlign:"center" }}>
+              ✅ Message copié dans le presse-papier !
+            </div>
+          )}
+
+          {/* Boutons réseaux */}
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+            {SHARE_OPTIONS.map(opt => (
+              <button
+                key={opt.id}
+                onClick={opt.action}
+                style={{
+                  background: opt.bg,
+                  border: `1px solid ${opt.border}`,
+                  borderRadius:12, padding:"10px 8px",
+                  color: opt.color, fontSize:12, fontWeight:700,
+                  cursor:"pointer", display:"flex", alignItems:"center",
+                  justifyContent:"center", gap:6,
+                }}
+              >
+                <span style={{ fontSize:16 }}>{opt.icon}</span>
+                {opt.label}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ fontSize:10, color:"#4a7c5c", textAlign:"center", marginTop:8 }}>
+            📱 Instagram : le message est copié — collez-le dans votre story ou post
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Page principale ────────────────────────────────────────────────────────
 export default function MyLawn() {
-  const navigate = useNavigate();
+  const navigate             = useNavigate();
   const { profile }          = useProfile();
   const { history = [] }     = useHistory();
   const { weather }          = useWeather() || {};
@@ -104,6 +230,9 @@ export default function MyLawn() {
               En suivant le plan → <span style={{ fontWeight:800, color:"#a5d6a7" }}>{projectionScore}/100</span> dans <span style={{ fontWeight:800 }}>{projectionDays} jours</span>
             </div>
           </div>
+
+          {/* ── PARTAGE DU SCORE ── */}
+          <ShareScore score={score} label={label} profile={profile} />
         </div>
 
         {/* ── 2. DÉTAIL DU SCORE ── */}
