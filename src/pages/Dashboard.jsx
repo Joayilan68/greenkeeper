@@ -20,19 +20,16 @@ export default function Dashboard() {
   const { profile, saveProfile } = useProfile();
   const { history = [] } = useHistory();
   const { isPaid = false, isAdmin = false } = useSubscription() || {};
-  const [showIssues, setShowIssues]       = useState(false);
+  const [showIssues, setShowIssues]           = useState(false);
   const [dismissedNotifs, setDismissedNotifs] = useState([]);
-  const [pushActivated, setPushActivated] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [pushActivated, setPushActivated]     = useState(false);
+  const [showOnboarding, setShowOnboarding]   = useState(false);
 
   const { permission, subscribe, sendTestNotification, sendAlert, isSupported } = usePushNotifications(user?.id);
 
-  // Afficher l'onboarding si pas encore fait et pas de profil
   useEffect(() => {
     const done = localStorage.getItem("gk_onboarding_done");
-    if (!done && !profile) {
-      setTimeout(() => setShowOnboarding(true), 800);
-    }
+    if (!done && !profile) setTimeout(() => setShowOnboarding(true), 800);
   }, [profile]);
 
   const today = new Date();
@@ -65,6 +62,15 @@ export default function Dashboard() {
     setShowOnboarding(false);
   };
 
+  // Gestion centralisée des actions de notifications
+  const handleNotifAction = (actionRoute) => {
+    if (actionRoute === "/onboarding-location") {
+      setShowOnboarding(true);
+    } else {
+      navigate(actionRoute);
+    }
+  };
+
   const NOTIF_COLORS = {
     danger:  { bg:"rgba(183,28,28,0.2)",  border:"rgba(229,57,53,0.4)",  badge:"#c62828" },
     warning: { bg:"rgba(230,81,0,0.2)",   border:"rgba(239,108,0,0.4)",  badge:"#e65100" },
@@ -73,10 +79,7 @@ export default function Dashboard() {
 
   return (
     <div>
-      {/* ── ONBOARDING MODAL ── */}
-      {showOnboarding && (
-        <OnboardingModal onComplete={handleOnboardingComplete} />
-      )}
+      {showOnboarding && <OnboardingModal onComplete={handleOnboardingComplete} />}
 
       <div style={{ ...header, display:"flex", flexDirection:"column", alignItems:"center" }}>
         <div style={{ width:"100%", display:"flex", justifyContent:"space-between", alignItems:"center", paddingRight:4, marginBottom:8 }}>
@@ -96,7 +99,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* ── NOM APP + SLOGAN ── */}
         <div style={{ textAlign:"center", marginBottom:4 }}>
           <div style={{ fontSize:11, color:"#4a7c5c", letterSpacing:2, textTransform:"uppercase", marginBottom:2 }}>
             🌿 Mon Gazon 360
@@ -136,7 +138,6 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* ── BADGE DIAGNOSTIC PHOTO ── */}
           {isPaid && hasDiag && diagScore !== null && (
             <div style={{ background:"rgba(33,150,243,0.12)", border:"1px solid rgba(66,165,245,0.3)", borderRadius:10, padding:"8px 12px", marginBottom:10, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
               <div style={{ display:"flex", alignItems:"center", gap:8 }}>
@@ -158,7 +159,6 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Lien vers diagnostic si pas encore fait */}
           {isPaid && !hasDiag && (
             <div onClick={() => navigate("/diagnostic")} style={{ background:"rgba(33,150,243,0.08)", border:"1px dashed rgba(66,165,245,0.3)", borderRadius:10, padding:"8px 12px", marginBottom:10, cursor:"pointer", textAlign:"center" }}>
               <div style={{ fontSize:11, color:"#90caf9" }}>📸 Faire un diagnostic photo pour affiner le score</div>
@@ -223,13 +223,10 @@ export default function Dashboard() {
                       </div>
                       <div style={{ fontSize:12, color:"#81c784", lineHeight:1.5, marginBottom:8 }}>{n.message}</div>
                       {n.action && (
-  <button onClick={() => {
-    if (n.actionRoute === "/onboarding-location") {
-      setShowOnboarding(true);
-    } else {
-      navigate(n.actionRoute);
-    }
-  }} ...>
+                        <button
+                          onClick={() => handleNotifAction(n.actionRoute)}
+                          style={{ background:c.badge, border:"none", borderRadius:8, padding:"6px 14px", color:"#fff", fontSize:12, fontWeight:700, cursor:"pointer" }}
+                        >
                           {n.action} →
                         </button>
                       )}
@@ -352,7 +349,6 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* ── SIGNATURE APP ── */}
         <div style={{ textAlign:"center", padding:"8px 0 24px" }}>
           <div style={{ fontSize:10, color:"#2d4a35", fontStyle:"italic" }}>
             🌿 Mon Gazon 360 — Tant qu'il y a gazon, il y a match
