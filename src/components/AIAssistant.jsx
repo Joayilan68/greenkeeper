@@ -40,7 +40,7 @@ export default function AIAssistant() {
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState([{
     role:"assistant",
-    content:"Bonjour ! 🌿 Je suis GreenBot, votre assistant gazon. Posez-moi toutes vos questions sur l'entretien de votre pelouse !",
+    content:"Bonjour ! 🌿 Je suis Ilan, votre assistant gazon. Posez-moi toutes vos questions sur l'entretien de votre pelouse !",
   }]);
 
   const bottomRef = useRef();
@@ -102,7 +102,7 @@ export default function AIAssistant() {
   const clearChat = () => {
     setMessages([{
       role:"assistant",
-      content:"Bonjour ! 🌿 Je suis GreenBot, votre assistant gazon. Posez-moi toutes vos questions sur l'entretien de votre pelouse !"
+      content:"Bonjour ! 🌿 Je suis Ilan, votre assistant gazon. Posez-moi toutes vos questions sur l'entretien de votre pelouse !"
     }]);
   };
 
@@ -145,7 +145,7 @@ export default function AIAssistant() {
                 🤖
               </div>
               <div>
-                <div style={{ fontSize:14, fontWeight:800, color:"#a5d6a7" }}>GreenBot</div>
+                <div style={{ fontSize:14, fontWeight:800, color:"#a5d6a7" }}>Ilan</div>
                 <div style={{ fontSize:10, color:"#81c784" }}>
                   Assistant gazon IA · Score : {score}/100
                   {isAdmin && " · 👑 Admin"}
@@ -206,7 +206,7 @@ export default function AIAssistant() {
             <input
               ref={inputRef}
               type="text"
-              placeholder="Posez votre question..."
+              placeholder="Posez votre question à Ilan..."
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendMessage()}
