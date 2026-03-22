@@ -10,10 +10,10 @@ const OBJECTIFS = [
 ];
 
 const GAZONS = [
-  { id:"ray-grass",  label:"Ray-grass anglais",   icon:"🌱" },
-  { id:"fetuque",    label:"Fétuque",              icon:"🌾" },
-  { id:"kikuyu",     label:"Kikuyu",               icon:"🌿" },
-  { id:"bermuda",    label:"Bermuda",              icon:"☀️" },
+  { id:"ray-grass",  label:"Ray-grass anglais",    icon:"🌱" },
+  { id:"fetuque",    label:"Fétuque",               icon:"🌾" },
+  { id:"kikuyu",     label:"Kikuyu",                icon:"🌿" },
+  { id:"bermuda",    label:"Bermuda",               icon:"☀️" },
   { id:"mixte",      label:"Mélange / Je sais pas", icon:"🤷" },
 ];
 
@@ -62,9 +62,12 @@ export default function OnboardingModal({ onComplete }) {
   const [surfaceErr, setSurfaceErr] = useState("");
   const [locStatus, setLocStatus]   = useState("idle"); // idle | loading | success | error
   const [locName, setLocName]       = useState("");
+  const [manualCity, setManualCity] = useState("");
 
   const canNext1 = objectif !== "";
   const canNext2 = gazon !== "" && sol !== "" && surface !== "" && !surfaceErr;
+  // Peut finir si géoloc OK OU ville manuelle saisie
+  const canFinish = locStatus === "success" || manualCity.trim().length >= 2;
 
   const handleSurface = (v) => {
     setSurface(v);
@@ -73,21 +76,16 @@ export default function OnboardingModal({ onComplete }) {
     else setSurfaceErr("");
   };
 
-  // ── Géolocalisation ────────────────────────────────────────────────────────
+  // ── Géolocalisation automatique ────────────────────────────────────────────
   const detectLocation = () => {
-    if (!navigator.geolocation) {
-      setLocStatus("error");
-      return;
-    }
+    if (!navigator.geolocation) { setLocStatus("error"); return; }
     setLocStatus("loading");
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const { latitude, longitude } = pos.coords;
-        // Sauvegarde les coordonnées pour useWeather
         try {
-          localStorage.setItem("gk_lat",  String(latitude));
-          localStorage.setItem("gk_lon",  String(longitude));
-          // Géocodage inverse pour afficher le nom de la ville
+          localStorage.setItem("gk_lat", String(latitude));
+          localStorage.setItem("gk_lon", String(longitude));
           const res  = await fetch(
             `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
           );
@@ -95,27 +93,40 @@ export default function OnboardingModal({ onComplete }) {
           const city = data.address?.city || data.address?.town || data.address?.village || data.address?.county || "Votre région";
           localStorage.setItem("gk_location_name", city);
           setLocName(city);
+          setManualCity(""); // reset saisie manuelle si géoloc réussit
           setLocStatus("success");
         } catch {
-          setLocStatus("success"); // coords sauvegardées même sans géocodage
+          setLocStatus("success");
         }
       },
-      () => {
-        setLocStatus("error");
-      },
+      () => { setLocStatus("error"); },
       { timeout:10000, enableHighAccuracy:false }
     );
   };
 
+  // ── Saisie manuelle ville ──────────────────────────────────────────────────
+  const handleManualCity = (v) => {
+    setManualCity(v);
+    // Reset géoloc si l'utilisateur tape manuellement
+    if (v.length > 0 && locStatus === "success") {
+      setLocStatus("idle");
+      setLocName("");
+    }
+  };
+
   // ── Finalisation ───────────────────────────────────────────────────────────
   const handleFinish = () => {
+    // Ville finale : géoloc en priorité, sinon saisie manuelle
+    const finalCity = locStatus === "success" ? locName : manualCity.trim();
+    if (finalCity) localStorage.setItem("gk_location_name", finalCity);
+
     const profile = {
       pelouse:  gazon,
       sol,
       surface:  parseInt(surface),
       objectif,
+      ville:    finalCity,
     };
-    // Sauvegarde profil avec la même clé que useProfile
     try {
       localStorage.setItem("gk_profile_v1",      JSON.stringify(profile));
       localStorage.setItem("gk_onboarding_done", "true");
@@ -226,50 +237,85 @@ export default function OnboardingModal({ onComplete }) {
               Utilisée pour la météo locale et les conseils saisonniers adaptés à votre région.
             </div>
 
-            {/* Bouton localisation */}
+            {/* ── Géolocalisation automatique ── */}
             {locStatus === "idle" && (
-              <button onClick={detectLocation} style={{ ...btn.primary, marginBottom:8, fontSize:14, padding:"14px" }}>
-                📍 Autoriser ma localisation
+              <button onClick={detectLocation} style={{ ...btn.primary, marginBottom:6, fontSize:14, padding:"13px" }}>
+                📍 Détecter ma position automatiquement
               </button>
             )}
             {locStatus === "loading" && (
-              <div style={{ ...btn.primary, marginBottom:8, fontSize:14, padding:"14px", textAlign:"center", opacity:0.7 }}>
+              <div style={{ background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:12, padding:"13px 16px", marginBottom:6, textAlign:"center", fontSize:13, color:"#81c784" }}>
                 ⌛ Détection en cours...
               </div>
             )}
             {locStatus === "success" && (
-              <div style={{ background:"rgba(67,160,71,0.2)", border:"1px solid rgba(67,160,71,0.4)", borderRadius:12, padding:"12px 16px", marginBottom:8, display:"flex", alignItems:"center", gap:10 }}>
-                <span style={{ fontSize:20 }}>✅</span>
-                <div>
-                  <div style={{ fontSize:13, fontWeight:700, color:"#a5d6a7" }}>Localisation détectée !</div>
-                  {locName && <div style={{ fontSize:11, color:"#81c784", marginTop:2 }}>📍 {locName}</div>}
+              <div style={{ background:"rgba(67,160,71,0.2)", border:"1px solid rgba(67,160,71,0.4)", borderRadius:12, padding:"12px 16px", marginBottom:6, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                  <span style={{ fontSize:20 }}>✅</span>
+                  <div>
+                    <div style={{ fontSize:13, fontWeight:700, color:"#a5d6a7" }}>Position détectée</div>
+                    {locName && <div style={{ fontSize:11, color:"#81c784", marginTop:2 }}>📍 {locName}</div>}
+                  </div>
                 </div>
+                <button onClick={() => { setLocStatus("idle"); setLocName(""); }}
+                  style={{ background:"none", border:"none", color:"#81c784", fontSize:11, cursor:"pointer" }}>
+                  Modifier
+                </button>
               </div>
             )}
             {locStatus === "error" && (
-              <div style={{ background:"rgba(198,40,40,0.15)", border:"1px solid rgba(198,40,40,0.3)", borderRadius:12, padding:"12px 16px", marginBottom:8 }}>
-                <div style={{ fontSize:12, color:"#ef9a9a", marginBottom:6 }}>
-                  ⚠️ Localisation refusée — vous pourrez l'activer plus tard dans les paramètres.
-                </div>
-                <button onClick={detectLocation} style={{ ...btn.ghost, fontSize:12, padding:"6px 12px" }}>
+              <div style={{ background:"rgba(198,40,40,0.15)", border:"1px solid rgba(198,40,40,0.3)", borderRadius:12, padding:"10px 14px", marginBottom:6, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                <div style={{ fontSize:12, color:"#ef9a9a" }}>⚠️ Localisation refusée</div>
+                <button onClick={detectLocation} style={{ background:"none", border:"none", color:"#81c784", fontSize:11, cursor:"pointer" }}>
                   Réessayer
                 </button>
               </div>
             )}
 
-            <div style={{ fontSize:11, color:"#4a7c5c", textAlign:"center", marginBottom:20 }}>
-              Utilisée uniquement pour la météo — jamais partagée
+            {/* ── Séparateur ── */}
+            {locStatus !== "success" && (
+              <>
+                <div style={{ display:"flex", alignItems:"center", gap:10, margin:"12px 0" }}>
+                  <div style={{ flex:1, height:1, background:"rgba(255,255,255,0.1)" }} />
+                  <span style={{ fontSize:11, color:"#4a7c5c" }}>ou saisir manuellement</span>
+                  <div style={{ flex:1, height:1, background:"rgba(255,255,255,0.1)" }} />
+                </div>
+
+                {/* ── Saisie manuelle ── */}
+                <input
+                  type="text"
+                  placeholder="Votre ville (ex : Lyon, Bordeaux, Lille...)"
+                  value={manualCity}
+                  onChange={e => handleManualCity(e.target.value)}
+                  style={{
+                    width:"100%", background:"rgba(255,255,255,0.08)",
+                    border:`1px solid ${manualCity.length >= 2 ? "rgba(67,160,71,0.5)" : "rgba(165,214,167,0.3)"}`,
+                    borderRadius:12, padding:"12px 16px", color:"#e8f5e9",
+                    fontSize:14, outline:"none", fontFamily:"inherit",
+                    boxSizing:"border-box",
+                  }}
+                />
+                {manualCity.length >= 2 && (
+                  <div style={{ fontSize:11, color:"#81c784", marginTop:4 }}>
+                    ✓ Ville enregistrée : {manualCity}
+                  </div>
+                )}
+              </>
+            )}
+
+            <div style={{ fontSize:11, color:"#4a7c5c", textAlign:"center", margin:"12px 0" }}>
+              🔒 Utilisée uniquement pour la météo — jamais partagée
             </div>
 
-            {/* Résumé profil */}
-            <div style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(165,214,167,0.2)", borderRadius:16, padding:16, marginBottom:20 }}>
+            {/* ── Résumé profil ── */}
+            <div style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(165,214,167,0.2)", borderRadius:16, padding:16, marginBottom:16 }}>
               <div style={{ fontSize:13, fontWeight:700, color:"#a5d6a7", marginBottom:12 }}>✅ Votre profil Mon Gazon 360</div>
               {[
                 ["🎯 Objectif", OBJECTIFS.find(o=>o.id===objectif)?.label || objectif],
                 ["🌱 Gazon",    GAZONS.find(g=>g.id===gazon)?.label || gazon],
                 ["🏔️ Sol",      SOLS.find(s=>s.id===sol)?.label || sol],
                 ["📐 Surface",  `${surface} m²`],
-                ["📍 Lieu",     locName || (locStatus==="success" ? "Détecté" : "Non renseigné")],
+                ["📍 Ville",    locStatus==="success" ? locName : manualCity || "—"],
               ].map(([label, val]) => (
                 <div key={label} style={{ display:"flex", justifyContent:"space-between", padding:"5px 0", borderBottom:"1px solid rgba(255,255,255,0.05)", fontSize:12 }}>
                   <span style={{ color:"#81c784" }}>{label}</span>
@@ -278,16 +324,23 @@ export default function OnboardingModal({ onComplete }) {
               ))}
             </div>
 
-            <div style={{ background:"rgba(67,160,71,0.1)", border:"1px solid rgba(67,160,71,0.25)", borderRadius:12, padding:"12px 14px", marginBottom:20, fontSize:12, color:"#a5d6a7", lineHeight:1.6 }}>
+            <div style={{ background:"rgba(67,160,71,0.1)", border:"1px solid rgba(67,160,71,0.25)", borderRadius:12, padding:"10px 14px", marginBottom:16, fontSize:12, color:"#a5d6a7", lineHeight:1.6 }}>
               🌿 Votre score de santé sera calculé en temps réel grâce à ces informations, la météo locale et votre historique d'entretien.
             </div>
 
             <div style={{ display:"flex", gap:8 }}>
               <button onClick={() => setStep(2)} style={{ ...btn.ghost, flex:1, fontSize:13 }}>← Retour</button>
-              <button onClick={handleFinish} style={{ ...btn.primary, flex:2, fontSize:15, padding:"14px" }}>
+              <button onClick={handleFinish} disabled={!canFinish}
+                style={{ ...btn.primary, flex:2, fontSize:15, padding:"14px", opacity:canFinish?1:0.4 }}>
                 🚀 Démarrer Mon Gazon 360 !
               </button>
             </div>
+
+            {!canFinish && (
+              <div style={{ textAlign:"center", fontSize:11, color:"#4a7c5c", marginTop:8 }}>
+                Détectez votre position ou saisissez votre ville pour continuer
+              </div>
+            )}
           </div>
         )}
       </div>
