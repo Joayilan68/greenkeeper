@@ -9,6 +9,7 @@ import { calcLawnScore } from "../lib/lawnScore";
 import { generateNotifications } from "../lib/notifications";
 import { usePushNotifications } from "../lib/usePushNotifications";
 import AlertBanner from "../components/AlertBanner";
+import OnboardingModal from "../components/OnboardingModal";
 import { card, cardTitle, pill, btn, scroll, header } from "../lib/styles";
 import { useState, useEffect } from "react";
 
@@ -16,14 +17,23 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useUser();
   const { weather, location, locationName, alerts = [], loading, locLoading, refreshLocation } = useWeather() || {};
-  const { profile } = useProfile();
+  const { profile, setProfile } = useProfile();
   const { history = [] } = useHistory();
   const { isPaid = false, isAdmin = false } = useSubscription() || {};
-  const [showIssues, setShowIssues] = useState(false);
+  const [showIssues, setShowIssues]       = useState(false);
   const [dismissedNotifs, setDismissedNotifs] = useState([]);
   const [pushActivated, setPushActivated] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   const { permission, subscribe, sendTestNotification, sendAlert, isSupported } = usePushNotifications(user?.id);
+
+  // Afficher l'onboarding si pas encore fait et pas de profil
+  useEffect(() => {
+    const done = localStorage.getItem("gk_onboarding_done");
+    if (!done && !profile) {
+      setTimeout(() => setShowOnboarding(true), 800);
+    }
+  }, [profile]);
 
   const today = new Date();
   const month = today.getMonth() + 1;
@@ -50,6 +60,11 @@ export default function Dashboard() {
     if (success) { setPushActivated(true); await sendTestNotification(); }
   };
 
+  const handleOnboardingComplete = (newProfile) => {
+    if (setProfile) setProfile(newProfile);
+    setShowOnboarding(false);
+  };
+
   const NOTIF_COLORS = {
     danger:  { bg:"rgba(183,28,28,0.2)",  border:"rgba(229,57,53,0.4)",  badge:"#c62828" },
     warning: { bg:"rgba(230,81,0,0.2)",   border:"rgba(239,108,0,0.4)",  badge:"#e65100" },
@@ -58,6 +73,11 @@ export default function Dashboard() {
 
   return (
     <div>
+      {/* ── ONBOARDING MODAL ── */}
+      {showOnboarding && (
+        <OnboardingModal onComplete={handleOnboardingComplete} />
+      )}
+
       <div style={{ ...header, display:"flex", flexDirection:"column", alignItems:"center" }}>
         <div style={{ width:"100%", display:"flex", justifyContent:"space-between", alignItems:"center", paddingRight:4, marginBottom:8 }}>
           <div style={{ fontSize:11, color:"#81c784" }}>
@@ -75,7 +95,18 @@ export default function Dashboard() {
             <UserButton appearance={{ variables: { colorPrimary:"#43a047" } }} />
           </div>
         </div>
-        <div style={{ fontSize:24, fontWeight:800, color:"#a5d6a7" }}>
+
+        {/* ── NOM APP + SLOGAN ── */}
+        <div style={{ textAlign:"center", marginBottom:4 }}>
+          <div style={{ fontSize:11, color:"#4a7c5c", letterSpacing:2, textTransform:"uppercase", marginBottom:2 }}>
+            🌿 Mon Gazon 360
+          </div>
+          <div style={{ fontSize:9, color:"#4a7c5c", fontStyle:"italic", letterSpacing:0.5 }}>
+            Tant qu'il y a gazon, il y a match
+          </div>
+        </div>
+
+        <div style={{ fontSize:22, fontWeight:800, color:"#a5d6a7", marginTop:6 }}>
           Bonjour {user?.firstName || ""} 👋
         </div>
         {isAdmin && <div style={{ fontSize:11, color:"#f9a825", marginTop:2 }}>👑 Mode Admin</div>}
@@ -293,14 +324,16 @@ export default function Dashboard() {
             </div>
           ) : (
             <div style={{ textAlign:"center", padding:"10px 0" }}>
-              <div style={{ fontSize:13, color:"#81c784", marginBottom:10 }}>Configurez votre profil pour un score précis</div>
-              <button onClick={() => navigate("/setup")} style={{ ...btn.primary, width:"auto", padding:"8px 24px" }}>Configurer</button>
+              <div style={{ fontSize:13, color:"#81c784", marginBottom:6 }}>Configurez votre profil pour un score précis</div>
+              <button onClick={() => setShowOnboarding(true)} style={{ ...btn.primary, width:"auto", padding:"8px 24px" }}>
+                🚀 Configurer mon gazon
+              </button>
             </div>
           )}
         </div>
 
         {/* ── LIENS LÉGAUX ── */}
-        <div style={{ display:"flex", justifyContent:"center", flexWrap:"wrap", gap:12, padding:"8px 0 24px" }}>
+        <div style={{ display:"flex", justifyContent:"center", flexWrap:"wrap", gap:12, padding:"8px 0 8px" }}>
           {[
             { label:"Mentions légales", route:"/mentions-legales" },
             { label:"Confidentialité",  route:"/confidentialite" },
@@ -311,6 +344,13 @@ export default function Dashboard() {
               {label}
             </span>
           ))}
+        </div>
+
+        {/* ── SIGNATURE APP ── */}
+        <div style={{ textAlign:"center", padding:"8px 0 24px" }}>
+          <div style={{ fontSize:10, color:"#2d4a35", fontStyle:"italic" }}>
+            🌿 Mon Gazon 360 — Tant qu'il y a gazon, il y a match
+          </div>
         </div>
 
       </div>
