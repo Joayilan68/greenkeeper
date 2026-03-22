@@ -1,4 +1,5 @@
 import BottomNav from "./BottomNav";
+import AIAssistant from "./AIAssistant";
 import { appShell } from "../lib/styles";
 
 export default function Layout({ children }) {
@@ -6,6 +7,7 @@ export default function Layout({ children }) {
     <div style={appShell}>
       {children}
       <BottomNav />
+      <AIAssistant />
     </div>
   );
 }
