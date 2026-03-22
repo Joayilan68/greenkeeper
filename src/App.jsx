@@ -14,11 +14,14 @@ import Admin from "./pages/Admin";
 import Free from "./pages/Free";
 import Register from "./pages/Register";
 import Settings from "./pages/Settings";
+import Pilotage from "./pages/Pilotage";
 import { MentionsLegales, Confidentialite, CGU, CGV } from "./pages/Legal";
 import Layout from "./components/Layout";
 import { WeatherProvider } from "./lib/WeatherContext";
+import { usePilotage } from "./lib/usePilotage";
 
 function AppWithWeather({ children }) {
+  usePilotage();
   return <WeatherProvider>{children}</WeatherProvider>;
 }
 
@@ -56,6 +59,9 @@ export default function App() {
 
           {/* ── Paramètres & données ── */}
           <Route path="/parametres"        element={<ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>} />
+
+          {/* ── Pilotage Admin ── */}
+          <Route path="/pilotage"          element={<Layout><Pilotage /></Layout>} />
 
           {/* ── App principale ── */}
           <Route path="/"          element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
