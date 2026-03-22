@@ -4,46 +4,40 @@ import { useProfile } from "../lib/useProfile";
 import { useHistory } from "../lib/useHistory";
 import { useWeather } from "../lib/useWeather";
 import { useSubscription } from "../lib/useSubscription";
+import { useReminders } from "../lib/useReminders";
 import { calcLawnScore } from "../lib/lawnScore";
 import { MONTHLY_PLAN, MONTHS_FR, calcArrosage } from "../lib/lawn";
 import { card, cardTitle, btn, scroll, header } from "../lib/styles";
 
 const PRODUCTS = [
-  { name:"Anti-mousse liquide", score:"+15", price:"18,50€", icon:"🌿", reason:"Mousse détectée" },
-  { name:"Engrais azoté NPK", score:"+10", price:"24,90€", icon:"🌱", reason:"Carence nutriments" },
+  { name:"Anti-mousse liquide",    score:"+15", price:"18,50€", icon:"🌿", reason:"Mousse détectée" },
+  { name:"Engrais azoté NPK",      score:"+10", price:"24,90€", icon:"🌱", reason:"Carence nutriments" },
   { name:"Biostimulant racinaire", score:"+8",  price:"29,90€", icon:"💧", reason:"Stress hydrique" },
 ];
 
 export default function MyLawn() {
   const navigate = useNavigate();
-  const { profile } = useProfile();
-  const { history = [] } = useHistory();
-  const { weather } = useWeather() || {};
-  const { isPaid = false } = useSubscription() || {};
-  const [period, setPeriod] = useState("7j");
+  const { profile }          = useProfile();
+  const { history = [] }     = useHistory();
+  const { weather }          = useWeather() || {};
+  const { isPaid = false }   = useSubscription() || {};
+  const { activeCount }      = useReminders();
+  const [period, setPeriod]  = useState("7j");
 
   const month = new Date().getMonth() + 1;
-  const plan = MONTHLY_PLAN[month];
+  const plan  = MONTHLY_PLAN[month];
   const arros = profile && weather ? calcArrosage(month, profile, weather) : null;
   const { score, potential, label, color, issues, strengths } = calcLawnScore({ weather, profile, history, month });
 
-  // Score simulé -7j pour montrer l'évolution
   const scoreLastWeek = Math.max(0, score - Math.floor(Math.random() * 8 + 2));
-  const scoreDiff = score - scoreLastWeek;
+  const scoreDiff     = score - scoreLastWeek;
 
-  // Statistiques historique
   const countAction = (kw) => history.filter(h => h.action.toLowerCase().includes(kw)).length;
-  const lastAction = (kw) => {
-    const found = history.filter(h => h.action.toLowerCase().includes(kw));
-    return found.length ? found[found.length-1].date : null;
-  };
 
-  // Projection score
   const actionsDisponibles = issues.reduce((acc, i) => acc + Math.abs(i.impact), 0);
-  const projectionScore = Math.min(100, score + Math.round(actionsDisponibles * 0.6));
-  const projectionDays = issues.length <= 2 ? 7 : 14;
+  const projectionScore    = Math.min(100, score + Math.round(actionsDisponibles * 0.6));
+  const projectionDays     = issues.length <= 2 ? 7 : 14;
 
-  // Graphique score (simulation 7 derniers jours)
   const generateScoreHistory = () => {
     const points = [];
     for (let i = 6; i >= 0; i--) {
@@ -60,8 +54,20 @@ export default function MyLawn() {
   return (
     <div>
       <div style={header}>
-        <div style={{ fontSize:20, fontWeight:800, color:"#a5d6a7" }}>🌿 Mon Gazon</div>
-        <div style={{ fontSize:12, color:"#81c784", opacity:0.7, marginTop:4 }}>Centre de pilotage</div>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+          <div>
+            <div style={{ fontSize:20, fontWeight:800, color:"#a5d6a7" }}>🌿 Mon Gazon</div>
+            <div style={{ fontSize:12, color:"#81c784", opacity:0.7, marginTop:4 }}>Centre de pilotage</div>
+          </div>
+          <button onClick={() => navigate("/rappels")} style={{ background:"rgba(67,160,71,0.15)", border:"1px solid rgba(67,160,71,0.35)", borderRadius:10, padding:"7px 12px", color:"#a5d6a7", fontSize:12, cursor:"pointer", display:"flex", alignItems:"center", gap:6 }}>
+            🔔 Rappels
+            {activeCount > 0 && (
+              <span style={{ background:"#43a047", color:"#fff", borderRadius:10, padding:"1px 6px", fontSize:10, fontWeight:700 }}>
+                {activeCount}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
       <div style={scroll}>
@@ -75,9 +81,7 @@ export default function MyLawn() {
               <div style={{ fontSize:13, color, fontWeight:700, marginTop:2 }}>/100 — {label}</div>
             </div>
             <div style={{ textAlign:"right" }}>
-              <div style={{ fontSize:22, marginBottom:4 }}>
-                {scoreDiff >= 0 ? "📈" : "📉"}
-              </div>
+              <div style={{ fontSize:22, marginBottom:4 }}>{scoreDiff >= 0 ? "📈" : "📉"}</div>
               <div style={{ fontSize:13, fontWeight:700, color: scoreDiff >= 0 ? "#a5d6a7" : "#ef9a9a" }}>
                 {scoreDiff >= 0 ? "+" : ""}{scoreDiff} pts
               </div>
@@ -85,7 +89,6 @@ export default function MyLawn() {
             </div>
           </div>
 
-          {/* Barre de progression */}
           <div style={{ marginTop:14 }}>
             <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:"#81c784", marginBottom:4 }}>
               <span>0</span><span>Score actuel</span><span>100</span>
@@ -95,7 +98,6 @@ export default function MyLawn() {
             </div>
           </div>
 
-          {/* Projection */}
           <div style={{ marginTop:14, background:"rgba(249,168,37,0.15)", borderRadius:12, padding:"10px 14px", border:"1px solid rgba(249,168,37,0.3)" }}>
             <div style={{ fontSize:12, fontWeight:700, color:"#f9a825" }}>🎯 Projection personnalisée</div>
             <div style={{ fontSize:13, color:"#e8f5e9", marginTop:4 }}>
@@ -108,10 +110,10 @@ export default function MyLawn() {
         <div style={card()}>
           <div style={cardTitle}><span>📊 Détail du score</span>{!isPaid && <span style={{ fontSize:10, color:"#f9a825" }}>🔒 Premium</span>}</div>
           {[
-            { icon:"🌱", label:"Entretien régulier",  val: Math.min(100, 40 + countAction("tonte") * 10),   weight:40 },
-            { icon:"💧", label:"Hydratation",          val: weather ? Math.max(20, 100 - weather.temp_max * 2) : 60, weight:25 },
-            { icon:"🧪", label:"Nutriments",           val: Math.min(100, 50 + countAction("engrais") * 15), weight:20 },
-            { icon:"🌿", label:"Sol & aération",       val: profile?.sol === "argileux" ? 55 : 75,           weight:15 },
+            { icon:"🌱", label:"Entretien régulier", val: Math.min(100, 40 + countAction("tonte") * 10),    weight:40 },
+            { icon:"💧", label:"Hydratation",         val: weather ? Math.max(20, 100 - weather.temp_max * 2) : 60, weight:25 },
+            { icon:"🧪", label:"Nutriments",          val: Math.min(100, 50 + countAction("engrais") * 15), weight:20 },
+            { icon:"🌿", label:"Sol & aération",      val: profile?.sol === "argileux" ? 55 : 75,            weight:15 },
           ].map((item, i) => (
             <div key={i} style={{ marginBottom:10 }}>
               <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, marginBottom:4 }}>
@@ -176,7 +178,7 @@ export default function MyLawn() {
           ))}
         </div>
 
-        {/* ── 5. PLAN DE LA SEMAINE ── */}
+        {/* ── 5. PLAN DU MOIS ── */}
         <div style={card()}>
           <div style={cardTitle}><span>📅 Plan {MONTHS_FR[month]}</span></div>
           <div style={{ fontSize:13, color:"#f9a825", fontWeight:700, marginBottom:8 }}>{plan?.label}</div>
@@ -217,8 +219,8 @@ export default function MyLawn() {
                 </linearGradient>
               </defs>
               {(() => {
-                const pts = scoreHistory;
-                const range = maxScore - minScore || 1;
+                const pts    = scoreHistory;
+                const range  = maxScore - minScore || 1;
                 const coords = pts.map((v, i) => ({
                   x: (i / (pts.length-1)) * 300,
                   y: 70 - ((v - minScore) / range) * 60
@@ -229,9 +231,7 @@ export default function MyLawn() {
                   <>
                     <path d={areaD} fill="url(#scoreGrad)"/>
                     <path d={pathD} fill="none" stroke="#43a047" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    {coords.map((p,i) => (
-                      <circle key={i} cx={p.x} cy={p.y} r="3" fill="#43a047"/>
-                    ))}
+                    {coords.map((p,i) => <circle key={i} cx={p.x} cy={p.y} r="3" fill="#43a047"/>)}
                     <text x={coords[coords.length-1].x - 15} y={coords[coords.length-1].y - 8} fill="#a5d6a7" fontSize="10" fontWeight="bold">{score}</text>
                   </>
                 );
@@ -241,13 +241,11 @@ export default function MyLawn() {
           <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:"#81c784", marginTop:4 }}>
             <span>Il y a 7 jours</span><span>Aujourd'hui</span>
           </div>
-
-          {/* Stats */}
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, marginTop:12 }}>
             {[
-              { icon:"✂️", label:"Tontes", val:countAction("tonte") },
+              { icon:"✂️", label:"Tontes",    val:countAction("tonte") },
               { icon:"💧", label:"Arrosages", val:countAction("arrosage") },
-              { icon:"🌱", label:"Engrais", val:countAction("engrais") },
+              { icon:"🌱", label:"Engrais",   val:countAction("engrais") },
             ].map(({ icon, label, val }) => (
               <div key={label} style={{ background:"rgba(255,255,255,0.05)", borderRadius:10, padding:"8px", textAlign:"center" }}>
                 <div style={{ fontSize:18 }}>{icon}</div>
@@ -304,7 +302,7 @@ export default function MyLawn() {
           <div style={{ ...card(), background:"linear-gradient(135deg, rgba(249,168,37,0.15), rgba(230,81,0,0.1))", border:"1px solid rgba(249,168,37,0.4)", textAlign:"center" }}>
             <div style={{ fontSize:28, marginBottom:8 }}>⭐</div>
             <div style={{ fontSize:15, fontWeight:800, color:"#f9a825", marginBottom:8 }}>Passez Premium</div>
-            {["Détail complet du score", "Diagnostic illimité", "Arrosage précis calculé", "Produits personnalisés", "Notifications téléphone"].map(f => (
+            {["Détail complet du score","Diagnostic illimité","Arrosage précis calculé","Produits personnalisés","Rappels push + email"].map(f => (
               <div key={f} style={{ fontSize:12, color:"#e8f5e9", padding:"3px 0" }}>✔ {f}</div>
             ))}
             <button onClick={() => navigate("/subscribe")} style={{ ...btn.primary, marginTop:14, padding:"12px 28px", fontSize:14 }}>
@@ -313,19 +311,18 @@ export default function MyLawn() {
           </div>
         )}
 
-        {/* ── 10. PRÉDICTION ── */}
+        {/* ── 10. PRÉDICTION IA ── */}
         {isPaid && (
           <div style={{ ...card(), background:"linear-gradient(135deg, rgba(27,94,32,0.3), rgba(13,43,26,0.5))", border:"1px solid rgba(165,214,167,0.3)", textAlign:"center", padding:20 }}>
             <div style={{ fontSize:11, color:"#81c784", fontWeight:700, letterSpacing:1, marginBottom:8 }}>🧠 PRÉDICTION IA</div>
-            <div style={{ fontSize:14, color:"#e8f5e9", lineHeight:1.6 }}>
-              Si tu suis le plan cette semaine
-            </div>
+            <div style={{ fontSize:14, color:"#e8f5e9", lineHeight:1.6 }}>Si tu suis le plan cette semaine</div>
             <div style={{ fontSize:32, fontWeight:900, color:"#a5d6a7", margin:"8px 0" }}>{projectionScore}</div>
             <div style={{ fontSize:13, color:"#81c784" }}>Score estimé dans <strong style={{ color:"#a5d6a7" }}>{projectionDays} jours</strong></div>
             <div style={{ fontSize:12, color:"#f9a825", marginTop:8 }}>+{projectionScore - score} pts en suivant le plan ↗</div>
           </div>
         )}
 
+        <div style={{ paddingBottom:32 }} />
       </div>
     </div>
   );
