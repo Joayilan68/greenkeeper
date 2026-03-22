@@ -2,8 +2,20 @@
   "functions": {
     "api/analyze-lawn.js": {
       "maxDuration": 30
+    },
+    "api/weekly-report.js": {
+      "maxDuration": 30
+    },
+    "api/send-alert.js": {
+      "maxDuration": 10
     }
   },
+  "crons": [
+    {
+      "path": "/api/weekly-report",
+      "schedule": "0 8 * * 1"
+    }
+  ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
