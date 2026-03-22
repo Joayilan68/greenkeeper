@@ -17,7 +17,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useUser();
   const { weather, location, locationName, alerts = [], loading, locLoading, refreshLocation } = useWeather() || {};
-  const { profile, setProfile } = useProfile();
+  const { profile, saveProfile } = useProfile();
   const { history = [] } = useHistory();
   const { isPaid = false, isAdmin = false } = useSubscription() || {};
   const [showIssues, setShowIssues]       = useState(false);
@@ -61,7 +61,7 @@ export default function Dashboard() {
   };
 
   const handleOnboardingComplete = (newProfile) => {
-    if (setProfile) setProfile(newProfile);
+    saveProfile(newProfile);
     setShowOnboarding(false);
   };
 
