@@ -29,28 +29,24 @@ function TypingIndicator() {
 }
 
 export default function AIAssistant() {
+  // ── TOUS LES HOOKS EN PREMIER — règle absolue React ──────────────────────
   const { profile }        = useProfile();
   const { weather }        = useWeather() || {};
   const { history = [] }   = useHistory();
   const { isPaid = false, isAdmin = false } = useSubscription() || {};
 
-  const [open, setOpen]     = useState(false);
-  const [input, setInput]   = useState("");
+  const [open, setOpen]       = useState(false);
+  const [input, setInput]     = useState("");
   const [loading, setLoading] = useState(false);
-  const [messages, setMessages] = useState([
-    {
-      role:"assistant",
-      content:"Bonjour ! 🌿 Je suis GreenBot, votre assistant gazon. Posez-moi toutes vos questions sur l'entretien de votre pelouse !",
-    }
-  ]);
+  const [messages, setMessages] = useState([{
+    role:"assistant",
+    content:"Bonjour ! 🌿 Je suis GreenBot, votre assistant gazon. Posez-moi toutes vos questions sur l'entretien de votre pelouse !",
+  }]);
 
   const bottomRef = useRef();
   const inputRef  = useRef();
   const month     = new Date().getMonth() + 1;
   const { score } = calcLawnScore({ weather, profile, history, month });
-
-  // ── Invisible pour les comptes Free ──────────────────────────────────────
-  if (!isPaid && !isAdmin) return null;
 
   useEffect(() => {
     if (open) {
@@ -64,6 +60,9 @@ export default function AIAssistant() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior:"smooth" });
   }, [messages, loading]);
+
+  // ── RETURN CONDITIONNEL APRÈS TOUS LES HOOKS ─────────────────────────────
+  if (!isPaid && !isAdmin) return null;
 
   const sendMessage = async (text) => {
     const userText = (text || input).trim();
