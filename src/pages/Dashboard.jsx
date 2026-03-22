@@ -64,6 +64,11 @@ export default function Dashboard() {
             {today.toLocaleDateString("fr-FR", { weekday:"long", day:"numeric", month:"long" })}
           </div>
           <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+            {isAdmin && (
+              <button onClick={() => navigate("/pilotage")} style={{ background:"rgba(249,168,37,0.2)", border:"1px solid rgba(249,168,37,0.3)", borderRadius:8, padding:"4px 10px", color:"#f9a825", fontSize:11, cursor:"pointer" }}>
+                📊
+              </button>
+            )}
             <button onClick={() => navigate("/parametres")} style={{ background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.15)", borderRadius:8, padding:"4px 10px", color:"#81c784", fontSize:11, cursor:"pointer" }}>
               ⚙️
             </button>
@@ -104,16 +109,6 @@ export default function Dashboard() {
           {isPaid && hasDiag && diagScore !== null && (
             <div style={{ background:"rgba(33,150,243,0.12)", border:"1px solid rgba(66,165,245,0.3)", borderRadius:10, padding:"8px 12px", marginBottom:10, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
               <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-  {isAdmin && (
-    <button onClick={() => navigate("/pilotage")} style={{ background:"rgba(249,168,37,0.2)", border:"1px solid rgba(249,168,37,0.3)", borderRadius:8, padding:"4px 10px", color:"#f9a825", fontSize:11, cursor:"pointer" }}>
-      📊
-    </button>
-  )}
-  <button onClick={() => navigate("/parametres")} style={{ background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.15)", borderRadius:8, padding:"4px 10px", color:"#81c784", fontSize:11, cursor:"pointer" }}>
-    ⚙️
-  </button>
-  <UserButton appearance={{ variables: { colorPrimary:"#43a047" } }} />
-</div>
                 <span style={{ fontSize:20 }}>{diagEmoji}</span>
                 <div>
                   <div style={{ fontSize:11, fontWeight:700, color:"#90caf9" }}>📸 Diagnostic photo pris en compte</div>
