@@ -223,7 +223,13 @@ export default function Dashboard() {
                       </div>
                       <div style={{ fontSize:12, color:"#81c784", lineHeight:1.5, marginBottom:8 }}>{n.message}</div>
                       {n.action && (
-                        <button onClick={() => navigate(n.actionRoute)} style={{ background:c.badge, border:"none", borderRadius:8, padding:"6px 14px", color:"#fff", fontSize:12, fontWeight:700, cursor:"pointer" }}>
+  <button onClick={() => {
+    if (n.actionRoute === "/onboarding-location") {
+      setShowOnboarding(true);
+    } else {
+      navigate(n.actionRoute);
+    }
+  }} ...>
                           {n.action} →
                         </button>
                       )}

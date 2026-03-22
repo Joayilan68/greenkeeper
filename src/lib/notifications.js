@@ -33,7 +33,7 @@ export function generateNotifications({ weather, profile, history, month, score,
       title: "Géolocalisation inactive",
       message: "Activez la géolocalisation pour recevoir des alertes météo personnalisées et un score précis.",
       action: "Activer",
-      actionRoute: "/",
+      actionRoute: "/onboarding-location",
       impact: -10,
       priority: 1,
     });
