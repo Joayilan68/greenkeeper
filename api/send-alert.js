@@ -78,7 +78,7 @@ module.exports = async function handler(req, res) {
         "Authorization": `Bearer ${process.env.RESEND_API_KEY}`
       },
       body: JSON.stringify({
-        from:    "MG360 Pilotage <onboarding@resend.dev>",
+        from:    "Mon Gazon 360 <pilotage@mongazon360.fr>",
         to:      ["jordankrebs1@gmail.com"],
         subject: `${severityEmoji} [MG360] ${severityLabel} — ${type}`,
         html

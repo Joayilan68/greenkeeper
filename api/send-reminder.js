@@ -69,7 +69,7 @@ module.exports = async function handler(req, res) {
       method: "POST",
       headers: { "Content-Type":"application/json", "Authorization":`Bearer ${process.env.RESEND_API_KEY}` },
       body: JSON.stringify({
-        from:    "Mon Gazon 360 <onboarding@resend.dev>",
+        from:    "Mon Gazon 360 <pilotage@mongazon360.fr>",
         to:      [userEmail],
         subject: `🌿 [MG360] Rappel : ${reminders.map(r => r.label).join(", ")}`,
         html
