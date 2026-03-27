@@ -12,6 +12,11 @@ import AlertBanner from "../components/AlertBanner";
 import OnboardingModal from "../components/OnboardingModal";
 import { card, cardTitle, pill, btn, scroll, header } from "../lib/styles";
 import { useState, useEffect } from "react";
+// ── Nouveaux hooks ────────────────────────────────────────────────────────────
+import { useGreenPoints } from "../lib/useGreenPoints";
+import { useStreak } from "../lib/useStreak";
+import { useClassement } from "../lib/useClassement";
+import { useSaison } from "../lib/useSaison";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -26,6 +31,15 @@ export default function Dashboard() {
   const [showOnboarding, setShowOnboarding]   = useState(false);
 
   const { permission, subscribe, sendTestNotification, sendAlert, isSupported } = usePushNotifications(user?.id);
+
+  // ── Nouveaux hooks ──────────────────────────────────────────────────────────
+  const { classementActif } = useSaison();
+  const { total: gpTotal, palier, prochainPalier, progressPalier } = useGreenPoints();
+  const { actuel: streak, enDanger, modeHiver } = useStreak();
+  const {
+    ligueActuelle, position, totalJoueurs, pointsSemaine,
+    enZonePromotion, enZoneRetrogradation, joursRestants, messageClassement
+  } = useClassement();
 
   useEffect(() => {
     const done = localStorage.getItem("gk_onboarding_done");
@@ -62,7 +76,6 @@ export default function Dashboard() {
     setShowOnboarding(false);
   };
 
-  // Gestion centralisée des actions de notifications
   const handleNotifAction = (actionRoute) => {
     if (actionRoute === "/onboarding-location") {
       setShowOnboarding(true);
@@ -81,6 +94,7 @@ export default function Dashboard() {
     <div>
       {showOnboarding && <OnboardingModal onComplete={handleOnboardingComplete} />}
 
+      {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div style={{ ...header, display:"flex", flexDirection:"column", alignItems:"center" }}>
         <div style={{ width:"100%", display:"flex", justifyContent:"space-between", alignItems:"center", paddingRight:4, marginBottom:8 }}>
           <div style={{ fontSize:11, color:"#81c784" }}>
@@ -98,7 +112,6 @@ export default function Dashboard() {
             <UserButton appearance={{ variables: { colorPrimary:"#43a047" } }} />
           </div>
         </div>
-
         <div style={{ textAlign:"center", marginBottom:4 }}>
           <div style={{ fontSize:11, color:"#4a7c5c", letterSpacing:2, textTransform:"uppercase", marginBottom:2 }}>
             🌿 Mon Gazon 360
@@ -107,7 +120,6 @@ export default function Dashboard() {
             Tant qu'il y a gazon, il y a match
           </div>
         </div>
-
         <div style={{ fontSize:22, fontWeight:800, color:"#a5d6a7", marginTop:6 }}>
           Bonjour {user?.firstName || ""} 👋
         </div>
@@ -116,7 +128,7 @@ export default function Dashboard() {
 
       <div style={scroll}>
 
-        {/* ── SCORE ── */}
+        {/* ── SCORE ─────────────────────────────────────────────────────────── */}
         <div style={{ ...card(), background:"linear-gradient(135deg, rgba(27,94,32,0.4), rgba(13,43,26,0.6))", border:`1px solid ${color}44` }}>
           <div style={{ fontSize:11, color:"#81c784", fontWeight:700, letterSpacing:1.2, textTransform:"uppercase", marginBottom:12, textAlign:"center" }}>
             🌿 Score Santé du Gazon
@@ -200,7 +212,129 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* ── NOTIFICATIONS INTELLIGENTES ── */}
+        {/* ── WIDGET GREENPOINTS + STREAK ───────────────────────────────────── */}
+        <div style={{ ...card(), padding:14 }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+            <span style={{ fontWeight:700, color:"#a5d6a7", fontSize:14 }}>🌿 GreenPoints</span>
+            <span style={{
+              background:  palier?.couleur || "#2e7d32",
+              color:       "white",
+              borderRadius: 20,
+              padding:     "2px 10px",
+              fontSize:    11,
+              fontWeight:  600,
+            }}>
+              {palier?.icone} {palier?.label}
+            </span>
+          </div>
+
+          <div style={{ display:"flex", alignItems:"baseline", gap:6, marginBottom:8 }}>
+            <span style={{ fontSize:30, fontWeight:800, color:"#a5d6a7" }}>
+              {gpTotal.toLocaleString("fr-FR")}
+            </span>
+            <span style={{ color:"#81c784", fontSize:12 }}>pts</span>
+          </div>
+
+          {prochainPalier && (
+            <div style={{ marginBottom:10 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:"#81c784", marginBottom:3 }}>
+                <span>{palier?.label}</span>
+                <span>{prochainPalier.icone} {prochainPalier.label} — {prochainPalier.min.toLocaleString("fr-FR")} pts</span>
+              </div>
+              <div style={{ background:"rgba(255,255,255,0.1)", borderRadius:8, height:6, overflow:"hidden" }}>
+                <div style={{
+                  width:      `${progressPalier}%`,
+                  height:     "100%",
+                  background: "linear-gradient(90deg, #43a047, #a5d6a7)",
+                  borderRadius: 8,
+                  transition: "width 0.8s ease",
+                }}/>
+              </div>
+            </div>
+          )}
+
+          <div style={{
+            display:      "flex",
+            alignItems:   "center",
+            gap:          8,
+            padding:      "8px 10px",
+            background:   enDanger ? "rgba(230,81,0,0.15)" : modeHiver ? "rgba(21,101,192,0.15)" : "rgba(76,175,80,0.15)",
+            borderRadius: 10,
+            border:       `1px solid ${enDanger ? "rgba(239,108,0,0.3)" : modeHiver ? "rgba(66,165,245,0.3)" : "rgba(76,175,80,0.2)"}`,
+          }}>
+            <span style={{ fontSize:20 }}>
+              {modeHiver ? "🛡️" : enDanger ? "⚠️" : "🔥"}
+            </span>
+            <div style={{ flex:1 }}>
+              <div style={{ fontWeight:600, fontSize:13, color: enDanger ? "#ef9a9a" : modeHiver ? "#90caf9" : "#a5d6a7" }}>
+                {modeHiver ? `Streak protégé — ${streak} jours` : `${streak} jour${streak > 1 ? "s" : ""} de streak`}
+              </div>
+              <div style={{ fontSize:10, color:"#81c784" }}>
+                {modeHiver ? "1 connexion/semaine suffit cet hiver" : enDanger ? "Connecte-toi aujourd'hui !" : "Continue comme ça !"}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── WIDGET CLASSEMENT ─────────────────────────────────────────────── */}
+        <div style={{ ...card(), padding:14 }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+            <span style={{ fontWeight:700, color:"#a5d6a7", fontSize:14 }}>🏆 Classement</span>
+            {classementActif ? (
+              <span style={{
+                background:  ligueActuelle?.couleurBg || "rgba(76,175,80,0.2)",
+                color:       ligueActuelle?.couleur || "#43a047",
+                borderRadius: 20,
+                padding:     "2px 10px",
+                fontSize:    11,
+                fontWeight:  600,
+                border:      `1px solid ${ligueActuelle?.couleur || "#43a047"}44`,
+              }}>
+                {ligueActuelle?.icone} Ligue {ligueActuelle?.label}
+              </span>
+            ) : (
+              <span style={{ fontSize:11, color:"#81c784" }}>😴 En pause</span>
+            )}
+          </div>
+
+          {classementActif ? (
+            <>
+              <div style={{ display:"flex", alignItems:"baseline", gap:6, marginBottom:8 }}>
+                <span style={{ fontSize:30, fontWeight:800, color:"#a5d6a7" }}>
+                  {position}<span style={{ fontSize:14, color:"#81c784" }}>e</span>
+                </span>
+                <span style={{ fontSize:12, color:"#81c784" }}>
+                  / {totalJoueurs} joueurs · {pointsSemaine} pts cette semaine
+                </span>
+              </div>
+              <div style={{
+                padding:      "8px 10px",
+                background:   enZonePromotion ? "rgba(76,175,80,0.15)" : enZoneRetrogradation ? "rgba(230,81,0,0.15)" : "rgba(255,255,255,0.05)",
+                borderRadius: 10,
+                color:        enZonePromotion ? "#a5d6a7" : enZoneRetrogradation ? "#ef9a9a" : "#81c784",
+                fontSize:     12,
+                fontWeight:   500,
+                marginBottom: 10,
+              }}>
+                {messageClassement}
+                {joursRestants <= 2 && <span style={{ fontWeight:700, color:"#f9a825" }}> — ⏰ Urgence !</span>}
+              </div>
+              <button
+                onClick={() => navigate("/classement")}
+                style={{ width:"100%", background:"rgba(76,175,80,0.2)", color:"#a5d6a7", border:"1px solid rgba(76,175,80,0.3)", borderRadius:10, padding:"9px", fontSize:12, fontWeight:600, cursor:"pointer" }}
+              >
+                Voir le classement complet →
+              </button>
+            </>
+          ) : (
+            <div style={{ textAlign:"center", padding:"8px 0" }}>
+              <div style={{ fontSize:13, color:"#81c784", marginBottom:4 }}>😴 Classement en pause jusqu'en février</div>
+              <div style={{ fontSize:11, color:"#4a7c5c" }}>Profite de l'hiver pour préparer ta saison !</div>
+            </div>
+          )}
+        </div>
+
+        {/* ── NOTIFICATIONS INTELLIGENTES ───────────────────────────────────── */}
         {notifications.length > 0 && (
           <div style={{ marginBottom:4 }}>
             <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8, padding:"0 2px" }}>
@@ -223,10 +357,7 @@ export default function Dashboard() {
                       </div>
                       <div style={{ fontSize:12, color:"#81c784", lineHeight:1.5, marginBottom:8 }}>{n.message}</div>
                       {n.action && (
-                        <button
-                          onClick={() => handleNotifAction(n.actionRoute)}
-                          style={{ background:c.badge, border:"none", borderRadius:8, padding:"6px 14px", color:"#fff", fontSize:12, fontWeight:700, cursor:"pointer" }}
-                        >
+                        <button onClick={() => handleNotifAction(n.actionRoute)} style={{ background:c.badge, border:"none", borderRadius:8, padding:"6px 14px", color:"#fff", fontSize:12, fontWeight:700, cursor:"pointer" }}>
                           {n.action} →
                         </button>
                       )}
@@ -244,7 +375,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* ── PUSH NOTIFICATIONS ── */}
+        {/* ── PUSH NOTIFICATIONS ────────────────────────────────────────────── */}
         {isSupported && isPaid && permission !== "granted" && (
           <div style={{ ...card(), background:"rgba(76,175,80,0.1)", border:"1px solid rgba(76,175,80,0.3)", textAlign:"center", padding:16 }}>
             <div style={{ fontSize:22, marginBottom:8 }}>🔔</div>
@@ -264,10 +395,10 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* ── ALERTES MÉTÉO ── */}
+        {/* ── ALERTES MÉTÉO ─────────────────────────────────────────────────── */}
         {isPaid && alerts.map((a, i) => <AlertBanner key={i} alert={a} />)}
 
-        {/* ── MÉTÉO ── */}
+        {/* ── MÉTÉO ─────────────────────────────────────────────────────────── */}
         {isPaid ? (
           <div style={{ ...card(), background:"linear-gradient(135deg,rgba(46,125,50,0.3),rgba(27,94,32,0.2))", border:"1px solid rgba(165,214,167,0.2)" }}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
@@ -306,7 +437,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* ── PROFIL ── */}
+        {/* ── PROFIL ────────────────────────────────────────────────────────── */}
         <div style={card()}>
           <div style={cardTitle}>
             <span>👤 Mon profil</span>
@@ -335,7 +466,7 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* ── LIENS LÉGAUX ── */}
+        {/* ── LIENS LÉGAUX ──────────────────────────────────────────────────── */}
         <div style={{ display:"flex", justifyContent:"center", flexWrap:"wrap", gap:12, padding:"8px 0 8px" }}>
           {[
             { label:"Mentions légales", route:"/mentions-legales" },
