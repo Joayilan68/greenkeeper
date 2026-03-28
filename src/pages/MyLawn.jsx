@@ -5,6 +5,8 @@ import { useHistory } from "../lib/useHistory";
 import { useWeather } from "../lib/useWeather";
 import { useSubscription } from "../lib/useSubscription";
 import { useReminders } from "../lib/useReminders";
+import { useRecommandations } from "../lib/useRecommandations";
+import { useSaison } from "../lib/useSaison";
 import { calcLawnScore } from "../lib/lawnScore";
 import { MONTHLY_PLAN, MONTHS_FR, calcArrosage } from "../lib/lawn";
 import { card, cardTitle, btn, scroll, header } from "../lib/styles";
@@ -15,151 +17,69 @@ const PRODUCTS = [
   { name:"Biostimulant racinaire", score:"+8",  price:"29,90€", icon:"💧", reason:"Stress hydrique" },
 ];
 
-// ── Composant partage ──────────────────────────────────────────────────────
 function ShareScore({ score, label, profile }) {
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied]     = useState(false);
   const [showPanel, setShowPanel] = useState(false);
-
-  const appUrl  = "https://greenkeeper-five.vercel.app";
-  const emoji   = score >= 85 ? "🏆" : score >= 70 ? "😊" : score >= 55 ? "😐" : score >= 40 ? "😟" : "😰";
-  const gazon   = profile?.pelouse ? ` Mon ${profile.pelouse}` : " Mon gazon";
-  const surface = profile?.surface ? ` (${profile.surface}m²)` : "";
-
-  const message = `${emoji}${gazon}${surface} a un score de santé de ${score}/100 sur Mon Gazon 360 !\n🌿 "${label}"\n\nSuivez votre gazon en temps réel :\n${appUrl}`;
+  const appUrl        = "https://mongazon360.fr";
+  const emoji         = score >= 85 ? "🏆" : score >= 70 ? "😊" : score >= 55 ? "😐" : score >= 40 ? "😟" : "😰";
+  const gazon         = profile?.pelouse ? ` Mon ${profile.pelouse}` : " Mon gazon";
+  const surface       = profile?.surface ? ` (${profile.surface}m²)` : "";
+  const message       = `${emoji}${gazon}${surface} a un score de santé de ${score}/100 sur Mon Gazon 360 !\n🌿 "${label}"\n\nSuivez votre gazon en temps réel :\n${appUrl}`;
   const messageEncoded = encodeURIComponent(message);
-  const urlEncoded     = encodeURIComponent(appUrl);
-  const titleEncoded   = encodeURIComponent(`Mon score gazon : ${score}/100 ${emoji}`);
-
+  const urlEncoded    = encodeURIComponent(appUrl);
   const SHARE_OPTIONS = [
-    {
-      id:"whatsapp",
-      icon:"💬",
-      label:"WhatsApp",
-      color:"#25D366",
-      bg:"rgba(37,211,102,0.15)",
-      border:"rgba(37,211,102,0.35)",
-      action: () => window.open(`https://wa.me/?text=${messageEncoded}`, "_blank"),
-    },
-    {
-      id:"facebook",
-      icon:"📘",
-      label:"Facebook",
-      color:"#1877F2",
-      bg:"rgba(24,119,242,0.15)",
-      border:"rgba(24,119,242,0.35)",
-      action: () => window.open(`https://www.facebook.com/sharer/sharer.php?u=${urlEncoded}&quote=${messageEncoded}`, "_blank"),
-    },
-    {
-      id:"twitter",
-      icon:"🐦",
-      label:"Twitter / X",
-      color:"#1DA1F2",
-      bg:"rgba(29,161,242,0.15)",
-      border:"rgba(29,161,242,0.35)",
-      action: () => window.open(`https://twitter.com/intent/tweet?text=${messageEncoded}`, "_blank"),
-    },
-    {
-      id:"instagram",
-      icon:"📸",
-      label:"Instagram",
-      color:"#E1306C",
-      bg:"rgba(225,48,108,0.15)",
-      border:"rgba(225,48,108,0.35)",
-      action: () => {
-        navigator.clipboard.writeText(message);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 3000);
-      },
-    },
-    {
-      id:"copy",
-      icon:"🔗",
-      label:"Copier le lien",
-      color:"#a5d6a7",
-      bg:"rgba(165,214,167,0.1)",
-      border:"rgba(165,214,167,0.25)",
-      action: () => {
-        navigator.clipboard.writeText(`${message}`);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 3000);
-      },
-    },
+    { id:"whatsapp", icon:"💬", label:"WhatsApp",    color:"#25D366", bg:"rgba(37,211,102,0.15)",  border:"rgba(37,211,102,0.35)",  action: () => window.open(`https://wa.me/?text=${messageEncoded}`, "_blank") },
+    { id:"facebook", icon:"📘", label:"Facebook",    color:"#1877F2", bg:"rgba(24,119,242,0.15)",  border:"rgba(24,119,242,0.35)",  action: () => window.open(`https://www.facebook.com/sharer/sharer.php?u=${urlEncoded}&quote=${messageEncoded}`, "_blank") },
+    { id:"twitter",  icon:"🐦", label:"Twitter / X", color:"#1DA1F2", bg:"rgba(29,161,242,0.15)",  border:"rgba(29,161,242,0.35)",  action: () => window.open(`https://twitter.com/intent/tweet?text=${messageEncoded}`, "_blank") },
+    { id:"instagram",icon:"📸", label:"Instagram",   color:"#E1306C", bg:"rgba(225,48,108,0.15)",  border:"rgba(225,48,108,0.35)",  action: () => { navigator.clipboard.writeText(message); setCopied(true); setTimeout(() => setCopied(false), 3000); } },
+    { id:"copy",     icon:"🔗", label:"Copier",      color:"#a5d6a7", bg:"rgba(165,214,167,0.1)",  border:"rgba(165,214,167,0.25)", action: () => { navigator.clipboard.writeText(message); setCopied(true); setTimeout(() => setCopied(false), 3000); } },
   ];
-
   return (
     <div style={{ marginTop:12 }}>
-      <button
-        onClick={() => setShowPanel(!showPanel)}
-        style={{ ...btn.ghost, fontSize:13, display:"flex", alignItems:"center", gap:8, justifyContent:"center" }}
-      >
+      <button onClick={() => setShowPanel(!showPanel)} style={{ ...btn.ghost, fontSize:13, display:"flex", alignItems:"center", gap:8, justifyContent:"center" }}>
         📤 Partager mon score {showPanel ? "▲" : "▼"}
       </button>
-
       {showPanel && (
         <div style={{ marginTop:10 }}>
-          {/* Aperçu du message */}
           <div style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:12, padding:"12px 14px", marginBottom:12 }}>
             <div style={{ fontSize:10, color:"#81c784", fontWeight:700, marginBottom:6, letterSpacing:1 }}>APERÇU DU MESSAGE</div>
             <div style={{ fontSize:12, color:"#e8f5e9", lineHeight:1.7, whiteSpace:"pre-line" }}>{message}</div>
           </div>
-
-          {/* Feedback copié */}
-          {copied && (
-            <div style={{ background:"rgba(67,160,71,0.2)", border:"1px solid rgba(67,160,71,0.4)", borderRadius:10, padding:"8px 12px", marginBottom:10, fontSize:12, color:"#a5d6a7", textAlign:"center" }}>
-              ✅ Message copié dans le presse-papier !
-            </div>
-          )}
-
-          {/* Boutons réseaux */}
+          {copied && <div style={{ background:"rgba(67,160,71,0.2)", border:"1px solid rgba(67,160,71,0.4)", borderRadius:10, padding:"8px 12px", marginBottom:10, fontSize:12, color:"#a5d6a7", textAlign:"center" }}>✅ Message copié !</div>}
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
             {SHARE_OPTIONS.map(opt => (
-              <button
-                key={opt.id}
-                onClick={opt.action}
-                style={{
-                  background: opt.bg,
-                  border: `1px solid ${opt.border}`,
-                  borderRadius:12, padding:"10px 8px",
-                  color: opt.color, fontSize:12, fontWeight:700,
-                  cursor:"pointer", display:"flex", alignItems:"center",
-                  justifyContent:"center", gap:6,
-                }}
-              >
-                <span style={{ fontSize:16 }}>{opt.icon}</span>
-                {opt.label}
+              <button key={opt.id} onClick={opt.action} style={{ background:opt.bg, border:`1px solid ${opt.border}`, borderRadius:12, padding:"10px 8px", color:opt.color, fontSize:12, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
+                <span style={{ fontSize:16 }}>{opt.icon}</span>{opt.label}
               </button>
             ))}
           </div>
-
-          <div style={{ fontSize:10, color:"#4a7c5c", textAlign:"center", marginTop:8 }}>
-            📱 Instagram : le message est copié — collez-le dans votre story ou post
-          </div>
+          <div style={{ fontSize:10, color:"#4a7c5c", textAlign:"center", marginTop:8 }}>📱 Instagram : le message est copié — collez-le dans votre story</div>
         </div>
       )}
     </div>
   );
 }
 
-// ── Page principale ────────────────────────────────────────────────────────
 export default function MyLawn() {
-  const navigate             = useNavigate();
-  const { profile }          = useProfile();
-  const { history = [] }     = useHistory();
-  const { weather }          = useWeather() || {};
-  const { isPaid = false }   = useSubscription() || {};
-  const { activeCount }      = useReminders();
-  const [period, setPeriod]  = useState("7j");
+  const navigate           = useNavigate();
+  const { profile }        = useProfile();
+  const { history = [] }   = useHistory();
+  const { weather }        = useWeather() || {};
+  const { isPaid = false } = useSubscription() || {};
+  const { activeCount }    = useReminders();
+  const [period, setPeriod] = useState("7j");
 
   const month = new Date().getMonth() + 1;
   const plan  = MONTHLY_PLAN[month];
   const arros = profile && weather ? calcArrosage(month, profile, weather) : null;
   const { score, potential, label, color, issues, strengths } = calcLawnScore({ weather, profile, history, month });
 
-  const scoreLastWeek = Math.max(0, score - Math.floor(Math.random() * 8 + 2));
-  const scoreDiff     = score - scoreLastWeek;
+  // ── Conseil du mois (nouveau) ──
+  const { recommandationPrincipale } = useRecommandations(profile, score, weather);
 
-  const countAction = (kw) => history.filter(h => h.action.toLowerCase().includes(kw)).length;
-
+  const scoreLastWeek      = Math.max(0, score - Math.floor(Math.random() * 8 + 2));
+  const scoreDiff          = score - scoreLastWeek;
+  const countAction        = (kw) => history.filter(h => h.action.toLowerCase().includes(kw)).length;
   const actionsDisponibles = issues.reduce((acc, i) => acc + Math.abs(i.impact), 0);
   const projectionScore    = Math.min(100, score + Math.round(actionsDisponibles * 0.6));
   const projectionDays     = issues.length <= 2 ? 7 : 14;
@@ -187,11 +107,7 @@ export default function MyLawn() {
           </div>
           <button onClick={() => navigate("/rappels")} style={{ background:"rgba(67,160,71,0.15)", border:"1px solid rgba(67,160,71,0.35)", borderRadius:10, padding:"7px 12px", color:"#a5d6a7", fontSize:12, cursor:"pointer", display:"flex", alignItems:"center", gap:6 }}>
             🔔 Rappels
-            {activeCount > 0 && (
-              <span style={{ background:"#43a047", color:"#fff", borderRadius:10, padding:"1px 6px", fontSize:10, fontWeight:700 }}>
-                {activeCount}
-              </span>
-            )}
+            {activeCount > 0 && <span style={{ background:"#43a047", color:"#fff", borderRadius:10, padding:"1px 6px", fontSize:10, fontWeight:700 }}>{activeCount}</span>}
           </button>
         </div>
       </div>
@@ -208,13 +124,10 @@ export default function MyLawn() {
             </div>
             <div style={{ textAlign:"right" }}>
               <div style={{ fontSize:22, marginBottom:4 }}>{scoreDiff >= 0 ? "📈" : "📉"}</div>
-              <div style={{ fontSize:13, fontWeight:700, color: scoreDiff >= 0 ? "#a5d6a7" : "#ef9a9a" }}>
-                {scoreDiff >= 0 ? "+" : ""}{scoreDiff} pts
-              </div>
+              <div style={{ fontSize:13, fontWeight:700, color: scoreDiff >= 0 ? "#a5d6a7" : "#ef9a9a" }}>{scoreDiff >= 0 ? "+" : ""}{scoreDiff} pts</div>
               <div style={{ fontSize:10, color:"#81c784" }}>vs 7 jours</div>
             </div>
           </div>
-
           <div style={{ marginTop:14 }}>
             <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:"#81c784", marginBottom:4 }}>
               <span>0</span><span>Score actuel</span><span>100</span>
@@ -223,53 +136,52 @@ export default function MyLawn() {
               <div style={{ width:`${score}%`, height:"100%", background:`linear-gradient(90deg, ${color}, #a5d6a7)`, borderRadius:10, transition:"width 1s ease" }} />
             </div>
           </div>
-
           <div style={{ marginTop:14, background:"rgba(249,168,37,0.15)", borderRadius:12, padding:"10px 14px", border:"1px solid rgba(249,168,37,0.3)" }}>
             <div style={{ fontSize:12, fontWeight:700, color:"#f9a825" }}>🎯 Projection personnalisée</div>
-            <div style={{ fontSize:13, color:"#e8f5e9", marginTop:4 }}>
-              En suivant le plan → <span style={{ fontWeight:800, color:"#a5d6a7" }}>{projectionScore}/100</span> dans <span style={{ fontWeight:800 }}>{projectionDays} jours</span>
-            </div>
+            <div style={{ fontSize:13, color:"#e8f5e9", marginTop:4 }}>En suivant le plan → <span style={{ fontWeight:800, color:"#a5d6a7" }}>{projectionScore}/100</span> dans <span style={{ fontWeight:800 }}>{projectionDays} jours</span></div>
           </div>
-
-          {/* ── PARTAGE DU SCORE ── */}
           <ShareScore score={score} label={label} profile={profile} />
         </div>
 
-        {/* ── 2. DÉTAIL DU SCORE ── */}
+        {/* ── 2. CONSEIL DU MOIS ── */}
+        {recommandationPrincipale && (
+          <div style={{ ...card(), border:"1px solid rgba(76,175,80,0.3)", background:"rgba(76,175,80,0.08)" }}>
+            <div style={cardTitle}>
+              <span>{recommandationPrincipale.icone} Conseil du mois</span>
+              <span style={{ fontSize:11, color: recommandationPrincipale.urgence === "haute" ? "#c62828" : "#f57f17", fontWeight:600 }}>
+                {recommandationPrincipale.urgence === "haute" ? "🔴 Maintenant" : "🟡 Bientôt"}
+              </span>
+            </div>
+            <div style={{ fontWeight:700, color:"#e8f5e9", fontSize:14, marginBottom:6 }}>{recommandationPrincipale.label}</div>
+            <div style={{ fontSize:12, color:"#81c784", lineHeight:1.5, marginBottom:12 }}>{recommandationPrincipale.message(score)}</div>
+            <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+              <span style={{ background:"rgba(76,175,80,0.2)", color:"#a5d6a7", borderRadius:8, padding:"4px 10px", fontSize:11, fontWeight:600 }}>📈 {recommandationPrincipale.impact_score}</span>
+              <button onClick={() => navigate("/products")} style={{ marginLeft:"auto", background:"rgba(76,175,80,0.3)", color:"#e8f5e9", border:"1px solid rgba(76,175,80,0.4)", borderRadius:10, padding:"8px 16px", fontSize:12, fontWeight:600, cursor:"pointer" }}>Voir le produit →</button>
+            </div>
+          </div>
+        )}
+
+        {/* ── 3. DÉTAIL DU SCORE ── */}
         <div style={card()}>
           <div style={cardTitle}><span>📊 Détail du score</span>{!isPaid && <span style={{ fontSize:10, color:"#f9a825" }}>🔒 Premium</span>}</div>
           {[
-            { icon:"🌱", label:"Entretien régulier", val: Math.min(100, 40 + countAction("tonte") * 10),    weight:40 },
-            { icon:"💧", label:"Hydratation",         val: weather ? Math.max(20, 100 - weather.temp_max * 2) : 60, weight:25 },
-            { icon:"🧪", label:"Nutriments",          val: Math.min(100, 50 + countAction("engrais") * 15), weight:20 },
-            { icon:"🌿", label:"Sol & aération",      val: profile?.sol === "argileux" ? 55 : 75,            weight:15 },
+            { icon:"🌱", label:"Entretien régulier", val: Math.min(100, 40 + countAction("tonte") * 10) },
+            { icon:"💧", label:"Hydratation",         val: weather ? Math.max(20, 100 - weather.temp_max * 2) : 60 },
+            { icon:"🧪", label:"Nutriments",          val: Math.min(100, 50 + countAction("engrais") * 15) },
+            { icon:"🌿", label:"Sol & aération",      val: profile?.sol === "argileux" ? 55 : 75 },
           ].map((item, i) => (
             <div key={i} style={{ marginBottom:10 }}>
               <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, marginBottom:4 }}>
                 <span>{item.icon} {item.label}</span>
-                {isPaid || i < 2 ? (
-                  <span style={{ fontWeight:700, color: item.val >= 70 ? "#a5d6a7" : item.val >= 50 ? "#f9a825" : "#ef9a9a" }}>
-                    {item.val}/100
-                  </span>
-                ) : (
-                  <span style={{ color:"#f9a825", fontSize:11 }}>🔒 Premium</span>
-                )}
+                {isPaid || i < 2 ? <span style={{ fontWeight:700, color: item.val >= 70 ? "#a5d6a7" : item.val >= 50 ? "#f9a825" : "#ef9a9a" }}>{item.val}/100</span> : <span style={{ color:"#f9a825", fontSize:11 }}>🔒 Premium</span>}
               </div>
-              {(isPaid || i < 2) && (
-                <div style={{ height:6, background:"rgba(255,255,255,0.1)", borderRadius:6, overflow:"hidden" }}>
-                  <div style={{ width:`${item.val}%`, height:"100%", background: item.val >= 70 ? "#43a047" : item.val >= 50 ? "#f9a825" : "#c62828", borderRadius:6 }} />
-                </div>
-              )}
+              {(isPaid || i < 2) && <div style={{ height:6, background:"rgba(255,255,255,0.1)", borderRadius:6, overflow:"hidden" }}><div style={{ width:`${item.val}%`, height:"100%", background: item.val >= 70 ? "#43a047" : item.val >= 50 ? "#f9a825" : "#c62828", borderRadius:6 }} /></div>}
             </div>
           ))}
-          {!isPaid && (
-            <button onClick={() => navigate("/subscribe")} style={{ ...btn.primary, fontSize:12, padding:"8px 16px", width:"auto", marginTop:4 }}>
-              ⭐ Voir le détail complet
-            </button>
-          )}
+          {!isPaid && <button onClick={() => navigate("/subscribe")} style={{ ...btn.primary, fontSize:12, padding:"8px 16px", width:"auto", marginTop:4 }}>⭐ Voir le détail complet</button>}
         </div>
 
-        {/* ── 3. PROBLÈMES PRIORITAIRES ── */}
+        {/* ── 4. PROBLÈMES PRIORITAIRES ── */}
         {issues.length > 0 && (
           <div style={card()}>
             <div style={cardTitle}><span>⚠️ Problèmes prioritaires</span></div>
@@ -279,33 +191,9 @@ export default function MyLawn() {
                 <span style={{ fontSize:12, fontWeight:700, color:"#ef9a9a" }}>{issue.impact} pts</span>
               </div>
             ))}
-            {!isPaid && issues.length > 2 && (
-              <div style={{ fontSize:12, color:"#f9a825", textAlign:"center", marginTop:6 }}>
-                🔒 +{issues.length - 2} problème{issues.length-2>1?"s":""} masqué{issues.length-2>1?"s":""} — <span style={{ cursor:"pointer", textDecoration:"underline" }} onClick={() => navigate("/subscribe")}>Premium</span>
-              </div>
-            )}
+            {!isPaid && issues.length > 2 && <div style={{ fontSize:12, color:"#f9a825", textAlign:"center", marginTop:6 }}>🔒 +{issues.length - 2} problème{issues.length-2>1?"s":""} masqué{issues.length-2>1?"s":""} — <span style={{ cursor:"pointer", textDecoration:"underline" }} onClick={() => navigate("/subscribe")}>Premium</span></div>}
           </div>
         )}
-
-        {/* ── 4. ACTIONS DU JOUR ── */}
-        <div style={{ ...card(), background:"rgba(76,175,80,0.08)", border:"1px solid rgba(76,175,80,0.25)" }}>
-          <div style={cardTitle}><span>🎯 Actions recommandées aujourd'hui</span></div>
-          {[
-            ...(arros ? [{ icon:"💧", text:`Arroser ${arros.minutes} min`, gain:"+5 pts", route:"/today" }] : []),
-            { icon:"✂️", text:`Tondre à ${plan?.hauteur || "4"} cm`, gain:"+3 pts", route:"/today" },
-            ...(plan?.engrais ? [{ icon:"🌱", text:"Appliquer engrais", gain:"+8 pts", route:"/today" }] : []),
-          ].slice(0,3).map((action, i) => (
-            <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
-              <span style={{ fontSize:13 }}>{action.icon} {action.text}</span>
-              <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                <span style={{ fontSize:11, color:"#a5d6a7", fontWeight:700 }}>{action.gain}</span>
-                <button onClick={() => navigate(action.route)} style={{ background:"rgba(76,175,80,0.2)", border:"none", borderRadius:8, padding:"4px 10px", color:"#a5d6a7", fontSize:11, cursor:"pointer", fontWeight:700 }}>
-                  Faire →
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
 
         {/* ── 5. PLAN DU MOIS ── */}
         <div style={card()}>
@@ -319,10 +207,7 @@ export default function MyLawn() {
           ].map(({ icon, label, val }) => (
             <div key={label} style={{ display:"flex", gap:10, padding:"7px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
               <span style={{ fontSize:16, minWidth:24 }}>{icon}</span>
-              <div>
-                <div style={{ fontSize:10, color:"#81c784", fontWeight:700 }}>{label}</div>
-                <div style={{ fontSize:12 }}>{val}</div>
-              </div>
+              <div><div style={{ fontSize:10, color:"#81c784", fontWeight:700 }}>{label}</div><div style={{ fontSize:12 }}>{val}</div></div>
             </div>
           ))}
         </div>
@@ -333,9 +218,7 @@ export default function MyLawn() {
             <span>📈 Évolution du score</span>
             <div style={{ display:"flex", gap:6 }}>
               {["7j","30j"].map(p => (
-                <button key={p} onClick={() => setPeriod(p)} style={{ background: period===p ? "rgba(76,175,80,0.3)" : "none", border:`1px solid ${period===p ? "#43a047" : "rgba(255,255,255,0.2)"}`, borderRadius:8, padding:"2px 8px", color: period===p ? "#a5d6a7" : "#81c784", fontSize:11, cursor:"pointer" }}>
-                  {p}
-                </button>
+                <button key={p} onClick={() => setPeriod(p)} style={{ background: period===p ? "rgba(76,175,80,0.3)" : "none", border:`1px solid ${period===p ? "#43a047" : "rgba(255,255,255,0.2)"}`, borderRadius:8, padding:"2px 8px", color: period===p ? "#a5d6a7" : "#81c784", fontSize:11, cursor:"pointer" }}>{p}</button>
               ))}
             </div>
           </div>
@@ -350,32 +233,21 @@ export default function MyLawn() {
               {(() => {
                 const pts    = scoreHistory;
                 const range  = maxScore - minScore || 1;
-                const coords = pts.map((v, i) => ({
-                  x: (i / (pts.length-1)) * 300,
-                  y: 70 - ((v - minScore) / range) * 60
-                }));
-                const pathD = coords.map((p,i) => `${i===0?"M":"L"} ${p.x} ${p.y}`).join(" ");
-                const areaD = pathD + ` L 300 70 L 0 70 Z`;
-                return (
-                  <>
-                    <path d={areaD} fill="url(#scoreGrad)"/>
-                    <path d={pathD} fill="none" stroke="#43a047" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    {coords.map((p,i) => <circle key={i} cx={p.x} cy={p.y} r="3" fill="#43a047"/>)}
-                    <text x={coords[coords.length-1].x - 15} y={coords[coords.length-1].y - 8} fill="#a5d6a7" fontSize="10" fontWeight="bold">{score}</text>
-                  </>
-                );
+                const coords = pts.map((v, i) => ({ x: (i / (pts.length-1)) * 300, y: 70 - ((v - minScore) / range) * 60 }));
+                const pathD  = coords.map((p,i) => `${i===0?"M":"L"} ${p.x} ${p.y}`).join(" ");
+                const areaD  = pathD + ` L 300 70 L 0 70 Z`;
+                return (<>
+                  <path d={areaD} fill="url(#scoreGrad)"/>
+                  <path d={pathD} fill="none" stroke="#43a047" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  {coords.map((p,i) => <circle key={i} cx={p.x} cy={p.y} r="3" fill="#43a047"/>)}
+                  <text x={coords[coords.length-1].x - 15} y={coords[coords.length-1].y - 8} fill="#a5d6a7" fontSize="10" fontWeight="bold">{score}</text>
+                </>);
               })()}
             </svg>
           </div>
-          <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:"#81c784", marginTop:4 }}>
-            <span>Il y a 7 jours</span><span>Aujourd'hui</span>
-          </div>
+          <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:"#81c784", marginTop:4 }}><span>Il y a 7 jours</span><span>Aujourd'hui</span></div>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, marginTop:12 }}>
-            {[
-              { icon:"✂️", label:"Tontes",    val:countAction("tonte") },
-              { icon:"💧", label:"Arrosages", val:countAction("arrosage") },
-              { icon:"🌱", label:"Engrais",   val:countAction("engrais") },
-            ].map(({ icon, label, val }) => (
+            {[{ icon:"✂️", label:"Tontes", val:countAction("tonte") },{ icon:"💧", label:"Arrosages", val:countAction("arrosage") },{ icon:"🌱", label:"Engrais", val:countAction("engrais") }].map(({ icon, label, val }) => (
               <div key={label} style={{ background:"rgba(255,255,255,0.05)", borderRadius:10, padding:"8px", textAlign:"center" }}>
                 <div style={{ fontSize:18 }}>{icon}</div>
                 <div style={{ fontSize:16, fontWeight:800, color:"#a5d6a7" }}>{val}</div>
@@ -391,9 +263,7 @@ export default function MyLawn() {
           <div style={{ textAlign:"center", padding:"12px 0" }}>
             <div style={{ fontSize:32, marginBottom:8 }}>📷</div>
             <div style={{ fontSize:13, color:"#81c784", marginBottom:12 }}>Aucun diagnostic photo effectué</div>
-            <button onClick={() => navigate("/diagnostic")} style={{ ...btn.primary, width:"auto", padding:"10px 24px", fontSize:13 }}>
-              🔬 Faire un diagnostic →
-            </button>
+            <button onClick={() => navigate("/diagnostic")} style={{ ...btn.primary, width:"auto", padding:"10px 24px", fontSize:13 }}>🔬 Faire un diagnostic →</button>
           </div>
         </div>
 
@@ -405,10 +275,7 @@ export default function MyLawn() {
             <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
               <div style={{ display:"flex", gap:10, alignItems:"center" }}>
                 <span style={{ fontSize:24 }}>{p.icon}</span>
-                <div>
-                  <div style={{ fontSize:12, fontWeight:700 }}>{p.name}</div>
-                  <div style={{ fontSize:10, color:"#81c784" }}>{p.reason}</div>
-                </div>
+                <div><div style={{ fontSize:12, fontWeight:700 }}>{p.name}</div><div style={{ fontSize:10, color:"#81c784" }}>{p.reason}</div></div>
               </div>
               <div style={{ textAlign:"right" }}>
                 <div style={{ fontSize:12, color:"#a5d6a7", fontWeight:700 }}>{p.score} pts</div>
@@ -416,14 +283,8 @@ export default function MyLawn() {
               </div>
             </div>
           ))}
-          {!isPaid && (
-            <div style={{ fontSize:12, color:"#f9a825", textAlign:"center", marginTop:8 }}>
-              🔒 +{PRODUCTS.length-1} produits masqués — <span style={{ cursor:"pointer", textDecoration:"underline" }} onClick={() => navigate("/subscribe")}>Premium</span>
-            </div>
-          )}
-          <button onClick={() => navigate("/products")} style={{ ...btn.primary, marginTop:12, fontSize:12, padding:"8px" }}>
-            Voir tous les produits →
-          </button>
+          {!isPaid && <div style={{ fontSize:12, color:"#f9a825", textAlign:"center", marginTop:8 }}>🔒 +{PRODUCTS.length-1} produits masqués — <span style={{ cursor:"pointer", textDecoration:"underline" }} onClick={() => navigate("/subscribe")}>Premium</span></div>}
+          <button onClick={() => navigate("/products")} style={{ ...btn.primary, marginTop:12, fontSize:12, padding:"8px" }}>Voir tous les produits →</button>
         </div>
 
         {/* ── 9. BLOC PREMIUM ── */}
@@ -434,9 +295,7 @@ export default function MyLawn() {
             {["Détail complet du score","Diagnostic illimité","Arrosage précis calculé","Produits personnalisés","Rappels push + email"].map(f => (
               <div key={f} style={{ fontSize:12, color:"#e8f5e9", padding:"3px 0" }}>✔ {f}</div>
             ))}
-            <button onClick={() => navigate("/subscribe")} style={{ ...btn.primary, marginTop:14, padding:"12px 28px", fontSize:14 }}>
-              ⭐ Améliorer mon gazon — 4,99€/mois
-            </button>
+            <button onClick={() => navigate("/subscribe")} style={{ ...btn.primary, marginTop:14, padding:"12px 28px", fontSize:14 }}>⭐ Améliorer mon gazon — 4,99€/mois</button>
           </div>
         )}
 
