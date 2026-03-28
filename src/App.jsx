@@ -1,7 +1,9 @@
 import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/clerk-react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
-import Diagnostic from "./pages/Diagnostic";
+import Diagnostic from "./pages/Diagnostic";import Classement from "./pages/Classement";
+// Dans les <Routes> :
+<Route path="/classement" element={<Classement />} />
 import MyLawn from "./pages/MyLawn";
 import Today from "./pages/Today";
 import Products from "./pages/Products";
