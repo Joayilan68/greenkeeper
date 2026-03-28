@@ -1,9 +1,8 @@
 import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/clerk-react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
-import Diagnostic from "./pages/Diagnostic";import Classement from "./pages/Classement";
-// Dans les <Routes> :
-<Route path="/classement" element={<Classement />} />
+import Diagnostic from "./pages/Diagnostic";
+import Classement from "./pages/Classement";
 import MyLawn from "./pages/MyLawn";
 import Today from "./pages/Today";
 import Products from "./pages/Products";
@@ -53,26 +52,27 @@ export default function App() {
           <Route path="/subscribe"         element={<SignedIn><Subscribe /></SignedIn>} />
           <Route path="/subscribe/success" element={<SignedIn><SubscribeSuccess /></SignedIn>} />
 
-          {/* ── Pages légales — accessibles sans connexion ── */}
+          {/* ── Pages légales ── */}
           <Route path="/mentions-legales"  element={<MentionsLegales />} />
           <Route path="/confidentialite"   element={<Confidentialite />} />
           <Route path="/cgu"               element={<CGU />} />
           <Route path="/cgv"               element={<CGV />} />
 
-          {/* ── Paramètres & données ── */}
+          {/* ── Paramètres ── */}
           <Route path="/parametres"        element={<ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>} />
 
           {/* ── Pilotage Admin ── */}
           <Route path="/pilotage"          element={<Layout><Pilotage /></Layout>} />
 
           {/* ── App principale ── */}
-          <Route path="/"          element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
-          <Route path="/diagnostic"element={<ProtectedRoute><Layout><Diagnostic /></Layout></ProtectedRoute>} />
-          <Route path="/my-lawn"   element={<ProtectedRoute><Layout><MyLawn /></Layout></ProtectedRoute>} />
-          <Route path="/today"     element={<ProtectedRoute><Layout><Today /></Layout></ProtectedRoute>} />
-          <Route path="/products"  element={<ProtectedRoute><Layout><Products /></Layout></ProtectedRoute>} />
-          <Route path="/history"   element={<ProtectedRoute><Layout><History /></Layout></ProtectedRoute>} />
-          <Route path="/setup"     element={<ProtectedRoute><Layout><Setup /></Layout></ProtectedRoute>} />
+          <Route path="/"                  element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
+          <Route path="/diagnostic"        element={<ProtectedRoute><Layout><Diagnostic /></Layout></ProtectedRoute>} />
+          <Route path="/my-lawn"           element={<ProtectedRoute><Layout><MyLawn /></Layout></ProtectedRoute>} />
+          <Route path="/today"             element={<ProtectedRoute><Layout><Today /></Layout></ProtectedRoute>} />
+          <Route path="/products"          element={<ProtectedRoute><Layout><Products /></Layout></ProtectedRoute>} />
+          <Route path="/history"           element={<ProtectedRoute><Layout><History /></Layout></ProtectedRoute>} />
+          <Route path="/setup"             element={<ProtectedRoute><Layout><Setup /></Layout></ProtectedRoute>} />
+          <Route path="/classement"        element={<ProtectedRoute><Layout><Classement /></Layout></ProtectedRoute>} />
         </Routes>
       </AppWithWeather>
     </BrowserRouter>
