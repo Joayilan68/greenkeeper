@@ -2,6 +2,7 @@ import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/clerk-react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import Diagnostic from "./pages/Diagnostic";
+import Classement from "./pages/Classement";
 import MyLawn from "./pages/MyLawn";
 import Today from "./pages/Today";
 import Products from "./pages/Products";
@@ -11,12 +12,17 @@ import Login from "./pages/Login";
 import Subscribe from "./pages/Subscribe";
 import SubscribeSuccess from "./pages/SubscribeSuccess";
 import Admin from "./pages/Admin";
-import Free from "./pages/free";
-import Classement from "./pages/Classement";
+import Free from "./pages/Free";
+import Register from "./pages/Register";
+import Settings from "./pages/Settings";
+import Pilotage from "./pages/Pilotage";
+import { MentionsLegales, Confidentialite, CGU, CGV } from "./pages/Legal";
 import Layout from "./components/Layout";
 import { WeatherProvider } from "./lib/WeatherContext";
+import { usePilotage } from "./lib/usePilotage";
 
 function AppWithWeather({ children }) {
+  usePilotage();
   return <WeatherProvider>{children}</WeatherProvider>;
 }
 
@@ -34,11 +40,31 @@ export default function App() {
     <BrowserRouter>
       <AppWithWeather>
         <Routes>
+          {/* ── Auth ── */}
           <Route path="/login"             element={<Login />} />
           <Route path="/admin"             element={<Admin />} />
+
+          {/* ── Onboarding & consentements RGPD ── */}
+          <Route path="/register"          element={<SignedIn><Register /></SignedIn>} />
+
+          {/* ── Abonnement ── */}
           <Route path="/free"              element={<SignedIn><Layout><Free /></Layout></SignedIn>} />
           <Route path="/subscribe"         element={<SignedIn><Subscribe /></SignedIn>} />
           <Route path="/subscribe/success" element={<SignedIn><SubscribeSuccess /></SignedIn>} />
+
+          {/* ── Pages légales ── */}
+          <Route path="/mentions-legales"  element={<MentionsLegales />} />
+          <Route path="/confidentialite"   element={<Confidentialite />} />
+          <Route path="/cgu"               element={<CGU />} />
+          <Route path="/cgv"               element={<CGV />} />
+
+          {/* ── Paramètres ── */}
+          <Route path="/parametres"        element={<ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>} />
+
+          {/* ── Pilotage Admin ── */}
+          <Route path="/pilotage"          element={<Layout><Pilotage /></Layout>} />
+
+          {/* ── App principale ── */}
           <Route path="/"                  element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
           <Route path="/diagnostic"        element={<ProtectedRoute><Layout><Diagnostic /></Layout></ProtectedRoute>} />
           <Route path="/my-lawn"           element={<ProtectedRoute><Layout><MyLawn /></Layout></ProtectedRoute>} />
