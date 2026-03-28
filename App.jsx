@@ -12,6 +12,7 @@ import Subscribe from "./pages/Subscribe";
 import SubscribeSuccess from "./pages/SubscribeSuccess";
 import Admin from "./pages/Admin";
 import Free from "./pages/free";
+import Classement from "./pages/Classement";
 import Layout from "./components/Layout";
 import { WeatherProvider } from "./lib/WeatherContext";
 
@@ -38,13 +39,14 @@ export default function App() {
           <Route path="/free"              element={<SignedIn><Layout><Free /></Layout></SignedIn>} />
           <Route path="/subscribe"         element={<SignedIn><Subscribe /></SignedIn>} />
           <Route path="/subscribe/success" element={<SignedIn><SubscribeSuccess /></SignedIn>} />
-          <Route path="/"          element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
-          <Route path="/diagnostic"element={<ProtectedRoute><Layout><Diagnostic /></Layout></ProtectedRoute>} />
-          <Route path="/my-lawn"   element={<ProtectedRoute><Layout><MyLawn /></Layout></ProtectedRoute>} />
-          <Route path="/today"     element={<ProtectedRoute><Layout><Today /></Layout></ProtectedRoute>} />
-          <Route path="/products"  element={<ProtectedRoute><Layout><Products /></Layout></ProtectedRoute>} />
-          <Route path="/history"   element={<ProtectedRoute><Layout><History /></Layout></ProtectedRoute>} />
-          <Route path="/setup"     element={<ProtectedRoute><Layout><Setup /></Layout></ProtectedRoute>} />
+          <Route path="/"                  element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
+          <Route path="/diagnostic"        element={<ProtectedRoute><Layout><Diagnostic /></Layout></ProtectedRoute>} />
+          <Route path="/my-lawn"           element={<ProtectedRoute><Layout><MyLawn /></Layout></ProtectedRoute>} />
+          <Route path="/today"             element={<ProtectedRoute><Layout><Today /></Layout></ProtectedRoute>} />
+          <Route path="/products"          element={<ProtectedRoute><Layout><Products /></Layout></ProtectedRoute>} />
+          <Route path="/history"           element={<ProtectedRoute><Layout><History /></Layout></ProtectedRoute>} />
+          <Route path="/setup"             element={<ProtectedRoute><Layout><Setup /></Layout></ProtectedRoute>} />
+          <Route path="/classement"        element={<ProtectedRoute><Layout><Classement /></Layout></ProtectedRoute>} />
         </Routes>
       </AppWithWeather>
     </BrowserRouter>
