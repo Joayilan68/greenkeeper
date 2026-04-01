@@ -116,7 +116,7 @@ export default function Dashboard() {
   <img
     src="/mg360-mascot-transparent.png"
     alt="MG360"
-    style={{ width:54, height:54, objectFit:"contain", display:"block", margin:"0 auto 2px" }}
+    style={{ width:72, height:72, objectFit:"contain", display:"block", margin:"0 auto 2px" }}
   />
   <div style={{ fontSize:9, color:"#4a7c5c", fontStyle:"italic", letterSpacing:0.5 }}>
     Tant qu'il y a gazon, il y a match
