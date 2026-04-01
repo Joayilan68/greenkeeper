@@ -349,7 +349,7 @@ export default function OnboardingModal({ onComplete }) {
             )}
             {isCreer && gazon === "mixte" && (
               <InfoBanner color="blue">
-                💬 Pas de problème — Ilan analysera votre sol, votre région et votre usage pour vous recommander la variété idéale.
+                🌱 Pas de problème ! Complétez votre profil (sol, exposition, région) et nous vous recommanderons automatiquement la variété idéale pour votre jardin.
               </InfoBanner>
             )}
 
