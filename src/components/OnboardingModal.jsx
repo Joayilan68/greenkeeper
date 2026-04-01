@@ -227,18 +227,15 @@ export default function OnboardingModal({ onComplete }) {
     }
   };
 
-  const handleFinish = () => {
+  const saveProfile = () => {
     const finalCity = locStatus === "success" ? locName : manualCity.trim();
     const profile = {
       objectif, pelouse: gazon, surface: parseInt(surface),
       ville: finalCity, lat: locLat, lon: locLon, usages,
       isSynthetique, isCreer,
-      // Champs Phase 2 — à compléter dans "Mon Profil"
-      // Sol et exposition supprimés pour synthétique, conservés pour les autres
       sol:        isSynthetique ? "N/A" : null,
       exposition: null,
       arrosage:   isSynthetique ? "N/A" : null,
-      // Matériel : liste différente selon synthétique (Phase 2)
       tondeuse:   [],
       materiel:   [],
       budget:     null,
@@ -251,6 +248,18 @@ export default function OnboardingModal({ onComplete }) {
       if (locLat)    localStorage.setItem("mg360_lat", String(locLat));
       if (locLon)    localStorage.setItem("mg360_lon", String(locLon));
     } catch {}
+    return profile;
+  };
+
+  // Bouton "Créer mon compte" → sauvegarde profil + flag waitlist + redirect Clerk
+  const handleClerkSignUp = () => {
+    saveProfile();
+    try { localStorage.setItem("mg360_waitlist", "true"); } catch {}
+    window.location.href = "/register";
+  };
+
+  const handleFinish = () => {
+    const profile = saveProfile();
     onComplete(profile);
   };
 
@@ -530,10 +539,9 @@ export default function OnboardingModal({ onComplete }) {
               </div>
             </div>
 
-            {/* Mount point Clerk */}
-            <div id="clerk-onboarding-mount" style={{ marginBottom: 12 }}>
-              {/* Brancher ici le composant Clerk SignUp */}
-              <button onClick={() => setStep(6)} style={btn.primary}>
+            {/* Clerk SignUp — sauvegarde profil + flag waitlist + redirect /register */}
+            <div style={{ marginBottom: 12 }}>
+              <button onClick={handleClerkSignUp} style={btn.primary}>
                 🚀 Créer mon compte gratuitement
               </button>
             </div>
