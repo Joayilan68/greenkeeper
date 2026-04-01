@@ -42,7 +42,6 @@ const OBJECTIFS = [
   { id: "creer",       icon: "✨", label: "Créer une nouvelle pelouse", desc: "Partir de zéro" },
 ];
 
-// Gazon standard (avec synthétique)
 const GAZONS_STANDARD = [
   { id: "ray-grass",   icon: "🌱", label: "Ray-grass anglais (RGA)" },
   { id: "fetuque",     icon: "🌾", label: "Fétuque (rouge, élevée…)" },
@@ -54,7 +53,6 @@ const GAZONS_STANDARD = [
   { id: "mixte",       icon: "🤷", label: "Mélange / Je ne sais pas" },
 ];
 
-// Gazon à créer (sans synthétique — on choisit ce qu'on plante)
 const GAZONS_CREER = [
   { id: "ray-grass", icon: "🌱", label: "Ray-grass anglais (RGA)", desc: "Rapide, robuste, idéal tempéré" },
   { id: "fetuque",   icon: "🌾", label: "Fétuque",                  desc: "Résistant à la sécheresse" },
@@ -140,9 +138,9 @@ function SectionTitle({ children }) {
 
 function InfoBanner({ color = "orange", children }) {
   const colors = {
-    orange: { bg: "rgba(244,162,97,0.1)",   border: "rgba(244,162,97,0.3)",   text: "#f4c88a" },
-    green:  { bg: "rgba(82,183,136,0.1)",   border: "rgba(82,183,136,0.3)",   text: C.lightGreen },
-    blue:   { bg: "rgba(100,160,255,0.1)",  border: "rgba(100,160,255,0.3)",  text: "#a0c4ff" },
+    orange: { bg: "rgba(244,162,97,0.1)",  border: "rgba(244,162,97,0.3)",  text: "#f4c88a" },
+    green:  { bg: "rgba(82,183,136,0.1)",  border: "rgba(82,183,136,0.3)",  text: C.lightGreen },
+    blue:   { bg: "rgba(100,160,255,0.1)", border: "rgba(100,160,255,0.3)", text: "#a0c4ff" },
   };
   const s = colors[color];
   return (
@@ -172,11 +170,9 @@ export default function OnboardingModal({ onComplete }) {
   const [usages, setUsages]           = useState([]);
   const [featureSlide, setFeatureSlide] = useState(0);
 
-  // ── Flags contextuels ─────────────────────────────────────────────────────
   const isSynthetique = gazon === "synthetique";
   const isCreer       = objectif === "creer";
 
-  // ── Validations ───────────────────────────────────────────────────────────
   const canNext1      = objectif !== "";
   const canNext2      = gazon !== "";
   const locOk         = locStatus === "success" || manualCity.trim().length >= 2;
@@ -184,7 +180,6 @@ export default function OnboardingModal({ onComplete }) {
   const canNext4      = usages.length > 0;
   const isLastFeature = featureSlide === FEATURES.length - 1;
 
-  // ── Handlers ──────────────────────────────────────────────────────────────
   const handleSurface = (v) => {
     setSurface(v);
     const n = parseInt(v);
@@ -195,7 +190,6 @@ export default function OnboardingModal({ onComplete }) {
   const toggleUsage = (id) =>
     setUsages(prev => prev.includes(id) ? prev.filter(u => u !== id) : [...prev, id]);
 
-  // Reset gazon quand l'objectif change (évite gazon synthétique + objectif creer)
   const handleObjectif = (id) => {
     setObjectif(id);
     setGazon("");
@@ -251,7 +245,6 @@ export default function OnboardingModal({ onComplete }) {
     return profile;
   };
 
-  // Bouton "Créer mon compte" → sauvegarde profil + flag waitlist + redirect Clerk
   const handleClerkSignUp = () => {
     saveProfile();
     try { localStorage.setItem("mg360_waitlist", "true"); } catch {}
@@ -297,7 +290,11 @@ export default function OnboardingModal({ onComplete }) {
         {step === 1 && (
           <div>
             <div style={{ textAlign: "center", marginBottom: 28 }}>
-              <img src="/icon-512x512.png" alt="Mongazon360" style={{ width: 80, height: 80, borderRadius: 20, objectFit: "cover", display: "block", margin: "0 auto 10px" }} />
+              <img
+                src="/mg360-mascot-transparent.png"
+                alt="Mongazon360"
+                style={{ width: 72, height: 72, objectFit: "contain", display: "block", margin: "0 auto 10px" }}
+              />
               <div style={{ fontSize: 22, fontWeight: 900, color: C.lightGreen, marginBottom: 4 }}>Bienvenue sur Mongazon360 !</div>
               <div style={{ fontSize: 11, color: C.textMuted, fontStyle: "italic", marginBottom: 12 }}>Tant qu'il y a gazon, il y a match</div>
               <div style={{ fontSize: 13, color: C.textSoft, lineHeight: 1.7 }}>
@@ -497,7 +494,6 @@ export default function OnboardingModal({ onComplete }) {
               </div>
             </div>
 
-            {/* Résumé adaptatif */}
             <div style={{ background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 16, padding: 16, marginBottom: 20 }}>
               <div style={{ fontSize: 12, fontWeight: 800, color: C.lightGreen, marginBottom: 12 }}>📋 Votre profil en cours</div>
               {[
@@ -525,7 +521,6 @@ export default function OnboardingModal({ onComplete }) {
               </InfoBanner>
             )}
 
-            {/* Barre de complétude */}
             <div style={{ background: "rgba(82,183,136,0.08)", border: `1px solid ${C.border}`, borderRadius: 12, padding: "12px 16px", marginBottom: 24 }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: 12 }}>
                 <span style={{ color: C.textSoft, fontWeight: 700 }}>Complétude du profil</span>
@@ -539,7 +534,6 @@ export default function OnboardingModal({ onComplete }) {
               </div>
             </div>
 
-            {/* Clerk SignUp — sauvegarde profil + flag waitlist + redirect /register */}
             <div style={{ marginBottom: 12 }}>
               <button onClick={handleClerkSignUp} style={btn.primary}>
                 🚀 Créer mon compte gratuitement
