@@ -112,12 +112,14 @@ export default function Dashboard() {
             <UserButton appearance={{ variables: { colorPrimary:"#43a047" } }} />
           </div>
         </div>
-        <div style={{ textAlign:"center", marginBottom:4 }}>
-          <div style={{ fontSize:11, color:"#4a7c5c", letterSpacing:2, textTransform:"uppercase", marginBottom:2 }}>
-            🌿 Mon Gazon 360
-          </div>
-          <div style={{ fontSize:9, color:"#4a7c5c", fontStyle:"italic", letterSpacing:0.5 }}>
-            Tant qu'il y a gazon, il y a match
+       <div style={{ textAlign:"center", marginBottom:4 }}>
+  <img
+    src="/mg360-mascot-transparent.png"
+    alt="MG360"
+    style={{ width:54, height:54, objectFit:"contain", display:"block", margin:"0 auto 2px" }}
+  />
+  <div style={{ fontSize:9, color:"#4a7c5c", fontStyle:"italic", letterSpacing:0.5 }}>
+    Tant qu'il y a gazon, il y a match
           </div>
         </div>
         <div style={{ fontSize:22, fontWeight:800, color:"#a5d6a7", marginTop:6 }}>
