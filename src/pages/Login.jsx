@@ -5,9 +5,13 @@ export default function Login() {
   return (
     <div style={{ ...appShell, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 16px" }}>
       <div style={{ textAlign: "center", marginBottom: 32 }}>
-        <div style={{ fontSize: 52, marginBottom: 8 }}>🌿</div>
-        <div style={{ fontSize: 26, fontWeight: 800, color: "#a5d6a7" }}>GreenKeeper</div>
-        <div style={{ fontSize: 13, color: "#81c784", marginTop: 4 }}>Entretien pelouse intelligent</div>
+        <img
+          src="/mg360-mascot-transparent.png"
+          alt="Mongazon360"
+          style={{ width: 80, height: 80, objectFit: "contain", display: "block", margin: "0 auto 8px" }}
+        />
+        <div style={{ fontSize: 26, fontWeight: 800, color: "#a5d6a7" }}>Mongazon360</div>
+        <div style={{ fontSize: 13, color: "#81c784", marginTop: 4 }}>Tant qu'il y a gazon, il y a match</div>
       </div>
       <SignIn
         routing="hash"
