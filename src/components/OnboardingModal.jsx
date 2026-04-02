@@ -182,7 +182,7 @@ export default function OnboardingModal({ onComplete }) {
   const handleSurface = (v) => {
     setSurface(v);
     const n = parseInt(v);
-    if (v && (isNaN(n) || n < 1 || n > 50000)) setSurfaceErr("Entre 1 et 50 000 m²");
+    if (!v || isNaN(n) || n < 1 || n > 50000) setSurfaceErr("Entre 1 et 50 000 m²");
     else setSurfaceErr("");
   };
 
@@ -263,11 +263,17 @@ export default function OnboardingModal({ onComplete }) {
     boxSizing: "border-box", transition: "border-color 0.2s",
   });
 
+  const GAZON_LABEL_MAP = {
+    sport: "Sport / résistant", ombre: "Ombre / mi-ombre", sec: "Sec / méditerranéen",
+    ornemental: "Ornemental", universel: "Universel / mélange", chaud: "Gazon chaud",
+    synthetique: "Gazon synthétique", inconnu: "Recommandation automatique",
+  };
+
   const gazonLabel = isSynthetique
     ? "Gazon synthétique"
     : isCreer
-      ? `${GAZONS_CREER.find(g => g.id === gazon)?.label || gazon} (à créer)`
-      : GAZONS_STANDARD.find(g => g.id === gazon)?.label || gazon;
+      ? `${GAZON_LABEL_MAP[gazon] || GAZONS_CREER.find(g => g.id === gazon)?.label || gazon} (à créer)`
+      : GAZON_LABEL_MAP[gazon] || GAZONS_STANDARD.find(g => g.id === gazon)?.label || gazon;
 
   return (
     <div style={{
@@ -297,7 +303,7 @@ export default function OnboardingModal({ onComplete }) {
               <div style={{ fontSize: 22, fontWeight: 900, color: C.lightGreen, marginBottom: 4 }}>Bienvenue sur Mongazon360 !</div>
               <div style={{ fontSize: 11, color: C.textMuted, fontStyle: "italic", marginBottom: 12 }}>Tant qu'il y a gazon, il y a match</div>
               <div style={{ fontSize: 13, color: C.textSoft, lineHeight: 1.7 }}>
-                6 étapes rapides pour personnaliser votre expérience et calculer votre score de santé pelouse.
+                {TOTAL_STEPS} étapes rapides pour personnaliser votre expérience et calculer votre score de santé pelouse.
               </div>
             </div>
             <SectionTitle>🎯 Quel est votre objectif principal ?</SectionTitle>
@@ -482,8 +488,51 @@ export default function OnboardingModal({ onComplete }) {
           </div>
         )}
 
-        {/* ══ ÉTAPE 5 — Inscription Clerk + Résumé ════════════════════════ */}
+        {/* ══ ÉTAPE 5 — Présentation des fonctionnalités ══════════════════ */}
         {step === 5 && (
+          <div>
+            <div style={{ textAlign: "center", marginBottom: 28 }}>
+              <div style={{ fontSize: 20, fontWeight: 900, color: C.lightGreen, marginBottom: 4 }}>🌟 Ce qui vous attend</div>
+              <div style={{ fontSize: 12, color: C.textSoft }}>Fonctionnalité {featureSlide + 1} sur {FEATURES.length}</div>
+            </div>
+
+            <div style={{ background: "rgba(82,183,136,0.1)", border: "1px solid rgba(82,183,136,0.25)", borderRadius: 20, padding: "32px 24px", textAlign: "center", marginBottom: 24, minHeight: 200, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ fontSize: 52, marginBottom: 16 }}>{FEATURES[featureSlide].icon}</div>
+              <div style={{ fontSize: 18, fontWeight: 900, color: C.lightGreen, marginBottom: 10 }}>{FEATURES[featureSlide].title}</div>
+              <div style={{ fontSize: 13, color: C.textSoft, lineHeight: 1.7 }}>{FEATURES[featureSlide].desc}</div>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 28 }}>
+              {FEATURES.map((_, i) => (
+                <div key={i} onClick={() => setFeatureSlide(i)} style={{ width: i === featureSlide ? 24 : 8, height: 8, borderRadius: 4, cursor: "pointer", background: i === featureSlide ? C.freshGreen : "rgba(255,255,255,0.15)", transition: "all 0.3s" }} />
+              ))}
+            </div>
+
+            {isLastFeature ? (
+              <button onClick={() => { setFeatureSlide(0); setStep(6); }} style={btn.primary}>
+                🚀 Créer mon compte →
+              </button>
+            ) : (
+              <div style={{ display: "flex", gap: 8 }}>
+                <button onClick={() => setFeatureSlide(f => Math.max(0, f - 1))} disabled={featureSlide === 0} style={{ ...btn.ghost, flex: 1, opacity: featureSlide === 0 ? 0.4 : 1 }}>←</button>
+                <button onClick={() => setFeatureSlide(f => f + 1)} style={{ ...btn.primary, flex: 3 }}>Suivant →</button>
+              </div>
+            )}
+
+            {!isLastFeature && (
+              <button onClick={() => { setFeatureSlide(0); setStep(6); }} style={{ background: "none", border: "none", color: C.textMuted, fontSize: 12, cursor: "pointer", width: "100%", marginTop: 14, fontFamily: "inherit" }}>
+                Passer →
+              </button>
+            )}
+
+            {featureSlide === 0 && (
+              <button onClick={() => setStep(4)} style={{ ...btn.ghost, width: "100%", marginTop: 8 }}>← Retour</button>
+            )}
+          </div>
+        )}
+
+        {/* ══ ÉTAPE 6 — Inscription Clerk + Résumé ════════════════════════ */}
+        {step === 6 && (
           <div>
             <div style={{ textAlign: "center", marginBottom: 28 }}>
               <div style={{ fontSize: 48, marginBottom: 10 }}>🔐</div>
@@ -539,44 +588,7 @@ export default function OnboardingModal({ onComplete }) {
               </button>
             </div>
 
-            <button onClick={() => setStep(4)} style={{ ...btn.ghost, width: "100%", marginTop: 8 }}>← Retour</button>
-          </div>
-        )}
-
-        {/* ══ ÉTAPE 6 — Présentation des fonctionnalités ══════════════════ */}
-        {step === 6 && (
-          <div>
-            <div style={{ textAlign: "center", marginBottom: 28 }}>
-              <div style={{ fontSize: 20, fontWeight: 900, color: C.lightGreen, marginBottom: 4 }}>🌟 Ce qui vous attend</div>
-              <div style={{ fontSize: 12, color: C.textSoft }}>Fonctionnalité {featureSlide + 1} sur {FEATURES.length}</div>
-            </div>
-
-            <div style={{ background: "rgba(82,183,136,0.1)", border: "1px solid rgba(82,183,136,0.25)", borderRadius: 20, padding: "32px 24px", textAlign: "center", marginBottom: 24, minHeight: 200, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-              <div style={{ fontSize: 52, marginBottom: 16 }}>{FEATURES[featureSlide].icon}</div>
-              <div style={{ fontSize: 18, fontWeight: 900, color: C.lightGreen, marginBottom: 10 }}>{FEATURES[featureSlide].title}</div>
-              <div style={{ fontSize: 13, color: C.textSoft, lineHeight: 1.7 }}>{FEATURES[featureSlide].desc}</div>
-            </div>
-
-            <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 28 }}>
-              {FEATURES.map((_, i) => (
-                <div key={i} onClick={() => setFeatureSlide(i)} style={{ width: i === featureSlide ? 24 : 8, height: 8, borderRadius: 4, cursor: "pointer", background: i === featureSlide ? C.freshGreen : "rgba(255,255,255,0.15)", transition: "all 0.3s" }} />
-              ))}
-            </div>
-
-            {isLastFeature ? (
-              <button onClick={handleFinish} style={btn.primary}>🌿 Découvrir mon tableau de bord !</button>
-            ) : (
-              <div style={{ display: "flex", gap: 8 }}>
-                <button onClick={() => setFeatureSlide(f => Math.max(0, f - 1))} disabled={featureSlide === 0} style={{ ...btn.ghost, flex: 1, opacity: featureSlide === 0 ? 0.4 : 1 }}>←</button>
-                <button onClick={() => setFeatureSlide(f => f + 1)} style={{ ...btn.primary, flex: 3 }}>Suivant →</button>
-              </div>
-            )}
-
-            {!isLastFeature && (
-              <button onClick={handleFinish} style={{ background: "none", border: "none", color: C.textMuted, fontSize: 12, cursor: "pointer", width: "100%", marginTop: 14, fontFamily: "inherit" }}>
-                Passer et accéder au dashboard →
-              </button>
-            )}
+            <button onClick={() => setStep(5)} style={{ ...btn.ghost, width: "100%", marginTop: 8 }}>← Retour</button>
           </div>
         )}
       </div>
