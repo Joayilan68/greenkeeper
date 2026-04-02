@@ -70,10 +70,11 @@ const USAGES = [
 ];
 
 const FEATURES = [
-  { icon: "📅", title: "Planning intelligent",  desc: "Votre programme d'entretien personnalisé, semaine par semaine." },
-  { icon: "🤖", title: "Ilan, votre IA gazon",  desc: "Posez toutes vos questions à votre expert pelouse disponible 24h/24." },
-  { icon: "🌦️", title: "Météo en temps réel",   desc: "Conseils adaptés aux conditions climatiques de votre jardin." },
-  { icon: "🏆", title: "GreenPoints & Ligues",  desc: "Gagnez des points, montez en ligue et restez motivé toute la saison." },
+  { icon: "📅", title: "Planning intelligent",  desc: "Votre programme d'entretien personnalisé, semaine par semaine.", premium: false },
+  { icon: "🤖", title: "Ilan, votre IA gazon",  desc: "Posez toutes vos questions à votre expert pelouse disponible 24h/24.", premium: true },
+  { icon: "📸", title: "Diagnostic photo",       desc: "Photographiez votre gazon — notre IA analyse et ajuste votre score en temps réel. Valide 7 jours.", premium: true },
+  { icon: "🌦️", title: "Météo en temps réel",   desc: "Conseils adaptés aux conditions climatiques de votre jardin.", premium: true },
+  { icon: "🏆", title: "GreenPoints & Ligues",  desc: "Gagnez des points, montez en ligue et restez motivé toute la saison.", premium: false },
 ];
 
 // ── Composants utilitaires ────────────────────────────────────────────────────
@@ -614,7 +615,14 @@ export default function OnboardingModal({ onComplete }) {
 
             <div style={{ background: "rgba(82,183,136,0.1)", border: "1px solid rgba(82,183,136,0.25)", borderRadius: 20, padding: "32px 24px", textAlign: "center", marginBottom: 24, minHeight: 200, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
               <div style={{ fontSize: 52, marginBottom: 16 }}>{FEATURES[featureSlide].icon}</div>
-              <div style={{ fontSize: 18, fontWeight: 900, color: C.lightGreen, marginBottom: 10 }}>{FEATURES[featureSlide].title}</div>
+              <div style={{ fontSize: 18, fontWeight: 900, color: C.lightGreen, marginBottom: 10 }}>
+                {FEATURES[featureSlide].title}
+                {FEATURES[featureSlide].premium && (
+                  <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 800, color: C.orange, background: "rgba(244,162,97,0.15)", border: "1px solid rgba(244,162,97,0.4)", borderRadius: 20, padding: "2px 8px", verticalAlign: "middle" }}>
+                    ⭐ Premium
+                  </span>
+                )}
+              </div>
               <div style={{ fontSize: 13, color: C.textSoft, lineHeight: 1.7 }}>{FEATURES[featureSlide].desc}</div>
             </div>
 
