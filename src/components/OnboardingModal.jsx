@@ -346,8 +346,8 @@ export default function OnboardingModal({ onComplete }) {
 
   return (
     <div style={{
-      position: "fixed", inset: 0, zIndex: 1000,
-      background: "rgba(0,0,0,0.8)",
+      position: "fixed", inset: 0, zIndex: 9999,
+      background: "rgba(0,0,0,0.95)",
       display: "flex", alignItems: "flex-end", justifyContent: "center",
     }}>
       <div style={{
