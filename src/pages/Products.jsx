@@ -65,7 +65,7 @@ export default function Products() {
             💡 Ces produits sont sélectionnés par nos experts greenkeeper
           </div>
           <div style={{ fontSize:11, color:"#81c784", opacity:0.6 }}>
-            Affiliation — GreenKeeper perçoit une commission sur les ventes
+            Affiliation — Mongazon360 perçoit une commission sur les ventes
           </div>
         </div>
 

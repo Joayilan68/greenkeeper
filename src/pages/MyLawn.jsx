@@ -268,11 +268,20 @@ export default function MyLawn() {
 
         {/* ── 7. DERNIER DIAGNOSTIC ── */}
         <div style={{ ...card(), background:"rgba(33,150,243,0.08)", border:"1px solid rgba(33,150,243,0.25)" }}>
-          <div style={cardTitle}><span>🔬 Dernier diagnostic</span></div>
+          <div style={cardTitle}><span>🔬 Dernier diagnostic</span>{!isPaid && <span style={{ fontSize:10, color:"#f9a825" }}>🔒 Premium</span>}</div>
           <div style={{ textAlign:"center", padding:"12px 0" }}>
             <div style={{ fontSize:32, marginBottom:8 }}>📷</div>
-            <div style={{ fontSize:13, color:"#81c784", marginBottom:12 }}>Aucun diagnostic photo effectué</div>
-            <button onClick={() => navigate("/diagnostic")} style={{ ...btn.primary, width:"auto", padding:"10px 24px", fontSize:13 }}>🔬 Faire un diagnostic →</button>
+            {isPaid ? (
+              <>
+                <div style={{ fontSize:13, color:"#81c784", marginBottom:12 }}>Aucun diagnostic photo effectué</div>
+                <button onClick={() => navigate("/diagnostic")} style={{ ...btn.primary, width:"auto", padding:"10px 24px", fontSize:13 }}>🔬 Faire un diagnostic →</button>
+              </>
+            ) : (
+              <>
+                <div style={{ fontSize:13, color:"#81c784", marginBottom:12 }}>Analysez votre gazon en photo pour affiner votre score jusqu'à +30 pts</div>
+                <button onClick={() => navigate("/subscribe")} style={{ ...btn.primary, width:"auto", padding:"10px 24px", fontSize:13 }}>⭐ Passer Premium pour diagnostiquer</button>
+              </>
+            )}
           </div>
         </div>
 
