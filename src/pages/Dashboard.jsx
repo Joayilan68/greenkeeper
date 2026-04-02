@@ -42,11 +42,22 @@ export default function Dashboard() {
   } = useClassement();
 
   useEffect(() => {
-    const done = localStorage.getItem("gk_onboarding_done");
+    const done = localStorage.getItem("mg360_onboarding_done") || localStorage.getItem("gk_onboarding_done"); // rétrocompat
     if (!done && !profile) setTimeout(() => setShowOnboarding(true), 800);
   }, [profile]);
 
-  const today = new Date();
+  const GAZON_LABELS = {
+    sport: "Sport / résistant", ombre: "Ombre / mi-ombre", sec: "Sec / méditerranéen",
+    ornemental: "Ornemental", universel: "Universel / mélange", chaud: "Gazon chaud",
+    synthetique: "Gazon synthétique", inconnu: "Non défini",
+    // Rétrocompat anciens ids
+    "ray-grass": "Ray-grass", fetuque: "Fétuque", kikuyu: "Kikuyu",
+    bermuda: "Bermuda", paturin: "Pâturin", zoysia: "Zoysia", mixte: "Mélange",
+  };
+
+  const gazonDisplay = profile?.pelouse ? (GAZON_LABELS[profile.pelouse] || profile.pelouse) : null;
+
+
   const month = today.getMonth() + 1;
   const plan  = MONTHLY_PLAN[month];
 
@@ -112,14 +123,14 @@ export default function Dashboard() {
             <UserButton appearance={{ variables: { colorPrimary:"#43a047" } }} />
           </div>
         </div>
-       <div style={{ textAlign:"center", marginBottom:4 }}>
-  <img
-    src="/mg360-mascot-transparent.png"
-    alt="MG360"
-    style={{ width:72, height:72, objectFit:"contain", display:"block", margin:"0 auto 2px" }}
-  />
-  <div style={{ fontSize:9, color:"#4a7c5c", fontStyle:"italic", letterSpacing:0.5 }}>
-    Tant qu'il y a gazon, il y a match
+        <div style={{ textAlign:"center", marginBottom:4 }}>
+          <img
+            src="/mg360-mascot-transparent.png"
+            alt="Mongazon360"
+            style={{ width:72, height:72, objectFit:"contain", display:"block", margin:"0 auto 2px" }}
+          />
+          <div style={{ fontSize:9, color:"#4a7c5c", fontStyle:"italic", letterSpacing:0.5 }}>
+            Tant qu'il y a gazon, il y a match
           </div>
         </div>
         <div style={{ fontSize:22, fontWeight:800, color:"#a5d6a7", marginTop:6 }}>
@@ -454,7 +465,11 @@ export default function Dashboard() {
           </div>
           {profile ? (
             <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
-              {[`🌿 ${profile.pelouse}`, `🏔️ Sol ${profile.sol}`, `📐 ${profile.surface}m²`].map(t => (
+              {[
+                gazonDisplay && `🌿 ${gazonDisplay}`,
+                profile.sol && profile.sol !== "N/A" && `🏔️ Sol ${profile.sol}`,
+                profile.surface && `📐 ${profile.surface}m²`,
+              ].filter(Boolean).map(t => (
                 <span key={t} style={pill()}>{t}</span>
               ))}
             </div>
