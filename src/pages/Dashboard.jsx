@@ -57,7 +57,7 @@ export default function Dashboard() {
 
   const gazonDisplay = profile?.pelouse ? (GAZON_LABELS[profile.pelouse] || profile.pelouse) : null;
 
-
+  const today = new Date();
   const month = today.getMonth() + 1;
   const plan  = MONTHLY_PLAN[month];
 
