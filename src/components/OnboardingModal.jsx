@@ -43,24 +43,23 @@ const OBJECTIFS = [
 ];
 
 const GAZONS_STANDARD = [
-  { id: "ray-grass",   icon: "🌱", label: "Ray-grass anglais (RGA)" },
-  { id: "fetuque",     icon: "🌾", label: "Fétuque (rouge, élevée…)" },
-  { id: "kikuyu",      icon: "🌿", label: "Kikuyu" },
-  { id: "bermuda",     icon: "☀️", label: "Bermuda" },
-  { id: "paturin",     icon: "🍀", label: "Pâturin des prés" },
-  { id: "zoysia",      icon: "🌴", label: "Zoysia" },
-  { id: "synthetique", icon: "🏟️", label: "Gazon synthétique" },
-  { id: "mixte",       icon: "🤷", label: "Mélange / Je ne sais pas" },
+  { id: "sport",       icon: "⚽", label: "Sport / résistant",       desc: "Ray-grass, Pâturin — type Barenbrug, Moowy Sport" },
+  { id: "ombre",       icon: "🌿", label: "Ombre / mi-ombre",         desc: "Fétuque rouge, Pâturin — zones peu ensoleillées" },
+  { id: "sec",         icon: "☀️", label: "Sec / méditerranéen",       desc: "Fétuque ovine, Bermuda, Zoysia — climat chaud" },
+  { id: "ornemental",  icon: "🏡", label: "Ornemental",                desc: "Fétuque fine, Ray-grass — pelouse décorative" },
+  { id: "universel",   icon: "🔄", label: "Universel / mélange",       desc: "Mix standard — grande surface, sac générique" },
+  { id: "chaud",       icon: "🌴", label: "Gazon chaud",               desc: "Kikuyu, Bermuda, Zoysia — climat méditerranéen" },
+  { id: "synthetique", icon: "🏟️", label: "Gazon synthétique",         desc: "Entretien spécifique — nettoyage, brossage" },
+  { id: "inconnu",     icon: "🤷", label: "Je ne sais pas",            desc: "Recommandation automatique selon votre profil" },
 ];
 
 const GAZONS_CREER = [
-  { id: "ray-grass", icon: "🌱", label: "Ray-grass anglais (RGA)", desc: "Rapide, robuste, idéal tempéré" },
-  { id: "fetuque",   icon: "🌾", label: "Fétuque",                  desc: "Résistant à la sécheresse" },
-  { id: "paturin",   icon: "🍀", label: "Pâturin des prés",         desc: "Luxuriant, zones fraîches" },
-  { id: "bermuda",   icon: "☀️", label: "Bermuda",                  desc: "Chaud, très résistant au piétinement" },
-  { id: "zoysia",    icon: "🌴", label: "Zoysia",                   desc: "Méditerranéen, faible entretien" },
-  { id: "kikuyu",    icon: "🌿", label: "Kikuyu",                   desc: "Croissance rapide, couvre-sol" },
-  { id: "mixte",     icon: "🤷", label: "Je ne sais pas encore",    desc: "Ilan vous conseillera" },
+  { id: "sport",      icon: "⚽", label: "Résistant au piétinement", desc: "Idéal enfants, animaux, sport" },
+  { id: "ornemental", icon: "🏡", label: "Esthétique / décoratif",   desc: "Dense, vert foncé, impeccable" },
+  { id: "ombre",      icon: "🌿", label: "Ombre / mi-ombre",          desc: "Pour zones peu ensoleillées" },
+  { id: "sec",        icon: "☀️", label: "Résistant à la sécheresse", desc: "Peu d'arrosage, climat chaud" },
+  { id: "universel",  icon: "🔄", label: "Polyvalent / universel",    desc: "Bon compromis toutes situations" },
+  { id: "inconnu",    icon: "🤷", label: "Je ne sais pas encore",     desc: "Recommandation automatique selon votre profil" },
 ];
 
 const USAGES = [
