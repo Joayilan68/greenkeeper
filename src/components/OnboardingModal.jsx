@@ -94,10 +94,24 @@ function ProgressBar({ step, total }) {
   );
 }
 
+const STEP_LABELS = {
+  1: "Votre objectif",
+  2: "Type de gazon",
+  3: "Votre jardin",
+  4: "Usage",
+  5: "Ce qui vous attend",
+  6: "Votre compte",
+};
+
 function StepLabel({ current, total }) {
   return (
-    <div style={{ textAlign: "right", fontSize: 11, color: C.textMuted, marginBottom: 6, fontWeight: 600 }}>
-      {current} / {total}
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+      <div style={{ fontSize: 11, color: C.lightGreen, fontWeight: 700 }}>
+        {STEP_LABELS[current] || ""}
+      </div>
+      <div style={{ fontSize: 11, color: C.textMuted, fontWeight: 600 }}>
+        {current} / {total}
+      </div>
     </div>
   );
 }
@@ -208,18 +222,8 @@ export default function OnboardingModal({ onComplete }) {
     else setSurfaceErr("");
   };
 
-  const toggleUsage = (id) => {
-    setUsages(prev => {
-      if (prev.includes(id)) {
-        // Désélection simple
-        return prev.filter(u => u !== id);
-      }
-      // "Peu utilisée" est exclusif — désélectionne tout le reste
-      if (id === "calme") return ["calme"];
-      // Sélectionner autre chose → retire "Peu utilisée"
-      return [...prev.filter(u => u !== "calme"), id];
-    });
-  };
+  const toggleUsage = (id) =>
+    setUsages(prev => prev.includes(id) ? prev.filter(u => u !== id) : [...prev, id]);
 
   const handleObjectif = (id) => {
     setObjectif(id);
@@ -348,6 +352,28 @@ export default function OnboardingModal({ onComplete }) {
     synthetique: "Gazon synthétique", inconnu: "Recommandation automatique",
   };
 
+  const [animKey, setAnimKey] = useState(0);
+
+  // Injecter les keyframes CSS une seule fois
+  useEffect(() => {
+    const id = "mg360-onboarding-anim";
+    if (document.getElementById(id)) return;
+    const style = document.createElement("style");
+    style.id = id;
+    style.textContent = `
+      @keyframes mg360StepIn {
+        from { opacity: 0; transform: translateX(18px); }
+        to   { opacity: 1; transform: translateX(0); }
+      }
+    `;
+    document.head.appendChild(style);
+  }, []);
+
+  const goToStep = (n) => {
+    setStep(n);
+    setAnimKey(k => k + 1);
+  };
+
   const gazonLabel = isSynthetique
     ? "Gazon synthétique"
     : isCreer
@@ -370,6 +396,9 @@ export default function OnboardingModal({ onComplete }) {
         <StepLabel current={step} total={TOTAL_STEPS} />
         <ProgressBar step={step} total={TOTAL_STEPS} />
 
+        {/* Wrapper animé — se re-monte à chaque changement d'étape */}
+        <div key={animKey} style={{ animation: "mg360StepIn 0.25s ease-out" }}>
+
         {/* ══ ÉTAPE 1 — Bienvenue + Objectif ══════════════════════════════ */}
         {step === 1 && (
           <div>
@@ -391,7 +420,7 @@ export default function OnboardingModal({ onComplete }) {
                 <OptionCard key={o.id} selected={objectif === o.id} onClick={() => handleObjectif(o.id)} icon={o.icon} label={o.label} desc={o.desc} />
               ))}
             </div>
-            <button onClick={() => setStep(2)} disabled={!canNext1} style={{ ...btn.primary, opacity: canNext1 ? 1 : 0.4 }}>
+            <button onClick={() => goToStep(2)} disabled={!canNext1} style={{ ...btn.primary, opacity: canNext1 ? 1 : 0.4 }}>
               Continuer →
             </button>
           </div>
@@ -438,8 +467,8 @@ export default function OnboardingModal({ onComplete }) {
             )}
 
             <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-              <button onClick={() => setStep(1)} style={{ ...btn.ghost, flex: 1 }}>← Retour</button>
-              <button onClick={() => setStep(3)} disabled={!canNext2} style={{ ...btn.primary, flex: 2, opacity: canNext2 ? 1 : 0.4 }}>
+              <button onClick={() => goToStep(1)} style={{ ...btn.ghost, flex: 1 }}>← Retour</button>
+              <button onClick={() => goToStep(3)} disabled={!canNext2} style={{ ...btn.primary, flex: 2, opacity: canNext2 ? 1 : 0.4 }}>
                 Continuer →
               </button>
             </div>
@@ -562,8 +591,8 @@ export default function OnboardingModal({ onComplete }) {
             </div>
 
             <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-              <button onClick={() => setStep(2)} style={{ ...btn.ghost, flex: 1 }}>← Retour</button>
-              <button onClick={() => setStep(4)} disabled={!canNext3} style={{ ...btn.primary, flex: 2, opacity: canNext3 ? 1 : 0.4 }}>
+              <button onClick={() => goToStep(2)} style={{ ...btn.ghost, flex: 1 }}>← Retour</button>
+              <button onClick={() => goToStep(4)} disabled={!canNext3} style={{ ...btn.primary, flex: 2, opacity: canNext3 ? 1 : 0.4 }}>
                 Continuer →
               </button>
             </div>
@@ -603,17 +632,12 @@ export default function OnboardingModal({ onComplete }) {
             {usages.length > 0 && (
               <div style={{ background: "rgba(82,183,136,0.08)", border: `1px solid ${C.border}`, borderRadius: 12, padding: "10px 14px", marginBottom: 16, fontSize: 12, color: C.textSoft }}>
                 ✓ {usages.length} usage{usages.length > 1 ? "s" : ""} sélectionné{usages.length > 1 ? "s" : ""}
-                {usages.includes("calme") && (
-                  <span style={{ display: "block", fontSize: 11, color: C.textMuted, marginTop: 4 }}>
-                    ℹ️ "Peu utilisée" est exclusif — incompatible avec les autres usages
-                  </span>
-                )}
               </div>
             )}
 
             <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={() => setStep(3)} style={{ ...btn.ghost, flex: 1 }}>← Retour</button>
-              <button onClick={() => setStep(5)} disabled={!canNext4} style={{ ...btn.primary, flex: 2, opacity: canNext4 ? 1 : 0.4 }}>
+              <button onClick={() => goToStep(3)} style={{ ...btn.ghost, flex: 1 }}>← Retour</button>
+              <button onClick={() => goToStep(5)} disabled={!canNext4} style={{ ...btn.primary, flex: 2, opacity: canNext4 ? 1 : 0.4 }}>
                 Continuer →
               </button>
             </div>
@@ -648,7 +672,7 @@ export default function OnboardingModal({ onComplete }) {
             </div>
 
             {isLastFeature ? (
-              <button onClick={() => { setFeatureSlide(0); setStep(6); }} style={btn.primary}>
+              <button onClick={() => { setFeatureSlide(0); goToStep(6); }} style={btn.primary}>
                 🚀 Créer mon compte →
               </button>
             ) : (
@@ -659,13 +683,13 @@ export default function OnboardingModal({ onComplete }) {
             )}
 
             {!isLastFeature && (
-              <button onClick={() => { setFeatureSlide(0); setStep(6); }} style={{ background: "none", border: "none", color: C.textMuted, fontSize: 12, cursor: "pointer", width: "100%", marginTop: 14, fontFamily: "inherit" }}>
+              <button onClick={() => { setFeatureSlide(0); goToStep(6); }} style={{ background: "none", border: "none", color: C.textMuted, fontSize: 12, cursor: "pointer", width: "100%", marginTop: 14, fontFamily: "inherit" }}>
                 Passer →
               </button>
             )}
 
             {featureSlide === 0 && (
-              <button onClick={() => setStep(4)} style={{ ...btn.ghost, width: "100%", marginTop: 8 }}>← Retour</button>
+              <button onClick={() => goToStep(4)} style={{ ...btn.ghost, width: "100%", marginTop: 8 }}>← Retour</button>
             )}
           </div>
         )}
@@ -727,9 +751,10 @@ export default function OnboardingModal({ onComplete }) {
               </button>
             </div>
 
-            <button onClick={() => setStep(5)} style={{ ...btn.ghost, width: "100%", marginTop: 8 }}>← Retour</button>
+            <button onClick={() => goToStep(5)} style={{ ...btn.ghost, width: "100%", marginTop: 8 }}>← Retour</button>
           </div>
         )}
+        </div>{/* fin animation wrapper */}
       </div>
     </div>
   );
