@@ -157,45 +157,18 @@ function InfoBanner({ color = "orange", children }) {
 export default function OnboardingModal({ onComplete }) {
   const TOTAL_STEPS = 6;
 
-  // ── Chargement progression sauvegardée (max étape 4 pour éviter crash) ───
-  const savedProgress = (() => {
-    try {
-      const p = JSON.parse(localStorage.getItem("mg360_onboarding_progress"));
-      if (!p) return {};
-      // On ne reprend jamais à partir de l'étape 5 ou 6 (Clerk/slides)
-      return { ...p, step: Math.min(p.step || 1, 4) };
-    } catch { return {}; }
-  })();
-
-  const [step, setStep]               = useState(savedProgress.step || 1);
-  const [objectif, setObjectif]       = useState(savedProgress.objectif || "");
-  const [gazon, setGazon]             = useState(savedProgress.gazon || "");
-  const [surface, setSurface]         = useState(savedProgress.surface || "");
+  const [step, setStep]               = useState(1);
+  const [objectif, setObjectif]       = useState("");
+  const [gazon, setGazon]             = useState("");
+  const [surface, setSurface]         = useState("");
   const [surfaceErr, setSurfaceErr]   = useState("");
   const [locStatus, setLocStatus]     = useState("idle");
   const [locName, setLocName]         = useState("");
   const [locLat, setLocLat]           = useState(null);
   const [locLon, setLocLon]           = useState(null);
-  const [manualCity, setManualCity]   = useState(savedProgress.manualCity || "");
-  const [usages, setUsages]           = useState(savedProgress.usages || []);
+  const [manualCity, setManualCity]   = useState("");
+  const [usages, setUsages]           = useState([]);
   const [featureSlide, setFeatureSlide] = useState(0);
-
-  // ── Sauvegarde avec debounce 500ms — aucun impact sur la fluidité ─────────
-  const saveDebounceRef = useRef(null);
-  const persistProgress = (data) => {
-    clearTimeout(saveDebounceRef.current);
-    saveDebounceRef.current = setTimeout(() => {
-      try {
-        // On ne sauvegarde jamais les étapes 5 et 6 (slides + Clerk)
-        if (data.step >= 5) return;
-        localStorage.setItem("mg360_onboarding_progress", JSON.stringify(data));
-      } catch {}
-    }, 500);
-  };
-
-  useEffect(() => {
-    persistProgress({ step, objectif, gazon, surface, manualCity, usages });
-  }, [step, objectif, gazon, surface, manualCity, usages]);
 
   // ── Geocoding autocomplete ────────────────────────────────────────────────
   const [geoSuggestions, setGeoSuggestions] = useState([]);
@@ -235,13 +208,22 @@ export default function OnboardingModal({ onComplete }) {
     else setSurfaceErr("");
   };
 
-  const toggleUsage = (id) =>
-    setUsages(prev => prev.includes(id) ? prev.filter(u => u !== id) : [...prev, id]);
+  const toggleUsage = (id) => {
+    setUsages(prev => {
+      if (prev.includes(id)) {
+        // Désélection simple
+        return prev.filter(u => u !== id);
+      }
+      // "Peu utilisée" est exclusif — désélectionne tout le reste
+      if (id === "calme") return ["calme"];
+      // Sélectionner autre chose → retire "Peu utilisée"
+      return [...prev.filter(u => u !== "calme"), id];
+    });
+  };
 
   const handleObjectif = (id) => {
     setObjectif(id);
     setGazon("");
-    setUsages([]); // reset usages — usage peut changer selon objectif
   };
 
   const detectLocation = () => {
@@ -337,7 +319,6 @@ export default function OnboardingModal({ onComplete }) {
       if (finalCity) localStorage.setItem("mg360_location_name", finalCity);
       if (finalLat)  localStorage.setItem("mg360_lat", String(finalLat));
       if (finalLon)  localStorage.setItem("mg360_lon", String(finalLon));
-      localStorage.removeItem("mg360_onboarding_progress"); // nettoyage progress
     } catch {}
     return profile;
   };
@@ -477,32 +458,6 @@ export default function OnboardingModal({ onComplete }) {
 
             <SectionTitle>📐 Surface {isCreer ? "du terrain à aménager" : "de votre pelouse"} (m²)</SectionTitle>
             <input type="number" placeholder="Ex : 150" value={surface} onChange={e => handleSurface(e.target.value)} style={inputStyle(!!surfaceErr, surface && !surfaceErr)} />
-
-            {/* Repères visuels — disparaissent dès qu'une valeur est saisie */}
-            {!surface && (
-              <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
-                {[
-                  { icon: "🚗", label: "Place parking", val: "15" },
-                  { icon: "🏡", label: "Jardin standard", val: "100" },
-                  { icon: "🏊", label: "Grande piscine", val: "500" },
-                ].map(({ icon, label, val }) => (
-                  <div
-                    key={val}
-                    onClick={() => handleSurface(val)}
-                    style={{
-                      flex: 1, background: "rgba(255,255,255,0.05)",
-                      border: `1px solid ${C.border}`, borderRadius: 10,
-                      padding: "8px 4px", textAlign: "center", cursor: "pointer",
-                      transition: "background 0.2s",
-                    }}
-                  >
-                    <div style={{ fontSize: 18 }}>{icon}</div>
-                    <div style={{ fontSize: 10, color: C.textMuted, marginTop: 2 }}>{label}</div>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: C.textSoft }}>~{val} m²</div>
-                  </div>
-                ))}
-              </div>
-            )}
             {surfaceErr
               ? <div style={{ color: "#ef9a9a", fontSize: 11, margin: "4px 0 12px" }}>{surfaceErr}</div>
               : surface && !surfaceErr
@@ -648,6 +603,11 @@ export default function OnboardingModal({ onComplete }) {
             {usages.length > 0 && (
               <div style={{ background: "rgba(82,183,136,0.08)", border: `1px solid ${C.border}`, borderRadius: 12, padding: "10px 14px", marginBottom: 16, fontSize: 12, color: C.textSoft }}>
                 ✓ {usages.length} usage{usages.length > 1 ? "s" : ""} sélectionné{usages.length > 1 ? "s" : ""}
+                {usages.includes("calme") && (
+                  <span style={{ display: "block", fontSize: 11, color: C.textMuted, marginTop: 4 }}>
+                    ℹ️ "Peu utilisée" est exclusif — incompatible avec les autres usages
+                  </span>
+                )}
               </div>
             )}
 
