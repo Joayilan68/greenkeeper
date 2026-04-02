@@ -137,8 +137,17 @@ export default function MyLawn() {
             </div>
           </div>
           <div style={{ marginTop:14, background:"rgba(249,168,37,0.15)", borderRadius:12, padding:"10px 14px", border:"1px solid rgba(249,168,37,0.3)" }}>
-            <div style={{ fontSize:12, fontWeight:700, color:"#f9a825" }}>🎯 Projection personnalisée</div>
-            <div style={{ fontSize:13, color:"#e8f5e9", marginTop:4 }}>En suivant le plan → <span style={{ fontWeight:800, color:"#a5d6a7" }}>{projectionScore}/100</span> dans <span style={{ fontWeight:800 }}>{projectionDays} jours</span></div>
+            {isPaid ? (
+              <>
+                <div style={{ fontSize:12, fontWeight:700, color:"#f9a825" }}>🎯 Projection personnalisée</div>
+                <div style={{ fontSize:13, color:"#e8f5e9", marginTop:4 }}>En suivant le plan → <span style={{ fontWeight:800, color:"#a5d6a7" }}>{projectionScore}/100</span> dans <span style={{ fontWeight:800 }}>{projectionDays} jours</span></div>
+              </>
+            ) : (
+              <>
+                <div style={{ fontSize:12, fontWeight:700, color:"#f9a825" }}>🎯 Projection personnalisée</div>
+                <div style={{ fontSize:13, color:"#81c784", marginTop:4 }}>🔒 Score projeté disponible en <span style={{ cursor:"pointer", textDecoration:"underline", color:"#f9a825" }} onClick={() => navigate("/subscribe")}>Premium</span></div>
+              </>
+            )}
           </div>
           <ShareScore score={score} label={label} profile={profile} />
         </div>
@@ -299,10 +308,10 @@ export default function MyLawn() {
           </div>
         )}
 
-        {/* ── 10. PRÉDICTION IA ── */}
+        {/* ── 10. PROJECTION PERSONNALISÉE (Premium) ── */}
         {isPaid && (
           <div style={{ ...card(), background:"linear-gradient(135deg, rgba(27,94,32,0.3), rgba(13,43,26,0.5))", border:"1px solid rgba(165,214,167,0.3)", textAlign:"center", padding:20 }}>
-            <div style={{ fontSize:11, color:"#81c784", fontWeight:700, letterSpacing:1, marginBottom:8 }}>🧠 PRÉDICTION IA</div>
+            <div style={{ fontSize:11, color:"#81c784", fontWeight:700, letterSpacing:1, marginBottom:8 }}>📈 PROJECTION PERSONNALISÉE</div>
             <div style={{ fontSize:14, color:"#e8f5e9", lineHeight:1.6 }}>Si tu suis le plan cette semaine</div>
             <div style={{ fontSize:32, fontWeight:900, color:"#a5d6a7", margin:"8px 0" }}>{projectionScore}</div>
             <div style={{ fontSize:13, color:"#81c784" }}>Score estimé dans <strong style={{ color:"#a5d6a7" }}>{projectionDays} jours</strong></div>
