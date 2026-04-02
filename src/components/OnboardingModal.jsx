@@ -362,8 +362,8 @@ export default function OnboardingModal({ onComplete }) {
     style.id = id;
     style.textContent = `
       @keyframes mg360StepIn {
-        from { opacity: 0; transform: translateY(12px); }
-        to   { opacity: 1; transform: translateY(0); }
+        from { opacity: 0; transform: translateX(18px); }
+        to   { opacity: 1; transform: translateX(0); }
       }
     `;
     document.head.appendChild(style);
@@ -683,8 +683,19 @@ export default function OnboardingModal({ onComplete }) {
             )}
 
             {!isLastFeature && (
-              <button onClick={() => { setFeatureSlide(0); goToStep(6); }} style={{ background: "none", border: "none", color: C.textMuted, fontSize: 12, cursor: "pointer", width: "100%", marginTop: 14, fontFamily: "inherit" }}>
-                Passer →
+              <button
+                onClick={() => { setFeatureSlide(0); goToStep(6); }}
+                style={{
+                  background: "rgba(255,255,255,0.07)",
+                  border: `1px solid rgba(255,255,255,0.15)`,
+                  borderRadius: 10, color: C.textSoft,
+                  fontSize: 13, fontWeight: 600,
+                  cursor: "pointer", width: "100%",
+                  marginTop: 10, padding: "10px",
+                  fontFamily: "inherit",
+                }}
+              >
+                Passer les fonctionnalités →
               </button>
             )}
 
