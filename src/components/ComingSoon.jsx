@@ -51,12 +51,20 @@ export default function ComingSoon() {
     navigate("/login");
   };
 
+  const GAZON_LABELS = {
+    sport: "Sport / résistant", ombre: "Ombre / mi-ombre", sec: "Sec / méditerranéen",
+    ornemental: "Ornemental", universel: "Universel / mélange", chaud: "Gazon chaud",
+    synthetique: "Gazon synthétique", inconnu: "Recommandation automatique",
+    "ray-grass": "Ray-grass", fetuque: "Fétuque", kikuyu: "Kikuyu",
+    bermuda: "Bermuda", paturin: "Pâturin", zoysia: "Zoysia", mixte: "Mélange",
+  };
+
   const profileItems = profile ? [
     ["🎯 Objectif", (() => {
       const map = { parfait: "Gazon parfait", fonctionnel: "Pelouse fonctionnelle", naturel: "Gazon naturel", renover: "Rénover ma pelouse", creer: "Créer une nouvelle pelouse" };
       return map[profile.objectif] || profile.objectif;
     })()],
-    ["🌱 Gazon",   profile.pelouse],
+    ["🌱 Gazon",   GAZON_LABELS[profile.pelouse] || profile.pelouse || "—"],
     ["📐 Surface", profile.surface ? `${profile.surface} m²` : "—"],
     ["📍 Ville",   profile.ville || "—"],
   ] : [];
@@ -74,17 +82,15 @@ export default function ComingSoon() {
         {/* Logo — tap secret ×5 */}
         <div style={{ textAlign: "center", marginBottom: 28 }}>
           <img
-            src="/icon-512x512.png"
+            src="/mg360-mascot-transparent.png"
             alt="Mongazon360"
             onClick={() => setTapCount(n => n + 1)}
             style={{
-              width: 88, height: 88, borderRadius: 22,
-              objectFit: "cover", display: "block", margin: "0 auto 16px",
+              width: 88, height: 88,
+              objectFit: "contain", display: "block", margin: "0 auto 16px",
               cursor: "pointer",
-              boxShadow: adminUnlocked
-                ? `0 0 32px rgba(82,183,136,0.8)`
-                : `0 4px 24px rgba(0,0,0,0.4)`,
-              transition: "box-shadow 0.3s",
+              filter: adminUnlocked ? "drop-shadow(0 0 16px rgba(82,183,136,0.8))" : "none",
+              transition: "filter 0.3s",
             }}
           />
 
@@ -101,10 +107,13 @@ export default function ComingSoon() {
           )}
 
           <div style={{ fontSize: 24, fontWeight: 900, color: C.lightGreen, marginBottom: 6 }}>
-            Vous êtes sur la liste ! 🌿
+            {user?.firstName ? `Bienvenue ${user.firstName} ! 🌿` : "Vous êtes sur la liste ! 🌿"}
           </div>
           <div style={{ fontSize: 13, color: C.textSoft, lineHeight: 1.7 }}>
-            Mongazon360 est en cours de déploiement. Vous serez parmi les premiers avertis à l'ouverture officielle.
+            {user?.firstName
+              ? `${user.firstName}, votre profil est prêt et votre gazon n'attend plus que vous. Nous vous prévenons dès l'ouverture officielle.`
+              : "Mongazon360 est en cours de déploiement. Vous serez parmi les premiers avertis à l'ouverture officielle."
+            }
           </div>
         </div>
 
