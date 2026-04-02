@@ -1,5 +1,5 @@
 // src/components/OnboardingModal.jsx
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 // ── Palette MG360 ─────────────────────────────────────────────────────────────
 const C = {
@@ -169,15 +169,36 @@ export default function OnboardingModal({ onComplete }) {
   const [usages, setUsages]           = useState([]);
   const [featureSlide, setFeatureSlide] = useState(0);
 
+  // ── Geocoding autocomplete ────────────────────────────────────────────────
+  const [geoSuggestions, setGeoSuggestions] = useState([]);
+  const [geoLoading, setGeoLoading]         = useState(false);
+  const [geoSelected, setGeoSelected]       = useState(null); // { name, lat, lon }
+  const [isOffline, setIsOffline]           = useState(!navigator.onLine);
+  const geoDebounceRef = useRef(null);
+  const geoRequestRef  = useRef(0); // anti race condition
+
   const isSynthetique = gazon === "synthetique";
   const isCreer       = objectif === "creer";
 
+  // locOk : GPS validé, OU ville sélectionnée via autocomplete, OU saisie libre offline
+  const locOk = locStatus === "success" || geoSelected !== null || (isOffline && manualCity.trim().length >= 2);
   const canNext1      = objectif !== "";
   const canNext2      = gazon !== "";
-  const locOk         = locStatus === "success" || manualCity.trim().length >= 2;
   const canNext3      = surface !== "" && !surfaceErr && locOk;
   const canNext4      = usages.length > 0;
   const isLastFeature = featureSlide === FEATURES.length - 1;
+
+  // Surveiller l'état réseau
+  useEffect(() => {
+    const goOnline  = () => setIsOffline(false);
+    const goOffline = () => setIsOffline(true);
+    window.addEventListener("online",  goOnline);
+    window.addEventListener("offline", goOffline);
+    return () => {
+      window.removeEventListener("online",  goOnline);
+      window.removeEventListener("offline", goOffline);
+    };
+  }, []);
 
   const handleSurface = (v) => {
     setSurface(v);
@@ -215,17 +236,64 @@ export default function OnboardingModal({ onComplete }) {
 
   const handleManualCity = (v) => {
     setManualCity(v);
+    setGeoSelected(null);
+    setGeoSuggestions([]);
     if (v.length > 0 && locStatus === "success") {
       setLocStatus("idle"); setLocName(""); setLocLat(null); setLocLon(null);
     }
+
+    // Pas de recherche si offline ou moins de 2 caractères
+    if (isOffline || v.trim().length < 2) {
+      setGeoSuggestions([]);
+      return;
+    }
+
+    // Debounce 350ms
+    clearTimeout(geoDebounceRef.current);
+    geoDebounceRef.current = setTimeout(async () => {
+      const reqId = ++geoRequestRef.current;
+      setGeoLoading(true);
+      try {
+        const res  = await fetch(
+          `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(v.trim())}&count=5&language=fr&format=json`
+        );
+        const data = await res.json();
+        // Anti race condition — on ignore les réponses périmées
+        if (reqId !== geoRequestRef.current) return;
+        const results = (data.results || []).map(r => ({
+          name:    `${r.name}${r.admin1 ? `, ${r.admin1}` : ""}, ${r.country}`,
+          lat:     r.latitude,
+          lon:     r.longitude,
+        }));
+        setGeoSuggestions(results);
+      } catch {
+        // Réseau coupé pendant la requête → on passe en mode offline
+        if (reqId === geoRequestRef.current) {
+          setIsOffline(true);
+          setGeoSuggestions([]);
+        }
+      } finally {
+        if (reqId === geoRequestRef.current) setGeoLoading(false);
+      }
+    }, 350);
+  };
+
+  const handleSelectSuggestion = (suggestion) => {
+    setGeoSelected(suggestion);
+    setManualCity(suggestion.name);
+    setGeoSuggestions([]);
+    setGeoLoading(false);
   };
 
   const saveProfile = () => {
-    const finalCity = locStatus === "success" ? locName : manualCity.trim();
+    const finalCity = locStatus === "success" ? locName : geoSelected?.name || manualCity.trim();
+    const finalLat  = locLat ?? geoSelected?.lat ?? null;
+    const finalLon  = locLon ?? geoSelected?.lon ?? null;
     const profile = {
       objectif, pelouse: gazon, surface: parseInt(surface),
-      ville: finalCity, lat: locLat, lon: locLon, usages,
+      ville: finalCity, lat: finalLat, lon: finalLon, usages,
       isSynthetique, isCreer,
+      cityVerified: locStatus === "success" || geoSelected !== null, // flag qualité
       sol:        isSynthetique ? "N/A" : null,
       exposition: null,
       arrosage:   isSynthetique ? "N/A" : null,
@@ -238,8 +306,8 @@ export default function OnboardingModal({ onComplete }) {
       localStorage.setItem("mg360_profile_v1",      JSON.stringify(profile));
       localStorage.setItem("mg360_onboarding_done", "true");
       if (finalCity) localStorage.setItem("mg360_location_name", finalCity);
-      if (locLat)    localStorage.setItem("mg360_lat", String(locLat));
-      if (locLon)    localStorage.setItem("mg360_lon", String(locLon));
+      if (finalLat)  localStorage.setItem("mg360_lat", String(finalLat));
+      if (finalLon)  localStorage.setItem("mg360_lon", String(finalLon));
     } catch {}
     return profile;
   };
@@ -423,9 +491,57 @@ export default function OnboardingModal({ onComplete }) {
                   <span style={{ fontSize: 11, color: C.textMuted }}>ou saisir manuellement</span>
                   <div style={{ flex: 1, height: 1, background: C.border }} />
                 </div>
-                <input type="text" placeholder="Votre ville (ex : Lyon, Bordeaux...)" value={manualCity} onChange={e => handleManualCity(e.target.value)} style={inputStyle(false, manualCity.trim().length >= 2)} />
-                {manualCity.trim().length >= 2 && (
-                  <div style={{ color: C.freshGreen, fontSize: 11, marginTop: 4 }}>✓ Ville enregistrée : {manualCity}</div>
+
+                {isOffline && (
+                  <div style={{ background: "rgba(244,162,97,0.1)", border: "1px solid rgba(244,162,97,0.3)", borderRadius: 10, padding: "8px 12px", marginBottom: 10, fontSize: 11, color: "#f4c88a" }}>
+                    📵 Hors connexion — saisissez votre ville, elle sera vérifiée au prochain lancement.
+                  </div>
+                )}
+
+                <div style={{ position: "relative" }}>
+                  <input
+                    type="text"
+                    placeholder="Votre ville (ex : Lyon, Bordeaux...)"
+                    value={manualCity}
+                    onChange={e => handleManualCity(e.target.value)}
+                    style={inputStyle(false, geoSelected !== null || (isOffline && manualCity.trim().length >= 2))}
+                    autoComplete="off"
+                  />
+                  {geoLoading && (
+                    <div style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", fontSize: 13, color: C.textMuted }}>⌛</div>
+                  )}
+                </div>
+
+                {/* Suggestions autocomplete */}
+                {geoSuggestions.length > 0 && (
+                  <div style={{ background: "#1a3d2b", border: `1px solid ${C.border}`, borderRadius: 12, marginTop: 4, overflow: "hidden" }}>
+                    {geoSuggestions.map((s, i) => (
+                      <div
+                        key={i}
+                        onClick={() => handleSelectSuggestion(s)}
+                        style={{
+                          padding: "10px 14px", fontSize: 13, cursor: "pointer",
+                          color: C.text, borderBottom: i < geoSuggestions.length - 1 ? `1px solid ${C.border}` : "none",
+                          display: "flex", alignItems: "center", gap: 8,
+                        }}
+                      >
+                        <span style={{ fontSize: 16 }}>📍</span>
+                        <span>{s.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Feedback sélection */}
+                {geoSelected && (
+                  <div style={{ color: C.freshGreen, fontSize: 11, marginTop: 6, display: "flex", alignItems: "center", gap: 6 }}>
+                    ✅ Ville vérifiée : {geoSelected.name}
+                  </div>
+                )}
+                {!geoSelected && isOffline && manualCity.trim().length >= 2 && (
+                  <div style={{ color: "#f4c88a", fontSize: 11, marginTop: 6 }}>
+                    ⚠️ Ville non vérifiée — sera confirmée en ligne
+                  </div>
                 )}
               </>
             )}
