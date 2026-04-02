@@ -362,8 +362,8 @@ export default function OnboardingModal({ onComplete }) {
     style.id = id;
     style.textContent = `
       @keyframes mg360StepIn {
-        from { opacity: 0; transform: translateX(18px); }
-        to   { opacity: 1; transform: translateX(0); }
+        from { opacity: 0; transform: translateY(12px); }
+        to   { opacity: 1; transform: translateY(0); }
       }
     `;
     document.head.appendChild(style);
