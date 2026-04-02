@@ -141,7 +141,30 @@ export default function Dashboard() {
 
       <div style={scroll}>
 
-        {/* ── SCORE ─────────────────────────────────────────────────────────── */}
+        {/* ── BANNIÈRE VILLE NON VÉRIFIÉE ───────────────────────────────────── */}
+        {profile?.cityNotFound && (
+          <div style={{
+            background: "rgba(230,81,0,0.15)", border: "1px solid rgba(239,108,0,0.4)",
+            borderRadius: 14, padding: "12px 14px", marginBottom: 4,
+            display: "flex", alignItems: "center", gap: 10,
+          }}>
+            <span style={{ fontSize: 22 }}>📍</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#f9a825", marginBottom: 2 }}>
+                Ville introuvable — météo désactivée
+              </div>
+              <div style={{ fontSize: 12, color: "#81c784", lineHeight: 1.5 }}>
+                "{profile.ville}" n'a pas pu être localisée. Corrigez votre ville pour activer la météo et les conseils saisonniers.
+              </div>
+            </div>
+            <button
+              onClick={() => setShowOnboarding(true)}
+              style={{ background: "rgba(239,108,0,0.3)", border: "1px solid rgba(239,108,0,0.5)", borderRadius: 10, padding: "6px 12px", color: "#f9a825", fontSize: 11, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}
+            >
+              Corriger →
+            </button>
+          </div>
+        )}
         <div style={{ ...card(), background:"linear-gradient(135deg, rgba(27,94,32,0.4), rgba(13,43,26,0.6))", border:`1px solid ${color}44` }}>
           <div style={{ fontSize:11, color:"#81c784", fontWeight:700, letterSpacing:1.2, textTransform:"uppercase", marginBottom:12, textAlign:"center" }}>
             🌿 Score Santé du Gazon
