@@ -223,8 +223,13 @@ export default function OnboardingModal({ onComplete }) {
     else setSurfaceErr("");
   };
 
-  const toggleUsage = (id) =>
-    setUsages(prev => prev.includes(id) ? prev.filter(u => u !== id) : [...prev, id]);
+  const toggleUsage = (id) => {
+    setUsages(prev => {
+      if (prev.includes(id)) return prev.filter(u => u !== id);
+      if (id === "calme") return ["calme"];
+      return [...prev.filter(u => u !== "calme"), id];
+    });
+  };
 
   const handleObjectif = (id) => {
     setObjectif(id);
@@ -387,8 +392,8 @@ export default function OnboardingModal({ onComplete }) {
 
   return (
     <div style={{
-      position: "fixed", inset: 0, zIndex: 1000,
-      background: "rgba(0,0,0,0.8)",
+      position: "fixed", inset: 0, zIndex: 9999,
+      background: "rgba(0,0,0,0.95)",
       display: "flex", alignItems: "flex-end", justifyContent: "center",
     }}>
       <div style={{
