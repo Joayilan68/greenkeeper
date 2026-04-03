@@ -222,8 +222,18 @@ export default function OnboardingModal({ onComplete }) {
     else setSurfaceErr("");
   };
 
-  const toggleUsage = (id) =>
-    setUsages(prev => prev.includes(id) ? prev.filter(u => u !== id) : [...prev, id]);
+  const toggleUsage = (id) => {
+    setUsages(prev => {
+      if (prev.includes(id)) {
+        // Désélection simple
+        return prev.filter(u => u !== id);
+      }
+      // "Peu utilisée" est exclusif — désélectionne tout le reste
+      if (id === "calme") return ["calme"];
+      // Sélectionner autre chose → retire "Peu utilisée"
+      return [...prev.filter(u => u !== "calme"), id];
+    });
+  };
 
   const handleObjectif = (id) => {
     setObjectif(id);
