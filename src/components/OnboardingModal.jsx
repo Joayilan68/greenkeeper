@@ -177,6 +177,7 @@ export default function OnboardingModal({ onComplete }) {
   const [surface, setSurface]         = useState("");
   const [surfaceErr, setSurfaceErr]   = useState("");
   const [locStatus, setLocStatus]     = useState("idle");
+  const [locError, setLocError]       = useState(null); // refusé | timeout | indisponible
   const [locName, setLocName]         = useState("");
   const [locLat, setLocLat]           = useState(null);
   const [locLon, setLocLon]           = useState(null);
@@ -222,18 +223,8 @@ export default function OnboardingModal({ onComplete }) {
     else setSurfaceErr("");
   };
 
-  const toggleUsage = (id) => {
-    setUsages(prev => {
-      if (prev.includes(id)) {
-        // Désélection simple
-        return prev.filter(u => u !== id);
-      }
-      // "Peu utilisée" est exclusif — désélectionne tout le reste
-      if (id === "calme") return ["calme"];
-      // Sélectionner autre chose → retire "Peu utilisée"
-      return [...prev.filter(u => u !== "calme"), id];
-    });
-  };
+  const toggleUsage = (id) =>
+    setUsages(prev => prev.includes(id) ? prev.filter(u => u !== id) : [...prev, id]);
 
   const handleObjectif = (id) => {
     setObjectif(id);
@@ -241,7 +232,7 @@ export default function OnboardingModal({ onComplete }) {
   };
 
   const detectLocation = () => {
-    if (!navigator.geolocation) { setLocStatus("error"); return; }
+    if (!navigator.geolocation) { setLocStatus("error"); setLocError("non_supporté"); return; }
     setLocStatus("loading");
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
@@ -252,10 +243,14 @@ export default function OnboardingModal({ onComplete }) {
           const data = await res.json();
           const city = data.address?.city || data.address?.town || data.address?.village || data.address?.county || "Votre région";
           setLocName(city); setManualCity(""); setLocStatus("success");
-        } catch { setLocStatus("success"); }
+        } catch { setLocStatus("success"); } // coords ok même si reverse geocoding échoue
       },
-      () => setLocStatus("error"),
-      { timeout: 10000, enableHighAccuracy: false }
+      (err) => {
+        // err.code : 1 = refusé, 2 = indisponible, 3 = timeout
+        setLocError(err.code === 1 ? "refusé" : err.code === 3 ? "timeout" : "indisponible");
+        setLocStatus("error");
+      },
+      { timeout: 15000, enableHighAccuracy: false, maximumAge: 60000 }
     );
   };
 
@@ -529,8 +524,13 @@ export default function OnboardingModal({ onComplete }) {
             )}
             {locStatus === "error" && (
               <div style={{ background: "rgba(198,40,40,0.12)", border: "1px solid rgba(198,40,40,0.3)", borderRadius: 12, padding: "10px 14px", marginBottom: 12, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <div style={{ fontSize: 12, color: "#ef9a9a" }}>⚠️ Localisation refusée</div>
-                <button onClick={detectLocation} style={{ background: "none", border: "none", color: C.textSoft, fontSize: 11, cursor: "pointer" }}>Réessayer</button>
+                <div style={{ fontSize: 12, color: "#ef9a9a" }}>
+                  {locError === "refusé"      && "⚠️ Permission refusée — autorisez la localisation dans vos paramètres"}
+                  {locError === "timeout"     && "⏱️ Délai dépassé — GPS lent, saisissez votre ville manuellement"}
+                  {locError === "indisponible"&& "📵 Position indisponible — GPS désactivé sur l'appareil ?"}
+                  {!locError                  && "⚠️ Localisation impossible"}
+                </div>
+                <button onClick={detectLocation} style={{ background: "none", border: "none", color: C.textSoft, fontSize: 11, cursor: "pointer", whiteSpace: "nowrap", marginLeft: 8 }}>Réessayer</button>
               </div>
             )}
 
@@ -568,7 +568,7 @@ export default function OnboardingModal({ onComplete }) {
                     {geoSuggestions.map((s, i) => (
                       <div
                         key={i}
-                        onClick={() => handleSelectSuggestion(s)}
+                        onMouseDown={(e) => { e.preventDefault(); handleSelectSuggestion(s); }}
                         style={{
                           padding: "10px 14px", fontSize: 13, cursor: "pointer",
                           color: C.text, borderBottom: i < geoSuggestions.length - 1 ? `1px solid ${C.border}` : "none",
