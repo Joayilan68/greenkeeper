@@ -79,7 +79,7 @@ export default function Rappels() {
           const isDue      = dueReminders.some(d => d.id === type.id);
 
           return (
-            <div key={type.id} style={{ ...card(), border:`1px solid ${isActive ? "rgba(82,183,136,0.4)" : C.border}`, background: isActive ? "rgba(82,183,136,0.06)" : "rgba(255,255,255,0.03)" }}>
+            <div key={type.id} style={{ ...card(), border:`1px solid ${isActive ? "rgba(82,183,136,0.4)" : "rgba(149,213,178,0.25)"}`, background: isActive ? "rgba(82,183,136,0.06)" : "rgba(255,255,255,0.07)" }}>
 
               {/* ── Ligne principale ── */}
               <div style={{ display:"flex", alignItems:"center", gap:12 }}>
