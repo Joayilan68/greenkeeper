@@ -1,7 +1,7 @@
 // src/lib/useReminders.js
 import { useState, useEffect } from "react";
 
-const KEY = "gk_reminders";
+const KEY = "mg360_reminders";
 
 export const REMINDER_TYPES = [
   { id:"tonte",     icon:"✂️", label:"Tonte",               defaultDays:7,  desc:"Fréquence de tonte recommandée" },

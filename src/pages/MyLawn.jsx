@@ -215,9 +215,12 @@ export default function MyLawn() {
     <div>
       <div style={header}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-          <div>
-            <div style={{ fontSize:20, fontWeight:800, color:"#a5d6a7" }}>🌿 Mon Gazon</div>
-            <div style={{ fontSize:12, color:"#81c784", opacity:0.7, marginTop:4 }}>Centre de pilotage</div>
+          <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+            <img src="/mg360-mascot-transparent.png" alt="MG360" style={{ width:40, height:40, objectFit:"contain" }} />
+            <div>
+              <div style={{ fontSize:20, fontWeight:800, color:"#a5d6a7" }}>Mon Gazon</div>
+              <div style={{ fontSize:12, color:"#81c784", opacity:0.7 }}>Centre de pilotage</div>
+            </div>
           </div>
           <button onClick={() => navigate("/rappels")} style={{ background:"rgba(67,160,71,0.15)", border:"1px solid rgba(67,160,71,0.35)", borderRadius:10, padding:"7px 12px", color:"#a5d6a7", fontSize:12, cursor:"pointer", display:"flex", alignItems:"center", gap:6 }}>
             🔔 Rappels
