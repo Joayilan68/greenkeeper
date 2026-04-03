@@ -11,6 +11,85 @@ import { calcLawnScore } from "../lib/lawnScore";
 import { MONTHLY_PLAN, MONTHS_FR, calcArrosage } from "../lib/lawn";
 import { card, cardTitle, btn, scroll, header } from "../lib/styles";
 
+// ── Data Phase 2 ─────────────────────────────────────────────────────────────
+const SOLS = [
+  { id:"argileux", label:"Argileux",    icon:"🏔️" },
+  { id:"sableux",  label:"Sableux",     icon:"🏖️" },
+  { id:"limoneux", label:"Limoneux",    icon:"🌍" },
+  { id:"calcaire", label:"Calcaire",    icon:"🪨" },
+  { id:"humifere", label:"Humifère",    icon:"🌱" },
+  { id:"compacte", label:"Compacté",    icon:"🧱" },
+  { id:"inconnu",  label:"Je ne sais pas", icon:"🤷" },
+];
+const EXPOSITIONS = [
+  { id:"ensoleille", label:"Ensoleillé",  icon:"☀️" },
+  { id:"mi-ombre",   label:"Mi-ombre",    icon:"⛅" },
+  { id:"ombrage",    label:"Ombragé",     icon:"🌥️" },
+];
+const ARROSAGES = [
+  { id:"automatique", label:"Arrosage automatique", icon:"🤖" },
+  { id:"manuel",      label:"Tuyau / manuel",        icon:"🪣" },
+  { id:"aucun",       label:"Pas d'arrosage",        icon:"❌" },
+  { id:"rarement",    label:"Rarement / je ne sais pas", icon:"🤷" },
+];
+const TONDEUSES = [
+  { id:"electrique_filaire",  label:"Électrique filaire",   icon:"🔌" },
+  { id:"electrique_batterie", label:"Électrique batterie",  icon:"🔋" },
+  { id:"thermique",           label:"Thermique",             icon:"⛽" },
+  { id:"robot",               label:"Robot tondeuse",        icon:"🤖" },
+  { id:"helicoidale",         label:"Hélicoïdale",           icon:"🔧" },
+  { id:"autoportee",          label:"Autoportée / Rider",    icon:"🚜" },
+  { id:"inconnu",             label:"Je ne sais pas",        icon:"🤷" },
+];
+const MATERIELS = [
+  { id:"scarificateur",   label:"Scarificateur",      icon:"🔩" },
+  { id:"aerateur",        label:"Aérateur",           icon:"🌀" },
+  { id:"debroussailleuse",label:"Débroussailleuse",   icon:"✂️" },
+  { id:"epandeur",        label:"Épandeur",            icon:"🌱" },
+  { id:"pulverisateur",   label:"Pulvérisateur",      icon:"💧" },
+  { id:"motoculteur",     label:"Motoculteur",         icon:"🚜" },
+  { id:"rouleau",         label:"Rouleau à gazon",     icon:"🛞" },
+  { id:"arroseur",        label:"Arroseur/programmateur", icon:"⏱️" },
+  { id:"souffleur",       label:"Souffleur",           icon:"💨" },
+  { id:"raclette",        label:"Raclette/lame niveleuse", icon:"📐" },
+  { id:"aucun",           label:"Aucun matériel",      icon:"❌" },
+];
+const BUDGETS = [
+  { id:"0-50",    label:"0–50 € / an",     icon:"💶" },
+  { id:"50-150",  label:"50–150 € / an",   icon:"💶" },
+  { id:"150-300", label:"150–300 € / an",  icon:"💶" },
+  { id:"300-600", label:"300–600 € / an",  icon:"💶" },
+  { id:"600+",    label:"Plus de 600 € / an", icon:"💶" },
+  { id:"inconnu", label:"Je ne sais pas",  icon:"🤷" },
+];
+
+// Matériel spécifique gazon synthétique
+const MATERIELS_SYNTH = [
+  { id:"brosse",    label:"Brosse",              icon:"🧹" },
+  { id:"souffleur", label:"Souffleur",           icon:"💨" },
+  { id:"hp",        label:"Nettoyeur haute pression", icon:"🚿" },
+  { id:"aspirateur",label:"Aspirateur",          icon:"🌀" },
+  { id:"aucun",     label:"Aucun",               icon:"❌" },
+];
+
+// ── Calcul complétude profil ──────────────────────────────────────────────────
+function calcCompletion(profile, isPaid) {
+  if (!profile) return 0;
+  const p2Fields = [
+    profile.sol && profile.sol !== "N/A",
+    profile.exposition,
+    profile.arrosage && profile.arrosage !== "N/A",
+    profile.tondeuse?.length > 0,
+    profile.materiel?.length > 0,
+    profile.budget,
+  ];
+  const p2Done = p2Fields.filter(Boolean).length;
+  const p2Pct  = Math.round((p2Done / 6) * 50); // 0→50%
+  const base   = 40; // Phase 1
+  const total  = Math.min(90, base + p2Pct); // max 90% sans diag photo
+  return total;
+}
+
 const PRODUCTS = [
   { name:"Anti-mousse liquide",    score:"+15", price:"18,50€", icon:"🌿", reason:"Mousse détectée" },
   { name:"Engrais azoté NPK",      score:"+10", price:"24,90€", icon:"🌱", reason:"Carence nutriments" },
@@ -62,12 +141,47 @@ function ShareScore({ score, label, profile }) {
 
 export default function MyLawn() {
   const navigate           = useNavigate();
-  const { profile }        = useProfile();
+  const { profile, saveProfile } = useProfile();
   const { history = [] }   = useHistory();
   const { weather }        = useWeather() || {};
   const { isPaid = false } = useSubscription() || {};
   const { activeCount }    = useReminders();
   const [period, setPeriod] = useState("7j");
+
+  // ── État complétion profil ──────────────────────────────────────────────
+  const [showCompletion, setShowCompletion] = useState(false);
+  const [p2, setP2] = useState({
+    sol:        profile?.sol        || null,
+    exposition: profile?.exposition || null,
+    arrosage:   profile?.arrosage   || null,
+    tondeuse:   profile?.tondeuse   || [],
+    materiel:   profile?.materiel   || [],
+    budget:     profile?.budget     || null,
+  });
+  const [p2Saved, setP2Saved] = useState(false);
+
+  const isSynthetique = profile?.isSynthetique || profile?.pelouse === "synthetique";
+  const completion    = calcCompletion(profile, isPaid);
+
+  const toggleMulti = (field, id) => {
+    setP2(prev => {
+      const arr = prev[field] || [];
+      if (id === "aucun") return { ...prev, [field]: ["aucun"] };
+      const filtered = arr.filter(x => x !== "aucun");
+      return {
+        ...prev,
+        [field]: filtered.includes(id) ? filtered.filter(x => x !== id) : [...filtered, id]
+      };
+    });
+  };
+
+  const handleSaveP2 = () => {
+    const updated = { ...profile, ...p2 };
+    updated.profileCompletion = calcCompletion(updated, isPaid);
+    saveProfile(updated);
+    setP2Saved(true);
+    setTimeout(() => setP2Saved(false), 2500);
+  };
 
   const month = new Date().getMonth() + 1;
   const plan  = MONTHLY_PLAN[month];
@@ -170,7 +284,151 @@ export default function MyLawn() {
           </div>
         )}
 
-        {/* ── 3. DÉTAIL DU SCORE ── */}
+        {/* ── 3. COMPLÉTER MON PROFIL ── */}
+        {completion < 90 && (
+          <div style={{ ...card(), border:`1px solid ${completion >= 70 ? "rgba(76,175,80,0.4)" : "rgba(244,162,97,0.4)"}`, background: completion >= 70 ? "rgba(76,175,80,0.08)" : "rgba(244,162,97,0.08)" }}>
+            <div style={cardTitle}>
+              <span>👤 Compléter mon profil</span>
+              <span style={{ fontSize:12, fontWeight:800, color: completion >= 70 ? "#a5d6a7" : "#f4a261" }}>{completion}%</span>
+            </div>
+
+            {/* Barre de progression */}
+            <div style={{ marginBottom:12 }}>
+              <div style={{ height:8, background:"rgba(255,255,255,0.08)", borderRadius:8, overflow:"hidden" }}>
+                <div style={{ width:`${completion}%`, height:"100%", borderRadius:8, background:`linear-gradient(90deg, #2d6a4f, #52b788)`, transition:"width 0.6s" }} />
+              </div>
+              <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:"#81c784", marginTop:4 }}>
+                <span>Onboarding ✅</span>
+                <span>Profil complet 90%</span>
+                <span>📸 Premium 100%</span>
+              </div>
+            </div>
+
+            <div style={{ fontSize:12, color:"#95d5b2", marginBottom:12, lineHeight:1.6 }}>
+              Un profil complet améliore la précision de vos conseils d'entretien. Renseignez les informations manquantes ci-dessous.
+            </div>
+
+            <button
+              onClick={() => setShowCompletion(!showCompletion)}
+              style={{ ...btn.primary, fontSize:13, marginBottom: showCompletion ? 16 : 0 }}
+            >
+              {showCompletion ? "▲ Masquer" : "✏️ Compléter mon profil →"}
+            </button>
+
+            {showCompletion && (
+              <div>
+                {/* ── Sol ── */}
+                {!isSynthetique && (
+                  <div style={{ marginBottom:16 }}>
+                    <div style={{ fontSize:12, fontWeight:700, color:"#95d5b2", marginBottom:8 }}>🏔️ Type de sol</div>
+                    <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+                      {SOLS.map(s => (
+                        <button key={s.id} onClick={() => setP2(prev => ({ ...prev, sol: s.id }))}
+                          style={{ background: p2.sol === s.id ? "rgba(82,183,136,0.3)" : "rgba(255,255,255,0.05)", border:`1px solid ${p2.sol === s.id ? "#52b788" : "rgba(149,213,178,0.18)"}`, borderRadius:10, padding:"6px 10px", color: p2.sol === s.id ? "#95d5b2" : "#e8f5e9", fontSize:11, cursor:"pointer", fontFamily:"inherit" }}>
+                          {s.icon} {s.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Exposition ── */}
+                <div style={{ marginBottom:16 }}>
+                  <div style={{ fontSize:12, fontWeight:700, color:"#95d5b2", marginBottom:8 }}>☀️ Exposition</div>
+                  <div style={{ display:"flex", gap:6 }}>
+                    {EXPOSITIONS.map(e => (
+                      <button key={e.id} onClick={() => setP2(prev => ({ ...prev, exposition: e.id }))}
+                        style={{ flex:1, background: p2.exposition === e.id ? "rgba(82,183,136,0.3)" : "rgba(255,255,255,0.05)", border:`1px solid ${p2.exposition === e.id ? "#52b788" : "rgba(149,213,178,0.18)"}`, borderRadius:10, padding:"8px 6px", color: p2.exposition === e.id ? "#95d5b2" : "#e8f5e9", fontSize:11, cursor:"pointer", fontFamily:"inherit", textAlign:"center" }}>
+                        {e.icon}<br/>{e.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* ── Arrosage ── */}
+                {!isSynthetique && (
+                  <div style={{ marginBottom:16 }}>
+                    <div style={{ fontSize:12, fontWeight:700, color:"#95d5b2", marginBottom:8 }}>💧 Mode d'arrosage</div>
+                    <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+                      {ARROSAGES.map(a => (
+                        <button key={a.id} onClick={() => setP2(prev => ({ ...prev, arrosage: a.id }))}
+                          style={{ background: p2.arrosage === a.id ? "rgba(82,183,136,0.3)" : "rgba(255,255,255,0.05)", border:`1px solid ${p2.arrosage === a.id ? "#52b788" : "rgba(149,213,178,0.18)"}`, borderRadius:10, padding:"6px 10px", color: p2.arrosage === a.id ? "#95d5b2" : "#e8f5e9", fontSize:11, cursor:"pointer", fontFamily:"inherit" }}>
+                          {a.icon} {a.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Tondeuse ── */}
+                {!isSynthetique && (
+                  <div style={{ marginBottom:16 }}>
+                    <div style={{ fontSize:12, fontWeight:700, color:"#95d5b2", marginBottom:8 }}>✂️ Tondeuse disponible <span style={{ fontWeight:400, color:"#4a7c5c" }}>(plusieurs choix)</span></div>
+                    <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+                      {TONDEUSES.map(t => (
+                        <button key={t.id} onClick={() => toggleMulti("tondeuse", t.id)}
+                          style={{ background: p2.tondeuse?.includes(t.id) ? "rgba(82,183,136,0.3)" : "rgba(255,255,255,0.05)", border:`1px solid ${p2.tondeuse?.includes(t.id) ? "#52b788" : "rgba(149,213,178,0.18)"}`, borderRadius:10, padding:"6px 10px", color: p2.tondeuse?.includes(t.id) ? "#95d5b2" : "#e8f5e9", fontSize:11, cursor:"pointer", fontFamily:"inherit" }}>
+                          {t.icon} {t.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Matériel ── */}
+                <div style={{ marginBottom:16 }}>
+                  <div style={{ fontSize:12, fontWeight:700, color:"#95d5b2", marginBottom:8 }}>🧰 Matériel disponible <span style={{ fontWeight:400, color:"#4a7c5c" }}>(plusieurs choix)</span></div>
+                  <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+                    {(isSynthetique ? MATERIELS_SYNTH : MATERIELS).map(m => (
+                      <button key={m.id} onClick={() => toggleMulti("materiel", m.id)}
+                        style={{ background: p2.materiel?.includes(m.id) ? "rgba(82,183,136,0.3)" : "rgba(255,255,255,0.05)", border:`1px solid ${p2.materiel?.includes(m.id) ? "#52b788" : "rgba(149,213,178,0.18)"}`, borderRadius:10, padding:"6px 10px", color: p2.materiel?.includes(m.id) ? "#95d5b2" : "#e8f5e9", fontSize:11, cursor:"pointer", fontFamily:"inherit" }}>
+                        {m.icon} {m.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* ── Budget ── */}
+                <div style={{ marginBottom:20 }}>
+                  <div style={{ fontSize:12, fontWeight:700, color:"#95d5b2", marginBottom:8 }}>💰 Budget entretien annuel</div>
+                  <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+                    {BUDGETS.map(b => (
+                      <button key={b.id} onClick={() => setP2(prev => ({ ...prev, budget: b.id }))}
+                        style={{ background: p2.budget === b.id ? "rgba(82,183,136,0.3)" : "rgba(255,255,255,0.05)", border:`1px solid ${p2.budget === b.id ? "#52b788" : "rgba(149,213,178,0.18)"}`, borderRadius:10, padding:"6px 10px", color: p2.budget === b.id ? "#95d5b2" : "#e8f5e9", fontSize:11, cursor:"pointer", fontFamily:"inherit" }}>
+                        {b.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* ── Bouton sauvegarder ── */}
+                <button onClick={handleSaveP2} style={{ ...btn.primary, fontSize:14 }}>
+                  {p2Saved ? "✅ Profil mis à jour !" : "💾 Sauvegarder mon profil"}
+                </button>
+
+                {/* Note diagnostic photo Premium */}
+                <div style={{ marginTop:12, fontSize:11, color:"#4a7c5c", textAlign:"center", lineHeight:1.6 }}>
+                  📸 Le diagnostic photo (Premium) débloquera les 10% restants jusqu'à 100%
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Profil complet à 90% — message encouragement */}
+        {completion >= 90 && (
+          <div style={{ ...card(), background:"rgba(82,183,136,0.08)", border:"1px solid rgba(82,183,136,0.3)", textAlign:"center", padding:14 }}>
+            <div style={{ fontSize:20, marginBottom:6 }}>🎉</div>
+            <div style={{ fontSize:13, fontWeight:700, color:"#95d5b2", marginBottom:4 }}>Profil complété à 90% !</div>
+            <div style={{ fontSize:12, color:"#81c784" }}>
+              {isPaid ? "Faites un diagnostic photo pour atteindre 100%." : "Passez Premium pour faire votre diagnostic photo et atteindre 100%."}
+            </div>
+            {!isPaid && <button onClick={() => navigate("/subscribe")} style={{ ...btn.primary, width:"auto", padding:"8px 20px", fontSize:12, marginTop:10 }}>⭐ Passer Premium</button>}
+            {isPaid && <button onClick={() => navigate("/diagnostic")} style={{ ...btn.primary, width:"auto", padding:"8px 20px", fontSize:12, marginTop:10 }}>📸 Faire un diagnostic</button>}
+          </div>
+        )}
+
+        {/* ── 4. DÉTAIL DU SCORE ── */}
         <div style={card()}>
           <div style={cardTitle}><span>📊 Détail du score</span>{!isPaid && <span style={{ fontSize:10, color:"#f9a825" }}>🔒 Premium</span>}</div>
           {[
@@ -190,7 +448,7 @@ export default function MyLawn() {
           {!isPaid && <button onClick={() => navigate("/subscribe")} style={{ ...btn.primary, fontSize:12, padding:"8px 16px", width:"auto", marginTop:4 }}>⭐ Voir le détail complet</button>}
         </div>
 
-        {/* ── 4. PROBLÈMES PRIORITAIRES ── */}
+        {/* ── 6. PROBLÈMES PRIORITAIRES ── */}
         {issues.length > 0 && (
           <div style={card()}>
             <div style={cardTitle}><span>⚠️ Problèmes prioritaires</span></div>
@@ -204,7 +462,7 @@ export default function MyLawn() {
           </div>
         )}
 
-        {/* ── 5. PLAN DU MOIS ── */}
+        {/* ── 7. PLAN DU MOIS ── */}
         <div style={card()}>
           <div style={cardTitle}><span>📅 Plan {MONTHS_FR[month]}</span></div>
           <div style={{ fontSize:13, color:"#f9a825", fontWeight:700, marginBottom:8 }}>{plan?.label}</div>
@@ -221,7 +479,7 @@ export default function MyLawn() {
           ))}
         </div>
 
-        {/* ── 6. ÉVOLUTION DU SCORE ── */}
+        {/* ── 8. ÉVOLUTION DU SCORE ── */}
         <div style={card()}>
           <div style={cardTitle}>
             <span>📈 Évolution du score</span>
@@ -266,7 +524,7 @@ export default function MyLawn() {
           </div>
         </div>
 
-        {/* ── 7. DERNIER DIAGNOSTIC ── */}
+        {/* ── 9. DERNIER DIAGNOSTIC ── */}
         <div style={{ ...card(), background:"rgba(33,150,243,0.08)", border:"1px solid rgba(33,150,243,0.25)" }}>
           <div style={cardTitle}><span>🔬 Dernier diagnostic</span>{!isPaid && <span style={{ fontSize:10, color:"#f9a825" }}>🔒 Premium</span>}</div>
           <div style={{ textAlign:"center", padding:"12px 0" }}>
@@ -285,7 +543,7 @@ export default function MyLawn() {
           </div>
         </div>
 
-        {/* ── 8. PRODUITS RECOMMANDÉS ── */}
+        {/* ── 10. PRODUITS RECOMMANDÉS ── */}
         <div style={card()}>
           <div style={cardTitle}><span>🛒 Produits recommandés</span></div>
           <div style={{ fontSize:11, color:"#81c784", marginBottom:10, fontStyle:"italic" }}>Sélectionnés selon votre score</div>
@@ -305,7 +563,7 @@ export default function MyLawn() {
           <button onClick={() => navigate("/products")} style={{ ...btn.primary, marginTop:12, fontSize:12, padding:"8px" }}>Voir tous les produits →</button>
         </div>
 
-        {/* ── 9. BLOC PREMIUM ── */}
+        {/* ── 11. BLOC PREMIUM ── */}
         {!isPaid && (
           <div style={{ ...card(), background:"linear-gradient(135deg, rgba(249,168,37,0.15), rgba(230,81,0,0.1))", border:"1px solid rgba(249,168,37,0.4)", textAlign:"center" }}>
             <div style={{ fontSize:28, marginBottom:8 }}>⭐</div>
@@ -317,7 +575,7 @@ export default function MyLawn() {
           </div>
         )}
 
-        {/* ── 10. PROJECTION PERSONNALISÉE (Premium) ── */}
+        {/* ── 12. PROJECTION PERSONNALISÉE (Premium) ── */}
         {isPaid && (
           <div style={{ ...card(), background:"linear-gradient(135deg, rgba(27,94,32,0.3), rgba(13,43,26,0.5))", border:"1px solid rgba(165,214,167,0.3)", textAlign:"center", padding:20 }}>
             <div style={{ fontSize:11, color:"#81c784", fontWeight:700, letterSpacing:1, marginBottom:8 }}>📈 PROJECTION PERSONNALISÉE</div>
