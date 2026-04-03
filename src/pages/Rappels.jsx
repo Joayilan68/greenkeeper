@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useReminders, REMINDER_TYPES } from "../lib/useReminders";
 import { useHistory } from "../lib/useHistory";
-import { card, cardTitle, btn, scroll, header } from "../lib/styles";
+import { card, cardTitle, btn, scroll } from "../lib/styles";
 
 const C = {
   freshGreen: "#52b788",
@@ -26,7 +26,7 @@ export default function Rappels() {
   return (
     <div>
       {/* ── Header ── */}
-      <div style={header}>
+      <div style={{ padding:"48px 20px 16px" }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
           <div style={{ display:"flex", alignItems:"center", gap:10 }}>
             <img src="/mg360-mascot-transparent.png" alt="MG360" style={{ width:40, height:40, objectFit:"contain" }} />
