@@ -47,7 +47,7 @@ export default function Today() {
   const today = new Date();
   const month = today.getMonth() + 1;
   const plan  = MONTHLY_PLAN[month];
-  const arros = profile && weather ? calcArrosage(month, profile, weather) : null;
+  const arros = profile && weather ? calcArrosage(month, profile, weather, history) : null;
   const canLog = isPaid || history.length < 5;
 
   const { mois } = useSaison();
@@ -69,7 +69,7 @@ export default function Today() {
   const fetchAI = useCallback(async () => {
     if (!weather || !isPaid) return;
     setAiLoading(true); setAiReco("");
-    const prompt = `Tu es un expert gazon pour Mongazon360. Recommandations concises pour aujourd'hui. Profil: Type=${profile?.pelouse||"?"} Sol=${profile?.sol||"?"} Surface=${profile?.surface||"?"}m² Date: ${today.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"})} — ${plan.label} Météo: ${weather.temp_max}°C / ${weather.temp_min}°C · ${weather.precip}mm · humidité ${weather.humidity}% · vent ${weather.wind}km/h Arrosage: ${arros ? arros.mm+"mm / "+arros.minutes+"min" : "aucun"} 4-5 points max, emojis, français.`;
+    const prompt = `Tu es un expert greenkeeper. Recommandations concises pour aujourd'hui. Profil: Type=${profile?.pelouse||"?"} Sol=${profile?.sol||"?"} Surface=${profile?.surface||"?"}m² Date: ${today.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"})} — ${plan.label} Météo: ${weather.temp_max}°C / ${weather.temp_min}°C · ${weather.precip}mm · humidité ${weather.humidity}% · vent ${weather.wind}km/h Arrosage: ${arros ? arros.mm+"mm / "+arros.minutes+"min" : "aucun"} 4-5 points max, emojis, français.`;
     try {
       const res  = await fetch("/api/ai-recommendations", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ prompt }) });
       const data = await res.json();
@@ -97,17 +97,10 @@ export default function Today() {
   return (
     <div>
       {/* Header */}
-      <div style={{ ...header, textAlign:"left" }}>
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
-          <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-            <img src="/mg360-mascot-transparent.png" alt="MG360" style={{ width:40, height:40, objectFit:"contain" }} />
-            <div>
-              <div style={{ fontSize:12, color:"#81c784" }}>{today.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</div>
-              <div style={{ fontSize:20, fontWeight:800, color:"#a5d6a7" }}>Actions du jour</div>
-            </div>
-          </div>
-          {isAdmin && <div style={{ fontSize:11, color:"#f9a825" }}>👑 Admin</div>}
-        </div>
+      <div style={header}>
+        <div style={{ fontSize:12, color:"#81c784" }}>{today.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</div>
+        <div style={{ fontSize:20, fontWeight:800, color:"#a5d6a7", marginTop:4 }}>Actions du jour</div>
+        {isAdmin && <div style={{ fontSize:11, color:"#f9a825", marginTop:4 }}>👑 Mode Admin activé</div>}
         {isFree && <div style={{ fontSize:11, color:"#81c784", marginTop:4 }}>🆓 Accès gratuit · <span onClick={() => navigate("/subscribe")} style={{ color:"#a5d6a7", cursor:"pointer", textDecoration:"underline" }}>Passer Premium</span></div>}
       </div>
 
@@ -127,15 +120,14 @@ export default function Today() {
           </div>
         )}
 
-        {/* Météo — Premium uniquement */}
-        {isPaid && weather && (()=>{ const w=getWMO(weather.code); return (<div style={{...card(),background:"rgba(76,175,80,0.12)",border:"1px solid rgba(76,175,80,0.25)"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:32,fontWeight:800}}>{Math.round(weather.temp_max)}°C</div><div style={{fontSize:13,color:"#81c784"}}>{w.label} · {weather.precip}mm</div><div style={{fontSize:11,color:"#81c784",opacity:0.7}}>Humidité {weather.humidity}% · Vent {weather.wind}km/h</div></div><div style={{fontSize:52}}>{w.icon}</div></div></div>); })()}
-        {!isPaid && (<div style={{...card(),textAlign:"center",padding:14,background:"rgba(255,255,255,0.03)"}}><div style={{fontSize:13,color:"#81c784",marginBottom:8}}>🔒 Météo temps réel — Premium uniquement</div><button onClick={() => navigate("/subscribe")} style={{...btn.primary,width:"auto",padding:"8px 20px",fontSize:12}}>Passer Premium</button></div>)}
+        {/* Météo */}
+        {weather && (()=>{ const w=getWMO(weather.code); return (<div style={{...card(),background:"rgba(76,175,80,0.12)",border:"1px solid rgba(76,175,80,0.25)"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:32,fontWeight:800}}>{Math.round(weather.temp_max)}°C</div><div style={{fontSize:13,color:"#81c784"}}>{w.label} · {weather.precip}mm</div><div style={{fontSize:11,color:"#81c784",opacity:0.7}}>Humidité {weather.humidity}% · Vent {weather.wind}km/h</div></div><div style={{fontSize:52}}>{w.icon}</div></div></div>); })()}
 
-        {/* Alertes — Premium uniquement */}
-        {isPaid && alerts.map((a,i) => <AlertBanner key={i} alert={a} />)}
+        {/* Alertes */}
+        {alerts.map((a,i) => <AlertBanner key={i} alert={a} />)}
 
-        {/* Arrosage — Premium uniquement */}
-        {isPaid && arros && (<div style={{...card(),background:"rgba(25,118,210,0.1)",border:"1px solid rgba(100,181,246,0.25)"}}><div style={cardTitle}><span>💧 Arrosage recommandé</span></div><div style={{display:"flex",gap:8}}>{[{val:`${arros.mm}mm`,label:"Apport"},{val:`${arros.minutes}min`,label:"Durée"},{val:"5h–9h",label:"Horaire"}].map(({val,label}) => (<div key={label} style={{flex:1,background:"rgba(255,255,255,0.06)",borderRadius:12,padding:"10px 6px",textAlign:"center"}}><div style={{fontSize:18,fontWeight:800,color:"#64b5f6"}}>{val}</div><div style={{fontSize:10,color:"#81c784"}}>{label}</div></div>))}</div></div>)}
+        {/* Arrosage */}
+        {arros && (<div style={{...card(),background:"rgba(25,118,210,0.1)",border:"1px solid rgba(100,181,246,0.25)"}}><div style={cardTitle}><span>💧 Arrosage recommandé</span></div><div style={{display:"flex",gap:8}}>{[{val:`${arros.mm}mm`,label:"Apport"},{val:`${arros.minutes}min`,label:"Durée"},{val:"5h–9h",label:"Horaire"}].map(({val,label}) => (<div key={label} style={{flex:1,background:"rgba(255,255,255,0.06)",borderRadius:12,padding:"10px 6px",textAlign:"center"}}><div style={{fontSize:18,fontWeight:800,color:"#64b5f6"}}>{val}</div><div style={{fontSize:10,color:"#81c784"}}>{label}</div></div>))}</div></div>)}
 
         {/* IA Recommandations */}
         <div style={card()}><div style={cardTitle}><span>🤖 Recommandations IA</span>{isPaid && <button onClick={fetchAI} style={{background:"rgba(76,175,80,0.2)",border:"none",borderRadius:8,padding:"4px 10px",color:"#a5d6a7",fontSize:11,cursor:"pointer"}}>↻</button>}</div>{!isPaid ? (<div style={{textAlign:"center",padding:"16px 0"}}><div style={{fontSize:28,marginBottom:8}}>🔒</div><div style={{fontSize:13,color:"#81c784",marginBottom:12}}>Fonctionnalité Premium uniquement</div><button onClick={() => navigate("/subscribe")} style={{...btn.primary,width:"auto",padding:"10px 24px"}}>Passer Premium 🌿</button></div>) : aiLoading ? (<div style={{textAlign:"center",padding:"20px 0"}}><div style={{fontSize:28,display:"inline-block",animation:"spin 1.2s linear infinite"}}>🌿</div><div style={{fontSize:12,color:"#81c784",marginTop:8}}>Analyse en cours...</div></div>) : aiReco ? (<div style={{fontSize:13,lineHeight:1.8,whiteSpace:"pre-wrap"}}>{aiReco}</div>) : (<div style={{fontSize:13,color:"#81c784",textAlign:"center",padding:"12px 0"}}>{!weather ? "Activez la géolocalisation" : "Appuyez sur ↻"}</div>)}</div>
@@ -176,8 +168,8 @@ export default function Today() {
             </div>
           </div>
 
-          {/* Actions recommandées aujourd'hui — uniquement si canLog */}
-          {canLog && (arros || plan?.engrais) && (
+          {/* Actions recommandées aujourd'hui */}
+          {(arros || plan?.engrais) && (
             <div style={{ marginBottom:12, padding:"10px 12px", background:"rgba(76,175,80,0.08)", borderRadius:12, border:"1px solid rgba(76,175,80,0.2)" }}>
               <div style={{ fontSize:11, color:"#81c784", fontWeight:700, marginBottom:8, letterSpacing:0.5 }}>🎯 RECOMMANDÉES AUJOURD'HUI</div>
               {[

@@ -4,7 +4,7 @@
 import { useState, useCallback } from "react";
 import { useSaison } from "./useSaison";
 
-const KEY = "gk_greenpoints";
+const KEY = "mg360_greenpoints";
 
 // ── Règles de points avec plafonds agronomiques logiques ─────────────────────
 export const GP_REGLES = {
@@ -13,78 +13,98 @@ export const GP_REGLES = {
     label: "Connexion du jour",
     icone: "🌿",
     plafond: { type: "jour", max: 1 },
+    cooldown_jours: 0,
   },
   tonte: {
     points: 50,
     label: "Tonte enregistrée",
     icone: "✂️",
-    plafond: { type: "semaine", max: 2 }, // max 2x/semaine — logique agronomique
+    plafond: { type: "semaine", max: 2 },
+    cooldown_jours: 3, // minimum 3 jours entre 2 tontes
   },
   arrosage: {
     points: 20,
     label: "Arrosage enregistré",
     icone: "💧",
     plafond: { type: "jour", max: 1 },
+    cooldown_jours: 1,
   },
   engrais: {
     points: 80,
     label: "Engrais appliqué",
     icone: "🌱",
-    plafond: { type: "mois", max: 1 }, // max 1x/mois — 4x/an en réalité
+    plafond: { type: "mois", max: 1 },
+    cooldown_jours: 30, // minimum 30 jours entre 2 apports
   },
   desherbage: {
     points: 40,
     label: "Désherbage effectué",
     icone: "🪴",
     plafond: { type: "semaine", max: 1 },
+    cooldown_jours: 14, // minimum 14 jours entre 2 désherbages
   },
   aeration: {
     points: 100,
     label: "Aération réalisée",
     icone: "🌀",
-    plafond: { type: "an", max: 2 }, // max 2x/an
+    plafond: { type: "an", max: 2 },
+    cooldown_jours: 90, // minimum 90 jours entre 2 aérations
   },
   scarification: {
     points: 100,
     label: "Scarification réalisée",
     icone: "🔧",
-    plafond: { type: "an", max: 1 }, // max 1x/an
+    plafond: { type: "an", max: 1 },
+    cooldown_jours: 365, // 1x par an maximum
   },
   anti_mousse: {
     points: 60,
-    label: "Traitement anti-mousse",
+    label: "Traitement anti-mousse / fongicide",
     icone: "🌿",
     plafond: { type: "an", max: 2 },
+    cooldown_jours: 21, // minimum 21 jours entre 2 traitements (délai agronomique)
+  },
+  semences: {
+    points: 80,
+    label: "Regarnissage / semis",
+    icone: "🌾",
+    plafond: { type: "an", max: 2 },
+    cooldown_jours: 60, // minimum 60 jours entre 2 semis
   },
   partage_score: {
     points: 75,
     label: "Score partagé",
     icone: "📤",
     plafond: { type: "semaine", max: 1 },
+    cooldown_jours: 7,
   },
   diagnostic_photo: {
     points: 100,
     label: "Diagnostic photo",
     icone: "📸",
     plafond: { type: "semaine", max: 1 },
+    cooldown_jours: 7,
   },
   profil_complet: {
     points: 200,
     label: "Profil complété",
     icone: "👤",
-    plafond: { type: "total", max: 1 }, // une seule fois
+    plafond: { type: "total", max: 1 },
+    cooldown_jours: 0,
   },
   streak_7j: {
     points: 200,
     label: "Streak 7 jours",
     icone: "🔥",
     plafond: { type: "semaine", max: 1 },
+    cooldown_jours: 7,
   },
   streak_30j: {
     points: 1000,
     label: "Streak 30 jours",
     icone: "🔥",
     plafond: { type: "mois", max: 1 },
+    cooldown_jours: 30,
   },
 };
 
@@ -145,15 +165,25 @@ function getDebutPeriode(type) {
   }
 }
 
-// Vérifie si une action peut être récompensée selon les plafonds
+// Vérifie si une action peut être récompensée selon les plafonds ET le cooldown
 function peutGagnerPoints(action, state) {
   const regle = GP_REGLES[action];
   if (!regle) return false;
 
-  const { plafond } = regle;
+  const { plafond, cooldown_jours } = regle;
+
+  // Vérification cooldown — intervalle minimum entre 2 actions identiques
+  if (cooldown_jours > 0) {
+    const derniere = state.historique
+      .filter(h => h.action === action)
+      .sort((a, b) => b.date - a.date)[0];
+    if (derniere) {
+      const joursEcoules = (maintenant() - derniere.date) / (1000 * 60 * 60 * 24);
+      if (joursEcoules < cooldown_jours) return false;
+    }
+  }
 
   if (plafond.type === "total") {
-    // Une seule fois dans toute la vie du compte
     const deja = state.historique.filter(h => h.action === action).length;
     return deja < plafond.max;
   }
