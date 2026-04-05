@@ -123,7 +123,7 @@ export default function Setup() {
         <div style={{ fontSize:11, color:"#81c784", marginTop:6, opacity:0.7 }}>Étape {step + 1} / {totalSteps}</div>
       </div>
 
-      <div style={{ padding:"0 16px 40px" }}>
+      <div style={{ padding:"0 16px 100px" }}>
         <div style={{ background:"rgba(255,255,255,0.06)", borderRadius:20, border:"1px solid rgba(165,214,167,0.15)", padding:18, marginBottom:16 }}>
           <div style={{ fontSize:16, fontWeight:800, marginBottom:16 }}>{stepActuel.title}</div>
 
