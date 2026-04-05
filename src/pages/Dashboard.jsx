@@ -34,12 +34,12 @@ export default function Dashboard() {
 
   // ── Nouveaux hooks ──────────────────────────────────────────────────────────
   const { classementActif } = useSaison();
-  const { total: gpTotal, palier, prochainPalier, progressPalier } = useGreenPoints();
+  const { total: gpTotal, palier, prochainPalier, progressPalier, historique: gpHistorique } = useGreenPoints();
   const { actuel: streak, enDanger, modeHiver } = useStreak();
   const {
     ligueActuelle, position, totalJoueurs, pointsSemaine,
     enZonePromotion, enZoneRetrogradation, joursRestants, messageClassement
-  } = useClassement();
+  } = useClassement(gpHistorique, profile, isPaid);
 
   useEffect(() => {
     const done = localStorage.getItem("mg360_onboarding_done") || localStorage.getItem("gk_onboarding_done"); // rétrocompat
