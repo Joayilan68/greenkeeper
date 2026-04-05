@@ -149,7 +149,6 @@ export default function MyLawn() {
   const [period, setPeriod] = useState("7j");
 
   // ── État complétion profil ──────────────────────────────────────────────
-  const [showCompletion, setShowCompletion] = useState(false);
   const [p2, setP2] = useState({
     sol:        profile?.sol        || null,
     exposition: profile?.exposition || null,
@@ -158,7 +157,6 @@ export default function MyLawn() {
     materiel:   profile?.materiel   || [],
     budget:     profile?.budget     || null,
   });
-  const [p2Saved, setP2Saved] = useState(false);
 
   const isSynthetique = profile?.isSynthetique || profile?.pelouse === "synthetique";
   const completion    = calcCompletion(profile, isPaid);
@@ -231,6 +229,19 @@ export default function MyLawn() {
 
       <div style={scroll}>
 
+        {/* ── BOUTON COMPLÉTER PROFIL ── */}
+        <div style={{ marginBottom:12, display:"flex", alignItems:"center", justifyContent:"space-between", background:"rgba(255,255,255,0.05)", border:`1px solid ${completion < 90 ? "rgba(244,162,97,0.25)" : "rgba(82,183,136,0.25)"}`, borderRadius:14, padding:"10px 14px" }}>
+          <div>
+            <div style={{ fontSize:12, fontWeight:700, color: completion < 90 ? "#f4a261" : "#95d5b2" }}>👤 Profil complété à {completion}%</div>
+            <div style={{ fontSize:11, color:"#81c784", marginTop:2 }}>
+              {completion < 90 ? "Complétez pour de meilleurs conseils" : "Modifier vos informations à tout moment"}
+            </div>
+          </div>
+          <button onClick={() => navigate("/setup")} style={{ background: completion < 90 ? "rgba(244,162,97,0.2)" : "rgba(82,183,136,0.15)", border:`1px solid ${completion < 90 ? "rgba(244,162,97,0.4)" : "rgba(82,183,136,0.3)"}`, borderRadius:10, padding:"7px 12px", color: completion < 90 ? "#f4a261" : "#95d5b2", fontSize:12, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap" }}>
+            ✏️ {completion < 90 ? "Compléter →" : "Modifier →"}
+          </button>
+        </div>
+
         {/* ── 1. SCORE HÉRO ── */}
         <div style={{ ...card(), background:`linear-gradient(135deg, rgba(27,94,32,0.5), rgba(13,43,26,0.7))`, border:`2px solid ${color}55`, padding:20 }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
@@ -287,151 +298,8 @@ export default function MyLawn() {
           </div>
         )}
 
-        {/* ── 3. COMPLÉTER MON PROFIL ── */}
-        {completion < 90 && (
-          <div style={{ ...card(), border:`1px solid ${completion >= 70 ? "rgba(76,175,80,0.4)" : "rgba(244,162,97,0.4)"}`, background: completion >= 70 ? "rgba(76,175,80,0.08)" : "rgba(244,162,97,0.08)" }}>
-            <div style={cardTitle}>
-              <span>👤 Compléter mon profil</span>
-              <span style={{ fontSize:12, fontWeight:800, color: completion >= 70 ? "#a5d6a7" : "#f4a261" }}>{completion}%</span>
-            </div>
+        {/* ── 3. DÉTAIL DU SCORE ── */}
 
-            {/* Barre de progression */}
-            <div style={{ marginBottom:12 }}>
-              <div style={{ height:8, background:"rgba(255,255,255,0.08)", borderRadius:8, overflow:"hidden" }}>
-                <div style={{ width:`${completion}%`, height:"100%", borderRadius:8, background:`linear-gradient(90deg, #2d6a4f, #52b788)`, transition:"width 0.6s" }} />
-              </div>
-              <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:"#81c784", marginTop:4 }}>
-                <span>Onboarding ✅</span>
-                <span>Profil complet 90%</span>
-                <span>📸 Premium 100%</span>
-              </div>
-            </div>
-
-            <div style={{ fontSize:12, color:"#95d5b2", marginBottom:12, lineHeight:1.6 }}>
-              Un profil complet améliore la précision de vos conseils d'entretien. Renseignez les informations manquantes ci-dessous.
-            </div>
-
-            <button
-              onClick={() => setShowCompletion(!showCompletion)}
-              style={{ ...btn.primary, fontSize:13, marginBottom: showCompletion ? 16 : 0 }}
-            >
-              {showCompletion ? "▲ Masquer" : "✏️ Compléter mon profil →"}
-            </button>
-
-            {showCompletion && (
-              <div>
-                {/* ── Sol ── */}
-                {!isSynthetique && (
-                  <div style={{ marginBottom:16 }}>
-                    <div style={{ fontSize:12, fontWeight:700, color:"#95d5b2", marginBottom:8 }}>🏔️ Type de sol</div>
-                    <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
-                      {SOLS.map(s => (
-                        <button key={s.id} onClick={() => setP2(prev => ({ ...prev, sol: s.id }))}
-                          style={{ background: p2.sol === s.id ? "rgba(82,183,136,0.3)" : "rgba(255,255,255,0.05)", border:`1px solid ${p2.sol === s.id ? "#52b788" : "rgba(149,213,178,0.18)"}`, borderRadius:10, padding:"6px 10px", color: p2.sol === s.id ? "#95d5b2" : "#e8f5e9", fontSize:11, cursor:"pointer", fontFamily:"inherit" }}>
-                          {s.icon} {s.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* ── Exposition ── */}
-                <div style={{ marginBottom:16 }}>
-                  <div style={{ fontSize:12, fontWeight:700, color:"#95d5b2", marginBottom:8 }}>☀️ Exposition</div>
-                  <div style={{ display:"flex", gap:6 }}>
-                    {EXPOSITIONS.map(e => (
-                      <button key={e.id} onClick={() => setP2(prev => ({ ...prev, exposition: e.id }))}
-                        style={{ flex:1, background: p2.exposition === e.id ? "rgba(82,183,136,0.3)" : "rgba(255,255,255,0.05)", border:`1px solid ${p2.exposition === e.id ? "#52b788" : "rgba(149,213,178,0.18)"}`, borderRadius:10, padding:"8px 6px", color: p2.exposition === e.id ? "#95d5b2" : "#e8f5e9", fontSize:11, cursor:"pointer", fontFamily:"inherit", textAlign:"center" }}>
-                        {e.icon}<br/>{e.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* ── Arrosage ── */}
-                {!isSynthetique && (
-                  <div style={{ marginBottom:16 }}>
-                    <div style={{ fontSize:12, fontWeight:700, color:"#95d5b2", marginBottom:8 }}>💧 Mode d'arrosage</div>
-                    <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
-                      {ARROSAGES.map(a => (
-                        <button key={a.id} onClick={() => setP2(prev => ({ ...prev, arrosage: a.id }))}
-                          style={{ background: p2.arrosage === a.id ? "rgba(82,183,136,0.3)" : "rgba(255,255,255,0.05)", border:`1px solid ${p2.arrosage === a.id ? "#52b788" : "rgba(149,213,178,0.18)"}`, borderRadius:10, padding:"6px 10px", color: p2.arrosage === a.id ? "#95d5b2" : "#e8f5e9", fontSize:11, cursor:"pointer", fontFamily:"inherit" }}>
-                          {a.icon} {a.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* ── Tondeuse ── */}
-                {!isSynthetique && (
-                  <div style={{ marginBottom:16 }}>
-                    <div style={{ fontSize:12, fontWeight:700, color:"#95d5b2", marginBottom:8 }}>✂️ Tondeuse disponible <span style={{ fontWeight:400, color:"#4a7c5c" }}>(plusieurs choix)</span></div>
-                    <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
-                      {TONDEUSES.map(t => (
-                        <button key={t.id} onClick={() => toggleMulti("tondeuse", t.id)}
-                          style={{ background: p2.tondeuse?.includes(t.id) ? "rgba(82,183,136,0.3)" : "rgba(255,255,255,0.05)", border:`1px solid ${p2.tondeuse?.includes(t.id) ? "#52b788" : "rgba(149,213,178,0.18)"}`, borderRadius:10, padding:"6px 10px", color: p2.tondeuse?.includes(t.id) ? "#95d5b2" : "#e8f5e9", fontSize:11, cursor:"pointer", fontFamily:"inherit" }}>
-                          {t.icon} {t.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* ── Matériel ── */}
-                <div style={{ marginBottom:16 }}>
-                  <div style={{ fontSize:12, fontWeight:700, color:"#95d5b2", marginBottom:8 }}>🧰 Matériel disponible <span style={{ fontWeight:400, color:"#4a7c5c" }}>(plusieurs choix)</span></div>
-                  <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
-                    {(isSynthetique ? MATERIELS_SYNTH : MATERIELS).map(m => (
-                      <button key={m.id} onClick={() => toggleMulti("materiel", m.id)}
-                        style={{ background: p2.materiel?.includes(m.id) ? "rgba(82,183,136,0.3)" : "rgba(255,255,255,0.05)", border:`1px solid ${p2.materiel?.includes(m.id) ? "#52b788" : "rgba(149,213,178,0.18)"}`, borderRadius:10, padding:"6px 10px", color: p2.materiel?.includes(m.id) ? "#95d5b2" : "#e8f5e9", fontSize:11, cursor:"pointer", fontFamily:"inherit" }}>
-                        {m.icon} {m.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* ── Budget ── */}
-                <div style={{ marginBottom:20 }}>
-                  <div style={{ fontSize:12, fontWeight:700, color:"#95d5b2", marginBottom:8 }}>💰 Budget entretien annuel</div>
-                  <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
-                    {BUDGETS.map(b => (
-                      <button key={b.id} onClick={() => setP2(prev => ({ ...prev, budget: b.id }))}
-                        style={{ background: p2.budget === b.id ? "rgba(82,183,136,0.3)" : "rgba(255,255,255,0.05)", border:`1px solid ${p2.budget === b.id ? "#52b788" : "rgba(149,213,178,0.18)"}`, borderRadius:10, padding:"6px 10px", color: p2.budget === b.id ? "#95d5b2" : "#e8f5e9", fontSize:11, cursor:"pointer", fontFamily:"inherit" }}>
-                        {b.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* ── Bouton sauvegarder ── */}
-                <button onClick={handleSaveP2} style={{ ...btn.primary, fontSize:14 }}>
-                  {p2Saved ? "✅ Profil mis à jour !" : "💾 Sauvegarder mon profil"}
-                </button>
-
-                {/* Note diagnostic photo Premium */}
-                <div style={{ marginTop:12, fontSize:11, color:"#4a7c5c", textAlign:"center", lineHeight:1.6 }}>
-                  📸 Le diagnostic photo (Premium) débloquera les 10% restants jusqu'à 100%
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Profil complet à 90% — message encouragement */}
-        {completion >= 90 && (
-          <div style={{ ...card(), background:"rgba(82,183,136,0.08)", border:"1px solid rgba(82,183,136,0.3)", textAlign:"center", padding:14 }}>
-            <div style={{ fontSize:20, marginBottom:6 }}>🎉</div>
-            <div style={{ fontSize:13, fontWeight:700, color:"#95d5b2", marginBottom:4 }}>Profil complété à 90% !</div>
-            <div style={{ fontSize:12, color:"#81c784" }}>
-              {isPaid ? "Faites un diagnostic photo pour atteindre 100%." : "Passez Premium pour faire votre diagnostic photo et atteindre 100%."}
-            </div>
-            {!isPaid && <button onClick={() => navigate("/subscribe")} style={{ ...btn.primary, width:"auto", padding:"8px 20px", fontSize:12, marginTop:10 }}>⭐ Passer Premium</button>}
-            {isPaid && <button onClick={() => navigate("/diagnostic")} style={{ ...btn.primary, width:"auto", padding:"8px 20px", fontSize:12, marginTop:10 }}>📸 Faire un diagnostic</button>}
-          </div>
-        )}
-
-        {/* ── 4. DÉTAIL DU SCORE ── */}
         <div style={card()}>
           <div style={cardTitle}><span>📊 Détail du score</span>{!isPaid && <span style={{ fontSize:10, color:"#f9a825" }}>🔒 Premium</span>}</div>
           {[

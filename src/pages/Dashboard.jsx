@@ -101,6 +101,34 @@ export default function Dashboard() {
     info:    { bg:"rgba(21,101,192,0.15)", border:"rgba(66,165,245,0.3)", badge:"#1565c0" },
   };
 
+  // ── Variables tuile profil ────────────────────────────────────────────────
+  const profileCompletion   = profile?.profileCompletion || (profile ? 40 : 0);
+  const OBJECTIF_LABELS_MAP = { parfait:"Gazon parfait", fonctionnel:"Pelouse fonctionnelle", naturel:"Gazon naturel", renover:"Rénover ma pelouse", creer:"Créer une nouvelle pelouse" };
+  const SOL_LABELS_MAP      = { argileux:"Argileux", limoneux:"Limoneux", sableux:"Sableux", calcaire:"Calcaire", humifere:"Humifère", compacte:"Compacté", inconnu:"Non défini" };
+  const EXPO_LABELS_MAP     = { ensoleille:"Ensoleillé", "mi-ombre":"Mi-ombre", ombrage:"Ombragé" };
+  const ARROSAGE_LABELS_MAP = { automatique:"Arrosage auto", manuel:"Tuyau/manuel", aucun:"Pas d'arrosage", rarement:"Rarement" };
+  const BUDGET_LABELS_MAP   = { "0-50":"0–50€/an", "50-150":"50–150€/an", "150-300":"150–300€/an", "300-600":"300–600€/an", "600+":"+600€/an", inconnu:"Non défini" };
+  const profilePhase1 = !profile ? [] : [
+    profile.objectif  ? { icon:"🎯", label:"Objectif", val: OBJECTIF_LABELS_MAP[profile.objectif] || profile.objectif } : null,
+    gazonDisplay      ? { icon:"🌿", label:"Gazon",    val: gazonDisplay } : null,
+    profile.surface   ? { icon:"📐", label:"Surface",  val: `${profile.surface} m²` } : null,
+    profile.ville     ? { icon:"📍", label:"Ville",    val: profile.ville } : null,
+  ].filter(Boolean);
+  const profilePhase2 = !profile ? [] : [
+    profile.sol && profile.sol !== "N/A" ? { icon:"🏔️", label:"Sol",        val: SOL_LABELS_MAP[profile.sol] || profile.sol } : null,
+    profile.exposition ? { icon:"☀️",  label:"Exposition", val: EXPO_LABELS_MAP[profile.exposition] || profile.exposition } : null,
+    profile.arrosage   ? { icon:"💧",  label:"Arrosage",   val: ARROSAGE_LABELS_MAP[profile.arrosage] || profile.arrosage } : null,
+    profile.tondeuse?.length > 0 ? { icon:"✂️", label:"Tondeuse", val: `${profile.tondeuse.length} type${profile.tondeuse.length > 1 ? "s" : ""}` } : null,
+    profile.budget     ? { icon:"💰",  label:"Budget",     val: BUDGET_LABELS_MAP[profile.budget] || profile.budget } : null,
+  ].filter(Boolean);
+  const profileManquants = !profile ? [] : [
+    !profile.sol || profile.sol === "N/A" ? "Type de sol" : null,
+    !profile.exposition ? "Exposition" : null,
+    !profile.arrosage   ? "Arrosage"   : null,
+    !profile.tondeuse?.length ? "Tondeuse" : null,
+    !profile.budget     ? "Budget"     : null,
+  ].filter(Boolean);
+
   return (
     <div>
       {showOnboarding && <OnboardingModal onComplete={handleOnboardingComplete} />}
@@ -474,59 +502,18 @@ export default function Dashboard() {
         )}
 
         {/* ── PROFIL ────────────────────────────────────────────────────────── */}
-        {(() => {
-          const completion = profile?.profileCompletion || (profile ? 40 : 0);
-
-          const OBJECTIF_LABELS = {
-            parfait: "Gazon parfait", fonctionnel: "Pelouse fonctionnelle",
-            naturel: "Gazon naturel", renover: "Rénover ma pelouse", creer: "Créer une nouvelle pelouse"
-          };
-          const SOL_LABELS = {
-            argileux:"Argileux", limoneux:"Limoneux", sableux:"Sableux",
-            calcaire:"Calcaire", humifere:"Humifère", compacte:"Compacté", inconnu:"Non défini"
-          };
-          const EXPO_LABELS = { ensoleille:"Ensoleillé", "mi-ombre":"Mi-ombre", ombrage:"Ombragé" };
-          const ARROSAGE_LABELS = { automatique:"Arrosage auto", manuel:"Tuyau/manuel", aucun:"Pas d'arrosage", rarement:"Rarement" };
-          const BUDGET_LABELS = { "0-50":"0–50€/an", "50-150":"50–150€/an", "150-300":"150–300€/an", "300-600":"300–600€/an", "600+":"+600€/an", inconnu:"Non défini" };
-
-          // Infos Phase 1 (onboarding)
-          const phase1 = [
-            profile?.objectif  && { icon:"🎯", label:"Objectif", val: OBJECTIF_LABELS[profile.objectif] || profile.objectif },
-            gazonDisplay       && { icon:"🌿", label:"Gazon",    val: gazonDisplay },
-            profile?.surface   && { icon:"📐", label:"Surface",  val: `${profile.surface} m²` },
-            profile?.ville     && { icon:"📍", label:"Ville",    val: profile.ville },
-          ].filter(Boolean);
-
-          // Infos Phase 2
-          const phase2 = [
-            profile?.sol        && profile.sol !== "N/A" && { icon:"🏔️", label:"Sol",        val: SOL_LABELS[profile.sol] || profile.sol },
-            profile?.exposition && { icon:"☀️",  label:"Exposition", val: EXPO_LABELS[profile.exposition] || profile.exposition },
-            profile?.arrosage   && { icon:"💧",  label:"Arrosage",   val: ARROSAGE_LABELS[profile.arrosage] || profile.arrosage },
-            profile?.tondeuse?.length > 0 && { icon:"✂️", label:"Tondeuse", val: `${profile.tondeuse.length} type${profile.tondeuse.length > 1 ? "s" : ""}` },
-            profile?.budget     && { icon:"💰",  label:"Budget",     val: BUDGET_LABELS[profile.budget] || profile.budget },
-          ].filter(Boolean);
-
-          // Champs manquants Phase 2
-          const manquants = [
-            !profile?.sol || profile.sol === "N/A" ? "Type de sol" : null,
-            !profile?.exposition ? "Exposition" : null,
-            !profile?.arrosage ? "Arrosage" : null,
-            !profile?.tondeuse?.length ? "Tondeuse" : null,
-            !profile?.budget ? "Budget" : null,
-          ].filter(Boolean);
-
+        {(()=>{
+          const completion = profileCompletion;
+          const phase1     = profilePhase1;
+          const phase2     = profilePhase2;
+          const manquants  = profileManquants;
           return (
             <div style={card()}>
               <div style={cardTitle}>
                 <span>👤 Mon profil</span>
-                <div style={{ display:"flex", gap:6 }}>
-                  <button onClick={() => navigate("/my-lawn")} style={{ background:"rgba(76,175,80,0.2)", border:"none", borderRadius:8, padding:"4px 10px", color:"#a5d6a7", fontSize:11, cursor:"pointer" }}>
-                    Modifier
-                  </button>
-                  <button onClick={() => navigate("/parametres")} style={{ background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.15)", borderRadius:8, padding:"4px 10px", color:"#81c784", fontSize:11, cursor:"pointer" }}>
-                    ⚙️ Données
-                  </button>
-                </div>
+                <button onClick={() => navigate("/setup")} style={{ background:"rgba(76,175,80,0.2)", border:"none", borderRadius:8, padding:"4px 10px", color:"#a5d6a7", fontSize:11, cursor:"pointer" }}>
+                  ✏️ Modifier
+                </button>
               </div>
 
               {profile ? (
@@ -587,7 +574,7 @@ export default function Dashboard() {
                             </span>
                           ))}
                         </div>
-                        <button onClick={() => navigate("/my-lawn")} style={{ marginTop:10, width:"100%", background:"rgba(244,162,97,0.2)", color:"#f4a261", border:"1px solid rgba(244,162,97,0.3)", borderRadius:10, padding:"8px", fontSize:12, fontWeight:700, cursor:"pointer" }}>
+                        <button onClick={() => navigate("/setup")} style={{ marginTop:10, width:"100%", background:"rgba(244,162,97,0.2)", color:"#f4a261", border:"1px solid rgba(244,162,97,0.3)", borderRadius:10, padding:"8px", fontSize:12, fontWeight:700, cursor:"pointer" }}>
                           Compléter → +{manquants.length * 8}% complétude
                         </button>
                       </div>
@@ -599,7 +586,7 @@ export default function Dashboard() {
                         <div style={{ fontSize:11, color:"#81c784", marginBottom:8 }}>
                           Complétez votre profil pour des conseils plus précis et un meilleur score au classement.
                         </div>
-                        <button onClick={() => navigate("/my-lawn")} style={{ width:"100%", background:"rgba(249,168,37,0.15)", color:"#f9a825", border:"1px solid rgba(249,168,37,0.3)", borderRadius:10, padding:"8px", fontSize:12, fontWeight:700, cursor:"pointer" }}>
+                        <button onClick={() => navigate("/setup")} style={{ width:"100%", background:"rgba(249,168,37,0.15)", color:"#f9a825", border:"1px solid rgba(249,168,37,0.3)", borderRadius:10, padding:"8px", fontSize:12, fontWeight:700, cursor:"pointer" }}>
                           Compléter mon profil →
                         </button>
                       </div>
