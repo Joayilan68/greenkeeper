@@ -7,6 +7,22 @@ import { card, btn } from "../lib/styles";
 
 export default function Register() {
   const navigate = useNavigate();
+
+  // Si les consentements ont déjà été acceptés → skip vers le dashboard
+  const dejaDone = (() => {
+    try {
+      const saved = localStorage.getItem("mg360_consents") || localStorage.getItem("gk_consents");
+      if (!saved) return false;
+      const c = JSON.parse(saved);
+      return c.cgu && c.confidentialite;
+    } catch { return false; }
+  })();
+
+  if (dejaDone) {
+    navigate("/", { replace: true });
+    return null;
+  }
+
   const [consents, setConsents] = useState({
     cgu: false,
     confidentialite: false,
@@ -24,7 +40,7 @@ export default function Register() {
       return;
     }
     // Sauvegarder les consentements
-    localStorage.setItem("gk_consents", JSON.stringify({
+    localStorage.setItem("mg360_consents", JSON.stringify({
       ...consents,
       date: new Date().toISOString(),
       version: "1.0"

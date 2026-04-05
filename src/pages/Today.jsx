@@ -48,7 +48,7 @@ export default function Today() {
   const month = today.getMonth() + 1;
   const plan  = MONTHLY_PLAN[month];
   const arros = profile && weather ? calcArrosage(month, profile, weather, history) : null;
-  const canLog = isPaid || history.length < 5;
+  const canLog = true; // Journalisation illimitée pour tous les utilisateurs
 
   const { mois } = useSaison();
   const { gagnerPoints, total: gpTotal, palier } = useGreenPoints();
@@ -169,7 +169,7 @@ export default function Today() {
           <div style={cardTitle}>
             <span>✅ Journaliser</span>
             <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-              {isFree && <span style={{ fontSize:11, color:"#f9a825" }}>{history.length}/5 entrées</span>}
+
               <span style={{ fontSize:11, color:"#81c784", background:"rgba(76,175,80,0.15)", borderRadius:20, padding:"2px 8px" }}>
                 🌿 {gpTotal.toLocaleString("fr-FR")} pts
               </span>
@@ -182,7 +182,7 @@ export default function Today() {
               <div style={{ fontSize:11, color:"#81c784", fontWeight:700, marginBottom:8, letterSpacing:0.5 }}>🎯 RECOMMANDÉES AUJOURD'HUI</div>
               {[
                 ...(arros ? [{ icon:"💧", text:`Arroser ${arros.minutes} min`, gain:"+20 pts", action:"Arrosage 💧" }] : []),
-                { icon:"✂️", text:`Tondre à ${plan?.hauteur || "4"} cm`, gain:"+50 pts", action:"Tonte ✂️" },
+                { icon:"✂️", text:`Tondre à ${plan?.hauteur || "25"} mm`, gain:"+50 pts", action:"Tonte ✂️" },
                 ...(plan?.engrais ? [{ icon:"🌱", text:"Appliquer engrais", gain:"+80 pts", action:"Engrais 🌱" }] : []),
               ].slice(0,3).map((action, i) => (
                 <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"6px 0", borderBottom: i < 2 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
