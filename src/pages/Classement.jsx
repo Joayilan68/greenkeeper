@@ -139,7 +139,7 @@ export default function Classement() {
                 </div>
               </div>
             </div>
-            <button onClick={() => navigate("/my-lawn")} style={{ marginTop:10, width:"100%", background:"rgba(244,162,97,0.2)", color:"#f4a261", border:"1px solid rgba(244,162,97,0.3)", borderRadius:10, padding:9, fontSize:12, fontWeight:600, cursor:"pointer" }}>
+            <button onClick={() => navigate("/setup")} style={{ marginTop:10, width:"100%", background:"rgba(244,162,97,0.2)", color:"#f4a261", border:"1px solid rgba(244,162,97,0.3)", borderRadius:10, padding:9, fontSize:12, fontWeight:600, cursor:"pointer" }}>
               👤 Compléter mon profil →
             </button>
           </div>
