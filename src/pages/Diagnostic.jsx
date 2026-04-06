@@ -7,7 +7,7 @@ import { useSubscription } from "../lib/useSubscription";
 import { useDiagnostic } from "../lib/useDiagnostic";
 import { calcLawnScore } from "../lib/lawnScore";
 import { useHistory } from "../lib/useHistory";
-import { card, cardTitle, btn, scroll, header } from "../lib/styles";
+import { card, cardTitle, btn, scroll } from "../lib/styles";
 
 const SEV_COLORS = {
   faible:   { bg:"rgba(76,175,80,0.15)",   border:"rgba(76,175,80,0.4)",   text:"#a5d6a7", badge:"#2e7d32" },
@@ -45,26 +45,17 @@ export default function Diagnostic() {
   const canUse = isPaid || isAdmin;
 
   const handleFile = (file) => {
-  if (!file) return;
-  setMimeType("image/jpeg");
-  const canvas = document.createElement("canvas");
-  const img = new Image();
-  const url = URL.createObjectURL(file);
-  img.onload = () => {
-    const MAX = 800;
-    let w = img.width, h = img.height;
-    if (w > h && w > MAX) { h = h * MAX / w; w = MAX; }
-    else if (h > MAX) { w = w * MAX / h; h = MAX; }
-    canvas.width = w; canvas.height = h;
-    canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-    const full = canvas.toDataURL("image/jpeg", 0.7);
-    setPreview(full);
-    setImageB64(full.split(",")[1]);
-    setView("camera");
-    URL.revokeObjectURL(url);
+    if (!file) return;
+    setMimeType(file.type || "image/jpeg");
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const full = e.target.result;
+      setPreview(full);
+      setImageB64(full.split(",")[1]);
+      setView("camera");
+    };
+    reader.readAsDataURL(file);
   };
-  img.src = url;
-};
 
   const handleInputChange = (e) => { handleFile(e.target.files[0]); e.target.value = ""; };
 
@@ -112,17 +103,22 @@ export default function Diagnostic() {
   // ── VUE ACCUEIL ──────────────────────────────────────────────────────────
   if (view === "home") return (
     <div>
-      <div style={header}>
-        <div style={{ fontSize:20, fontWeight:800, color:"#a5d6a7" }}>🔬 Diagnostic Photo</div>
-        <div style={{ fontSize:12, color:"#81c784", marginTop:4 }}>Analyse IA de votre gazon</div>
+      <div style={{ padding:"48px 20px 16px" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <img src="/mg360-mascot-transparent.png" alt="MG360" style={{ width:40, height:40, objectFit:"contain" }} />
+          <div>
+            <div style={{ fontSize:20, fontWeight:800, color:"#F1F8F2" }}>Diagnostic Photo</div>
+            <div style={{ fontSize:12, color:"#66BB6A", marginTop:2 }}>Analyse IA de votre gazon</div>
+          </div>
+        </div>
       </div>
       <div style={scroll}>
         {hiddenInputs}
 
         {!canUse ? (
-          <div style={{ ...card(), textAlign:"center", padding:24 }}>
+          <div style={{ ...card(), textAlign:"center", padding:24, background:"rgba(15,47,31,0.6)", border:"1px solid rgba(102,187,106,0.2)" }}>
             <div style={{ fontSize:48, marginBottom:12 }}>🔒</div>
-            <div style={{ fontSize:16, fontWeight:800, color:"#a5d6a7", marginBottom:8 }}>Diagnostic Photo — Premium</div>
+            <div style={{ fontSize:16, fontWeight:800, color:"#66BB6A", marginBottom:8 }}>Diagnostic Photo — Premium</div>
             <div style={{ fontSize:13, color:"#81c784", lineHeight:1.6, marginBottom:16 }}>
               Prenez une photo de votre gazon et laissez l'IA détecter les maladies, carences et problèmes en quelques secondes.
             </div>
@@ -137,9 +133,9 @@ export default function Diagnostic() {
           </div>
         ) : (
           <>
-            <div style={{ ...card(), background:"linear-gradient(135deg,rgba(27,94,32,0.4),rgba(13,43,26,0.6))", border:"1px solid rgba(165,214,167,0.3)", textAlign:"center", padding:24 }}>
+            <div style={{ ...card(), background:"linear-gradient(135deg,rgba(15,47,31,0.7),rgba(27,94,32,0.4))", border:"1px solid rgba(102,187,106,0.25)", textAlign:"center", padding:24 }}>
               <div style={{ fontSize:52, marginBottom:12 }}>📸</div>
-              <div style={{ fontSize:16, fontWeight:800, color:"#a5d6a7", marginBottom:8 }}>Photographiez votre gazon</div>
+              <div style={{ fontSize:16, fontWeight:800, color:"#F1F8F2", marginBottom:8 }}>Photographiez votre gazon</div>
               <div style={{ fontSize:12, color:"#81c784", lineHeight:1.6, marginBottom:20 }}>
                 Prenez une photo en pleine lumière à environ 1m du sol pour un diagnostic précis.
               </div>
@@ -343,8 +339,14 @@ export default function Diagnostic() {
       const etatColor = ETAT_COLORS[analysis.etat_general] || "#a5d6a7";
       return (
         <div>
-          <div style={header}>
-            <div style={{ fontSize:18, fontWeight:800, color:"#a5d6a7" }}>🔬 Diagnostic du {new Date(selected.date).toLocaleDateString("fr-FR")}</div>
+          <div style={{ padding:"48px 20px 16px" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+              <img src="/mg360-mascot-transparent.png" alt="MG360" style={{ width:40, height:40, objectFit:"contain" }} />
+              <div>
+                <div style={{ fontSize:18, fontWeight:800, color:"#F1F8F2" }}>Diagnostic Photo</div>
+                <div style={{ fontSize:12, color:"#66BB6A", marginTop:2 }}>{new Date(selected.date).toLocaleDateString("fr-FR")}</div>
+              </div>
+            </div>
           </div>
           <div style={scroll}>
             <div style={{ borderRadius:16, overflow:"hidden", marginBottom:12 }}>
@@ -378,9 +380,14 @@ export default function Diagnostic() {
 
     return (
       <div>
-        <div style={header}>
-          <div style={{ fontSize:20, fontWeight:800, color:"#a5d6a7" }}>🕐 Historique diagnostics</div>
-          <div style={{ fontSize:11, color:"#81c784", marginTop:4 }}>{diagnostics.length} diagnostic{diagnostics.length>1?"s":""} enregistré{diagnostics.length>1?"s":""}</div>
+        <div style={{ padding:"48px 20px 16px" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+            <img src="/mg360-mascot-transparent.png" alt="MG360" style={{ width:40, height:40, objectFit:"contain" }} />
+            <div>
+              <div style={{ fontSize:20, fontWeight:800, color:"#F1F8F2" }}>Historique</div>
+              <div style={{ fontSize:12, color:"#66BB6A", marginTop:2 }}>{diagnostics.length} diagnostic{diagnostics.length>1?"s":""} enregistré{diagnostics.length>1?"s":""}</div>
+            </div>
+          </div>
         </div>
         <div style={scroll}>
           {diagnostics.length === 0 ? (
