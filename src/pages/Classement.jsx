@@ -7,7 +7,7 @@ import { useStreak } from "../lib/useStreak";
 import { useProfile } from "../lib/useProfile";
 import { useSubscription } from "../lib/useSubscription";
 import { useSaison } from "../lib/useSaison";
-import { card, cardTitle, scroll, header } from "../lib/styles";
+import { card, cardTitle, scroll } from "../lib/styles";
 
 export default function Classement() {
   const navigate = useNavigate();
@@ -69,19 +69,19 @@ export default function Classement() {
   return (
     <div>
       {/* Header */}
-      <div style={{ ...header, textAlign:"left" }}>
+      <div style={{ padding:"48px 20px 16px" }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
           <div style={{ display:"flex", alignItems:"center", gap:10 }}>
             <img src="/mg360-mascot-transparent.png" alt="MG360" style={{ width:40, height:40, objectFit:"contain" }} />
             <div>
-              <div style={{ fontSize:11, color:"#81c784", letterSpacing:2, textTransform:"uppercase" }}>🏆 Classement</div>
-              <div style={{ fontSize:18, fontWeight:800, color:"#a5d6a7" }}>
+              <div style={{ fontSize:20, fontWeight:800, color:"#F1F8F2" }}>Classement</div>
+              <div style={{ fontSize:12, color:"#66BB6A", marginTop:2 }}>
                 {ligueActuelle?.icone} Ligue {ligueActuelle?.label}
               </div>
             </div>
           </div>
           <div style={{ textAlign:"right" }}>
-            <div style={{ fontSize:11, color:"#81c784" }}>{joursRestants}j restants</div>
+            <div style={{ fontSize:11, color:"#66BB6A", fontWeight:700 }}>{joursRestants}j restants</div>
             <div style={{ fontSize:10, color:"#4a7c5c" }}>Fin du mois</div>
           </div>
         </div>
@@ -93,7 +93,7 @@ export default function Classement() {
         <div style={{ ...card(), background:"linear-gradient(135deg,rgba(27,94,32,0.4),rgba(13,43,26,0.6))" }}>
           <div style={{ display:"flex", gap:12, alignItems:"center", marginBottom:12 }}>
             <div style={{ textAlign:"center", minWidth:64 }}>
-              <div style={{ fontSize:42, fontWeight:800, color:"#a5d6a7", lineHeight:1 }}>{position}</div>
+              <div style={{ fontSize:42, fontWeight:800, color:"#F1F8F2", lineHeight:1 }}>{position}</div>
               <div style={{ fontSize:11, color:"#81c784" }}>/ {totalJoueurs}</div>
             </div>
             <div style={{ flex:1 }}>
