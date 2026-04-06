@@ -1,12 +1,30 @@
-// ─── SERVICE WORKER — GreenKeeper Push Notifications ─────────────────────────
-const CACHE_NAME = 'greenkeeper-v1';
+// ─── SERVICE WORKER — Mongazon360 Push Notifications ─────────────────────────
+const CACHE_NAME = 'mg360-v1';
 
 self.addEventListener('install', (e) => {
-  self.skipWaiting();
+  // Ne pas skipWaiting — laisser la page en cours terminer son rendu
+  // avant que le nouveau SW prenne le contrôle
+  // self.skipWaiting() supprimé intentionnellement
 });
 
 self.addEventListener('activate', (e) => {
-  e.waitUntil(clients.claim());
+  // Nettoyer les anciens caches si nécessaire
+  e.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+    ).then(() => {
+      // Ne pas appeler clients.claim() — évite d'interrompre le render React
+      // en cours sur mobile lors du premier chargement du jour
+    })
+  );
+});
+
+// ── Fetch — network first pour les navigations ────────────────────────────────
+self.addEventListener('fetch', (e) => {
+  // Laisser passer toutes les requêtes sans interception
+  // L'app est une SPA — pas besoin de cache applicatif ici
+  // (le cache navigateur et Vercel CDN s'en chargent)
+  return;
 });
 
 // ── Réception d'une push notification ────────────────────────────────────────
@@ -15,14 +33,14 @@ self.addEventListener('push', (e) => {
 
   let data;
   try { data = e.data.json(); }
-  catch { data = { title: 'GreenKeeper', body: e.data.text(), icon: '/icon-192.png' }; }
+  catch { data = { title: 'Mongazon360', body: e.data.text(), icon: '/icon-192.png' }; }
 
   const options = {
     body: data.body || 'Nouvelle alerte pour votre gazon',
     icon: '/icon-192.png',
     badge: '/icon-192.png',
     vibrate: [200, 100, 200],
-    tag: data.tag || 'greenkeeper-notif',
+    tag: data.tag || 'mg360-notif',
     renotify: true,
     data: { url: data.url || '/', actionRoute: data.actionRoute || '/' },
     actions: data.action ? [
@@ -31,7 +49,7 @@ self.addEventListener('push', (e) => {
     ] : [],
   };
 
-  e.waitUntil(self.registration.showNotification(data.title || '🌿 GreenKeeper', options));
+  e.waitUntil(self.registration.showNotification(data.title || '🌿 Mongazon360', options));
 });
 
 // ── Clic sur la notification ──────────────────────────────────────────────────
