@@ -5,7 +5,7 @@ import { useSubscription } from "../lib/useSubscription";
 import { useHistory } from "../lib/useHistory";
 import { useProfile } from "../lib/useProfile";
 import { useWeather } from "../lib/useWeather";
-import { card, cardTitle, btn, scroll, header } from "../lib/styles";
+import { card, cardTitle, btn, scroll } from "../lib/styles";
 
 // Page Paramètres — Gestion données client + consentements
 export default function Settings() {
@@ -62,9 +62,14 @@ export default function Settings() {
 
   return (
     <div>
-      <div style={header}>
-        <div style={{ fontSize:20, fontWeight:800, color:"#a5d6a7" }}>⚙️ Mes données & Paramètres</div>
-        <div style={{ fontSize:12, color:"#81c784", opacity:0.7, marginTop:4 }}>RGPD — Gestion de vos consentements</div>
+      <div style={{ padding:"48px 20px 16px" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <img src="/mg360-mascot-transparent.png" alt="MG360" style={{ width:40, height:40, objectFit:"contain" }} />
+          <div>
+            <div style={{ fontSize:20, fontWeight:800, color:"#F1F8F2" }}>Mes données & Paramètres</div>
+            <div style={{ fontSize:12, color:"#66BB6A", marginTop:2 }}>RGPD — Gestion de vos consentements</div>
+          </div>
+        </div>
       </div>
 
       <div style={scroll}>
