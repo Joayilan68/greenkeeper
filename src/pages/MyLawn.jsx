@@ -246,19 +246,14 @@ export default function MyLawn() {
         <div style={{ ...card(), background:`linear-gradient(135deg, rgba(27,94,32,0.5), rgba(13,43,26,0.7))`, border:`2px solid ${color}55`, padding:20 }}>
           <div style={{ fontSize:11, color:"#66BB6A", fontWeight:700, letterSpacing:1.5, marginBottom:12, textAlign:"center" }}>🌿 SCORE SANTÉ</div>
           <div style={{ display:"flex", justifyContent:"center", alignItems:"center", gap:24, marginBottom:12 }}>
-            {/* Cercle score */}
-            <div style={{ position:"relative", width:140, height:140 }}>
-              <svg width="140" height="140" viewBox="0 0 140 140">
-                <circle cx="70" cy="70" r="58" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="12"/>
-                <circle cx="70" cy="70" r="58" fill="none" stroke={color} strokeWidth="12"
-                  strokeLinecap="round"
-                  strokeDasharray={`${(score/100)*364} 364`}
-                  strokeDashoffset="91"
-                  style={{ transition:"stroke-dasharray 1s ease" }}
-                />
-                <text x="70" y="65" textAnchor="middle" fill="white" fontSize="32" fontWeight="bold" fontFamily="Nunito,Arial">{score}</text>
-                <text x="70" y="82" textAnchor="middle" fill={color} fontSize="11" fontFamily="Nunito,Arial">/100</text>
-                <text x="70" y="97" textAnchor="middle" fill={color} fontSize="10" fontFamily="Nunito,Arial">{label}</text>
+            {/* Cercle score — même style que Dashboard */}
+            <div style={{ position:"relative" }}>
+              <svg width="160" height="100" viewBox="0 0 160 100">
+                <path d="M 15 90 A 65 65 0 0 1 145 90" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="12" strokeLinecap="round"/>
+                <path d="M 15 90 A 65 65 0 0 1 145 90" fill="none" stroke={color} strokeWidth="12" strokeLinecap="round"
+                  strokeDasharray={`${(score/100)*204} 204`}/>
+                <text x="80" y="82" textAnchor="middle" fill="white" fontSize="32" fontWeight="bold" fontFamily="Nunito,Arial">{score}</text>
+                <text x="80" y="95" textAnchor="middle" fill={color} fontSize="11" fontFamily="Nunito,Arial">/100 — {label}</text>
               </svg>
             </div>
             {/* Stats droite */}
