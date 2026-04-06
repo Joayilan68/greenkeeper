@@ -6,7 +6,7 @@ import { useHistory } from "../lib/useHistory";
 import { useSubscription } from "../lib/useSubscription";
 import { MONTHLY_PLAN, MONTHS_FR, calcArrosage, getWMO } from "../lib/lawn";
 import AlertBanner from "../components/AlertBanner";
-import { card, cardTitle, btn, scroll, header } from "../lib/styles";
+import { card, cardTitle, btn, scroll } from "../lib/styles";
 import { useGreenPoints } from "../lib/useGreenPoints";
 import { useStreak } from "../lib/useStreak";
 import { getConseilApresAction } from "../lib/useRecommandations";
@@ -97,18 +97,18 @@ export default function Today() {
   return (
     <div>
       {/* Header */}
-      <div style={{ ...header, textAlign:"left" }}>
+      <div style={{ padding:"48px 20px 16px" }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
           <div style={{ display:"flex", alignItems:"center", gap:10 }}>
             <img src="/mg360-mascot-transparent.png" alt="MG360" style={{ width:40, height:40, objectFit:"contain" }} />
             <div>
-              <div style={{ fontSize:12, color:"#81c784" }}>{today.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</div>
-              <div style={{ fontSize:20, fontWeight:800, color:"#a5d6a7" }}>Actions du jour</div>
+              <div style={{ fontSize:20, fontWeight:800, color:"#F1F8F2" }}>Actions du jour</div>
+              <div style={{ fontSize:12, color:"#66BB6A", marginTop:2 }}>{today.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</div>
             </div>
           </div>
           {isAdmin && <div style={{ fontSize:11, color:"#f9a825" }}>👑 Admin</div>}
         </div>
-        {isFree && <div style={{ fontSize:11, color:"#81c784", marginTop:4 }}>🆓 Accès gratuit · <span onClick={() => navigate("/subscribe")} style={{ color:"#a5d6a7", cursor:"pointer", textDecoration:"underline" }}>Passer Premium</span></div>}
+        {isFree && <div style={{ fontSize:11, color:"#81c784", marginTop:4 }}>🆓 Accès gratuit · <span onClick={() => navigate("/subscribe")} style={{ color:"#66BB6A", cursor:"pointer", textDecoration:"underline" }}>Passer Premium</span></div>}
       </div>
 
       <div style={scroll}>
