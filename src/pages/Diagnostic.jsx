@@ -138,8 +138,21 @@ export default function Diagnostic() {
                 </div>
               </div>
             </div>
-            <div style={{ fontSize:11, color:"#4a7c5c", marginBottom:16, fontStyle:"italic" }}>
+            <div style={{ fontSize:11, color:"#4a7c5c", marginBottom:12, fontStyle:"italic" }}>
               🔒 Résultats réels d'un utilisateur Premium — débloquez le diagnostic pour voir votre gazon évoluer
+            </div>
+
+            {/* Arguments IA */}
+            <div style={{ background:"rgba(102,187,106,0.08)", border:"1px solid rgba(102,187,106,0.2)", borderRadius:12, padding:"12px 14px", marginBottom:16, textAlign:"left" }}>
+              <div style={{ fontSize:12, fontWeight:700, color:"#66BB6A", marginBottom:8 }}>🤖 Ce que l'IA fait pour vous :</div>
+              {[
+                "💡 Recommandations personnalisées selon votre gazon et météo",
+                "🛒 Conseils d'achat optimisés — plus de produits inutiles",
+                "📅 Plan d'entretien sur mesure semaine par semaine",
+                "💬 Assistant gazon disponible 24h/24",
+              ].map(f => (
+                <div key={f} style={{ fontSize:12, color:"#A5D6A7", padding:"3px 0" }}>→ {f}</div>
+              ))}
             </div>
 
             <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:16 }}>
