@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useSubscription } from "../lib/useSubscription";
-import { card, btn, scroll, header } from "../lib/styles";
+import { card, btn, scroll } from "../lib/styles";
 
 const PRODUCTS = [
   { id:1, name:"Engrais NPK 15-5-10", desc:"Printemps/été · Croissance active", price:"24,90€", icon:"🌱", tag:"Recommandé" },
@@ -17,9 +17,14 @@ export default function Products() {
 
   return (
     <div>
-      <div style={header}>
-        <div style={{ fontSize:20, fontWeight:800, color:"#a5d6a7" }}>🛒 Produits</div>
-        <div style={{ fontSize:12, color:"#81c784", opacity:0.7, marginTop:4 }}>Recommandés pour votre gazon</div>
+      <div style={{ padding:"48px 20px 16px" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <img src="/mg360-mascot-transparent.png" alt="MG360" style={{ width:40, height:40, objectFit:"contain" }} />
+          <div>
+            <div style={{ fontSize:20, fontWeight:800, color:"#F1F8F2" }}>Produits</div>
+            <div style={{ fontSize:12, color:"#66BB6A", marginTop:2 }}>Recommandés pour votre gazon</div>
+          </div>
+        </div>
       </div>
       <div style={scroll}>
 
