@@ -123,7 +123,13 @@ export default function Diagnostic() {
               Prenez une photo de votre gazon et laissez l'IA détecter les maladies, carences et problèmes en quelques secondes.
             </div>
             <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:16 }}>
-              {["🦠 Détection oïdium, helminthosporiose, fusariose","💧 Analyse manque d'eau et brûlures","🌿 Zones mortes et compaction du sol","📊 Impact sur votre score de santé"].map(f => (
+              {[
+                "🦠 Détection maladies, carences et zones mortes",
+                "⚡ Résultat en moins de 10 secondes",
+                "📈 +15 pts de score en moyenne après action",
+                "💰 Économisez sur les produits inutiles",
+                "🏆 +100 GreenPoints + profil complété à 100%",
+              ].map(f => (
                 <div key={f} style={{ fontSize:12, color:"#81c784", textAlign:"left" }}>✓ {f}</div>
               ))}
             </div>
