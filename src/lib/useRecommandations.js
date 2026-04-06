@@ -1,108 +1,278 @@
 // src/lib/useRecommandations.js
-// Moteur de recommandations produits intelligent
-// Règle d'or : bon produit + bonne période + bon besoin = 1 seul conseil à la fois
+// Moteur de recommandations — "Papa du gazon"
+// Flow : 1. Analyser tout le profil → 2. Conseiller agronomiquement → 3. Équiper selon budget
 // 100% localStorage — zéro API — zéro latence
 
 import { useSaison } from "./useSaison";
 
 const KEY_DERNIERE_RECO = "gk_derniere_reco";
-const DELAI_MIN_JOURS   = 7; // minimum 7 jours entre 2 suggestions
+const DELAI_MIN_JOURS   = 7;
 
-// ── Calendrier agronomique strict ────────────────────────────────────────────
-// mois valides = périodes où le produit EST RÉELLEMENT UTILE
+// ── Grilles budget ────────────────────────────────────────────────────────────
+// Retourne la gamme de produit adaptée au budget déclaré
+function gamme(budget) {
+  if (!budget || budget === "inconnu") return "standard";
+  if (budget === "0-50")    return "eco";
+  if (budget === "50-150")  return "standard";
+  if (budget === "150-300") return "qualite";
+  return "premium"; // 300-600 et 600+
+}
+
+// ── Vérifie si l'utilisateur a un équipement ─────────────────────────────────
+function hasMateriel(profil, item) {
+  const mat = profil?.materiel || [];
+  const ton = profil?.tondeuse || [];
+  return [...mat, ...ton].some(m => m.toLowerCase().includes(item.toLowerCase()));
+}
+
+// ── Message d'achat matériel si absent ───────────────────────────────────────
+function ctaMatériel(profil, item, budget) {
+  if (hasMateriel(profil, item)) return "";
+  const g = gamme(budget);
+  const prix = {
+    aerateur:      { eco:"~30€", standard:"~60€", qualite:"~120€", premium:"~250€+" },
+    scarificateur: { eco:"~40€", standard:"~80€", qualite:"~150€", premium:"~300€+" },
+    epandeur:      { eco:"~20€", standard:"~40€", qualite:"~80€",  premium:"~150€+" },
+    tondeuse:      { eco:"~100€",standard:"~200€",qualite:"~400€", premium:"~800€+" },
+  };
+  const p = prix[item]?.[g] || "";
+  return ` 🛒 Vous n'avez pas de ${item} — nous vous recommandons d'en acquérir un (${p}).`;
+}
+
+// ── Message engrais adapté au budget ─────────────────────────────────────────
+function msgEngrais(budget, type) {
+  const g = gamme(budget);
+  const produits = {
+    starter: {
+      eco:      "un engrais NPK basique (ex: 10€/5kg)",
+      standard: "un engrais NPK 12-5-5 organo-minéral (ex: 15-20€/5kg)",
+      qualite:  "un engrais organique à libération lente (ex: 25-35€/5kg)",
+      premium:  "un engrais professionnel bio-stimulé (ex: 40-60€/5kg)",
+    },
+    ete: {
+      eco:      "un engrais été basique NPK (ex: 12€/5kg)",
+      standard: "un engrais longue durée NPK 15-5-10 (ex: 20€/5kg)",
+      qualite:  "un engrais summer organique (ex: 30€/5kg)",
+      premium:  "un engrais professionnel résistance sécheresse (ex: 50€/5kg)",
+    },
+    automne: {
+      eco:      "un engrais automne basique riche en K (ex: 12€/5kg)",
+      standard: "un engrais NPK 5-10-25 automne (ex: 18€/5kg)",
+      qualite:  "un engrais organique automne (ex: 28€/5kg)",
+      premium:  "un engrais professionnel hivernant (ex: 45€/5kg)",
+    },
+  };
+  return produits[type]?.[g] || "un engrais adapté à la saison";
+}
+
+// ── Calendrier agronomique ────────────────────────────────────────────────────
 const CALENDRIER = {
   engrais_starter: {
-    id:             "engrais_starter",
-    label:          "Engrais Starter NPK",
-    icone:          "🌱",
-    mois_valides:   [2, 3],       // Fév-Mars uniquement
-    conditions:     (profil, score, meteo) => score < 80,
-    max_par_an:     1,
-    message:        (score) => `Ton gazon sort de l'hiver avec un score de ${score}/100. Un engrais starter NPK relance la croissance dès les premières chaleurs.`,
-    impact_score:   "+8 à +12 pts potentiels",
-    urgence:        "haute",
+    id:           "engrais_starter",
+    label:        "Engrais Starter NPK",
+    icone:        "🌱",
+    mois_valides: [2, 3],
+    conditions:   (profil, score, meteo) => {
+      if (profil?.pelouse === "synthetique") return false;
+      return score < 80;
+    },
+    max_par_an:   1,
+    message:      (score, profil) => {
+      const obj = profil?.objectif === "parfait" ? "Pour atteindre votre objectif d'un gazon parfait, " : "";
+      return `${obj}Ton gazon sort de l'hiver avec un score de ${score}/100. Applique ${msgEngrais(profil?.budget, "starter")} pour relancer la croissance.${hasMateriel(profil, "epandeur") ? "" : ctaMatériel(profil, "epandeur", profil?.budget)}`;
+    },
+    impact_score: "+8 à +12 pts potentiels",
+    urgence:      "haute",
   },
+
   anti_mousse: {
-    id:             "anti_mousse",
-    label:          "Anti-Mousse Liquide",
-    icone:          "🌿",
-    mois_valides:   [3, 4, 9],    // Printemps et automne
-    conditions:     (profil, score, meteo) => profil?.typeSol === "argileux" || score < 65,
-    max_par_an:     1,
-    message:        (score) => `Les conditions actuelles favorisent le développement de la mousse. Un traitement maintenant évite une invasion difficile à gérer ensuite.`,
-    impact_score:   "+5 à +10 pts potentiels",
-    urgence:        "normale",
+    id:           "anti_mousse",
+    label:        "Anti-Mousse Liquide",
+    icone:        "🌿",
+    mois_valides: [3, 4, 9],
+    conditions:   (profil, score, meteo) => {
+      if (profil?.pelouse === "synthetique") return false;
+      // Fix bug : profil.sol au lieu de profil.typeSol
+      return profil?.sol === "argileux" || profil?.sol === "compacte" ||
+             profil?.exposition === "ombrage" || profil?.exposition === "mi-ombre" || score < 65;
+    },
+    max_par_an:   1,
+    message:      (score, profil) => {
+      const raison = profil?.sol === "argileux" ? "votre sol argileux favorise la mousse" :
+                     profil?.exposition === "ombrage" ? "l'ombrage de votre terrain favorise la mousse" :
+                     "les conditions actuelles favorisent le développement de la mousse";
+      return `${raison.charAt(0).toUpperCase() + raison.slice(1)}. Un traitement anti-mousse maintenant évite une invasion difficile à gérer.${hasMateriel(profil, "pulverisateur") ? "" : " 🛒 Un pulvérisateur facilitera l'application (éco: ~15€)."}`;
+    },
+    impact_score: "+5 à +10 pts potentiels",
+    urgence:      "normale",
   },
+
   desherbage: {
-    id:             "desherbage",
-    label:          "Désherbant Sélectif Gazon",
-    icone:          "🪴",
-    mois_valides:   [4, 5, 9],
-    conditions:     (profil, score, meteo) => score < 70,
-    max_par_an:     2,
-    message:        () => `C'est la période idéale pour un désherbage sélectif — les mauvaises herbes sont en pleine croissance et vulnérables au traitement.`,
-    impact_score:   "+6 à +10 pts potentiels",
-    urgence:        "normale",
+    id:           "desherbage",
+    label:        "Désherbant Sélectif Gazon",
+    icone:        "🪴",
+    mois_valides: [4, 5, 9],
+    conditions:   (profil, score, meteo) => {
+      if (profil?.pelouse === "synthetique") return false;
+      return score < 70;
+    },
+    max_par_an:   2,
+    message:      (score, profil) => {
+      const g = gamme(profil?.budget);
+      const produit = g === "eco" ? "un désherbant sélectif basique (~10€)" :
+                      g === "premium" ? "un désherbant professionnel sélectif (~40€)" :
+                      "un désherbant sélectif gazon (~15-25€)";
+      return `C'est la période idéale — les mauvaises herbes sont vulnérables. Utilisez ${produit}.${hasMateriel(profil, "pulverisateur") ? "" : " 🛒 Un pulvérisateur est recommandé pour une application homogène (~15€)."}`;
+    },
+    impact_score: "+6 à +10 pts potentiels",
+    urgence:      "normale",
   },
+
   engrais_ete: {
-    id:             "engrais_ete",
-    label:          "Engrais Été Longue Durée",
-    icone:          "☀️",
-    mois_valides:   [5, 6],
-    conditions:     (profil, score, meteo) => score < 85,
-    max_par_an:     1,
-    message:        (score) => `Avant la chaleur estivale, un engrais longue durée maintient la densité et la couleur de ton gazon tout l'été.`,
-    impact_score:   "+8 à +15 pts potentiels",
-    urgence:        "haute",
+    id:           "engrais_ete",
+    label:        "Engrais Été Longue Durée",
+    icone:        "☀️",
+    mois_valides: [5, 6],
+    conditions:   (profil, score, meteo) => {
+      if (profil?.pelouse === "synthetique") return false;
+      // Gazon sec/chaud → moins de besoins en engrais été
+      if (profil?.pelouse === "sec" || profil?.pelouse === "chaud") return score < 75;
+      return score < 85;
+    },
+    max_par_an:   1,
+    message:      (score, profil) => {
+      const surface = profil?.surface ? ` (prévoyez ~${Math.round(profil.surface * 0.03 * 10) / 10}kg pour vos ${profil.surface}m²)` : "";
+      return `Avant la chaleur estivale, applique ${msgEngrais(profil?.budget, "ete")}${surface} pour maintenir densité et couleur tout l'été.${hasMateriel(profil, "epandeur") ? "" : ctaMatériel(profil, "epandeur", profil?.budget)}`;
+    },
+    impact_score: "+8 à +15 pts potentiels",
+    urgence:      "haute",
   },
+
   biostimulant: {
-    id:             "biostimulant",
-    label:          "Biostimulant Stress Hydrique",
-    icone:          "💧",
-    mois_valides:   [6, 7, 8],
-    conditions:     (profil, score, meteo) => meteo?.temperature > 25 || score < 70,
-    max_par_an:     1,
-    message:        (score) => `Les températures élevées stressent ton gazon. Un biostimulant racinaire renforce sa résistance à la chaleur et réduit les besoins en eau.`,
-    impact_score:   "+5 à +12 pts potentiels",
-    urgence:        "haute",
+    id:           "biostimulant",
+    label:        "Biostimulant Stress Hydrique",
+    icone:        "💧",
+    mois_valides: [6, 7, 8],
+    conditions:   (profil, score, meteo) => {
+      if (profil?.pelouse === "synthetique") return false;
+      // Fix bug : meteo.temp_max au lieu de meteo.temperature
+      const chaud = meteo?.temp_max > 25 || meteo?.temp_max > 22;
+      // Gazon sec/chaud → plus résistant, seuil plus haut
+      if (profil?.pelouse === "sec" || profil?.pelouse === "chaud") return chaud && score < 60;
+      return chaud || score < 70;
+    },
+    max_par_an:   1,
+    message:      (score, profil) => {
+      const g = gamme(profil?.budget);
+      const produit = g === "eco" ? "un biostimulant basique (~12€)" :
+                      g === "premium" ? "un biostimulant professionnel acides aminés + algues (~45€)" :
+                      "un biostimulant racinaire (~20-30€)";
+      return `Les températures élevées stressent votre gazon. ${produit} renforce sa résistance et réduit les besoins en eau de 20-30%.`;
+    },
+    impact_score: "+5 à +12 pts potentiels",
+    urgence:      "haute",
   },
+
   semences: {
-    id:             "semences",
-    label:          "Semences Regarnissage Automne",
-    icone:          "🌾",
-    mois_valides:   [8, 9],       // Fin août et septembre uniquement
-    conditions:     (profil, score, meteo) => score < 75,
-    max_par_an:     1,
-    message:        () => `Septembre est le meilleur mois de l'année pour semer — sol chaud, rosées matinales, températures douces. Ne manquez pas cette fenêtre !`,
-    impact_score:   "+10 à +20 pts potentiels",
-    urgence:        "haute",
+    id:           "semences",
+    label:        "Semences Regarnissage Automne",
+    icone:        "🌾",
+    mois_valides: [8, 9],
+    conditions:   (profil, score, meteo) => {
+      if (profil?.pelouse === "synthetique") return false;
+      return score < 75;
+    },
+    max_par_an:   1,
+    message:      (score, profil) => {
+      const surface = profil?.surface ? profil.surface : null;
+      const typeGazon = profil?.pelouse === "ombre" ? "mélange ombre/mi-ombre" :
+                        profil?.pelouse === "sport" ? "ray-grass résistant" :
+                        profil?.pelouse === "sec" ? "fétuque résistante sécheresse" :
+                        "mélange universel";
+      const quantite = surface ? ` (~${Math.round(surface * 0.035 * 10)/10}kg pour vos ${surface}m²)` : "";
+      const g = gamme(profil?.budget);
+      const prix = g === "eco" ? "~8€/kg" : g === "premium" ? "~25€/kg" : "~12-18€/kg";
+      return `Septembre est la meilleure période pour semer — sol chaud, rosées matinales, températures douces. Choisissez un ${typeGazon}${quantite} (${prix}).`;
+    },
+    impact_score: "+10 à +20 pts potentiels",
+    urgence:      "haute",
   },
+
   engrais_automne: {
-    id:             "engrais_automne",
-    label:          "Engrais Automne Potassium",
-    icone:          "🍂",
-    mois_valides:   [9, 10],
-    conditions:     (profil, score, meteo) => score < 80,
-    max_par_an:     1,
-    message:        () => `L'engrais d'automne riche en potassium prépare ton gazon à l'hiver — meilleure résistance au gel et reprise plus rapide au printemps.`,
-    impact_score:   "+5 à +10 pts potentiels",
-    urgence:        "normale",
+    id:           "engrais_automne",
+    label:        "Engrais Automne Potassium",
+    icone:        "🍂",
+    mois_valides: [9, 10],
+    conditions:   (profil, score, meteo) => {
+      if (profil?.pelouse === "synthetique") return false;
+      return score < 80;
+    },
+    max_par_an:   1,
+    message:      (score, profil) => {
+      const surface = profil?.surface ? ` (~${Math.round(profil.surface * 0.04 * 10)/10}kg pour vos ${profil.surface}m²)` : "";
+      return `L'engrais d'automne riche en potassium prépare ton gazon à l'hiver. Utilise ${msgEngrais(profil?.budget, "automne")}${surface}.${hasMateriel(profil, "epandeur") ? "" : ctaMatériel(profil, "epandeur", profil?.budget)}`;
+    },
+    impact_score: "+5 à +10 pts potentiels",
+    urgence:      "normale",
   },
+
   engrais_potassium_hiver: {
-    id:             "engrais_potassium_hiver",
-    label:          "Engrais Résistance Hiver",
-    icone:          "❄️",
-    mois_valides:   [11],         // Novembre uniquement — transition
-    conditions:     (profil, score, meteo) => score < 70,
-    max_par_an:     1,
-    message:        () => `Avant l'hiver, un apport de potassium protège les racines du gel et assure une belle reprise printanière.`,
-    impact_score:   "+4 à +8 pts potentiels",
-    urgence:        "normale",
+    id:           "engrais_potassium_hiver",
+    label:        "Engrais Résistance Hiver",
+    icone:        "❄️",
+    mois_valides: [11],
+    conditions:   (profil, score, meteo) => {
+      if (profil?.pelouse === "synthetique") return false;
+      return score < 70;
+    },
+    max_par_an:   1,
+    message:      (score, profil) => {
+      return `Avant l'hiver, un apport de potassium protège les racines du gel. Utilise ${msgEngrais(profil?.budget, "automne")} pour assurer une belle reprise printanière.`;
+    },
+    impact_score: "+4 à +8 pts potentiels",
+    urgence:      "normale",
   },
-  // Aucun produit en décembre-janvier
+
+  aeration: {
+    id:           "aeration",
+    label:        "Aération / Carottage",
+    icone:        "🌀",
+    mois_valides: [3, 4, 9],
+    conditions:   (profil, score, meteo) => {
+      if (profil?.pelouse === "synthetique") return false;
+      // Sol compacté ou argileux → aération fortement recommandée
+      return profil?.sol === "argileux" || profil?.sol === "compacte" || score < 70;
+    },
+    max_par_an:   1,
+    message:      (score, profil) => {
+      const raison = profil?.sol === "argileux" ? "Votre sol argileux se compacte rapidement" :
+                     profil?.sol === "compacte" ? "Votre sol compacté étouffe les racines" :
+                     "Votre gazon bénéficierait d'une meilleure aération racinaire";
+      return `${raison}. L'aération (carottage) améliore la pénétration de l'eau et des engrais.${ctaMatériel(profil, "aerateur", profil?.budget)}`;
+    },
+    impact_score: "+8 à +15 pts potentiels",
+    urgence:      "haute",
+  },
+
+  scarification: {
+    id:           "scarification",
+    label:        "Scarification",
+    icone:        "🔩",
+    mois_valides: [3, 4, 9],
+    conditions:   (profil, score, meteo) => {
+      if (profil?.pelouse === "synthetique") return false;
+      return score < 75;
+    },
+    max_par_an:   1,
+    message:      (score, profil) => {
+      return `La scarification élimine le feutre (couche de matière organique morte) qui étouffe votre gazon et réduit l'efficacité des engrais.${ctaMatériel(profil, "scarificateur", profil?.budget)}`;
+    },
+    impact_score: "+6 à +12 pts potentiels",
+    urgence:      "normale",
+  },
 };
 
-// ── Helpers localStorage ─────────────────────────────────────────────────────
+// ── Helpers localStorage ──────────────────────────────────────────────────────
 function getDerniereReco() {
   try { return JSON.parse(localStorage.getItem(KEY_DERNIERE_RECO)) || {}; }
   catch { return {}; }
@@ -120,9 +290,9 @@ function joursDepuis(timestamp) {
 function nombreApplicationsAnneeCourante(produitId) {
   const reco = getDerniereReco();
   const anneeActuelle = new Date().getFullYear();
-  return (reco[produitId] || []).filter(ts => {
-    return new Date(ts).getFullYear() === anneeActuelle;
-  }).length;
+  return (reco[produitId] || []).filter(ts =>
+    new Date(ts).getFullYear() === anneeActuelle
+  ).length;
 }
 
 function enregistrerApplication(produitId) {
@@ -134,55 +304,40 @@ function enregistrerApplication(produitId) {
 
 // ── Hook principal ────────────────────────────────────────────────────────────
 export function useRecommandations(profil, score, meteo) {
-  const { mois, isHivernal, isTransition } = useSaison();
+  const { mois, isHivernal } = useSaison();
 
-  // En mode hivernal pur → aucune recommandation
   if (isHivernal) {
     return { recommandations: [], recommandationPrincipale: null, enregistrerApplication };
   }
 
   const derniereReco = getDerniereReco();
 
-  // ── Filtrage strict ──────────────────────────────────────────────────────
   const recommandations = Object.values(CALENDRIER).filter(produit => {
-
-    // 1. Vérification période agronomique
     if (!produit.mois_valides.includes(mois)) return false;
-
-    // 2. Vérification conditions réelles (score, profil, météo)
     if (!produit.conditions(profil, score, meteo)) return false;
-
-    // 3. Vérification plafond annuel
     const nbCetteAnnee = nombreApplicationsAnneeCourante(produit.id);
     if (nbCetteAnnee >= produit.max_par_an) return false;
-
-    // 4. Délai minimum entre 2 suggestions du même produit
     const dernieres = derniereReco[produit.id] || [];
     const dernierAffichage = dernieres[dernieres.length - 1];
     if (joursDepuis(dernierAffichage) < DELAI_MIN_JOURS) return false;
-
     return true;
-
   }).sort((a, b) => {
-    // Priorité : urgence haute d'abord, puis impact score potentiel
     if (a.urgence === "haute" && b.urgence !== "haute") return -1;
     if (b.urgence === "haute" && a.urgence !== "haute") return 1;
     return 0;
   });
 
-  // ── 1 seul produit principal à la fois ──────────────────────────────────
   const recommandationPrincipale = recommandations[0] || null;
 
-  // ── Produits "à venir" — mois suivant ───────────────────────────────────
   const moisSuivant = mois === 12 ? 1 : mois + 1;
   const produitsAVenir = Object.values(CALENDRIER).filter(produit => {
-    if (produit.mois_valides.includes(mois)) return false; // déjà actif
+    if (produit.mois_valides.includes(mois)) return false;
     if (!produit.mois_valides.includes(moisSuivant)) return false;
     return true;
-  }).slice(0, 1); // max 1 produit à anticiper
+  }).slice(0, 1);
 
   return {
-    recommandations:         recommandations.slice(0, 2), // max 2 visibles
+    recommandations:          recommandations.slice(0, 2),
     recommandationPrincipale,
     produitsAVenir,
     enregistrerApplication,
@@ -190,11 +345,8 @@ export function useRecommandations(profil, score, meteo) {
   };
 }
 
-// ── Conseil contextuel après chaque action ───────────────────────────────────
-// Appelé depuis Today.jsx après enregistrement d'une action
+// ── Conseil contextuel après chaque action ────────────────────────────────────
 export function getConseilApresAction(action, mois, profil, score) {
-
-  // Règle d'or : jamais de suggestion d'engrais après une simple tonte
   const conseilsActions = {
     tonte: {
       [2]: "🌱 Après la première tonte de l'année, surveille la repousse — si elle est lente, un engrais starter sera bientôt utile.",
@@ -227,6 +379,5 @@ export function getConseilApresAction(action, mois, profil, score) {
 
   const conseilsProduit = conseilsActions[action];
   if (!conseilsProduit) return null;
-
   return conseilsProduit[mois] || conseilsProduit.default || null;
 }
