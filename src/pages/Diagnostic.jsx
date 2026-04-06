@@ -122,6 +122,26 @@ export default function Diagnostic() {
             <div style={{ fontSize:13, color:"#81c784", lineHeight:1.6, marginBottom:16 }}>
               Prenez une photo de votre gazon et laissez l'IA détecter les maladies, carences et problèmes en quelques secondes.
             </div>
+
+            {/* Avant / Après floutés */}
+            <div style={{ display:"flex", gap:8, marginBottom:16, borderRadius:14, overflow:"hidden" }}>
+              <div style={{ flex:1, position:"relative" }}>
+                <img src="/gazon-avant.jpg" alt="Avant" style={{ width:"100%", height:110, objectFit:"cover", filter:"blur(3px) brightness(0.7)", borderRadius:10 }} />
+                <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center" }}>
+                  <div style={{ fontSize:11, fontWeight:800, color:"#ef9a9a", background:"rgba(0,0,0,0.5)", borderRadius:20, padding:"2px 10px" }}>AVANT</div>
+                </div>
+              </div>
+              <div style={{ flex:1, position:"relative" }}>
+                <img src="/gazon-apres.jpg" alt="Après" style={{ width:"100%", height:110, objectFit:"cover", filter:"blur(3px) brightness(0.7)", borderRadius:10 }} />
+                <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center" }}>
+                  <div style={{ fontSize:11, fontWeight:800, color:"#66BB6A", background:"rgba(0,0,0,0.5)", borderRadius:20, padding:"2px 10px" }}>APRÈS</div>
+                </div>
+              </div>
+            </div>
+            <div style={{ fontSize:11, color:"#4a7c5c", marginBottom:16, fontStyle:"italic" }}>
+              🔒 Résultats réels d'un utilisateur Premium — débloquez le diagnostic pour voir votre gazon évoluer
+            </div>
+
             <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:16 }}>
               {[
                 "🦠 Détection maladies, carences et zones mortes",
