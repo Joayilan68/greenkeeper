@@ -184,28 +184,36 @@ export default function MyLawn() {
   const month = new Date().getMonth() + 1;
   const plan  = MONTHLY_PLAN[month];
   const arros = profile && weather ? calcArrosage(month, profile, weather) : null;
-  const { score, potential, label, color, issues, strengths } = calcLawnScore({ weather, profile, history, month });
+  const { score, potential, label, color, issues, strengths, composantes } = calcLawnScore({ weather, profile, history, month });
 
   // ── Conseil du mois (nouveau) ──
   const { recommandationPrincipale } = useRecommandations(profile, score, weather);
 
-  const scoreLastWeek      = Math.max(0, score - Math.floor(Math.random() * 8 + 2));
+  const historyMinus7      = history.filter(h => {
+    const parts = h.date?.split('/');
+    if (!parts || parts.length !== 3) return true; // garder si date invalide
+    const d = new Date(parts[2], parts[1]-1, parts[0]);
+    return Math.floor((Date.now() - d.getTime()) / 86400000) >= 7;
+  });
+  const { score: scoreLastWeek } = calcLawnScore({ weather, profile, history: historyMinus7, month });
   const scoreDiff          = score - scoreLastWeek;
   const countAction        = (kw) => history.filter(h => h.action.toLowerCase().includes(kw)).length;
   const actionsDisponibles = issues.reduce((acc, i) => acc + Math.abs(i.impact), 0);
   const projectionScore    = Math.min(100, score + Math.round(actionsDisponibles * 0.6));
   const projectionDays     = issues.length <= 2 ? 7 : 14;
 
-  const generateScoreHistory = () => {
-    const points = [];
-    for (let i = 6; i >= 0; i--) {
-      const variation = Math.floor(Math.random() * 6) - 2;
-      points.push(Math.max(0, Math.min(100, score - i * 1.5 + variation)));
-    }
-    points[6] = score;
-    return points;
-  };
-  const scoreHistory = generateScoreHistory();
+  const scoreHistory = Array.from({ length: 7 }, (_, i) => {
+    const daysAgo = 6 - i;
+    if (daysAgo === 0) return score;
+    const histFiltered = history.filter(h => {
+      const parts = h.date?.split('/');
+      if (!parts || parts.length !== 3) return false;
+      const d = new Date(parts[2], parts[1]-1, parts[0]);
+      return Math.floor((Date.now() - d.getTime()) / 86400000) >= daysAgo;
+    });
+    const { score: s } = calcLawnScore({ weather, profile, history: histFiltered, month });
+    return s;
+  });
   const maxScore = Math.max(...scoreHistory);
   const minScore = Math.min(...scoreHistory);
 
@@ -309,10 +317,10 @@ export default function MyLawn() {
         <div style={card()}>
           <div style={cardTitle}><span>📊 Détail du score</span>{!isPaid && <span style={{ fontSize:10, color:"#f9a825" }}>🔒 Premium</span>}</div>
           {[
-            { icon:"🌱", label:"Entretien régulier", val: Math.min(100, 40 + countAction("tonte") * 10) },
-            { icon:"💧", label:"Hydratation",         val: weather ? Math.max(20, 100 - weather.temp_max * 2) : 60 },
-            { icon:"🧪", label:"Nutriments",          val: Math.min(100, 50 + countAction("engrais") * 15) },
-            { icon:"🌿", label:"Sol & aération",      val: profile?.sol === "argileux" ? 55 : 75 },
+            { icon:"🌱", label:"Entretien régulier", val: composantes?.entretien  ?? 70 },
+            { icon:"💧", label:"Hydratation",         val: composantes?.hydratation ?? 70 },
+            { icon:"🧪", label:"Nutriments",          val: composantes?.nutriments  ?? 70 },
+            { icon:"🌿", label:"Sol & aération",      val: composantes?.sol         ?? 75 },
           ].map((item, i) => (
             <div key={i} style={{ marginBottom:10 }}>
               <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, marginBottom:4 }}>
