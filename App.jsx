@@ -1,5 +1,6 @@
-import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/clerk-react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+// src/App.jsx
+import { SignedIn, SignedOut, RedirectToSignIn, useUser } from "@clerk/clerk-react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import Diagnostic from "./pages/Diagnostic";
 import Classement from "./pages/Classement";
@@ -16,8 +17,10 @@ import Free from "./pages/Free";
 import Register from "./pages/Register";
 import Settings from "./pages/Settings";
 import Pilotage from "./pages/Pilotage";
+import Rappels from "./pages/Rappels";
 import { MentionsLegales, Confidentialite, CGU, CGV } from "./pages/Legal";
 import Layout from "./components/Layout";
+import ComingSoon from "./components/ComingSoon";
 import { WeatherProvider } from "./lib/WeatherContext";
 import { usePilotage } from "./lib/usePilotage";
 
@@ -26,12 +29,40 @@ function AppWithWeather({ children }) {
   return <WeatherProvider>{children}</WeatherProvider>;
 }
 
+// ── Helpers waitlist ──────────────────────────────────────────────────────────
+function isOnWaitlist() {
+  try {
+    return localStorage.getItem("mg360_waitlist") === "true" &&
+           localStorage.getItem("mg360_approved") !== "true";
+  } catch { return false; }
+}
+
+// ── Route protégée avec vérification waitlist ─────────────────────────────────
 function ProtectedRoute({ children }) {
   return (
     <>
-      <SignedIn>{children}</SignedIn>
-      <SignedOut><RedirectToSignIn /></SignedOut>
+      <SignedIn>
+        {isOnWaitlist()
+          ? <Navigate to="/coming-soon" replace />
+          : children
+        }
+      </SignedIn>
+      <SignedOut>
+        <RedirectToSignIn />
+      </SignedOut>
     </>
+  );
+}
+
+// ── Route post-inscription : redirige vers coming-soon si waitlist ────────────
+function RegisterRoute() {
+  return (
+    <SignedIn>
+      {isOnWaitlist()
+        ? <Navigate to="/coming-soon" replace />
+        : <Register />
+      }
+    </SignedIn>
   );
 }
 
@@ -45,7 +76,10 @@ export default function App() {
           <Route path="/admin"             element={<Admin />} />
 
           {/* ── Onboarding & consentements RGPD ── */}
-          <Route path="/register"          element={<SignedIn><Register /></SignedIn>} />
+          <Route path="/register"          element={<RegisterRoute />} />
+
+          {/* ── Liste d'attente ── */}
+          <Route path="/coming-soon"       element={<SignedIn><ComingSoon /></SignedIn>} />
 
           {/* ── Abonnement ── */}
           <Route path="/free"              element={<SignedIn><Layout><Free /></Layout></SignedIn>} />
@@ -73,6 +107,7 @@ export default function App() {
           <Route path="/history"           element={<ProtectedRoute><Layout><History /></Layout></ProtectedRoute>} />
           <Route path="/setup"             element={<ProtectedRoute><Layout><Setup /></Layout></ProtectedRoute>} />
           <Route path="/classement"        element={<ProtectedRoute><Layout><Classement /></Layout></ProtectedRoute>} />
+          <Route path="/rappels"           element={<ProtectedRoute><Layout><Rappels /></Layout></ProtectedRoute>} />
         </Routes>
       </AppWithWeather>
     </BrowserRouter>
