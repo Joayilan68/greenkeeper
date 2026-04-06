@@ -133,38 +133,40 @@ export default function Dashboard() {
     <div>
       {showOnboarding && <OnboardingModal onComplete={handleOnboardingComplete} />}
 
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div style={{ ...header, display:"flex", flexDirection:"column", alignItems:"center" }}>
-        <div style={{ width:"100%", display:"flex", justifyContent:"space-between", alignItems:"center", paddingRight:4, marginBottom:8 }}>
-          <div style={{ fontSize:11, color:"#81c784" }}>
-            {today.toLocaleDateString("fr-FR", { weekday:"long", day:"numeric", month:"long" })}
+      {/* ── Header premium ──────────────────────────────────────────────────── */}
+      <div style={{ padding:"52px 20px 16px" }}>
+        {/* Ligne top : avatar + icônes */}
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+          <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+            <UserButton appearance={{ variables: { colorPrimary:"#43a047" } }} />
+            <div>
+              <div style={{ fontSize:20, fontWeight:800, color:"#F1F8F2", lineHeight:1.1 }}>
+                Bonjour <span style={{ color:"#66BB6A" }}>{user?.firstName || ""}</span> 👋
+              </div>
+              <div style={{ fontSize:11, color:"#81c784", marginTop:2 }}>
+                {today.toLocaleDateString("fr-FR", { weekday:"long", day:"numeric", month:"long" })}
+              </div>
+            </div>
           </div>
           <div style={{ display:"flex", alignItems:"center", gap:8 }}>
             {isAdmin && (
-              <button onClick={() => navigate("/pilotage")} style={{ background:"rgba(249,168,37,0.2)", border:"1px solid rgba(249,168,37,0.3)", borderRadius:8, padding:"4px 10px", color:"#f9a825", fontSize:11, cursor:"pointer" }}>
+              <button onClick={() => navigate("/pilotage")} style={{ background:"rgba(249,168,37,0.2)", border:"1px solid rgba(249,168,37,0.3)", borderRadius:10, padding:"8px 10px", color:"#f9a825", fontSize:14, cursor:"pointer" }}>
                 📊
               </button>
             )}
-            <button onClick={() => navigate("/parametres")} style={{ background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.15)", borderRadius:8, padding:"4px 10px", color:"#81c784", fontSize:11, cursor:"pointer" }}>
+            <button onClick={() => navigate("/parametres")} style={{ background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:10, padding:"8px 10px", color:"#A5D6A7", fontSize:14, cursor:"pointer" }}>
               ⚙️
             </button>
-            <UserButton appearance={{ variables: { colorPrimary:"#43a047" } }} />
           </div>
         </div>
-        <div style={{ textAlign:"center", marginBottom:4 }}>
-          <img
-            src="/mg360-mascot-transparent.png"
-            alt="Mongazon360"
-            style={{ width:72, height:72, objectFit:"contain", display:"block", margin:"0 auto 2px" }}
-          />
-          <div style={{ fontSize:9, color:"#4a7c5c", fontStyle:"italic", letterSpacing:0.5 }}>
-            Tant qu'il y a gazon, il y a match
+        {/* Tagline */}
+        <div style={{ background:"rgba(102,187,106,0.08)", border:"1px solid rgba(102,187,106,0.2)", borderRadius:12, padding:"8px 14px", display:"flex", alignItems:"center", gap:8 }}>
+          <img src="/mg360-mascot-transparent.png" alt="MG360" style={{ width:28, height:28, objectFit:"contain" }} />
+          <div style={{ fontSize:12, color:"#81c784", fontStyle:"italic" }}>
+            Prêt à prendre soin de ton gazon aujourd'hui ?
           </div>
         </div>
-        <div style={{ fontSize:22, fontWeight:800, color:"#a5d6a7", marginTop:6 }}>
-          Bonjour {user?.firstName || ""} 👋
-        </div>
-        {isAdmin && <div style={{ fontSize:11, color:"#f9a825", marginTop:2 }}>👑 Mode Admin</div>}
+        {isAdmin && <div style={{ fontSize:11, color:"#f9a825", marginTop:6, textAlign:"center" }}>👑 Mode Admin</div>}
       </div>
 
       <div style={scroll}>
@@ -194,7 +196,7 @@ export default function Dashboard() {
           </div>
         )}
         <div style={{ ...card(), background:"linear-gradient(135deg, rgba(27,94,32,0.4), rgba(13,43,26,0.6))", border:`1px solid ${color}44` }}>
-          <div style={{ fontSize:11, color:"#81c784", fontWeight:700, letterSpacing:1.2, textTransform:"uppercase", marginBottom:12, textAlign:"center" }}>
+          <div style={{ fontSize:11, color:"#66BB6A", fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", marginBottom:12, textAlign:"center" }}>
             🌿 Score Santé du Gazon
           </div>
           <div style={{ textAlign:"center", marginBottom:12 }}>
@@ -279,7 +281,7 @@ export default function Dashboard() {
         {/* ── WIDGET GREENPOINTS + STREAK ───────────────────────────────────── */}
         <div style={{ ...card(), padding:14 }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
-            <span style={{ fontWeight:700, color:"#a5d6a7", fontSize:14 }}>🌿 GreenPoints</span>
+            <span style={{ fontWeight:700, color:"#66BB6A", fontSize:14 }}>🌿 GreenPoints</span>
             <span style={{
               background:  palier?.couleur || "#2e7d32",
               color:       "white",
@@ -343,7 +345,7 @@ export default function Dashboard() {
         {/* ── WIDGET CLASSEMENT ─────────────────────────────────────────────── */}
         <div style={{ ...card(), padding:14 }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
-            <span style={{ fontWeight:700, color:"#a5d6a7", fontSize:14 }}>🏆 Classement</span>
+            <span style={{ fontWeight:700, color:"#66BB6A", fontSize:14 }}>🏆 Classement</span>
             {classementActif ? (
               <span style={{
                 background:  ligueActuelle?.couleurBg || "rgba(76,175,80,0.2)",
