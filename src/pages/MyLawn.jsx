@@ -216,11 +216,11 @@ export default function MyLawn() {
           <div style={{ display:"flex", alignItems:"center", gap:10 }}>
             <img src="/mg360-mascot-transparent.png" alt="MG360" style={{ width:40, height:40, objectFit:"contain" }} />
             <div>
-              <div style={{ fontSize:20, fontWeight:800, color:"#a5d6a7" }}>Mon Gazon</div>
-              <div style={{ fontSize:12, color:"#81c784", opacity:0.7 }}>Centre de pilotage</div>
+              <div style={{ fontSize:20, fontWeight:800, color:"#F1F8F2" }}>Mon Gazon</div>
+              <div style={{ fontSize:12, color:"#66BB6A", opacity:0.9 }}>Centre de pilotage</div>
             </div>
           </div>
-          <button onClick={() => navigate("/rappels")} style={{ background:"rgba(67,160,71,0.15)", border:"1px solid rgba(67,160,71,0.35)", borderRadius:10, padding:"7px 12px", color:"#a5d6a7", fontSize:12, cursor:"pointer", display:"flex", alignItems:"center", gap:6 }}>
+          <button onClick={() => navigate("/rappels")} style={{ background:"rgba(102,187,106,0.12)", border:"1px solid rgba(102,187,106,0.3)", borderRadius:10, padding:"7px 12px", color:"#66BB6A", fontSize:12, cursor:"pointer", display:"flex", alignItems:"center", gap:6 }}>
             🔔 Rappels
             {activeCount > 0 && <span style={{ background:"#43a047", color:"#fff", borderRadius:10, padding:"1px 6px", fontSize:10, fontWeight:700 }}>{activeCount}</span>}
           </button>
@@ -244,24 +244,35 @@ export default function MyLawn() {
 
         {/* ── 1. SCORE HÉRO ── */}
         <div style={{ ...card(), background:`linear-gradient(135deg, rgba(27,94,32,0.5), rgba(13,43,26,0.7))`, border:`2px solid ${color}55`, padding:20 }}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
-            <div>
-              <div style={{ fontSize:11, color:"#81c784", fontWeight:700, letterSpacing:1, marginBottom:6 }}>🌿 SCORE SANTÉ</div>
-              <div style={{ fontSize:56, fontWeight:900, color, lineHeight:1 }}>{score}</div>
-              <div style={{ fontSize:13, color, fontWeight:700, marginTop:2 }}>/100 — {label}</div>
+          <div style={{ fontSize:11, color:"#66BB6A", fontWeight:700, letterSpacing:1.5, marginBottom:12, textAlign:"center" }}>🌿 SCORE SANTÉ</div>
+          <div style={{ display:"flex", justifyContent:"center", alignItems:"center", gap:24, marginBottom:12 }}>
+            {/* Cercle score */}
+            <div style={{ position:"relative", width:140, height:140 }}>
+              <svg width="140" height="140" viewBox="0 0 140 140">
+                <circle cx="70" cy="70" r="58" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="12"/>
+                <circle cx="70" cy="70" r="58" fill="none" stroke={color} strokeWidth="12"
+                  strokeLinecap="round"
+                  strokeDasharray={`${(score/100)*364} 364`}
+                  strokeDashoffset="91"
+                  style={{ transition:"stroke-dasharray 1s ease" }}
+                />
+                <text x="70" y="65" textAnchor="middle" fill="white" fontSize="32" fontWeight="bold" fontFamily="Nunito,Arial">{score}</text>
+                <text x="70" y="82" textAnchor="middle" fill={color} fontSize="11" fontFamily="Nunito,Arial">/100</text>
+                <text x="70" y="97" textAnchor="middle" fill={color} fontSize="10" fontFamily="Nunito,Arial">{label}</text>
+              </svg>
             </div>
-            <div style={{ textAlign:"right" }}>
-              <div style={{ fontSize:22, marginBottom:4 }}>{scoreDiff >= 0 ? "📈" : "📉"}</div>
-              <div style={{ fontSize:13, fontWeight:700, color: scoreDiff >= 0 ? "#a5d6a7" : "#ef9a9a" }}>{scoreDiff >= 0 ? "+" : ""}{scoreDiff} pts</div>
-              <div style={{ fontSize:10, color:"#81c784" }}>vs 7 jours</div>
-            </div>
-          </div>
-          <div style={{ marginTop:14 }}>
-            <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:"#81c784", marginBottom:4 }}>
-              <span>0</span><span>Score actuel</span><span>100</span>
-            </div>
-            <div style={{ height:10, background:"rgba(255,255,255,0.1)", borderRadius:10, overflow:"hidden" }}>
-              <div style={{ width:`${score}%`, height:"100%", background:`linear-gradient(90deg, ${color}, #a5d6a7)`, borderRadius:10, transition:"width 1s ease" }} />
+            {/* Stats droite */}
+            <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+              <div style={{ textAlign:"center" }}>
+                <div style={{ fontSize:20, marginBottom:2 }}>{scoreDiff >= 0 ? "📈" : "📉"}</div>
+                <div style={{ fontSize:16, fontWeight:800, color: scoreDiff >= 0 ? "#66BB6A" : "#ef9a9a" }}>{scoreDiff >= 0 ? "+" : ""}{scoreDiff}</div>
+                <div style={{ fontSize:10, color:"#81c784" }}>vs 7 jours</div>
+              </div>
+              <div style={{ textAlign:"center" }}>
+                <div style={{ fontSize:10, color:"#81c784", marginBottom:2 }}>Potentiel</div>
+                <div style={{ fontSize:14, fontWeight:800, color:"#f9a825" }}>{potential}</div>
+                <div style={{ fontSize:9, color:"#81c784" }}>/100</div>
+              </div>
             </div>
           </div>
           <div style={{ marginTop:14, background:"rgba(249,168,37,0.15)", borderRadius:12, padding:"10px 14px", border:"1px solid rgba(249,168,37,0.3)" }}>
@@ -282,18 +293,18 @@ export default function MyLawn() {
 
         {/* ── 2. CONSEIL DU MOIS ── */}
         {recommandationPrincipale && (
-          <div style={{ ...card(), border:"1px solid rgba(76,175,80,0.3)", background:"rgba(76,175,80,0.08)" }}>
+          <div style={{ ...card(), border:`2px solid ${recommandationPrincipale.urgence === "haute" ? "rgba(198,40,40,0.5)" : "rgba(102,187,106,0.4)"}`, background:`linear-gradient(135deg, ${recommandationPrincipale.urgence === "haute" ? "rgba(198,40,40,0.12)" : "rgba(15,47,31,0.7)"}, rgba(27,94,32,0.3))` }}>
             <div style={cardTitle}>
-              <span>{recommandationPrincipale.icone} Conseil du mois</span>
-              <span style={{ fontSize:11, color: recommandationPrincipale.urgence === "haute" ? "#c62828" : "#f57f17", fontWeight:600 }}>
+              <span style={{ fontSize:13 }}>{recommandationPrincipale.icone} Conseil du mois</span>
+              <span style={{ fontSize:11, background: recommandationPrincipale.urgence === "haute" ? "rgba(198,40,40,0.2)" : "rgba(102,187,106,0.2)", color: recommandationPrincipale.urgence === "haute" ? "#ef9a9a" : "#66BB6A", borderRadius:20, padding:"2px 10px", fontWeight:700 }}>
                 {recommandationPrincipale.urgence === "haute" ? "🔴 Maintenant" : "🟡 Bientôt"}
               </span>
             </div>
-            <div style={{ fontWeight:700, color:"#e8f5e9", fontSize:14, marginBottom:6 }}>{recommandationPrincipale.label}</div>
-            <div style={{ fontSize:12, color:"#81c784", lineHeight:1.5, marginBottom:12 }}>{recommandationPrincipale.message(score)}</div>
+            <div style={{ fontWeight:800, color:"#F1F8F2", fontSize:15, marginBottom:8 }}>{recommandationPrincipale.label}</div>
+            <div style={{ fontSize:12, color:"#A5D6A7", lineHeight:1.6, marginBottom:12 }}>{recommandationPrincipale.message(score)}</div>
             <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-              <span style={{ background:"rgba(76,175,80,0.2)", color:"#a5d6a7", borderRadius:8, padding:"4px 10px", fontSize:11, fontWeight:600 }}>📈 {recommandationPrincipale.impact_score}</span>
-              <button onClick={() => navigate("/products")} style={{ marginLeft:"auto", background:"rgba(76,175,80,0.3)", color:"#e8f5e9", border:"1px solid rgba(76,175,80,0.4)", borderRadius:10, padding:"8px 16px", fontSize:12, fontWeight:600, cursor:"pointer" }}>Voir le produit →</button>
+              <span style={{ background:"rgba(102,187,106,0.2)", color:"#66BB6A", borderRadius:8, padding:"4px 10px", fontSize:11, fontWeight:700, border:"1px solid rgba(102,187,106,0.3)" }}>📈 {recommandationPrincipale.impact_score}</span>
+              <button onClick={() => navigate("/products")} style={{ marginLeft:"auto", background:"linear-gradient(135deg,#43A047,#2E7D32)", color:"#fff", border:"none", borderRadius:10, padding:"8px 16px", fontSize:12, fontWeight:700, cursor:"pointer", boxShadow:"0 2px 8px rgba(46,125,50,0.4)" }}>Voir le produit →</button>
             </div>
           </div>
         )}
@@ -364,8 +375,8 @@ export default function MyLawn() {
             <svg width="100%" height="80" viewBox="0 0 300 80" preserveAspectRatio="none">
               <defs>
                 <linearGradient id="scoreGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#43a047" stopOpacity="0.4"/>
-                  <stop offset="100%" stopColor="#43a047" stopOpacity="0"/>
+                  <stop offset="0%" stopColor="#66BB6A" stopOpacity="0.4"/>
+                  <stop offset="100%" stopColor="#66BB6A" stopOpacity="0"/>
                 </linearGradient>
               </defs>
               {(() => {
@@ -376,7 +387,7 @@ export default function MyLawn() {
                 const areaD  = pathD + ` L 300 70 L 0 70 Z`;
                 return (<>
                   <path d={areaD} fill="url(#scoreGrad)"/>
-                  <path d={pathD} fill="none" stroke="#43a047" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d={pathD} fill="none" stroke="#66BB6A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
                   {coords.map((p,i) => <circle key={i} cx={p.x} cy={p.y} r="3" fill="#43a047"/>)}
                   <text x={coords[coords.length-1].x - 15} y={coords[coords.length-1].y - 8} fill="#a5d6a7" fontSize="10" fontWeight="bold">{score}</text>
                 </>);
@@ -396,28 +407,39 @@ export default function MyLawn() {
         </div>
 
         {/* ── 9. DERNIER DIAGNOSTIC ── */}
-        <div style={{ ...card(), background:"rgba(33,150,243,0.08)", border:"1px solid rgba(33,150,243,0.25)" }}>
-          <div style={cardTitle}><span>🔬 Dernier diagnostic</span>{!isPaid && <span style={{ fontSize:10, color:"#f9a825" }}>🔒 Premium</span>}</div>
-          <div style={{ textAlign:"center", padding:"12px 0" }}>
-            <div style={{ fontSize:32, marginBottom:8 }}>📷</div>
-            {isPaid ? (
-              <>
-                <div style={{ fontSize:13, color:"#81c784", marginBottom:12 }}>Aucun diagnostic photo effectué</div>
-                <button onClick={() => navigate("/diagnostic")} style={{ ...btn.primary, width:"auto", padding:"10px 24px", fontSize:13 }}>🔬 Faire un diagnostic →</button>
-              </>
-            ) : (
-              <>
-                <div style={{ fontSize:13, color:"#81c784", marginBottom:12 }}>Analysez votre gazon en photo pour affiner votre score jusqu'à +30 pts</div>
-                <button onClick={() => navigate("/subscribe")} style={{ ...btn.primary, width:"auto", padding:"10px 24px", fontSize:13 }}>⭐ Passer Premium pour diagnostiquer</button>
-              </>
-            )}
+        <div style={{ ...card(), background:"linear-gradient(135deg,rgba(25,118,210,0.12),rgba(13,43,26,0.6))", border:"1px solid rgba(33,150,243,0.3)" }}>
+          <div style={cardTitle}>
+            <span>🔬 Diagnostic IA</span>
+            {!isPaid && <span style={{ fontSize:10, color:"#f9a825", background:"rgba(249,168,37,0.15)", borderRadius:20, padding:"2px 8px" }}>🔒 Premium</span>}
           </div>
+          {isPaid ? (
+            <div style={{ textAlign:"center", padding:"8px 0" }}>
+              <div style={{ fontSize:48, marginBottom:8 }}>📸</div>
+              <div style={{ fontSize:14, fontWeight:700, color:"#F1F8F2", marginBottom:6 }}>Analysez votre gazon en photo</div>
+              <div style={{ fontSize:12, color:"#81c784", lineHeight:1.6, marginBottom:16 }}>
+                Détection des maladies, carences et zones mortes en moins de 10 secondes.
+              </div>
+              <button onClick={() => navigate("/diagnostic")} style={{ ...btn.primary, width:"auto", padding:"12px 28px", fontSize:14 }}>🔬 Lancer un diagnostic →</button>
+            </div>
+          ) : (
+            <div style={{ padding:"8px 0" }}>
+              <div style={{ display:"flex", gap:8, flexDirection:"column", marginBottom:16 }}>
+                {["📈 +15 pts de score en moyenne après action","⚡ Résultat en moins de 10 secondes","🏆 +100 GreenPoints garantis"].map(f => (
+                  <div key={f} style={{ fontSize:12, color:"#81c784" }}>✓ {f}</div>
+                ))}
+              </div>
+              <button onClick={() => navigate("/subscribe")} style={{ ...btn.primary, fontSize:13, padding:"12px" }}>⭐ Passer Premium — 4,99€/mois</button>
+            </div>
+          )}
         </div>
 
         {/* ── 10. PRODUITS RECOMMANDÉS ── */}
         <div style={card()}>
           <div style={cardTitle}><span>🛒 Produits recommandés</span></div>
-          <div style={{ fontSize:11, color:"#81c784", marginBottom:10, fontStyle:"italic" }}>Sélectionnés selon votre score</div>
+          <div style={{ fontSize:11, color:"#81c784", marginBottom:10, fontStyle:"italic", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+            <span>Sélectionnés selon votre score</span>
+            {isPaid && <span style={{ fontSize:10, color:"#66BB6A", background:"rgba(102,187,106,0.1)", border:"1px solid rgba(102,187,106,0.2)", borderRadius:20, padding:"2px 8px", fontStyle:"normal", fontWeight:700 }}>⭐ Personnalisés Premium</span>}
+          </div>
           {PRODUCTS.slice(0, isPaid ? 3 : 1).map((p, i) => (
             <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
               <div style={{ display:"flex", gap:10, alignItems:"center" }}>
