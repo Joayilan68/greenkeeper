@@ -112,15 +112,19 @@ export default function Setup() {
 
   return (
     <div style={{ ...appShell, fontFamily:"'Nunito','Segoe UI',sans-serif" }}>
-      <div style={{ padding:"48px 20px 24px", textAlign:"center" }}>
-        <img src="/mg360-mascot-transparent.png" alt="MG360" style={{ width:52, height:52, objectFit:"contain", display:"block", margin:"0 auto 8px" }} />
-        <div style={{ fontSize:18, fontWeight:800, color:"#a5d6a7", marginTop:4 }}>
-          {profile ? "Compléter mon profil" : "Configuration"}
+      <div style={{ padding:"48px 20px 16px" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <img src="/mg360-mascot-transparent.png" alt="MG360" style={{ width:40, height:40, objectFit:"contain" }} />
+          <div>
+            <div style={{ fontSize:20, fontWeight:800, color:"#F1F8F2" }}>
+              {profile ? "Compléter mon profil" : "Configuration"}
+            </div>
+            <div style={{ fontSize:12, color:"#66BB6A", marginTop:2 }}>Étape {step + 1} / {totalSteps}</div>
+          </div>
         </div>
-        <div style={{ height:4, background:"rgba(255,255,255,0.1)", borderRadius:2, margin:"14px 20px 0" }}>
-          <div style={{ height:"100%", width:`${progress}%`, background:"linear-gradient(90deg,#43a047,#a5d6a7)", borderRadius:2, transition:"width 0.4s" }} />
+        <div style={{ height:4, background:"rgba(255,255,255,0.1)", borderRadius:2, margin:"14px 0 0" }}>
+          <div style={{ height:"100%", width:`${progress}%`, background:"linear-gradient(90deg,#43a047,#66BB6A)", borderRadius:2, transition:"width 0.4s" }} />
         </div>
-        <div style={{ fontSize:11, color:"#81c784", marginTop:6, opacity:0.7 }}>Étape {step + 1} / {totalSteps}</div>
       </div>
 
       <div style={{ padding:"0 16px 100px" }}>
