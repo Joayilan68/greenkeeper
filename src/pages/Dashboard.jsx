@@ -117,14 +117,14 @@ export default function Dashboard() {
   const profilePhase2 = !profile ? [] : [
     profile.sol && profile.sol !== "N/A" ? { icon:"🏔️", label:"Sol",        val: SOL_LABELS_MAP[profile.sol] || profile.sol } : null,
     profile.exposition ? { icon:"☀️",  label:"Exposition", val: EXPO_LABELS_MAP[profile.exposition] || profile.exposition } : null,
-    profile.arrosage   ? { icon:"💧",  label:"Arrosage",   val: ARROSAGE_LABELS_MAP[profile.arrosage] || profile.arrosage } : null,
+    profile.arrosage && profile.arrosage !== "N/A" ? { icon:"💧",  label:"Arrosage",   val: ARROSAGE_LABELS_MAP[profile.arrosage] || profile.arrosage } : null,
     profile.tondeuse?.length > 0 ? { icon:"✂️", label:"Tondeuse", val: `${profile.tondeuse.length} type${profile.tondeuse.length > 1 ? "s" : ""}` } : null,
     profile.budget     ? { icon:"💰",  label:"Budget",     val: BUDGET_LABELS_MAP[profile.budget] || profile.budget } : null,
   ].filter(Boolean);
   const profileManquants = !profile ? [] : [
     !profile.sol || profile.sol === "N/A" ? "Type de sol" : null,
     !profile.exposition ? "Exposition" : null,
-    !profile.arrosage   ? "Arrosage"   : null,
+    !profile.arrosage || profile.arrosage === "N/A" ? "Arrosage" : null,
     !profile.tondeuse?.length ? "Tondeuse" : null,
     !profile.budget     ? "Budget"     : null,
   ].filter(Boolean);
@@ -160,11 +160,8 @@ export default function Dashboard() {
           </div>
         </div>
         {/* Tagline */}
-        <div style={{ background:"rgba(102,187,106,0.08)", border:"1px solid rgba(102,187,106,0.2)", borderRadius:12, padding:"8px 14px", display:"flex", alignItems:"center", gap:8 }}>
-          <img src="/mg360-mascot-transparent.png" alt="MG360" style={{ width:28, height:28, objectFit:"contain" }} />
-          <div style={{ fontSize:12, color:"#81c784", fontStyle:"italic" }}>
-            Prêt à prendre soin de ton gazon aujourd'hui ?
-          </div>
+        <div style={{ fontSize:11, color:"#81c784", fontStyle:"italic", opacity:0.8, marginTop:2 }}>
+          🌿 Prêt à prendre soin de ton gazon aujourd'hui ?
         </div>
         {isAdmin && <div style={{ fontSize:11, color:"#f9a825", marginTop:6, textAlign:"center" }}>👑 Mode Admin</div>}
       </div>
