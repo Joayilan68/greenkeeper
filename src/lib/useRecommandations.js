@@ -6,6 +6,43 @@
 import { useSaison } from "./useSaison";
 
 const KEY_DERNIERE_RECO = "gk_derniere_reco";
+
+// ── Zone climatique déduite de la ville ───────────────────────────────────────
+// Permet d'adapter les périodes et seuils selon le climat local
+function zoneClimatique(ville) {
+  if (!ville) return "centre";
+  const v = ville.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  // Sud méditerranéen — étés très chauds, hivers doux, sécheresses
+  if (/marseille|nice|toulon|montpellier|nimes|perpignan|aix|avignon|arles|beziers|sete|agde|valence/.test(v)) return "sud";
+  // Sud-Ouest — doux et humide, hivers cléments
+  if (/toulouse|bordeaux|bayonne|pau|tarbes|agen|auch|biarritz|mont.de.marsan/.test(v)) return "sud_ouest";
+  // Ouest océanique — pluies fréquentes, hivers doux, peu de gel
+  if (/nantes|rennes|brest|quimper|lorient|vannes|la.rochelle|poitiers|angers|le.mans|tours/.test(v)) return "ouest";
+  // Nord — hivers froids, étés frais, gel tardif possible
+  if (/lille|amiens|rouen|calais|dunkerque|arras|valenciennes|lens|boulogne/.test(v)) return "nord";
+  // Nord-Est continental — gel tardif, étés chauds, hivers rigoureux
+  if (/strasbourg|mulhouse|colmar|metz|nancy|reims|chalons|epinal|belfort|montbeliard|sierentz|altkirch|guebwiller/.test(v)) return "nord_est";
+  // Centre / Île-de-France
+  if (/paris|lyon|dijon|clermont|limoges|orleans|bourges|chartres|versailles|evry/.test(v)) return "centre";
+  return "centre"; // fallback
+}
+
+// ── Helpers météo ─────────────────────────────────────────────────────────────
+function gelPossible(meteo) {
+  return meteo?.temp_min !== undefined && meteo.temp_min < 4;
+}
+function tropFroid(meteo, seuil = 10) {
+  return meteo?.temp_max !== undefined && meteo.temp_max < seuil;
+}
+function pluiePrevue(meteo, seuil = 5) {
+  return meteo?.precip !== undefined && meteo.precip > seuil;
+}
+function solDetrempé(meteo) {
+  return meteo?.precip !== undefined && meteo.precip > 15;
+}
+function humideEtFroid(meteo) {
+  return meteo?.humidity > 70 && meteo?.temp_max < 18;
+}
 const DELAI_MIN_JOURS   = 7;
 
 // ── Grilles budget ────────────────────────────────────────────────────────────
@@ -74,12 +111,22 @@ const CALENDRIER = {
     mois_valides: [2, 3],
     conditions:   (profil, score, meteo) => {
       if (profil?.pelouse === "synthetique") return false;
+      // Pas d'engrais si gel encore possible — engrais brûlerait le gazon
+      if (gelPossible(meteo)) return false;
+      // Pas si trop froid — engrais inefficace sous 8°C
+      if (tropFroid(meteo, 8)) return false;
+      // Zone Nord-Est : sol encore froid en février, décaler à mars
+      const zone = zoneClimatique(profil?.ville);
+      if (zone === "nord_est" || zone === "nord") return score < 80 && (meteo?.temp_max || 0) >= 10;
       return score < 80;
     },
     max_par_an:   1,
     message:      (score, profil) => {
       const obj = profil?.objectif === "parfait" ? "Pour atteindre votre objectif d'un gazon parfait, " : "";
-      return `${obj}Ton gazon sort de l'hiver avec un score de ${score}/100. Applique ${msgEngrais(profil?.budget, "starter")} pour relancer la croissance.${hasMateriel(profil, "epandeur") ? "" : ctaMatériel(profil, "epandeur", profil?.budget)}`;
+      const zone = zoneClimatique(profil?.ville);
+      const conseil = zone === "nord_est" ? "Attendez que les températures dépassent 10°C avant d'appliquer." :
+                      zone === "sud" ? "Profitez des températures douces pour une application précoce." : "";
+      return `${obj}Ton gazon sort de l'hiver avec un score de ${score}/100. Applique ${msgEngrais(profil?.budget, "starter")} pour relancer la croissance. ${conseil}${hasMateriel(profil, "epandeur") ? "" : ctaMatériel(profil, "epandeur", profil?.budget)}`.trim();
     },
     impact_score: "+8 à +12 pts potentiels",
     urgence:      "haute",
@@ -92,14 +139,22 @@ const CALENDRIER = {
     mois_valides: [3, 4, 9],
     conditions:   (profil, score, meteo) => {
       if (profil?.pelouse === "synthetique") return false;
-      // Fix bug : profil.sol au lieu de profil.typeSol
+      const zone = zoneClimatique(profil?.ville);
+      // Zone Ouest ou Nord-Est → humidité chronique → seuil plus permissif
+      const seuilScore = (zone === "ouest" || zone === "nord_est") ? 75 : 65;
+      // Humidité élevée + froid → conditions parfaites pour la mousse
+      const condMeteo = humideEtFroid(meteo);
       return profil?.sol === "argileux" || profil?.sol === "compacte" ||
-             profil?.exposition === "ombrage" || profil?.exposition === "mi-ombre" || score < 65;
+             profil?.exposition === "ombrage" || profil?.exposition === "mi-ombre" ||
+             condMeteo || score < seuilScore;
     },
     max_par_an:   1,
     message:      (score, profil) => {
+      const zone = zoneClimatique(profil?.ville);
       const raison = profil?.sol === "argileux" ? "votre sol argileux favorise la mousse" :
                      profil?.exposition === "ombrage" ? "l'ombrage de votre terrain favorise la mousse" :
+                     zone === "ouest" ? "le climat humide de votre région favorise la mousse" :
+                     zone === "nord_est" ? "les hivers humides et froids de votre région favorisent la mousse" :
                      "les conditions actuelles favorisent le développement de la mousse";
       return `${raison.charAt(0).toUpperCase() + raison.slice(1)}. Un traitement anti-mousse maintenant évite une invasion difficile à gérer.${hasMateriel(profil, "pulverisateur") ? "" : " 🛒 Un pulvérisateur facilitera l'application (éco: ~15€)."}`;
     },
@@ -114,6 +169,9 @@ const CALENDRIER = {
     mois_valides: [4, 5, 9],
     conditions:   (profil, score, meteo) => {
       if (profil?.pelouse === "synthetique") return false;
+      // Désherbant inefficace si pluie prévue (lessivage) ou trop froid
+      if (pluiePrevue(meteo, 3)) return false;
+      if (tropFroid(meteo, 10)) return false;
       return score < 70;
     },
     max_par_an:   2,
@@ -135,14 +193,21 @@ const CALENDRIER = {
     mois_valides: [5, 6],
     conditions:   (profil, score, meteo) => {
       if (profil?.pelouse === "synthetique") return false;
+      // Pas si pluie abondante — lessivage immédiat
+      if (solDetrempé(meteo)) return false;
       // Gazon sec/chaud → moins de besoins en engrais été
       if (profil?.pelouse === "sec" || profil?.pelouse === "chaud") return score < 75;
+      // Zone Sud → urgence plus haute (chaleur arrive plus tôt)
+      const zone = zoneClimatique(profil?.ville);
+      if (zone === "sud" || zone === "sud_ouest") return score < 90;
       return score < 85;
     },
     max_par_an:   1,
     message:      (score, profil) => {
+      const zone = zoneClimatique(profil?.ville);
       const surface = profil?.surface ? ` (prévoyez ~${Math.round(profil.surface * 0.03 * 10) / 10}kg pour vos ${profil.surface}m²)` : "";
-      return `Avant la chaleur estivale, applique ${msgEngrais(profil?.budget, "ete")}${surface} pour maintenir densité et couleur tout l'été.${hasMateriel(profil, "epandeur") ? "" : ctaMatériel(profil, "epandeur", profil?.budget)}`;
+      const urgence = (zone === "sud" || zone === "sud_ouest") ? " Dans votre région, les chaleurs arrivent tôt — ne tardez pas !" : "";
+      return `Avant la chaleur estivale, applique ${msgEngrais(profil?.budget, "ete")}${surface} pour maintenir densité et couleur tout l'été.${urgence}${hasMateriel(profil, "epandeur") ? "" : ctaMatériel(profil, "epandeur", profil?.budget)}`;
     },
     impact_score: "+8 à +15 pts potentiels",
     urgence:      "haute",
@@ -155,10 +220,14 @@ const CALENDRIER = {
     mois_valides: [6, 7, 8],
     conditions:   (profil, score, meteo) => {
       if (profil?.pelouse === "synthetique") return false;
-      // Fix bug : meteo.temp_max au lieu de meteo.temperature
-      const chaud = meteo?.temp_max > 25 || meteo?.temp_max > 22;
+      const zone = zoneClimatique(profil?.ville);
+      // Seuil de température adapté à la zone
+      const seuilTemp = (zone === "sud" || zone === "sud_ouest") ? 22 : 25;
+      const chaud = (meteo?.temp_max || 0) > seuilTemp;
       // Gazon sec/chaud → plus résistant, seuil plus haut
       if (profil?.pelouse === "sec" || profil?.pelouse === "chaud") return chaud && score < 60;
+      // Zone Sud → recommandé dès qu'il fait chaud (stress hydrique fréquent)
+      if (zone === "sud" || zone === "sud_ouest") return chaud || score < 65;
       return chaud || score < 70;
     },
     max_par_an:   1,
@@ -180,10 +249,15 @@ const CALENDRIER = {
     mois_valides: [8, 9],
     conditions:   (profil, score, meteo) => {
       if (profil?.pelouse === "synthetique") return false;
+      // Pas si trop chaud (> 28°C) — germination compromise
+      if ((meteo?.temp_max || 0) > 28) return false;
+      // Pas si gel — semences ne germent pas
+      if (gelPossible(meteo)) return false;
       return score < 75;
     },
     max_par_an:   1,
     message:      (score, profil) => {
+      const zone = zoneClimatique(profil?.ville);
       const surface = profil?.surface ? profil.surface : null;
       const typeGazon = profil?.pelouse === "ombre" ? "mélange ombre/mi-ombre" :
                         profil?.pelouse === "sport" ? "ray-grass résistant" :
@@ -192,7 +266,10 @@ const CALENDRIER = {
       const quantite = surface ? ` (~${Math.round(surface * 0.035 * 10)/10}kg pour vos ${surface}m²)` : "";
       const g = gamme(profil?.budget);
       const prix = g === "eco" ? "~8€/kg" : g === "premium" ? "~25€/kg" : "~12-18€/kg";
-      return `Septembre est la meilleure période pour semer — sol chaud, rosées matinales, températures douces. Choisissez un ${typeGazon}${quantite} (${prix}).`;
+      const timing = zone === "nord_est" ? "Privilégiez la première quinzaine de septembre — le gel arrive tôt dans votre région." :
+                     zone === "sud" ? "En région méditerranéenne, août-septembre convient parfaitement — profitez de la rosée matinale." :
+                     "Septembre est la meilleure période — sol chaud, rosées matinales, températures douces.";
+      return `${timing} Choisissez un ${typeGazon}${quantite} (${prix}).`;
     },
     impact_score: "+10 à +20 pts potentiels",
     urgence:      "haute",
@@ -205,12 +282,19 @@ const CALENDRIER = {
     mois_valides: [9, 10],
     conditions:   (profil, score, meteo) => {
       if (profil?.pelouse === "synthetique") return false;
+      // Pas si gel — engrais ne sera pas absorbé
+      if (gelPossible(meteo)) return false;
+      // Pas si sol détrempé — lessivage
+      if (solDetrempé(meteo)) return false;
       return score < 80;
     },
     max_par_an:   1,
     message:      (score, profil) => {
+      const zone = zoneClimatique(profil?.ville);
       const surface = profil?.surface ? ` (~${Math.round(profil.surface * 0.04 * 10)/10}kg pour vos ${profil.surface}m²)` : "";
-      return `L'engrais d'automne riche en potassium prépare ton gazon à l'hiver. Utilise ${msgEngrais(profil?.budget, "automne")}${surface}.${hasMateriel(profil, "epandeur") ? "" : ctaMatériel(profil, "epandeur", profil?.budget)}`;
+      const timing = zone === "nord_est" ? " Dans votre région, appliquez dès septembre — les premières gelées arrivent en octobre." :
+                     zone === "sud" ? " Dans votre région, octobre convient parfaitement — les températures restent douces." : "";
+      return `L'engrais d'automne riche en potassium prépare ton gazon à l'hiver. Utilise ${msgEngrais(profil?.budget, "automne")}${surface}.${timing}${hasMateriel(profil, "epandeur") ? "" : ctaMatériel(profil, "epandeur", profil?.budget)}`;
     },
     impact_score: "+5 à +10 pts potentiels",
     urgence:      "normale",
@@ -240,6 +324,8 @@ const CALENDRIER = {
     mois_valides: [3, 4, 9],
     conditions:   (profil, score, meteo) => {
       if (profil?.pelouse === "synthetique") return false;
+      // Aération contre-productive si sol détrempé — attend que ça sèche
+      if (solDetrempé(meteo)) return false;
       // Sol compacté ou argileux → aération fortement recommandée
       return profil?.sol === "argileux" || profil?.sol === "compacte" || score < 70;
     },
@@ -261,6 +347,9 @@ const CALENDRIER = {
     mois_valides: [3, 4, 9],
     conditions:   (profil, score, meteo) => {
       if (profil?.pelouse === "synthetique") return false;
+      // Scarification inefficace si sol mouillé ou trop froid
+      if (pluiePrevue(meteo, 3)) return false;
+      if (tropFroid(meteo, 10)) return false;
       return score < 75;
     },
     max_par_an:   1,
