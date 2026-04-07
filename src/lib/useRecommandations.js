@@ -7,24 +7,46 @@ import { useSaison } from "./useSaison";
 
 const KEY_DERNIERE_RECO = "gk_derniere_reco";
 
-// ── Zone climatique déduite de la ville ───────────────────────────────────────
-// Permet d'adapter les périodes et seuils selon le climat local
-function zoneClimatique(ville) {
-  if (!ville) return "centre";
-  const v = ville.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-  // Sud méditerranéen — étés très chauds, hivers doux, sécheresses
-  if (/marseille|nice|toulon|montpellier|nimes|perpignan|aix|avignon|arles|beziers|sete|agde|valence/.test(v)) return "sud";
-  // Sud-Ouest — doux et humide, hivers cléments
-  if (/toulouse|bordeaux|bayonne|pau|tarbes|agen|auch|biarritz|mont.de.marsan/.test(v)) return "sud_ouest";
-  // Ouest océanique — pluies fréquentes, hivers doux, peu de gel
-  if (/nantes|rennes|brest|quimper|lorient|vannes|la.rochelle|poitiers|angers|le.mans|tours/.test(v)) return "ouest";
-  // Nord — hivers froids, étés frais, gel tardif possible
-  if (/lille|amiens|rouen|calais|dunkerque|arras|valenciennes|lens|boulogne/.test(v)) return "nord";
-  // Nord-Est continental — gel tardif, étés chauds, hivers rigoureux
-  if (/strasbourg|mulhouse|colmar|metz|nancy|reims|chalons|epinal|belfort|montbeliard|sierentz|altkirch|guebwiller/.test(v)) return "nord_est";
-  // Centre / Île-de-France
-  if (/paris|lyon|dijon|clermont|limoges|orleans|bourges|chartres|versailles|evry/.test(v)) return "centre";
-  return "centre"; // fallback
+// ── Zone climatique déduite des coordonnées GPS ──────────────────────────────
+// Couvre toute la France sans exception — bien plus fiable que le nom de ville
+// Zones : nord_est | sud | sud_ouest | ouest | nord | centre | corse
+function zoneClimatique(ville, coords) {
+  const lat = coords?.lat;
+  const lon = coords?.lon;
+
+  if (lat && lon) {
+    // Corse — île méditerranéenne spécifique
+    if (lat >= 41.3 && lat <= 43.1 && lon >= 8.5 && lon <= 9.6) return "corse";
+
+    // Sud méditerranéen — Provence, Languedoc, Roussillon, Côte d'Azur
+    if (lat < 44.5 && lon > 2) return "sud";
+
+    // Sud-Ouest — Occitanie hors méditerranée, Nouvelle-Aquitaine sud
+    if (lat < 44.5 && lon <= 2) return "sud_ouest";
+
+    // Nord — dessus du 50e parallèle (Nord-Pas-de-Calais, partie Belgique)
+    if (lat > 50) return "nord";
+
+    // Nord-Est continental — Alsace, Lorraine, Champagne, Bourgogne-FC
+    if (lon > 5 && lat >= 46.5 && lat <= 50) return "nord_est";
+
+    // Ouest océanique — Bretagne, Normandie, Pays de Loire, Poitou
+    if (lon < 0 || (lon < 1.5 && lat > 46)) return "ouest";
+
+    // Centre — Île-de-France, Centre-Val de Loire, Auvergne, Rhône-Alpes
+    return "centre";
+  }
+
+  // Fallback sans GPS — centre par défaut
+  return "centre";
+}
+
+// ── Coordonnées GPS depuis localStorage ──────────────────────────────────────
+function getCoords() {
+  try {
+    const loc = JSON.parse(localStorage.getItem("gk_location"));
+    return loc?.lat && loc?.lon ? { lat: loc.lat, lon: loc.lon } : null;
+  } catch { return null; }
 }
 
 // ── Helpers météo ─────────────────────────────────────────────────────────────
@@ -116,14 +138,14 @@ const CALENDRIER = {
       // Pas si trop froid — engrais inefficace sous 8°C
       if (tropFroid(meteo, 8)) return false;
       // Zone Nord-Est : sol encore froid en février, décaler à mars
-      const zone = zoneClimatique(profil?.ville);
+      const zone = zoneClimatique(profil?.ville, profil?._coords);
       if (zone === "nord_est" || zone === "nord") return score < 80 && (meteo?.temp_max || 0) >= 10;
       return score < 80;
     },
     max_par_an:   1,
     message:      (score, profil) => {
       const obj = profil?.objectif === "parfait" ? "Pour atteindre votre objectif d'un gazon parfait, " : "";
-      const zone = zoneClimatique(profil?.ville);
+      const zone = zoneClimatique(profil?.ville, profil?._coords);
       const conseil = zone === "nord_est" ? "Attendez que les températures dépassent 10°C avant d'appliquer." :
                       zone === "sud" ? "Profitez des températures douces pour une application précoce." : "";
       return `${obj}Ton gazon sort de l'hiver avec un score de ${score}/100. Applique ${msgEngrais(profil?.budget, "starter")} pour relancer la croissance. ${conseil}${hasMateriel(profil, "epandeur") ? "" : ctaMatériel(profil, "epandeur", profil?.budget)}`.trim();
@@ -139,7 +161,7 @@ const CALENDRIER = {
     mois_valides: [3, 4, 9],
     conditions:   (profil, score, meteo) => {
       if (profil?.pelouse === "synthetique") return false;
-      const zone = zoneClimatique(profil?.ville);
+      const zone = zoneClimatique(profil?.ville, profil?._coords);
       // Zone Ouest ou Nord-Est → humidité chronique → seuil plus permissif
       const seuilScore = (zone === "ouest" || zone === "nord_est") ? 75 : 65;
       // Humidité élevée + froid → conditions parfaites pour la mousse
@@ -150,7 +172,7 @@ const CALENDRIER = {
     },
     max_par_an:   1,
     message:      (score, profil) => {
-      const zone = zoneClimatique(profil?.ville);
+      const zone = zoneClimatique(profil?.ville, profil?._coords);
       const raison = profil?.sol === "argileux" ? "votre sol argileux favorise la mousse" :
                      profil?.exposition === "ombrage" ? "l'ombrage de votre terrain favorise la mousse" :
                      zone === "ouest" ? "le climat humide de votre région favorise la mousse" :
@@ -198,13 +220,13 @@ const CALENDRIER = {
       // Gazon sec/chaud → moins de besoins en engrais été
       if (profil?.pelouse === "sec" || profil?.pelouse === "chaud") return score < 75;
       // Zone Sud → urgence plus haute (chaleur arrive plus tôt)
-      const zone = zoneClimatique(profil?.ville);
+      const zone = zoneClimatique(profil?.ville, profil?._coords);
       if (zone === "sud" || zone === "sud_ouest") return score < 90;
       return score < 85;
     },
     max_par_an:   1,
     message:      (score, profil) => {
-      const zone = zoneClimatique(profil?.ville);
+      const zone = zoneClimatique(profil?.ville, profil?._coords);
       const surface = profil?.surface ? ` (prévoyez ~${Math.round(profil.surface * 0.03 * 10) / 10}kg pour vos ${profil.surface}m²)` : "";
       const urgence = (zone === "sud" || zone === "sud_ouest") ? " Dans votre région, les chaleurs arrivent tôt — ne tardez pas !" : "";
       return `Avant la chaleur estivale, applique ${msgEngrais(profil?.budget, "ete")}${surface} pour maintenir densité et couleur tout l'été.${urgence}${hasMateriel(profil, "epandeur") ? "" : ctaMatériel(profil, "epandeur", profil?.budget)}`;
@@ -220,7 +242,7 @@ const CALENDRIER = {
     mois_valides: [6, 7, 8],
     conditions:   (profil, score, meteo) => {
       if (profil?.pelouse === "synthetique") return false;
-      const zone = zoneClimatique(profil?.ville);
+      const zone = zoneClimatique(profil?.ville, profil?._coords);
       // Seuil de température adapté à la zone
       const seuilTemp = (zone === "sud" || zone === "sud_ouest") ? 22 : 25;
       const chaud = (meteo?.temp_max || 0) > seuilTemp;
@@ -257,7 +279,7 @@ const CALENDRIER = {
     },
     max_par_an:   1,
     message:      (score, profil) => {
-      const zone = zoneClimatique(profil?.ville);
+      const zone = zoneClimatique(profil?.ville, profil?._coords);
       const surface = profil?.surface ? profil.surface : null;
       const typeGazon = profil?.pelouse === "ombre" ? "mélange ombre/mi-ombre" :
                         profil?.pelouse === "sport" ? "ray-grass résistant" :
@@ -290,7 +312,7 @@ const CALENDRIER = {
     },
     max_par_an:   1,
     message:      (score, profil) => {
-      const zone = zoneClimatique(profil?.ville);
+      const zone = zoneClimatique(profil?.ville, profil?._coords);
       const surface = profil?.surface ? ` (~${Math.round(profil.surface * 0.04 * 10)/10}kg pour vos ${profil.surface}m²)` : "";
       const timing = zone === "nord_est" ? " Dans votre région, appliquez dès septembre — les premières gelées arrivent en octobre." :
                      zone === "sud" ? " Dans votre région, octobre convient parfaitement — les températures restent douces." : "";
@@ -399,11 +421,15 @@ export function useRecommandations(profil, score, meteo) {
     return { recommandations: [], recommandationPrincipale: null, enregistrerApplication };
   }
 
+  // Enrichir le profil avec les coordonnées GPS pour la zone climatique
+  const coords = getCoords();
+  const profilAvecCoords = profil ? { ...profil, _coords: coords } : profil;
+
   const derniereReco = getDerniereReco();
 
   const recommandations = Object.values(CALENDRIER).filter(produit => {
     if (!produit.mois_valides.includes(mois)) return false;
-    if (!produit.conditions(profil, score, meteo)) return false;
+    if (!produit.conditions(profilAvecCoords, score, meteo)) return false;
     const nbCetteAnnee = nombreApplicationsAnneeCourante(produit.id);
     if (nbCetteAnnee >= produit.max_par_an) return false;
     const dernieres = derniereReco[produit.id] || [];
@@ -416,7 +442,11 @@ export function useRecommandations(profil, score, meteo) {
     return 0;
   });
 
-  const recommandationPrincipale = recommandations[0] || null;
+  // Enrichir les recommandations avec profilAvecCoords pour les messages
+  const recommandationPrincipale = recommandations[0] ? {
+    ...recommandations[0],
+    message: (score, p) => recommandations[0].message(score, p || profilAvecCoords),
+  } : null;
 
   const moisSuivant = mois === 12 ? 1 : mois + 1;
   const produitsAVenir = Object.values(CALENDRIER).filter(produit => {
