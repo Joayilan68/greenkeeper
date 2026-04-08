@@ -124,6 +124,20 @@ function msgEngrais(budget, type) {
   return produits[type]?.[g] || "un engrais adapté à la saison";
 }
 
+// ── Helper historique journalisé ─────────────────────────────────────────────
+function dernierJour(history, keyword) {
+  if (!history?.length) return 999;
+  const found = history.filter(h => h.action?.toLowerCase().includes(keyword.toLowerCase()));
+  if (!found.length) return 999;
+  const days = found.map(h => {
+    const parts = h.date?.split('/');
+    if (!parts || parts.length !== 3) return 999;
+    const d = new Date(parts[2], parts[1]-1, parts[0]);
+    return Math.floor((Date.now() - d.getTime()) / 86400000);
+  });
+  return Math.min(...days);
+}
+
 // ── Calendrier agronomique ────────────────────────────────────────────────────
 const CALENDRIER = {
   engrais_starter: {
