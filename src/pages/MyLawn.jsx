@@ -187,7 +187,7 @@ export default function MyLawn() {
   const { score, potential, label, color, issues, strengths, composantes } = calcLawnScore({ weather, profile, history, month });
 
   // ── Conseil du mois (nouveau) ──
-  const { recommandationPrincipale } = useRecommandations(profile, score, weather);
+  const { recommandationPrincipale } = useRecommandations(profile, score, weather, history);
 
   const historyMinus7      = history.filter(h => {
     const parts = h.date?.split('/');

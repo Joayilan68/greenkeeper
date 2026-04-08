@@ -131,13 +131,12 @@ const CALENDRIER = {
     label:        "Engrais Starter NPK",
     icone:        "🌱",
     mois_valides: [2, 3],
-    conditions:   (profil, score, meteo) => {
+    conditions:   (profil, score, meteo, history) => {
       if (profil?.pelouse === "synthetique") return false;
-      // Pas d'engrais si gel encore possible — engrais brûlerait le gazon
       if (gelPossible(meteo)) return false;
-      // Pas si trop froid — engrais inefficace sous 8°C
       if (tropFroid(meteo, 8)) return false;
-      // Zone Nord-Est : sol encore froid en février, décaler à mars
+      // Pas si engrais appliqué récemment (< 45 jours)
+      if (dernierJour(history, "engrais") < 45) return false;
       const zone = zoneClimatique(profil?.ville, profil?._coords);
       if (zone === "nord_est" || zone === "nord") return score < 80 && (meteo?.temp_max || 0) >= 10;
       return score < 80;
@@ -159,12 +158,13 @@ const CALENDRIER = {
     label:        "Anti-Mousse Liquide",
     icone:        "🌿",
     mois_valides: [3, 4, 9],
-    conditions:   (profil, score, meteo) => {
+    conditions:   (profil, score, meteo, history) => {
       if (profil?.pelouse === "synthetique") return false;
+      // Pas si traitement anti-mousse récent (< 30 jours)
+      if (dernierJour(history, "anti_mousse") < 30) return false;
+      if (dernierJour(history, "mousse") < 30) return false;
       const zone = zoneClimatique(profil?.ville, profil?._coords);
-      // Zone Ouest ou Nord-Est → humidité chronique → seuil plus permissif
       const seuilScore = (zone === "ouest" || zone === "nord_est") ? 75 : 65;
-      // Humidité élevée + froid → conditions parfaites pour la mousse
       const condMeteo = humideEtFroid(meteo);
       return profil?.sol === "argileux" || profil?.sol === "compacte" ||
              profil?.exposition === "ombrage" || profil?.exposition === "mi-ombre" ||
@@ -189,11 +189,13 @@ const CALENDRIER = {
     label:        "Désherbant Sélectif Gazon",
     icone:        "🪴",
     mois_valides: [4, 5, 9],
-    conditions:   (profil, score, meteo) => {
+    conditions:   (profil, score, meteo, history) => {
       if (profil?.pelouse === "synthetique") return false;
-      // Désherbant inefficace si pluie prévue (lessivage) ou trop froid
       if (pluiePrevue(meteo, 3)) return false;
       if (tropFroid(meteo, 10)) return false;
+      // Pas si désherbé récemment (< 21 jours)
+      if (dernierJour(history, "desherb") < 21) return false;
+      if (dernierJour(history, "désherb") < 21) return false;
       return score < 70;
     },
     max_par_an:   2,
@@ -213,13 +215,12 @@ const CALENDRIER = {
     label:        "Engrais Été Longue Durée",
     icone:        "☀️",
     mois_valides: [5, 6],
-    conditions:   (profil, score, meteo) => {
+    conditions:   (profil, score, meteo, history) => {
       if (profil?.pelouse === "synthetique") return false;
-      // Pas si pluie abondante — lessivage immédiat
       if (solDetrempé(meteo)) return false;
-      // Gazon sec/chaud → moins de besoins en engrais été
+      // Pas si engrais appliqué récemment (< 45 jours)
+      if (dernierJour(history, "engrais") < 45) return false;
       if (profil?.pelouse === "sec" || profil?.pelouse === "chaud") return score < 75;
-      // Zone Sud → urgence plus haute (chaleur arrive plus tôt)
       const zone = zoneClimatique(profil?.ville, profil?._coords);
       if (zone === "sud" || zone === "sud_ouest") return score < 90;
       return score < 85;
@@ -239,26 +240,39 @@ const CALENDRIER = {
     id:           "biostimulant",
     label:        "Biostimulant Stress Hydrique",
     icone:        "💧",
-    mois_valides: [6, 7, 8],
-    conditions:   (profil, score, meteo) => {
+    mois_valides: [3, 4, 5, 6, 7, 8, 9, 10],
+    conditions:   (profil, score, meteo, history) => {
       if (profil?.pelouse === "synthetique") return false;
+      // Respecter délai minimum 42 jours (6 semaines) entre applications
+      if (dernierJour(history, "biostimulant") < 42) return false;
+      if (dernierJour(history, "stimulant") < 42) return false;
       const zone = zoneClimatique(profil?.ville, profil?._coords);
-      // Seuil de température adapté à la zone
-      const seuilTemp = (zone === "sud" || zone === "sud_ouest") ? 22 : 25;
-      const chaud = (meteo?.temp_max || 0) > seuilTemp;
-      // Gazon sec/chaud → plus résistant, seuil plus haut
-      if (profil?.pelouse === "sec" || profil?.pelouse === "chaud") return chaud && score < 60;
-      // Zone Sud → recommandé dès qu'il fait chaud (stress hydrique fréquent)
-      if (zone === "sud" || zone === "sud_ouest") return chaud || score < 65;
-      return chaud || score < 70;
+      const moisActuel = new Date().getMonth() + 1;
+      // Hors saison de croissance → pas utile
+      if (gelPossible(meteo)) return false;
+      if (tropFroid(meteo, 8)) return false;
+      // En pleine saison chaude (juin-août) : seuil température
+      if (moisActuel >= 6 && moisActuel <= 8) {
+        const seuilTemp = (zone === "sud" || zone === "sud_ouest") ? 22 : 25;
+        const chaud = (meteo?.temp_max || 0) > seuilTemp;
+        if (profil?.pelouse === "sec" || profil?.pelouse === "chaud") return chaud && score < 60;
+        if (zone === "sud" || zone === "sud_ouest") return chaud || score < 65;
+        return chaud || score < 70;
+      }
+      // Hors été (mars-mai, sept-oct) : recommandé si score < 80
+      return score < 80;
     },
-    max_par_an:   1,
-    message:      (score, profil) => {
+    max_par_an:   6,
+    message:      (score, profil, history) => {
       const g = gamme(profil?.budget);
       const produit = g === "eco" ? "un biostimulant basique (~12€)" :
                       g === "premium" ? "un biostimulant professionnel acides aminés + algues (~45€)" :
                       "un biostimulant racinaire (~20-30€)";
-      return `Les températures élevées stressent votre gazon. ${produit} renforce sa résistance et réduit les besoins en eau de 20-30%.`;
+      const moisActuel = new Date().getMonth() + 1;
+      const contexte = moisActuel <= 5 || moisActuel >= 9 ?
+          "En début et fin de saison, le biostimulant stimule les racines et améliore la résistance." :
+          "Les températures élevées stressent votre gazon.";
+      return `${contexte} ${produit} renforce la résistance et réduit les besoins en eau de 20-30%. Application toutes les 6 semaines recommandée.`;
     },
     impact_score: "+5 à +12 pts potentiels",
     urgence:      "haute",
@@ -268,17 +282,28 @@ const CALENDRIER = {
     id:           "semences",
     label:        "Semences Regarnissage Automne",
     icone:        "🌾",
-    mois_valides: [8, 9],
-    conditions:   (profil, score, meteo) => {
+    mois_valides: [3, 4, 5, 6, 8, 9],
+    conditions:   (profil, score, meteo, history) => {
       if (profil?.pelouse === "synthetique") return false;
-      // Pas si trop chaud (> 28°C) — germination compromise
-      if ((meteo?.temp_max || 0) > 28) return false;
       // Pas si gel — semences ne germent pas
       if (gelPossible(meteo)) return false;
+      // Pas si trop chaud — germination compromise
+      if ((meteo?.temp_max || 0) > 28) return false;
+      // Pas si semé récemment (< 60 jours)
+      if (dernierJour(history, "semences") < 60) return false;
+      if (dernierJour(history, "semis") < 60) return false;
+      // Juin : conditions plus strictes (chaleur naissante, risque stress hydrique)
+      const moisActuel = new Date().getMonth() + 1;
+      if (moisActuel === 6) return score < 65 && (meteo?.temp_max || 30) < 26;
+      // Mars-avril : sol doit être suffisamment chaud
+      if (moisActuel === 3 || moisActuel === 4) {
+        if ((meteo?.temp_max || 0) < 10) return false;
+      }
       return score < 75;
     },
-    max_par_an:   1,
-    message:      (score, profil) => {
+    max_par_an:   2,
+    message:      (score, profil, history) => {
+      const moisActuel = new Date().getMonth() + 1;
       const zone = zoneClimatique(profil?.ville, profil?._coords);
       const surface = profil?.surface ? profil.surface : null;
       const typeGazon = profil?.pelouse === "ombre" ? "mélange ombre/mi-ombre" :
@@ -288,9 +313,15 @@ const CALENDRIER = {
       const quantite = surface ? ` (~${Math.round(surface * 0.035 * 10)/10}kg pour vos ${surface}m²)` : "";
       const g = gamme(profil?.budget);
       const prix = g === "eco" ? "~8€/kg" : g === "premium" ? "~25€/kg" : "~12-18€/kg";
-      const timing = zone === "nord_est" ? "Privilégiez la première quinzaine de septembre — le gel arrive tôt dans votre région." :
-                     zone === "sud" ? "En région méditerranéenne, août-septembre convient parfaitement — profitez de la rosée matinale." :
-                     "Septembre est la meilleure période — sol chaud, rosées matinales, températures douces.";
+      const timing = (moisActuel >= 3 && moisActuel <= 5) ?
+          "Bonne période de semis printanier — sol en réchauffement, humidité suffisante." :
+        moisActuel === 6 ?
+          "⚠️ Semis possible mais risqué en juin — prévoyez un arrosage régulier pour la germination." :
+        zone === "nord_est" ?
+          "Privilégiez la première quinzaine de septembre — le gel arrive tôt dans votre région." :
+        zone === "sud" ?
+          "Août-septembre idéal — sol chaud, rosées matinales." :
+          "Septembre est la meilleure période — sol chaud, rosées matinales, températures douces.";
       return `${timing} Choisissez un ${typeGazon}${quantite} (${prix}).`;
     },
     impact_score: "+10 à +20 pts potentiels",
@@ -302,12 +333,12 @@ const CALENDRIER = {
     label:        "Engrais Automne Potassium",
     icone:        "🍂",
     mois_valides: [9, 10],
-    conditions:   (profil, score, meteo) => {
+    conditions:   (profil, score, meteo, history) => {
       if (profil?.pelouse === "synthetique") return false;
-      // Pas si gel — engrais ne sera pas absorbé
       if (gelPossible(meteo)) return false;
-      // Pas si sol détrempé — lessivage
       if (solDetrempé(meteo)) return false;
+      // Pas si engrais appliqué récemment (< 45 jours)
+      if (dernierJour(history, "engrais") < 45) return false;
       return score < 80;
     },
     max_par_an:   1,
@@ -327,8 +358,9 @@ const CALENDRIER = {
     label:        "Engrais Résistance Hiver",
     icone:        "❄️",
     mois_valides: [11],
-    conditions:   (profil, score, meteo) => {
+    conditions:   (profil, score, meteo, history) => {
       if (profil?.pelouse === "synthetique") return false;
+      if (dernierJour(history, "engrais") < 45) return false;
       return score < 70;
     },
     max_par_an:   1,
@@ -344,11 +376,12 @@ const CALENDRIER = {
     label:        "Aération / Carottage",
     icone:        "🌀",
     mois_valides: [3, 4, 9],
-    conditions:   (profil, score, meteo) => {
+    conditions:   (profil, score, meteo, history) => {
       if (profil?.pelouse === "synthetique") return false;
-      // Aération contre-productive si sol détrempé — attend que ça sèche
       if (solDetrempé(meteo)) return false;
-      // Sol compacté ou argileux → aération fortement recommandée
+      // Pas si aération effectuée récemment (< 90 jours)
+      if (dernierJour(history, "aération") < 90) return false;
+      if (dernierJour(history, "aeration") < 90) return false;
       return profil?.sol === "argileux" || profil?.sol === "compacte" || score < 70;
     },
     max_par_an:   1,
@@ -367,11 +400,11 @@ const CALENDRIER = {
     label:        "Scarification",
     icone:        "🔩",
     mois_valides: [3, 4, 9],
-    conditions:   (profil, score, meteo) => {
+    conditions:   (profil, score, meteo, history) => {
       if (profil?.pelouse === "synthetique") return false;
-      // Scarification inefficace si sol mouillé ou trop froid
       if (pluiePrevue(meteo, 3)) return false;
       if (tropFroid(meteo, 10)) return false;
+      if (dernierJour(history, "scarif") < 180) return false;
       return score < 75;
     },
     max_par_an:   1,
@@ -380,6 +413,57 @@ const CALENDRIER = {
     },
     impact_score: "+6 à +12 pts potentiels",
     urgence:      "normale",
+  },
+
+  arrosage: {
+    id:           "arrosage",
+    label:        "Arrosage recommandé",
+    icone:        "💧",
+    mois_valides: [3, 4, 5, 6, 7, 8, 9, 10],
+    conditions:   (profil, score, meteo, history) => {
+      if (profil?.pelouse === "synthetique") return false;
+      // Pas si gel — ne pas arroser par gel
+      if (gelPossible(meteo)) return false;
+      // Pas si pluie suffisante (≥ 8mm) — pas besoin d'arroser
+      if ((meteo?.precip || 0) >= 8) return false;
+      // Pas si arrosé récemment (< 20h = même journée)
+      if (dernierJour(history, "arrosage") < 1) return false;
+      // Pas si mode d'arrosage = automatique (géré sans intervention)
+      if (profil?.arrosage === "automatique") return false;
+      // Pas si pas d'arrosage déclaré
+      if (profil?.arrosage === "aucun") return false;
+      const zone = zoneClimatique(profil?.ville, profil?._coords);
+      const moisActuel = new Date().getMonth() + 1;
+      // Sol sableux → sèche vite → plus sensible
+      const solSensible = profil?.sol === "sableux";
+      // Gazon exigeant en eau
+      const gazonExigeant = profil?.pelouse === "sport" || profil?.pelouse === "ornemental";
+      // Chaleur + pas de pluie récente → arrosage nécessaire
+      const chaud = (meteo?.temp_max || 0) > 22;
+      const treschaud = (meteo?.temp_max || 0) > 30;
+      // Été → toujours recommander si pas de pluie
+      if (moisActuel >= 6 && moisActuel <= 8) return chaud || score < 75;
+      // Printemps/automne → uniquement si chaleur ou sol sensible
+      if (solSensible || gazonExigeant) return chaud || score < 70;
+      // Zone Sud → seuil plus bas (sécheresse plus fréquente)
+      if (zone === "sud" || zone === "sud_ouest") return chaud || score < 75;
+      return treschaud || score < 65;
+    },
+    max_par_an:   52,
+    message:      (score, profil, history) => {
+      const meteoMsg = ""; // accès via closure non disponible — message générique
+      const zone = zoneClimatique(profil?.ville, profil?._coords);
+      const solInfo = profil?.sol === "sableux" ? "Votre sol sableux sèche rapidement — " :
+                      profil?.sol === "argileux" ? "Votre sol argileux retient l'eau — " : "";
+      const freq = profil?.sol === "sableux" ? "tous les 2-3 jours" :
+                   (zone === "sud" || zone === "sud_ouest") ? "tous les 2-3 jours" :
+                   "2 à 3 fois par semaine";
+      const surface = profil?.surface;
+      const conseil = surface ? ` Pour vos ${surface}m², prévoyez ~${Math.round(surface * 0.004 * 10)/10}L/m² par arrosage.` : "";
+      return `${solInfo}Un arrosage est recommandé aujourd'hui. Arrosez ${freq} tôt le matin (6h-9h) pour limiter l'évaporation.${conseil}`;
+    },
+    impact_score: "+3 à +8 pts potentiels",
+    urgence:      "haute",
   },
 };
 
@@ -414,7 +498,7 @@ function enregistrerApplication(produitId) {
 }
 
 // ── Hook principal ────────────────────────────────────────────────────────────
-export function useRecommandations(profil, score, meteo) {
+export function useRecommandations(profil, score, meteo, history = []) {
   const { mois, isHivernal } = useSaison();
 
   if (isHivernal) {
@@ -429,7 +513,7 @@ export function useRecommandations(profil, score, meteo) {
 
   const recommandations = Object.values(CALENDRIER).filter(produit => {
     if (!produit.mois_valides.includes(mois)) return false;
-    if (!produit.conditions(profilAvecCoords, score, meteo)) return false;
+    if (!produit.conditions(profilAvecCoords, score, meteo, history)) return false;
     const nbCetteAnnee = nombreApplicationsAnneeCourante(produit.id);
     if (nbCetteAnnee >= produit.max_par_an) return false;
     const dernieres = derniereReco[produit.id] || [];
@@ -442,10 +526,10 @@ export function useRecommandations(profil, score, meteo) {
     return 0;
   });
 
-  // Enrichir les recommandations avec profilAvecCoords pour les messages
+  // Enrichir les recommandations avec profilAvecCoords et history pour les messages
   const recommandationPrincipale = recommandations[0] ? {
     ...recommandations[0],
-    message: (score, p) => recommandations[0].message(score, p || profilAvecCoords),
+    message: (score, p) => recommandations[0].message(score, p || profilAvecCoords, history),
   } : null;
 
   const moisSuivant = mois === 12 ? 1 : mois + 1;
