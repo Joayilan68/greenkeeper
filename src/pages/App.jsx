@@ -18,7 +18,7 @@ import Register from "./pages/Register";
 import Settings from "./pages/Settings";
 import Pilotage from "./pages/Pilotage";
 import Rappels from "./pages/Rappels";
-import { MentionsLegales, Confidentialite, CGU, CGV } from "./pages/Legal";
+import { MentionsLegales, Confidentialite, CGU, CGV, Cookies } from "./pages/Legal";
 import Layout from "./components/Layout";
 import ComingSoon from "./components/ComingSoon";
 import { WeatherProvider } from "./lib/WeatherContext";
@@ -91,6 +91,7 @@ export default function App() {
           <Route path="/confidentialite"   element={<Confidentialite />} />
           <Route path="/cgu"               element={<CGU />} />
           <Route path="/cgv"               element={<CGV />} />
+          <Route path="/cookies"           element={<Cookies />} />
 
           {/* ── Paramètres ── */}
           <Route path="/parametres"        element={<ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>} />
