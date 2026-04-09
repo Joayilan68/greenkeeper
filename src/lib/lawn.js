@@ -1,16 +1,18 @@
+// arrosage_base = besoin HEBDOMADAIRE total en mm (agronomique)
+// arrosage_freq = nombre de sessions d'arrosage par semaine recommandées
 export const MONTHLY_PLAN = {
-  1:  { tonte:"Aucune", engrais:null, verticut:false, arrosage_base:0, aeration:false, label:"Repos hivernal", hauteur:null },
-  2:  { tonte:"35 mm si repousse", engrais:null, verticut:false, arrosage_base:3, aeration:true, label:"Réveil de la pelouse", hauteur:35 },
-  3:  { tonte:"30 mm · 1-2x/sem", engrais:"NPK 12-5-5 organo-minéral · 30-40 g/m²", verticut:false, arrosage_base:10, aeration:true, label:"Reprise printanière", hauteur:30 },
-  4:  { tonte:"25-30 mm · 2x/sem", engrais:"NPK 15-5-10 · 30-40 g/m²", verticut:true, arrosage_base:13, aeration:false, label:"Croissance active", hauteur:28 },
-  5:  { tonte:"25 mm · 2-3x/sem", engrais:"NPK 15-5-10 · 30 g/m²", verticut:true, arrosage_base:15, aeration:false, label:"Pleine saison", hauteur:25 },
-  6:  { tonte:"28-30 mm · 2x/sem", engrais:"NPK 10-5-15 équilibré · 25-30 g/m²", verticut:true, arrosage_base:17, aeration:false, label:"Surveillance chaleur", hauteur:29 },
-  7:  { tonte:"30-35 mm · 1-2x/sem", engrais:"NPK 8-0-20 riche K · 20-25 g/m²", verticut:false, arrosage_base:22, aeration:false, label:"Protection estivale", hauteur:32 },
-  8:  { tonte:"30-35 mm · 1-2x/sem", engrais:"NPK 8-0-20 · 20 g/m²", verticut:false, arrosage_base:20, aeration:false, label:"Stress hydrique", hauteur:32 },
-  9:  { tonte:"28-30 mm · 1-2x/sem", engrais:"NPK 5-10-25 automne · 40 g/m²", verticut:false, arrosage_base:16, aeration:true, label:"Rénovation automnale", hauteur:29 },
-  10: { tonte:"30 mm · 1x/sem", engrais:null, verticut:false, arrosage_base:10, aeration:false, label:"Préparation hiver", hauteur:30 },
-  11: { tonte:"35 mm si pousse", engrais:"Chaux magnésienne si pH<6 · 150-200 g/m²", verticut:false, arrosage_base:0, aeration:false, label:"Fin de saison", hauteur:35 },
-  12: { tonte:"Aucune", engrais:null, verticut:false, arrosage_base:0, aeration:false, label:"Repos complet", hauteur:null },
+  1:  { tonte:"Aucune",             engrais:null,                                  verticut:false, arrosage_base:0,  arrosage_freq:0, aeration:false, label:"Repos hivernal",       hauteur:null },
+  2:  { tonte:"35 mm si repousse",  engrais:null,                                  verticut:false, arrosage_base:3,  arrosage_freq:1, aeration:true,  label:"Réveil de la pelouse", hauteur:35 },
+  3:  { tonte:"30 mm · 1-2x/sem",  engrais:"NPK 12-5-5 organo-minéral · 30-40 g/m²", verticut:false, arrosage_base:10, arrosage_freq:2, aeration:true,  label:"Reprise printanière",  hauteur:30 },
+  4:  { tonte:"25-30 mm · 2x/sem", engrais:"NPK 15-5-10 · 30-40 g/m²",           verticut:true,  arrosage_base:13, arrosage_freq:2, aeration:false, label:"Croissance active",     hauteur:28 },
+  5:  { tonte:"25 mm · 2-3x/sem",  engrais:"NPK 15-5-10 · 30 g/m²",              verticut:true,  arrosage_base:15, arrosage_freq:3, aeration:false, label:"Pleine saison",         hauteur:25 },
+  6:  { tonte:"28-30 mm · 2x/sem", engrais:"NPK 10-5-15 équilibré · 25-30 g/m²", verticut:true,  arrosage_base:17, arrosage_freq:3, aeration:false, label:"Surveillance chaleur",  hauteur:29 },
+  7:  { tonte:"30-35 mm · 1-2x/sem",engrais:"NPK 8-0-20 riche K · 20-25 g/m²",  verticut:false, arrosage_base:22, arrosage_freq:3, aeration:false, label:"Protection estivale",   hauteur:32 },
+  8:  { tonte:"30-35 mm · 1-2x/sem",engrais:"NPK 8-0-20 · 20 g/m²",             verticut:false, arrosage_base:20, arrosage_freq:3, aeration:false, label:"Stress hydrique",       hauteur:32 },
+  9:  { tonte:"28-30 mm · 1-2x/sem",engrais:"NPK 5-10-25 automne · 40 g/m²",    verticut:false, arrosage_base:16, arrosage_freq:2, aeration:true,  label:"Rénovation automnale",  hauteur:29 },
+  10: { tonte:"30 mm · 1x/sem",    engrais:null,                                  verticut:false, arrosage_base:10, arrosage_freq:1, aeration:false, label:"Préparation hiver",     hauteur:30 },
+  11: { tonte:"35 mm si pousse",   engrais:"Chaux magnésienne si pH<6 · 150-200 g/m²", verticut:false, arrosage_base:0, arrosage_freq:0, aeration:false, label:"Fin de saison",  hauteur:35 },
+  12: { tonte:"Aucune",            engrais:null,                                   verticut:false, arrosage_base:0,  arrosage_freq:0, aeration:false, label:"Repos complet",        hauteur:null },
 };
 
 export const MONTHS_FR = ["","Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
@@ -42,14 +44,30 @@ export const LAWN_COEFF = {
   "ombre-semi-ombre": 0.9,
 };
 
-export function calcArrosage(month, profile, weather, history = []) {
+// ── Débit arroseur par défaut (mm/h) ─────────────────────────────────────────
+// Correspond à un arroseur oscillant résidentiel standard sur une pelouse moyenne.
+// Configurable en Premium via localStorage "mg360_debit_mmh".
+export const DEBIT_DEFAULT_MMH = 5;
+
+export function getDebitMmH() {
+  try {
+    const v = parseFloat(localStorage.getItem("mg360_debit_mmh"));
+    return (!isNaN(v) && v >= 1 && v <= 20) ? v : DEBIT_DEFAULT_MMH;
+  } catch { return DEBIT_DEFAULT_MMH; }
+}
+
+export function calcArrosage(month, profile, weather, history = [], debitMmH = DEBIT_DEFAULT_MMH) {
   // Gazon synthétique → jamais d'arrosage
   if (profile?.isSynthetique || profile?.pelouse === "synthetique") return null;
 
-  const base = MONTHLY_PLAN[month]?.arrosage_base ?? 0;
-  if (base === 0) return null;
+  const plan = MONTHLY_PLAN[month];
+  const baseHebdo = plan?.arrosage_base ?? 0;
+  const freq      = plan?.arrosage_freq ?? 0;
+  if (baseHebdo === 0 || freq === 0) return null;
 
-  // ── Vérification historique — arrosé récemment ? ─────────────────────────
+  // ── Vérification historique — intervalle adaptatif selon fréquence ────────
+  // Ex : 3x/sem → intervalle min = floor(7/3) = 2 jours = 48h
+  const intervalHeures = Math.floor(7 / freq) * 24;
   const maintenant = Date.now();
   const dernierArrosage = history
     ?.filter(h => h.action?.toLowerCase().includes("arrosage"))
@@ -64,13 +82,13 @@ export function calcArrosage(month, profile, weather, history = []) {
 
   if (dernierArrosage) {
     const heuresDepuis = (maintenant - dernierArrosage) / (1000 * 60 * 60);
-    // Arrosé il y a moins de 20h → pas de recommandation
-    if (heuresDepuis < 20) return null;
+    if (heuresDepuis < intervalHeures) return null;
   }
 
+  // ── Dose par session = besoin hebdomadaire ÷ fréquence ────────────────────
   const soil = SOIL_COEFF[profile?.sol] ?? 1;
   const lawn = LAWN_COEFF[profile?.pelouse] ?? 1;
-  let mm = base * soil * lawn;
+  let mm = (baseHebdo / freq) * soil * lawn;
 
   if (weather) {
     // Chaleur → augmente les besoins
@@ -78,9 +96,9 @@ export function calcArrosage(month, profile, weather, history = []) {
     else if (weather.temp_max > 25) mm *= 1.15;
 
     // Pluie → réduit ou annule
-    if (weather.precip >= 10) return null;          // Forte pluie → inutile d'arroser
+    if (weather.precip >= 10) return null;
     if (weather.precip > 5)   mm = Math.max(0, mm - weather.precip * 0.8);
-    if (weather.precip > 2)   mm = Math.max(0, mm - weather.precip * 0.5);
+    else if (weather.precip > 2) mm = Math.max(0, mm - weather.precip * 0.5);
 
     // Humidité élevée → réduit
     if (weather.humidity > 80) mm *= 0.85;
@@ -91,11 +109,13 @@ export function calcArrosage(month, profile, weather, history = []) {
 
   mm = Math.round(mm * 10) / 10;
 
-  // Seuil minimum — si < 2mm, pas la peine d'arroser
+  // Seuil minimum
   if (mm < 2) return null;
 
-  const minutes = Math.round((mm / 10) * 60);
-  return { mm, minutes };
+  // Durée = dose ÷ débit × 60 min
+  const minutes = Math.round((mm / debitMmH) * 60);
+
+  return { mm, minutes, freq, debitMmH, intervalHeures };
 }
 
 export function getWMO(code) {
