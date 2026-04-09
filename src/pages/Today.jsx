@@ -12,26 +12,128 @@ import { useStreak } from "../lib/useStreak";
 import { getConseilApresAction } from "../lib/useRecommandations";
 import { useSaison } from "../lib/useSaison";
 
-const ACTIONS = ["Tonte ✂️","Arrosage 💧","Engrais 🌱","Verticut 🔧","Aération 🌀","Désherbage 🪴","Regarnissage 🌾","Top-dressing 🏖️","Traitement fongicide 💊","Scarification 🔩"];
+// ── Règles de fréquence alignées sur useRecommandations.js ───────────────────
+// intervalDays = délai minimum entre deux applications de la même action
+const FREQ_RULES = [
+  {
+    id:       "tonte",
+    label:    "Tonte ✂️",
+    gp:       "tonte",
+    mois:     [3,4,5,6,7,8,9,10],
+    interval: (month) => month >= 6 && month <= 8 ? 4 : month >= 3 && month <= 5 ? 5 : 7,
+    keywords: ["tonte"],
+  },
+  {
+    id:       "arrosage",
+    label:    "Arrosage 💧",
+    gp:       "arrosage",
+    mois:     [3,4,5,6,7,8,9,10],
+    interval: () => 1,                    // géré aussi par calcArrosage
+    keywords: ["arrosage"],
+    weatherDriven: true,                  // ne s'affiche que si calcArrosage le dit
+  },
+  {
+    id:       "engrais",
+    label:    "Engrais 🌱",
+    gp:       "engrais",
+    mois:     [2,3,5,6,9,10,11],
+    interval: () => 45,
+    keywords: ["engrais"],
+  },
+  {
+    id:       "desherbage",
+    label:    "Désherbage 🪴",
+    gp:       "desherbage",
+    mois:     [4,5,9],
+    interval: () => 21,
+    keywords: ["desherb","désherb"],
+  },
+  {
+    id:       "aeration",
+    label:    "Aération 🌀",
+    gp:       "aeration",
+    mois:     [3,4,9],
+    interval: () => 90,
+    keywords: ["aeration","aération"],
+  },
+  {
+    id:       "scarification",
+    label:    "Scarification 🔩",
+    gp:       "scarification",
+    mois:     [3,4,9],
+    interval: () => 180,
+    keywords: ["scarif","verticut"],
+  },
+  {
+    id:       "regarnissage",
+    label:    "Regarnissage 🌾",
+    gp:       "semences",
+    mois:     [3,4,5,6,8,9],
+    interval: () => 60,
+    keywords: ["semences","semis","regarnissage"],
+  },
+  {
+    id:       "topdressing",
+    label:    "Top-dressing 🏖️",
+    gp:       "aeration",
+    mois:     [3,4,9],
+    interval: () => 90,
+    keywords: ["top-dressing","topdressing","top_dressing"],
+  },
+  {
+    id:       "antimousse",
+    label:    "Anti-mousse 💊",
+    gp:       "anti_mousse",
+    mois:     [3,4,9],
+    interval: () => 30,
+    keywords: ["anti_mousse","mousse","fongicide"],
+  },
+];
 
-const ACTION_TO_GP = {
-  "Tonte ✂️":               "tonte",
-  "Arrosage 💧":            "arrosage",
-  "Engrais 🌱":             "engrais",
-  "Verticut 🔧":            "scarification",
-  "Aération 🌀":            "aeration",
-  "Désherbage 🪴":          "desherbage",
-  "Regarnissage 🌾":        "semences",
-  "Top-dressing 🏖️":       "aeration",
-  "Traitement fongicide 💊":"anti_mousse",
-  "Scarification 🔩":       "scarification",
-};
+// ── Helpers historique ────────────────────────────────────────────────────────
+function daysSince(history, keywords) {
+  if (!history?.length) return 999;
+  const matches = history.filter(h =>
+    keywords.some(kw => h.action?.toLowerCase().includes(kw.toLowerCase()))
+  );
+  if (!matches.length) return 999;
+  const days = matches.map(h => {
+    const parts = h.date?.split("/");
+    if (!parts || parts.length !== 3) return 999;
+    const d = new Date(parts[2], parts[1] - 1, parts[0]);
+    return Math.floor((Date.now() - d.getTime()) / 86400000);
+  });
+  return Math.min(...days);
+}
+
+function doneToday(history, keywords) {
+  return daysSince(history, keywords) === 0;
+}
+
+// ── Calcul du statut de chaque action ────────────────────────────────────────
+// Statuts : "recommended" | "done_today" | "too_soon" | "off_season"
+function getActionStatus(rule, month, history, arros) {
+  if (!rule.mois.includes(month)) return { status: "off_season", daysLeft: null };
+
+  // Arrosage piloté par la météo
+  if (rule.weatherDriven && !arros) return { status: "off_season", daysLeft: null };
+
+  const since    = daysSince(history, rule.keywords);
+  const interval = rule.interval(month);
+
+  if (since === 0) return { status: "done_today", daysLeft: 0 };
+  if (since < interval) {
+    const daysLeft = interval - since;
+    return { status: "too_soon", daysLeft };
+  }
+  return { status: "recommended", daysLeft: null };
+}
 
 const ACTION_TO_CONSEIL = {
-  "Tonte ✂️":    "tonte",
-  "Arrosage 💧": "arrosage",
-  "Engrais 🌱":  "engrais",
-  "Aération 🌀": "aeration",
+  "tonte":    "tonte",
+  "arrosage": "arrosage",
+  "engrais":  "engrais",
+  "aeration": "aeration",
 };
 
 export default function Today() {
@@ -42,13 +144,12 @@ export default function Today() {
   const { isPaid, isAdmin, isFree } = useSubscription();
   const [aiReco, setAiReco]       = useState("");
   const [aiLoading, setAiLoading] = useState(false);
-  const [logged, setLogged]       = useState([]);
+  const [justLogged, setJustLogged] = useState([]); // flash visuel uniquement
 
   const today = new Date();
   const month = today.getMonth() + 1;
   const plan  = MONTHLY_PLAN[month];
   const arros = profile && weather ? calcArrosage(month, profile, weather, history) : null;
-  const canLog = true; // Journalisation illimitée pour tous les utilisateurs
 
   const { mois } = useSaison();
   const { gagnerPoints, total: gpTotal, palier } = useGreenPoints();
@@ -78,21 +179,30 @@ export default function Today() {
     setAiLoading(false);
   }, [weather, profile, month, arros, isPaid]);
 
-  useEffect(() => { if (weather && isPaid) fetchAI(); }, [weather, isPaid]);
+  useEffect(() => { if (weather && isPaid) fetchAI(); }, [weather, isPaid]); // eslint-disable-line
 
-  const log = (action) => {
-    if (!canLog) return;
-    addEntry(action);
-    setLogged(p => [...p, action]);
-    setTimeout(() => setLogged(p => p.filter(x => x !== action)), 2000);
-    const gpKey      = ACTION_TO_GP[action];
-    const conseilKey = ACTION_TO_CONSEIL[action];
-    if (gpKey) {
-      const res     = gagnerPoints(gpKey);
-      const conseil = conseilKey ? getConseilApresAction(conseilKey, mois, profile, null) : null;
-      afficherToast(res, conseil);
-    }
+  const log = (rule) => {
+    addEntry(rule.label);
+    // Flash visuel 1.5s
+    setJustLogged(p => [...p, rule.id]);
+    setTimeout(() => setJustLogged(p => p.filter(x => x !== rule.id)), 1500);
+    // GreenPoints + conseil
+    const res     = gagnerPoints(rule.gp);
+    const conseil = ACTION_TO_CONSEIL[rule.id]
+      ? getConseilApresAction(ACTION_TO_CONSEIL[rule.id], mois, profile, null)
+      : null;
+    afficherToast(res, conseil);
   };
+
+  // Calcul des statuts pour toutes les règles
+  const actionStatuses = FREQ_RULES.map(rule => ({
+    rule,
+    ...getActionStatus(rule, month, history, arros),
+  }));
+
+  const recommended = actionStatuses.filter(a => a.status === "recommended");
+  const tooSoon     = actionStatuses.filter(a => a.status === "done_today" || a.status === "too_soon");
+  const offSeason   = actionStatuses.filter(a => a.status === "off_season");
 
   return (
     <div>
@@ -140,9 +250,95 @@ export default function Today() {
         {/* IA Recommandations */}
         <div style={card()}><div style={cardTitle}><span>🤖 Recommandations IA</span>{isPaid && <button onClick={fetchAI} style={{background:"rgba(76,175,80,0.2)",border:"none",borderRadius:8,padding:"4px 10px",color:"#a5d6a7",fontSize:11,cursor:"pointer"}}>↻</button>}</div>{!isPaid ? (<div style={{textAlign:"center",padding:"16px 0"}}><div style={{fontSize:28,marginBottom:8}}>🔒</div><div style={{fontSize:13,color:"#81c784",marginBottom:12}}>Fonctionnalité Premium uniquement</div><button onClick={() => navigate("/subscribe")} style={{...btn.primary,width:"auto",padding:"10px 24px"}}>Passer Premium 🌿</button></div>) : aiLoading ? (<div style={{textAlign:"center",padding:"20px 0"}}><div style={{fontSize:28,display:"inline-block",animation:"spin 1.2s linear infinite"}}>🌿</div><div style={{fontSize:12,color:"#81c784",marginTop:8}}>Analyse en cours...</div></div>) : aiReco ? (<div style={{fontSize:13,lineHeight:1.8,whiteSpace:"pre-wrap"}}>{aiReco}</div>) : (<div style={{fontSize:13,color:"#81c784",textAlign:"center",padding:"12px 0"}}>{!weather ? "Activez la géolocalisation" : "Appuyez sur ↻"}</div>)}</div>
 
-        {/* Plan du mois */}
+        {/* ── JOURNALISATION ───────────────────────────────────────────────── */}
         <div style={card()}>
-          <div style={cardTitle}><span>📅 Actions recommandées en {MONTHS_FR[month]}</span></div>
+          <div style={cardTitle}>
+            <span>✅ Journaliser</span>
+            <span style={{ fontSize:11, color:"#81c784", background:"rgba(76,175,80,0.15)", borderRadius:20, padding:"2px 8px" }}>
+              🌿 {gpTotal.toLocaleString("fr-FR")} pts
+            </span>
+          </div>
+
+          {/* ── À faire aujourd'hui ── */}
+          {recommended.length > 0 && (
+            <div style={{ marginBottom:14 }}>
+              <div style={{ fontSize:10, fontWeight:700, color:"#66BB6A", letterSpacing:0.8, marginBottom:8 }}>À FAIRE AUJOURD'HUI</div>
+              {recommended.map(({ rule }) => {
+                const isFlashing = justLogged.includes(rule.id);
+                return (
+                  <div key={rule.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"9px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
+                    <div>
+                      <div style={{ fontSize:13, fontWeight:600, color:"#e8f5e9" }}>{rule.label}</div>
+                      <div style={{ fontSize:11, color:"#81c784" }}>
+                        {rule.id === "tonte"     && `Hauteur recommandée : ${plan?.hauteur || "25"} mm`}
+                        {rule.id === "arrosage"  && arros && `${arros.mm} mm · ${arros.minutes} min · 5h-9h`}
+                        {rule.id === "engrais"   && plan?.engrais && plan.engrais}
+                        {!["tonte","arrosage","engrais"].includes(rule.id) && "Conseillé ce mois"}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => log(rule)}
+                      style={{
+                        background:    isFlashing ? "rgba(76,175,80,0.5)" : "rgba(76,175,80,0.2)",
+                        border:        "1px solid rgba(76,175,80,0.5)",
+                        borderRadius:  10,
+                        padding:       "8px 14px",
+                        color:         "#a5d6a7",
+                        fontSize:      12,
+                        fontWeight:    700,
+                        cursor:        "pointer",
+                        transition:    "background 0.2s",
+                        minWidth:      72,
+                        textAlign:     "center",
+                      }}
+                    >
+                      {isFlashing ? "✓ Fait !" : "Faire →"}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {recommended.length === 0 && (
+            <div style={{ textAlign:"center", padding:"12px 0 8px", color:"#66BB6A", fontSize:13 }}>
+              ✅ Tout est à jour pour aujourd'hui !
+            </div>
+          )}
+
+          {/* ── Déjà fait / trop tôt ── */}
+          {tooSoon.length > 0 && (
+            <div style={{ marginTop:4 }}>
+              <div style={{ fontSize:10, fontWeight:700, color:"#555", letterSpacing:0.8, marginBottom:8 }}>DÉJÀ FAIT / TROP TÔT</div>
+              {tooSoon.map(({ rule, status, daysLeft }) => (
+                <div key={rule.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"7px 0", borderBottom:"1px solid rgba(255,255,255,0.04)", opacity:0.45 }}>
+                  <div style={{ fontSize:12, color:"#81c784" }}>{rule.label}</div>
+                  <div style={{ fontSize:11, color:"#555", background:"rgba(255,255,255,0.06)", borderRadius:8, padding:"3px 10px" }}>
+                    {status === "done_today" ? "✓ Fait aujourd'hui" : `Dans ${daysLeft}j`}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* ── Hors saison ── */}
+          {offSeason.length > 0 && (
+            <div style={{ marginTop:10 }}>
+              <div style={{ fontSize:10, fontWeight:700, color:"#444", letterSpacing:0.8, marginBottom:6 }}>HORS SAISON CE MOIS</div>
+              <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+                {offSeason.map(({ rule }) => (
+                  <div key={rule.id} style={{ fontSize:11, color:"#444", background:"rgba(255,255,255,0.04)", borderRadius:8, padding:"4px 10px", opacity:0.35 }}>
+                    {rule.label}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Plan du mois — inchangé */}
+        <div style={card()}>
+          <div style={cardTitle}><span>📅 Résumé {MONTHS_FR[month]}</span></div>
           {[
             { icon:"✂️", label:"Tonte",    val:plan.tonte,                                  produit:false },
             { icon:"🌱", label:"Engrais",  val:plan.engrais||"Aucun ce mois",               produit:!!plan.engrais },
@@ -162,64 +358,6 @@ export default function Today() {
               )}
             </div>
           ))}
-        </div>
-
-        {/* ── JOURNALISER + ACTIONS RECOMMANDÉES (déplacé depuis MyLawn) ── */}
-        <div style={card()}>
-          <div style={cardTitle}>
-            <span>✅ Journaliser</span>
-            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-
-              <span style={{ fontSize:11, color:"#81c784", background:"rgba(76,175,80,0.15)", borderRadius:20, padding:"2px 8px" }}>
-                🌿 {gpTotal.toLocaleString("fr-FR")} pts
-              </span>
-            </div>
-          </div>
-
-          {/* Actions recommandées — uniquement si canLog */}
-          {canLog && (arros || plan?.engrais) && (
-            <div style={{ marginBottom:12, padding:"10px 12px", background:"rgba(76,175,80,0.08)", borderRadius:12, border:"1px solid rgba(76,175,80,0.2)" }}>
-              <div style={{ fontSize:11, color:"#81c784", fontWeight:700, marginBottom:8, letterSpacing:0.5 }}>🎯 RECOMMANDÉES AUJOURD'HUI</div>
-              {[
-                ...(arros ? [{ icon:"💧", text:`Arroser ${arros.minutes} min`, gain:"+20 pts", action:"Arrosage 💧" }] : []),
-                { icon:"✂️", text:`Tondre à ${plan?.hauteur || "25"} mm`, gain:"+50 pts", action:"Tonte ✂️" },
-                ...(plan?.engrais ? [{ icon:"🌱", text:"Appliquer engrais", gain:"+80 pts", action:"Engrais 🌱" }] : []),
-              ].slice(0,3).map((action, i) => (
-                <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"6px 0", borderBottom: i < 2 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
-                  <span style={{ fontSize:13 }}>{action.icon} {action.text}</span>
-                  <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                    <span style={{ fontSize:11, color:"#a5d6a7", fontWeight:700 }}>{action.gain}</span>
-                    <button
-                      onClick={() => log(action.action)}
-                      style={{ background: logged.includes(action.action) ? "rgba(76,175,80,0.4)" : "rgba(76,175,80,0.2)", border:"none", borderRadius:8, padding:"4px 10px", color:"#a5d6a7", fontSize:11, cursor:"pointer", fontWeight:700 }}
-                    >
-                      {logged.includes(action.action) ? "✓ Fait !" : "Faire →"}
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {!canLog ? (
-            <div style={{ textAlign:"center", padding:"16px 0" }}>
-              <div style={{ fontSize:13, color:"#81c784", marginBottom:12 }}>🔒 Limite gratuite atteinte (5 entrées)</div>
-              <button onClick={() => navigate("/subscribe")} style={{ ...btn.primary, width:"auto", padding:"10px 24px" }}>Passer Premium</button>
-            </div>
-          ) : (
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
-              {ACTIONS.map(a => (
-                <button key={a} onClick={() => log(a)} style={{
-                  background: logged.includes(a) ? "rgba(76,175,80,0.3)" : "rgba(76,175,80,0.1)",
-                  border:     `1px solid ${logged.includes(a) ? "#43a047" : "rgba(76,175,80,0.2)"}`,
-                  borderRadius:10, padding:"10px 8px", color:"#e8f5e9",
-                  cursor:"pointer", fontSize:12, fontWeight:600,
-                }}>
-                  {logged.includes(a) ? "✓ Fait !" : a}
-                </button>
-              ))}
-            </div>
-          )}
         </div>
 
       </div>
