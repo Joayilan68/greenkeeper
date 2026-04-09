@@ -6,7 +6,6 @@ import { useHistory } from "../lib/useHistory";
 import { useProfile } from "../lib/useProfile";
 import { useWeather } from "../lib/useWeather";
 import { card, cardTitle, btn, scroll } from "../lib/styles";
-import { DEBIT_DEFAULT_MMH } from "../lib/lawn";
 
 // Page Paramètres — Gestion données client + consentements
 export default function Settings() {
@@ -19,13 +18,6 @@ export default function Settings() {
   const [consents, setConsents] = useState({});
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleted, setDeleted] = useState(false);
-  const [debitMmH, setDebitMmH] = useState(() => {
-    try {
-      const v = parseFloat(localStorage.getItem("mg360_debit_mmh"));
-      return (!isNaN(v) && v >= 1 && v <= 20) ? v : DEBIT_DEFAULT_MMH;
-    } catch { return DEBIT_DEFAULT_MMH; }
-  });
-  const [debitSaved, setDebitSaved] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("gk_consents");
@@ -38,13 +30,6 @@ export default function Settings() {
     localStorage.setItem("gk_consents", JSON.stringify(updated));
   };
 
-  const saveDebit = (val) => {
-    const v = Math.round(val * 10) / 10;
-    setDebitMmH(v);
-    localStorage.setItem("mg360_debit_mmh", String(v));
-    setDebitSaved(true);
-    setTimeout(() => setDebitSaved(false), 2000);
-  };
 
   const exportData = () => {
     const data = {
@@ -108,77 +93,6 @@ export default function Settings() {
           <button onClick={exportData} style={{ ...btn.ghost, marginTop:12, fontSize:12, padding:"8px" }}>
             📥 Télécharger mes données (RGPD)
           </button>
-        </div>
-
-        {/* DÉBIT ARROSEUR — Premium uniquement */}
-        <div style={{ ...card(), ...(isPaid ? {} : { opacity:0.85 }) }}>
-          <div style={cardTitle}>
-            <span>💧 Débit de mon arroseur</span>
-            {!isPaid && <span style={{ fontSize:10, background:"rgba(255,152,0,0.2)", color:"#ffb74d", borderRadius:20, padding:"2px 8px" }}>Premium</span>}
-          </div>
-          {!isPaid ? (
-            <div style={{ textAlign:"center", padding:"12px 0" }}>
-              <div style={{ fontSize:13, color:"#81c784", marginBottom:12 }}>
-                Calibrez la durée d'arrosage selon votre matériel — arroseur oscillant, enrouleur, micro-asperseur…
-              </div>
-              <button onClick={() => navigate("/subscribe")} style={{ ...btn.primary, width:"auto", padding:"10px 24px", fontSize:12 }}>
-                Passer Premium pour calibrer →
-              </button>
-            </div>
-          ) : (
-            <div>
-              <div style={{ fontSize:12, color:"#81c784", marginBottom:14, lineHeight:1.6 }}>
-                Renseignez le débit de votre arroseur pour obtenir des durées précises. La durée affichée s'ajuste automatiquement.
-              </div>
-
-              {/* Valeurs de référence */}
-              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:6, marginBottom:16 }}>
-                {[
-                  { label:"Arroseur oscillant", val:3.5 },
-                  { label:"Arroseur rotatif",   val:5   },
-                  { label:"Enrouleur tuyau",    val:8   },
-                  { label:"Micro-asperseur",    val:2   },
-                ].map(({ label, val }) => (
-                  <button key={label} onClick={() => saveDebit(val)} style={{
-                    background: Math.abs(debitMmH - val) < 0.1 ? "rgba(76,175,80,0.3)" : "rgba(76,175,80,0.08)",
-                    border:     `1px solid ${Math.abs(debitMmH - val) < 0.1 ? "#43a047" : "rgba(76,175,80,0.2)"}`,
-                    borderRadius:10, padding:"8px 6px", cursor:"pointer", textAlign:"center",
-                  }}>
-                    <div style={{ fontSize:11, color:"#a5d6a7", fontWeight:600 }}>{label}</div>
-                    <div style={{ fontSize:13, color:"#e8f5e9", fontWeight:800 }}>{val} mm/h</div>
-                  </button>
-                ))}
-              </div>
-
-              {/* Slider précis */}
-              <div style={{ marginBottom:8 }}>
-                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
-                  <span style={{ fontSize:12, color:"#81c784" }}>Réglage précis</span>
-                  <span style={{ fontSize:14, fontWeight:800, color:"#66BB6A" }}>{debitMmH.toFixed(1)} mm/h</span>
-                </div>
-                <input
-                  type="range" min="1" max="20" step="0.5" value={debitMmH}
-                  onChange={e => saveDebit(parseFloat(e.target.value))}
-                  style={{ width:"100%" }}
-                />
-                <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:"#4a7c5c", marginTop:2 }}>
-                  <span>1 mm/h</span><span>10 mm/h</span><span>20 mm/h</span>
-                </div>
-              </div>
-
-              {/* Aperçu durée */}
-              <div style={{ background:"rgba(76,175,80,0.08)", borderRadius:10, padding:"10px 14px", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-                <span style={{ fontSize:12, color:"#81c784" }}>Pour 7mm d'eau :</span>
-                <span style={{ fontSize:16, fontWeight:800, color:"#66BB6A" }}>
-                  {Math.round((7 / debitMmH) * 60)} min
-                </span>
-              </div>
-
-              {debitSaved && (
-                <div style={{ textAlign:"center", color:"#66BB6A", fontSize:12, marginTop:8 }}>✅ Débit enregistré</div>
-              )}
-            </div>
-          )}
         </div>
 
         {/* CONSENTEMENTS */}

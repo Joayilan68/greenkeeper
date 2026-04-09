@@ -8,7 +8,7 @@ import { useReminders } from "../lib/useReminders";
 import { useRecommandations } from "../lib/useRecommandations";
 import { useSaison } from "../lib/useSaison";
 import { calcLawnScore } from "../lib/lawnScore";
-import { MONTHLY_PLAN, MONTHS_FR, calcArrosage } from "../lib/lawn";
+import { MONTHLY_PLAN, MONTHS_FR, calcArrosage, DEBIT_DEFAULT_MMH } from "../lib/lawn";
 import { card, cardTitle, btn, scroll, header } from "../lib/styles";
 
 // ── Data Phase 2 ─────────────────────────────────────────────────────────────
@@ -147,6 +147,22 @@ export default function MyLawn() {
   const { isPaid = false } = useSubscription() || {};
   const { activeCount }    = useReminders();
   const [period, setPeriod] = useState("7j");
+
+  // ── Débit arroseur (Premium) ────────────────────────────────────────────────
+  const [debitMmH, setDebitMmH] = useState(() => {
+    try {
+      const v = parseFloat(localStorage.getItem("mg360_debit_mmh"));
+      return (!isNaN(v) && v >= 1 && v <= 20) ? v : DEBIT_DEFAULT_MMH;
+    } catch { return DEBIT_DEFAULT_MMH; }
+  });
+  const [debitSaved, setDebitSaved] = useState(false);
+  const saveDebit = (val) => {
+    const v = Math.round(val * 10) / 10;
+    setDebitMmH(v);
+    localStorage.setItem("mg360_debit_mmh", String(v));
+    setDebitSaved(true);
+    setTimeout(() => setDebitSaved(false), 2000);
+  };
 
   // ── État complétion profil ──────────────────────────────────────────────
   const [p2, setP2] = useState({
@@ -432,6 +448,72 @@ export default function MyLawn() {
                 ))}
               </div>
               <button onClick={() => navigate("/subscribe")} style={{ ...btn.primary, fontSize:13, padding:"12px" }}>⭐ Passer Premium — 4,99€/mois</button>
+            </div>
+          )}
+        </div>
+
+
+        {/* ── 9b. CALIBRAGE ARROSEUR ── */}
+        <div style={{ ...card(), background:"linear-gradient(135deg,rgba(25,118,210,0.1),rgba(13,43,26,0.6))", border:"1px solid rgba(100,181,246,0.3)" }}>
+          <div style={cardTitle}>
+            <span>💧 Calibrage arroseur</span>
+            {!isPaid && <span style={{ fontSize:10, color:"#f9a825", background:"rgba(249,168,37,0.15)", borderRadius:20, padding:"2px 8px" }}>🔒 Premium</span>}
+          </div>
+          {isPaid ? (
+            <div>
+              <div style={{ fontSize:12, color:"#81c784", marginBottom:14, lineHeight:1.6 }}>
+                Renseignez le débit de votre arroseur pour obtenir des durées d'arrosage précises. La durée s'ajuste automatiquement dans "Aujourd'hui".
+              </div>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:6, marginBottom:16 }}>
+                {[
+                  { label:"Arroseur oscillant", val:3.5 },
+                  { label:"Arroseur rotatif",   val:5   },
+                  { label:"Enrouleur tuyau",     val:8   },
+                  { label:"Micro-asperseur",     val:2   },
+                ].map(({ label, val }) => (
+                  <button key={label} onClick={() => saveDebit(val)} style={{
+                    background: Math.abs(debitMmH - val) < 0.1 ? "rgba(100,181,246,0.3)" : "rgba(100,181,246,0.08)",
+                    border:     `1px solid ${Math.abs(debitMmH - val) < 0.1 ? "#64b5f6" : "rgba(100,181,246,0.25)"}`,
+                    borderRadius:10, padding:"8px 6px", cursor:"pointer", textAlign:"center",
+                  }}>
+                    <div style={{ fontSize:11, color:"#81c784", fontWeight:600 }}>{label}</div>
+                    <div style={{ fontSize:13, color:"#e8f5e9", fontWeight:800 }}>{val} mm/h</div>
+                  </button>
+                ))}
+              </div>
+              <div style={{ marginBottom:12 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
+                  <span style={{ fontSize:12, color:"#81c784" }}>Réglage précis</span>
+                  <span style={{ fontSize:14, fontWeight:800, color:"#64b5f6" }}>{debitMmH.toFixed(1)} mm/h</span>
+                </div>
+                <input
+                  type="range" min="1" max="20" step="0.5" value={debitMmH}
+                  onChange={e => saveDebit(parseFloat(e.target.value))}
+                  style={{ width:"100%" }}
+                />
+                <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:"#4a7c5c", marginTop:2 }}>
+                  <span>1 mm/h</span><span>10 mm/h</span><span>20 mm/h</span>
+                </div>
+              </div>
+              <div style={{ background:"rgba(100,181,246,0.08)", borderRadius:10, padding:"10px 14px", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                <span style={{ fontSize:12, color:"#81c784" }}>Pour 7mm d'eau :</span>
+                <span style={{ fontSize:16, fontWeight:800, color:"#64b5f6" }}>{Math.round((7 / debitMmH) * 60)} min</span>
+              </div>
+              {debitSaved && <div style={{ textAlign:"center", color:"#64b5f6", fontSize:12, marginTop:8 }}>✅ Débit enregistré</div>}
+            </div>
+          ) : (
+            <div style={{ padding:"4px 0" }}>
+              <div style={{ fontSize:13, color:"#81c784", lineHeight:1.7, marginBottom:14 }}>
+                Calibrez la durée d'arrosage selon votre matériel et obtenez des recommandations au plus précis.
+              </div>
+              <div style={{ display:"flex", gap:8, flexDirection:"column", marginBottom:16 }}>
+                {["⏱️ Durée calculée selon votre arroseur réel","🎯 Arroseur oscillant, rotatif, enrouleur, micro-asperseur","💡 Économies d'eau grâce à l'arrosage optimisé"].map(f => (
+                  <div key={f} style={{ fontSize:12, color:"#81c784" }}>✓ {f}</div>
+                ))}
+              </div>
+              <button onClick={() => navigate("/subscribe")} style={{ ...btn.primary, fontSize:13, padding:"12px" }}>
+                ⭐ Passer Premium — 4,99€/mois
+              </button>
             </div>
           )}
         </div>
