@@ -47,7 +47,7 @@ export const LAWN_COEFF = {
 // ── Débit arroseur par défaut (mm/h) ─────────────────────────────────────────
 // Correspond à un arroseur oscillant résidentiel standard sur une pelouse moyenne.
 // Configurable en Premium via localStorage "mg360_debit_mmh".
-export const DEBIT_DEFAULT_MMH = 5;
+export const DEBIT_DEFAULT_MMH = 8;
 
 export function getDebitMmH() {
   try {
