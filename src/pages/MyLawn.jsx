@@ -364,21 +364,119 @@ export default function MyLawn() {
         )}
 
         {/* ── 7. PLAN DU MOIS ── */}
-        <div style={card()}>
-          <div style={cardTitle}><span>📅 Plan {MONTHS_FR[month]}</span></div>
-          <div style={{ fontSize:13, color:"#f9a825", fontWeight:700, marginBottom:8 }}>{plan?.label}</div>
-          {[
-            { icon:"✂️", label:"Tonte",    val:plan?.tonte },
-            { icon:"🌱", label:"Engrais",  val:plan?.engrais || "Aucun ce mois" },
-            { icon:"🔧", label:"Verticut", val:plan?.verticut ? "À prévoir" : "Non requis" },
-            { icon:"🌀", label:"Aération", val:plan?.aeration ? "Recommandée" : "Non requise" },
-          ].map(({ icon, label, val }) => (
-            <div key={label} style={{ display:"flex", gap:10, padding:"7px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
-              <span style={{ fontSize:16, minWidth:24 }}>{icon}</span>
-              <div><div style={{ fontSize:10, color:"#81c784", fontWeight:700 }}>{label}</div><div style={{ fontSize:12 }}>{val}</div></div>
+        {(() => {
+          const isSynth = profile?.pelouse === "synthetique";
+          const sol     = profile?.sol;
+
+          // Mois actifs dérivés de MONTHLY_PLAN — même logique que Today > Journaliser
+          const actionsplan = [
+            {
+              id:"tonte", icon:"✂️", label:"Tonte",
+              actif: !isSynth && plan?.tonte && plan.tonte !== "Aucune",
+              detail: plan?.tonte,
+              keywords:["tonte"],
+            },
+            {
+              id:"arrosage", icon:"💧", label:"Arrosage",
+              actif: !isSynth && (plan?.arrosage_base || 0) > 0,
+              detail: plan?.arrosage_freq ? `${plan.arrosage_freq}x/semaine recommandé` : null,
+              keywords:["arrosage"],
+            },
+            {
+              id:"engrais", icon:"🌱", label:"Engrais",
+              actif: !isSynth && !!plan?.engrais,
+              detail: plan?.engrais || "Aucun ce mois",
+              keywords:["engrais"],
+              produit: !!plan?.engrais,
+            },
+            {
+              id:"verticut", icon:"🔧", label:"Verticut",
+              actif: !isSynth && !!plan?.verticut,
+              detail: plan?.verticut ? "Scarification / passage verticut" : "Non requis",
+              keywords:["scarif","verticut"],
+              produit: !!plan?.verticut,
+            },
+            {
+              id:"aeration", icon:"🌀", label:"Aération",
+              actif: !isSynth && (!!plan?.aeration || ((sol === "argileux" || sol === "compacte") && [3,4,9,10].includes(month))),
+              detail: plan?.aeration ? "Aération ou carottage recommandée" : (sol === "argileux" || sol === "compacte") ? "Conseillée (sol compacté)" : "Non requise",
+              keywords:["aeration","aération"],
+            },
+            {
+              id:"desherbage", icon:"🪴", label:"Désherbage",
+              actif: !isSynth && [4,5,9].includes(month),
+              detail: [4,5,9].includes(month) ? "Désherbant sélectif conseillé" : "Non prévu",
+              keywords:["desherb","désherb"],
+            },
+            {
+              id:"regarnissage", icon:"🌾", label:"Regarnissage",
+              actif: !isSynth && [3,4,5,8,9].includes(month),
+              detail: [3,4,5,8,9].includes(month) ? "Semences sur zones clairsemées" : "Non prévu",
+              keywords:["semences","semis","regarnissage"],
+            },
+            {
+              id:"antimousse", icon:"💊", label:"Anti-mousse",
+              actif: !isSynth && [3,4,9].includes(month),
+              detail: [3,4,9].includes(month) ? "Traitement anti-mousse" : "Non prévu",
+              keywords:["anti_mousse","mousse"],
+            },
+          ];
+
+          // Statut depuis l'historique
+          const daysSince = (keywords) => {
+            if (!history?.length) return 999;
+            const matches = history.filter(h => keywords.some(kw => h.action?.toLowerCase().includes(kw.toLowerCase())));
+            if (!matches.length) return 999;
+            const days = matches.map(h => {
+              const parts = h.date?.split("/");
+              if (!parts || parts.length !== 3) return 999;
+              return Math.floor((Date.now() - new Date(parts[2], parts[1]-1, parts[0]).getTime()) / 86400000);
+            });
+            return Math.min(...days);
+          };
+
+          return (
+            <div style={card()}>
+              <div style={cardTitle}>
+                <span>📅 Plan {MONTHS_FR[month]}</span>
+                <span style={{ fontSize:12, color:"#f9a825", fontWeight:700 }}>{plan?.label}</span>
+              </div>
+
+              {actionsplan.map(({ id, icon, label, actif, detail, produit, keywords }) => {
+                const since = daysSince(keywords);
+                const faitAujourdhui = since === 0;
+                const faitRecemment  = since > 0 && since <= 7;
+                const badge = !actif
+                  ? { label:"Pas prévu", color:"#4a7c5c", bg:"rgba(255,255,255,0.04)" }
+                  : faitAujourdhui
+                  ? { label:"✓ Fait", color:"#66BB6A", bg:"rgba(102,187,106,0.15)" }
+                  : faitRecemment
+                  ? { label:`Fait il y a ${since}j`, color:"#81c784", bg:"rgba(102,187,106,0.08)" }
+                  : { label:"À faire", color:"#f9a825", bg:"rgba(249,168,37,0.12)" };
+
+                return (
+                  <div key={id} style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 0", borderBottom:"1px solid rgba(255,255,255,0.05)", opacity: actif ? 1 : 0.45 }}>
+                    <span style={{ fontSize:18, minWidth:26 }}>{icon}</span>
+                    <div style={{ flex:1 }}>
+                      <div style={{ fontSize:12, fontWeight:700, color: actif ? "#e8f5e9" : "#81c784" }}>{label}</div>
+                      <div style={{ fontSize:11, color:"#81c784", marginTop:1 }}>{detail}</div>
+                    </div>
+                    <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                      <span style={{ fontSize:10, color:badge.color, background:badge.bg, borderRadius:20, padding:"2px 8px", fontWeight:700, whiteSpace:"nowrap" }}>
+                        {badge.label}
+                      </span>
+                      {produit && actif && (
+                        <button onClick={() => navigate("/products")} style={{ background:"rgba(76,175,80,0.2)", border:"1px solid rgba(76,175,80,0.4)", borderRadius:8, padding:"4px 8px", color:"#a5d6a7", fontSize:10, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap" }}>
+                          Acheter →
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          ))}
-        </div>
+          );
+        })()}
 
         {/* ── 8. ÉVOLUTION DU SCORE ── */}
         <div style={card()}>
