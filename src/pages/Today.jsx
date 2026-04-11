@@ -5,6 +5,8 @@ import { useProfile } from "../lib/useProfile";
 import { useHistory } from "../lib/useHistory";
 import { useSubscription } from "../lib/useSubscription";
 import { MONTHLY_PLAN, MONTHS_FR, calcArrosage, getWMO, getDebitMmH } from "../lib/lawn";
+import { buildActions, zoneClimatique, ZONE_LABELS } from "../lib/planEntretien";
+import { calcLawnScore } from "../lib/lawnScore";
 import AlertBanner from "../components/AlertBanner";
 import { card, cardTitle, btn, scroll } from "../lib/styles";
 import { useGreenPoints } from "../lib/useGreenPoints";
@@ -12,144 +14,37 @@ import { useStreak } from "../lib/useStreak";
 import { getConseilApresAction } from "../lib/useRecommandations";
 import { useSaison } from "../lib/useSaison";
 
-// ── Règles de fréquence alignées sur useRecommandations.js ───────────────────
-// intervalDays = délai minimum entre deux applications de la même action
-const FREQ_RULES = [
-  {
-    id:       "tonte",
-    label:    "Tonte ✂️",
-    gp:       "tonte",
-    mois:     [3,4,5,6,7,8,9,10],
-    interval: (month) => month >= 6 && month <= 8 ? 4 : month >= 3 && month <= 5 ? 5 : 7,
-    keywords: ["tonte"],
-  },
-  {
-    id:       "arrosage",
-    label:    "Arrosage 💧",
-    gp:       "arrosage",
-    mois:     [3,4,5,6,7,8,9,10],
-    interval: () => 1,                    // géré aussi par calcArrosage
-    keywords: ["arrosage"],
-    weatherDriven: true,                  // ne s'affiche que si calcArrosage le dit
-  },
-  {
-    id:       "engrais",
-    label:    "Engrais 🌱",
-    gp:       "engrais",
-    mois:     [2,3,5,6,9,10,11],
-    interval: () => 45,
-    keywords: ["engrais"],
-  },
-  {
-    id:       "desherbage",
-    label:    "Désherbage 🪴",
-    gp:       "desherbage",
-    mois:     [4,5,9],
-    interval: () => 21,
-    keywords: ["desherb","désherb"],
-  },
-  {
-    id:       "aeration",
-    label:    "Aération 🌀",
-    gp:       "aeration",
-    mois:     [3,4,9],
-    interval: () => 90,
-    keywords: ["aeration","aération"],
-  },
-  {
-    id:       "scarification",
-    label:    "Scarification 🔩",
-    gp:       "scarification",
-    mois:     [3,4,9],
-    interval: () => 180,
-    keywords: ["scarif","verticut"],
-  },
-  {
-    id:       "regarnissage",
-    label:    "Regarnissage 🌾",
-    gp:       "semences",
-    mois:     [3,4,5,6,8,9],
-    interval: () => 60,
-    keywords: ["semences","semis","regarnissage"],
-  },
-  {
-    id:       "topdressing",
-    label:    "Top-dressing 🏖️",
-    gp:       "aeration",
-    mois:     [3,4,9],
-    interval: () => 90,
-    keywords: ["top-dressing","topdressing","top_dressing"],
-  },
-  {
-    id:       "antimousse",
-    label:    "Anti-mousse 💊",
-    gp:       "anti_mousse",
-    mois:     [3,4,9],
-    interval: () => 30,
-    keywords: ["anti_mousse","mousse","fongicide"],
-  },
-];
-
-// ── Helpers historique ────────────────────────────────────────────────────────
-function daysSince(history, keywords) {
-  if (!history?.length) return 999;
-  const matches = history.filter(h =>
-    keywords.some(kw => h.action?.toLowerCase().includes(kw.toLowerCase()))
-  );
-  if (!matches.length) return 999;
-  const days = matches.map(h => {
-    const parts = h.date?.split("/");
-    if (!parts || parts.length !== 3) return 999;
-    const d = new Date(parts[2], parts[1] - 1, parts[0]);
-    return Math.floor((Date.now() - d.getTime()) / 86400000);
-  });
-  return Math.min(...days);
-}
-
-function doneToday(history, keywords) {
-  return daysSince(history, keywords) === 0;
-}
-
-// ── Calcul du statut de chaque action ────────────────────────────────────────
-// Statuts : "recommended" | "done_today" | "too_soon" | "off_season"
-function getActionStatus(rule, month, history, arros) {
-  if (!rule.mois.includes(month)) return { status: "off_season", daysLeft: null };
-
-  // Arrosage piloté par la météo
-  if (rule.weatherDriven && !arros) return { status: "off_season", daysLeft: null };
-
-  const since    = daysSince(history, rule.keywords);
-  const interval = rule.interval(month);
-
-  if (since === 0) return { status: "done_today", daysLeft: 0 };
-  if (since < interval) {
-    const daysLeft = interval - since;
-    return { status: "too_soon", daysLeft };
-  }
-  return { status: "recommended", daysLeft: null };
-}
-
-const ACTION_TO_CONSEIL = {
-  "tonte":    "tonte",
-  "arrosage": "arrosage",
-  "engrais":  "engrais",
-  "aeration": "aeration",
+// Mapping action id → clé conseil post-action
+const CONSEILS_MAP = {
+  tonte:           "tonte",
+  arrosage:        "arrosage",
+  engrais_starter: "engrais",
+  engrais_ete:     "engrais",
+  engrais_automne: "engrais",
+  engrais_hiver:   "engrais",
+  aeration:        "aeration",
 };
 
 export default function Today() {
   const navigate = useNavigate();
   const { weather, alerts } = useWeather();
-  const { profile } = useProfile();
+  const { profile }         = useProfile();
   const { history, addEntry } = useHistory();
   const { isPaid, isAdmin, isFree } = useSubscription();
   const [aiReco, setAiReco]       = useState("");
   const [aiLoading, setAiLoading] = useState(false);
-  const [justLogged, setJustLogged] = useState([]); // flash visuel uniquement
+  const [justLogged, setJustLogged] = useState([]);
 
   const today = new Date();
   const month = today.getMonth() + 1;
   const plan  = MONTHLY_PLAN[month];
-  const arros = profile && weather ? calcArrosage(month, profile, weather, history, getDebitMmH()) : null;
+  const arros = profile && weather
+    ? calcArrosage(month, profile, weather, history, getDebitMmH())
+    : null;
+
+  // ── Score et zone ─────────────────────────────────────────────────────────
+  const score = profile ? calcLawnScore(profile, history, weather) : 70;
+  const zone  = zoneClimatique(profile);
 
   const { mois } = useSaison();
   const { gagnerPoints, total: gpTotal, palier } = useGreenPoints();
@@ -167,42 +62,54 @@ export default function Today() {
     setTimeout(() => setToastPoints(null), 3500);
   };
 
+  // ── Prompt IA enrichi avec zone + profil complet ──────────────────────────
   const fetchAI = useCallback(async () => {
     if (!weather || !isPaid) return;
     setAiLoading(true); setAiReco("");
-    const prompt = `Tu es un expert gazon pour Mongazon360. Recommandations concises pour aujourd'hui. Profil: Type=${profile?.pelouse||"?"} Sol=${profile?.sol||"?"} Surface=${profile?.surface||"?"}m² Date: ${today.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"})} — ${plan.label} Météo: ${weather.temp_max}°C / ${weather.temp_min}°C · ${weather.precip}mm · humidité ${weather.humidity}% · vent ${weather.wind}km/h Arrosage: ${arros ? arros.mm+"mm / "+arros.minutes+"min" : "aucun"} 4-5 points max, emojis, français.`;
+    const zoneLabel = ZONE_LABELS[zone] || zone;
+    const prompt = [
+      `Tu es un expert gazon pour Mongazon360. Recommandations concises pour aujourd'hui.`,
+      `Profil: type=${profile?.pelouse||"?"} sol=${profile?.sol||"?"} expo=${profile?.exposition||"?"}`,
+      `surface=${profile?.surface||"?"}m² score=${score}/100 zone=${zoneLabel}`,
+      `Date: ${today.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"})} — ${plan?.label}`,
+      `Météo: ${weather.temp_max}°C/${weather.temp_min}°C · ${weather.precip}mm pluie · hum ${weather.humidity}% · vent ${weather.wind}km/h`,
+      `Arrosage: ${arros ? arros.mm+"mm/session · "+arros.minutes+"min" : "non recommandé"}`,
+      `4-5 points max, emojis, français, personnalisé à la zone ${zoneLabel}.`,
+    ].join(" ");
     try {
-      const res  = await fetch("/api/ai-recommendations", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ prompt }) });
+      const res  = await fetch("/api/ai-recommendations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt }),
+      });
       const data = await res.json();
       setAiReco(data.text || "");
     } catch { setAiReco("Impossible de contacter l'IA."); }
     setAiLoading(false);
-  }, [weather, profile, month, arros, isPaid]);
+  }, [weather, profile, month, arros, isPaid, zone, score]); // eslint-disable-line
 
   useEffect(() => { if (weather && isPaid) fetchAI(); }, [weather, isPaid]); // eslint-disable-line
 
-  const log = (rule) => {
-    addEntry(rule.label);
-    // Flash visuel 1.5s
-    setJustLogged(p => [...p, rule.id]);
-    setTimeout(() => setJustLogged(p => p.filter(x => x !== rule.id)), 1500);
-    // GreenPoints + conseil
-    const res     = gagnerPoints(rule.gp);
-    const conseil = ACTION_TO_CONSEIL[rule.id]
-      ? getConseilApresAction(ACTION_TO_CONSEIL[rule.id], mois, profile, null)
-      : null;
+  // ── Journalisation ────────────────────────────────────────────────────────
+  const log = (action) => {
+    addEntry(action.label);
+    setJustLogged(p => [...p, action.id]);
+    setTimeout(() => setJustLogged(p => p.filter(x => x !== action.id)), 1500);
+    const res     = gagnerPoints(action.gp);
+    const consKey = CONSEILS_MAP[action.id];
+    const conseil = consKey ? getConseilApresAction(consKey, mois, profile, score) : null;
     afficherToast(res, conseil);
   };
 
-  // Calcul des statuts pour toutes les règles
-  const actionStatuses = FREQ_RULES.map(rule => ({
-    rule,
-    ...getActionStatus(rule, month, history, arros),
-  }));
+  // ── Calcul des statuts (source unique planEntretien.js) ───────────────────
+  const actionStatuses = buildActions(profile, weather, history, score, month, arros);
 
   const recommended = actionStatuses.filter(a => a.status === "recommended");
-  const tooSoon     = actionStatuses.filter(a => a.status === "done_today" || a.status === "too_soon");
-  const offSeason   = actionStatuses.filter(a => a.status === "off_season");
+  const prevoyez    = actionStatuses.filter(a =>
+    a.status === "done_today" || a.status === "too_soon" ||
+    a.status === "blocked"    || a.status === "exclusive"
+  );
+  const pasPrevu    = actionStatuses.filter(a => a.status === "off_season");
 
   return (
     <div>
@@ -213,20 +120,29 @@ export default function Today() {
             <img src="/mg360-mascot-transparent.png" alt="MG360" style={{ width:40, height:40, objectFit:"contain" }} />
             <div>
               <div style={{ fontSize:20, fontWeight:800, color:"#F1F8F2" }}>Actions du jour</div>
-              <div style={{ fontSize:12, color:"#66BB6A", marginTop:2 }}>{today.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</div>
+              <div style={{ fontSize:12, color:"#66BB6A", marginTop:2 }}>
+                {today.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}
+              </div>
             </div>
           </div>
-          {isAdmin && <div style={{ fontSize:11, color:"#f9a825" }}>👑 Admin</div>}
+          <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:3 }}>
+            {isAdmin && <div style={{ fontSize:11, color:"#f9a825" }}>👑 Admin</div>}
+            {zone && <div style={{ fontSize:10, color:"#4a7c5c", background:"rgba(255,255,255,0.05)", borderRadius:20, padding:"2px 8px" }}>📍 {ZONE_LABELS[zone]}</div>}
+          </div>
         </div>
-        {isFree && <div style={{ fontSize:11, color:"#81c784", marginTop:4 }}>🆓 Accès gratuit · <span onClick={() => navigate("/subscribe")} style={{ color:"#66BB6A", cursor:"pointer", textDecoration:"underline" }}>Passer Premium</span></div>}
+        {isFree && (
+          <div style={{ fontSize:11, color:"#81c784", marginTop:4 }}>
+            🆓 Accès gratuit · <span onClick={() => navigate("/subscribe")} style={{ color:"#66BB6A", cursor:"pointer", textDecoration:"underline" }}>Passer Premium</span>
+          </div>
+        )}
       </div>
 
       <div style={scroll}>
 
-        {/* Bandeau Streak */}
+        {/* Streak */}
         {streak > 0 && (
-          <div style={{ background: enDanger ? "#fff3e0" : "#e8f5e9", border:`1px solid ${enDanger ? "#f9a825" : "#a5d6a7"}`, borderRadius:12, padding:"10px 14px", display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
-            <span style={{ fontSize:22 }}>{enDanger ? "⚠️" : "🔥"}</span>
+          <div style={{ background:enDanger?"#fff3e0":"#e8f5e9", border:`1px solid ${enDanger?"#f9a825":"#a5d6a7"}`, borderRadius:12, padding:"10px 14px", display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
+            <span style={{ fontSize:22 }}>{enDanger?"⚠️":"🔥"}</span>
             <div style={{ flex:1 }}>
               <div style={{ fontWeight:600, color:enDanger?"#e65100":"#2e7d32", fontSize:14 }}>{streakMsg}</div>
               {enDanger && <div style={{ fontSize:11, color:"#f57c00" }}>Connecte-toi aujourd'hui pour garder ton streak !</div>}
@@ -238,60 +154,111 @@ export default function Today() {
         )}
 
         {/* Météo — Premium uniquement */}
-        {isPaid && weather && (()=>{ const w=getWMO(weather.code); return (<div style={{...card(),background:"rgba(76,175,80,0.12)",border:"1px solid rgba(76,175,80,0.25)"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:32,fontWeight:800}}>{Math.round(weather.temp_max)}°C</div><div style={{fontSize:13,color:"#81c784"}}>{w.label} · {weather.precip}mm</div><div style={{fontSize:11,color:"#81c784",opacity:0.7}}>Humidité {weather.humidity}% · Vent {weather.wind}km/h</div></div><div style={{fontSize:52}}>{w.icon}</div></div></div>); })()}
-        {!isPaid && (<div style={{...card(),textAlign:"center",padding:14,background:"rgba(255,255,255,0.03)"}}><div style={{fontSize:13,color:"#81c784",marginBottom:8}}>🔒 Météo temps réel — Premium uniquement</div><button onClick={() => navigate("/subscribe")} style={{...btn.primary,width:"auto",padding:"8px 20px",fontSize:12}}>Passer Premium</button></div>)}
+        {isPaid && weather && (()=>{ const w=getWMO(weather.code); return (
+          <div style={{...card(),background:"rgba(76,175,80,0.12)",border:"1px solid rgba(76,175,80,0.25)"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div>
+                <div style={{fontSize:32,fontWeight:800}}>{Math.round(weather.temp_max)}°C</div>
+                <div style={{fontSize:13,color:"#81c784"}}>{w.label} · {weather.precip}mm précip.</div>
+                <div style={{fontSize:11,color:"#81c784",opacity:0.7}}>Humidité {weather.humidity}% · Vent {weather.wind}km/h</div>
+              </div>
+              <div style={{fontSize:52}}>{w.icon}</div>
+            </div>
+          </div>
+        ); })()}
+        {!isPaid && (
+          <div style={{...card(),textAlign:"center",padding:14,background:"rgba(255,255,255,0.03)"}}>
+            <div style={{fontSize:13,color:"#81c784",marginBottom:8}}>🔒 Météo temps réel — Premium uniquement</div>
+            <button onClick={()=>navigate("/subscribe")} style={{...btn.primary,width:"auto",padding:"8px 20px",fontSize:12}}>Passer Premium</button>
+          </div>
+        )}
 
-        {/* Alertes — Premium uniquement */}
+        {/* Alertes météo */}
         {isPaid && alerts.map((a,i) => <AlertBanner key={i} alert={a} />)}
 
-        {/* Arrosage — Premium uniquement */}
-        {isPaid && arros && (<div style={{...card(),background:"rgba(25,118,210,0.1)",border:"1px solid rgba(100,181,246,0.25)"}}><div style={cardTitle}><span>💧 Arrosage recommandé</span><span style={{ fontSize:11, color:"#64b5f6", background:"rgba(100,181,246,0.15)", borderRadius:20, padding:"2px 8px" }}>{arros.freq}x/semaine</span></div><div style={{display:"flex",gap:8}}>{[{val:`${arros.mm}mm`,label:"mm/session"},{val:`${arros.minutes}min`,label:"min/session"},{val:"5h–9h",label:"Horaire"}].map(({val,label}) => (<div key={label} style={{flex:1,background:"rgba(255,255,255,0.06)",borderRadius:12,padding:"10px 6px",textAlign:"center"}}><div style={{fontSize:18,fontWeight:800,color:"#64b5f6"}}>{val}</div><div style={{fontSize:10,color:"#81c784"}}>{label}</div></div>))}</div><div style={{fontSize:11,color:"rgba(100,181,246,0.6)",textAlign:"center",marginTop:8}}>
+        {/* Arrosage détaillé — Premium */}
+        {isPaid && arros && (
+          <div style={{...card(),background:"rgba(25,118,210,0.1)",border:"1px solid rgba(100,181,246,0.25)"}}>
+            <div style={cardTitle}>
+              <span>💧 Arrosage recommandé</span>
+              <span style={{ fontSize:11, color:"#64b5f6", background:"rgba(100,181,246,0.15)", borderRadius:20, padding:"2px 8px" }}>
+                {arros.freq}x/semaine
+              </span>
+            </div>
+            <div style={{display:"flex",gap:8}}>
+              {[{val:`${arros.mm}mm`,label:"mm/session"},{val:`${arros.minutes}min`,label:"min/session"},{val:"5h–9h",label:"Horaire"}].map(({val,label}) => (
+                <div key={label} style={{flex:1,background:"rgba(255,255,255,0.06)",borderRadius:12,padding:"10px 6px",textAlign:"center"}}>
+                  <div style={{fontSize:18,fontWeight:800,color:"#64b5f6"}}>{val}</div>
+                  <div style={{fontSize:10,color:"#81c784"}}>{label}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{fontSize:11,color:"rgba(100,181,246,0.6)",textAlign:"center",marginTop:8}}>
               ⚙️ Débit : {arros.debitMmH} mm/h · Précipitations du jour déduites
-            </div></div>)}
+            </div>
+          </div>
+        )}
 
-        {/* IA Recommandations */}
-        <div style={card()}><div style={cardTitle}><span>🤖 Recommandations IA</span>{isPaid && <button onClick={fetchAI} style={{background:"rgba(76,175,80,0.2)",border:"none",borderRadius:8,padding:"4px 10px",color:"#a5d6a7",fontSize:11,cursor:"pointer"}}>↻</button>}</div>{!isPaid ? (<div style={{textAlign:"center",padding:"16px 0"}}><div style={{fontSize:28,marginBottom:8}}>🔒</div><div style={{fontSize:13,color:"#81c784",marginBottom:12}}>Fonctionnalité Premium uniquement</div><button onClick={() => navigate("/subscribe")} style={{...btn.primary,width:"auto",padding:"10px 24px"}}>Passer Premium 🌿</button></div>) : aiLoading ? (<div style={{textAlign:"center",padding:"20px 0"}}><div style={{fontSize:28,display:"inline-block",animation:"spin 1.2s linear infinite"}}>🌿</div><div style={{fontSize:12,color:"#81c784",marginTop:8}}>Analyse en cours...</div></div>) : aiReco ? (<div style={{fontSize:13,lineHeight:1.8,whiteSpace:"pre-wrap"}}>{aiReco}</div>) : (<div style={{fontSize:13,color:"#81c784",textAlign:"center",padding:"12px 0"}}>{!weather ? "Activez la géolocalisation" : "Appuyez sur ↻"}</div>)}</div>
-
-        {/* ── JOURNALISATION ───────────────────────────────────────────────── */}
+        {/* Recommandations IA */}
         <div style={card()}>
           <div style={cardTitle}>
+            <span>🤖 Recommandations IA</span>
+            {isPaid && <button onClick={fetchAI} style={{background:"rgba(76,175,80,0.2)",border:"none",borderRadius:8,padding:"4px 10px",color:"#a5d6a7",fontSize:11,cursor:"pointer"}}>↻</button>}
+          </div>
+          {!isPaid ? (
+            <div style={{textAlign:"center",padding:"16px 0"}}>
+              <div style={{fontSize:28,marginBottom:8}}>🔒</div>
+              <div style={{fontSize:13,color:"#81c784",marginBottom:12}}>Fonctionnalité Premium uniquement</div>
+              <button onClick={()=>navigate("/subscribe")} style={{...btn.primary,width:"auto",padding:"10px 24px"}}>Passer Premium 🌿</button>
+            </div>
+          ) : aiLoading ? (
+            <div style={{textAlign:"center",padding:"20px 0"}}>
+              <div style={{fontSize:28,display:"inline-block",animation:"spin 1.2s linear infinite"}}>🌿</div>
+              <div style={{fontSize:12,color:"#81c784",marginTop:8}}>Analyse en cours...</div>
+            </div>
+          ) : aiReco ? (
+            <div style={{fontSize:13,lineHeight:1.8,whiteSpace:"pre-wrap"}}>{aiReco}</div>
+          ) : (
+            <div style={{fontSize:13,color:"#81c784",textAlign:"center",padding:"12px 0"}}>
+              {!weather ? "Activez la géolocalisation" : "Appuyez sur ↻"}
+            </div>
+          )}
+        </div>
+
+        {/* ── JOURNALISER ─────────────────────────────────────────────────── */}
+        <div style={{ ...card(), background:"rgba(15,47,31,0.95)", border:"1px solid rgba(102,187,106,0.25)" }}>
+          <div style={cardTitle}>
             <span>✅ Journaliser</span>
-            <span style={{ fontSize:11, color:"#81c784", background:"rgba(76,175,80,0.15)", borderRadius:20, padding:"2px 8px" }}>
+            <span style={{ fontSize:11, color:"#66BB6A", background:"rgba(102,187,106,0.15)", borderRadius:20, padding:"2px 8px" }}>
               🌿 {gpTotal.toLocaleString("fr-FR")} pts
             </span>
           </div>
 
-          {/* ── À faire aujourd'hui ── */}
-          {recommended.length > 0 && (
-            <div style={{ marginBottom:14 }}>
-              <div style={{ fontSize:10, fontWeight:700, color:"#66BB6A", letterSpacing:0.8, marginBottom:8 }}>À FAIRE AUJOURD'HUI</div>
-              {recommended.map(({ rule }) => {
-                const isFlashing = justLogged.includes(rule.id);
+          {/* À FAIRE AUJOURD'HUI */}
+          {recommended.length > 0 ? (
+            <div style={{ marginBottom:16 }}>
+              <div style={{ fontSize:10, fontWeight:800, color:"#66BB6A", letterSpacing:1, marginBottom:10, display:"flex", alignItems:"center", gap:6 }}>
+                <span style={{ width:6, height:6, borderRadius:"50%", background:"#66BB6A", display:"inline-block" }} />
+                À FAIRE AUJOURD'HUI
+              </div>
+              {recommended.map(({ action }) => {
+                const isFlashing = justLogged.includes(action.id);
+                const detail     = action.detail?.(plan, arros, profile, month, zone);
                 return (
-                  <div key={rule.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"9px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
-                    <div>
-                      <div style={{ fontSize:13, fontWeight:600, color:"#e8f5e9" }}>{rule.label}</div>
-                      <div style={{ fontSize:11, color:"#81c784" }}>
-                        {rule.id === "tonte"     && `Hauteur recommandée : ${plan?.hauteur || "25"} mm`}
-                        {rule.id === "arrosage"  && arros && `${arros.freq}x/sem · ${arros.mm} mm · ${arros.minutes} min/session`}
-                        {rule.id === "engrais"   && plan?.engrais && plan.engrais}
-                        {!["tonte","arrosage","engrais"].includes(rule.id) && "Conseillé ce mois"}
-                      </div>
+                  <div key={action.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 12px", marginBottom:6, background:"rgba(102,187,106,0.08)", borderRadius:10, border:"1px solid rgba(102,187,106,0.2)" }}>
+                    <div style={{ flex:1, marginRight:10 }}>
+                      <div style={{ fontSize:13, fontWeight:700, color:"#e8f5e9" }}>{action.label}</div>
+                      {detail && <div style={{ fontSize:11, color:"#81c784", marginTop:2 }}>{detail}</div>}
                     </div>
                     <button
-                      onClick={() => log(rule)}
+                      onClick={() => log(action)}
                       style={{
-                        background:    isFlashing ? "rgba(76,175,80,0.5)" : "rgba(76,175,80,0.2)",
-                        border:        "1px solid rgba(76,175,80,0.5)",
-                        borderRadius:  10,
-                        padding:       "8px 14px",
-                        color:         "#a5d6a7",
-                        fontSize:      12,
-                        fontWeight:    700,
-                        cursor:        "pointer",
-                        transition:    "background 0.2s",
-                        minWidth:      72,
-                        textAlign:     "center",
+                        background:   isFlashing ? "rgba(102,187,106,0.5)" : "rgba(102,187,106,0.2)",
+                        border:       "1px solid rgba(102,187,106,0.5)",
+                        borderRadius: 10, padding:"8px 14px",
+                        color:"#a5d6a7", fontSize:12, fontWeight:700,
+                        cursor:"pointer", minWidth:76, textAlign:"center",
+                        transition:"background 0.2s", flexShrink:0,
                       }}
                     >
                       {isFlashing ? "✓ Fait !" : "Faire →"}
@@ -300,44 +267,48 @@ export default function Today() {
                 );
               })}
             </div>
-          )}
-
-          {recommended.length === 0 && (
-            <div style={{ textAlign:"center", padding:"12px 0 8px", color:"#66BB6A", fontSize:13 }}>
+          ) : (
+            <div style={{ textAlign:"center", padding:"14px 0", color:"#66BB6A", fontSize:13, marginBottom:12 }}>
               ✅ Tout est à jour pour aujourd'hui !
             </div>
           )}
 
-          {/* ── Déjà fait / trop tôt ── */}
-          {tooSoon.length > 0 && (
-            <div style={{ marginTop:4 }}>
-              <div style={{ fontSize:10, fontWeight:700, color:"#81c784", letterSpacing:0.8, marginBottom:8 }}>PRÉVOIR</div>
-              {tooSoon.map(({ rule, status, daysLeft }) => (
-                <div key={rule.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"7px 0", borderBottom:"1px solid rgba(255,255,255,0.04)", opacity:0.45 }}>
-                  <div style={{ fontSize:12, color:"#81c784" }}>{rule.label}</div>
-                  <div style={{ fontSize:11, color:"#81c784", background:"rgba(255,255,255,0.06)", borderRadius:8, padding:"3px 10px" }}>
-                    {status === "done_today" ? "✓ Fait aujourd'hui" : `Dans ${daysLeft}j`}
+          {/* PRÉVOIR */}
+          {prevoyez.length > 0 && (
+            <div style={{ marginBottom:10 }}>
+              <div style={{ fontSize:10, fontWeight:800, color:"#81c784", letterSpacing:1, marginBottom:8, opacity:0.8 }}>
+                PRÉVOIR
+              </div>
+              {prevoyez.map(({ action, status, daysLeft, blockedReason, exclusiveWith }) => (
+                <div key={action.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"7px 10px", marginBottom:4, borderRadius:8, background:"rgba(255,255,255,0.03)", opacity:0.55 }}>
+                  <div style={{ fontSize:12, color:"#a5d6a7" }}>{action.label}</div>
+                  <div style={{ fontSize:11, color:"#81c784", background:"rgba(255,255,255,0.06)", borderRadius:8, padding:"3px 10px", whiteSpace:"nowrap", maxWidth:160, textAlign:"right" }}>
+                    {status === "done_today"  && "✓ Fait aujourd'hui"}
+                    {status === "too_soon"    && `Dans ${daysLeft}j`}
+                    {status === "blocked"     && `⛔ ${blockedReason?.split(" — ")[0] || "Bloqué"}`}
+                    {status === "exclusive"   && `⚠️ Excl. ${daysLeft}j`}
                   </div>
                 </div>
               ))}
             </div>
           )}
 
-          {/* ── Hors saison ── */}
-          {offSeason.length > 0 && (
-            <div style={{ marginTop:10 }}>
-              <div style={{ fontSize:10, fontWeight:700, color:"#8aab96", letterSpacing:0.8, marginBottom:6 }}>PAS PRÉVU CE MOIS</div>
-              <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
-                {offSeason.map(({ rule }) => (
-                  <div key={rule.id} style={{ fontSize:11, color:"#8aab96", background:"rgba(255,255,255,0.06)", borderRadius:8, padding:"4px 10px", opacity:0.65 }}>
-                    {rule.label}
+          {/* PAS PRÉVU CE MOIS */}
+          {pasPrevu.length > 0 && (
+            <div>
+              <div style={{ fontSize:10, fontWeight:800, color:"#4a7c5c", letterSpacing:1, marginBottom:6 }}>
+                PAS PRÉVU CE MOIS
+              </div>
+              <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
+                {pasPrevu.map(({ action }) => (
+                  <div key={action.id} style={{ fontSize:11, color:"#8aab96", background:"rgba(255,255,255,0.05)", borderRadius:8, padding:"3px 10px", opacity:0.65 }}>
+                    {action.label}
                   </div>
                 ))}
               </div>
             </div>
           )}
         </div>
-
 
       </div>
 

@@ -8,7 +8,8 @@ import { useReminders } from "../lib/useReminders";
 import { useRecommandations } from "../lib/useRecommandations";
 import { useSaison } from "../lib/useSaison";
 import { calcLawnScore } from "../lib/lawnScore";
-import { MONTHLY_PLAN, MONTHS_FR, calcArrosage, DEBIT_DEFAULT_MMH } from "../lib/lawn";
+import { MONTHLY_PLAN, MONTHS_FR, calcArrosage, DEBIT_DEFAULT_MMH, getDebitMmH } from "../lib/lawn";
+import { buildActions, zoneClimatique, ZONE_LABELS } from "../lib/planEntretien";
 import { card, cardTitle, btn, scroll, header } from "../lib/styles";
 
 // ── Data Phase 2 ─────────────────────────────────────────────────────────────
@@ -363,117 +364,80 @@ export default function MyLawn() {
           </div>
         )}
 
-        {/* ── 7. PLAN DU MOIS ── */}
+        {/* ── 7. PLAN DU MOIS — source unique planEntretien.js ── */}
         {(() => {
-          const isSynth = profile?.pelouse === "synthetique";
-          const sol     = profile?.sol;
+          const arrosPlan = profile && weather
+            ? calcArrosage(month, profile, weather, history, getDebitMmH())
+            : null;
+          const zone     = zoneClimatique(profile);
+          const statuts  = buildActions(profile, weather, history, score, month, arrosPlan);
 
-          // Mois actifs dérivés de MONTHLY_PLAN — même logique que Today > Journaliser
-          const actionsplan = [
-            {
-              id:"tonte", icon:"✂️", label:"Tonte",
-              actif: !isSynth && plan?.tonte && plan.tonte !== "Aucune",
-              detail: plan?.tonte,
-              keywords:["tonte"],
-            },
-            {
-              id:"arrosage", icon:"💧", label:"Arrosage",
-              actif: !isSynth && (plan?.arrosage_base || 0) > 0,
-              detail: plan?.arrosage_freq ? `${plan.arrosage_freq}x/semaine recommandé` : null,
-              keywords:["arrosage"],
-            },
-            {
-              id:"engrais", icon:"🌱", label:"Engrais",
-              actif: !isSynth && !!plan?.engrais,
-              detail: plan?.engrais || "Aucun ce mois",
-              keywords:["engrais"],
-              produit: !!plan?.engrais,
-            },
-            {
-              id:"verticut", icon:"🔧", label:"Verticut",
-              actif: !isSynth && !!plan?.verticut,
-              detail: plan?.verticut ? "Scarification / passage verticut" : "Non requis",
-              keywords:["scarif","verticut"],
-              produit: !!plan?.verticut,
-            },
-            {
-              id:"aeration", icon:"🌀", label:"Aération",
-              actif: !isSynth && (!!plan?.aeration || ((sol === "argileux" || sol === "compacte") && [3,4,9,10].includes(month))),
-              detail: plan?.aeration ? "Aération ou carottage recommandée" : (sol === "argileux" || sol === "compacte") ? "Conseillée (sol compacté)" : "Non requise",
-              keywords:["aeration","aération"],
-            },
-            {
-              id:"desherbage", icon:"🪴", label:"Désherbage",
-              actif: !isSynth && [4,5,9].includes(month),
-              detail: [4,5,9].includes(month) ? "Désherbant sélectif conseillé" : "Non prévu",
-              keywords:["desherb","désherb"],
-            },
-            {
-              id:"regarnissage", icon:"🌾", label:"Regarnissage",
-              actif: !isSynth && [3,4,5,8,9].includes(month),
-              detail: [3,4,5,8,9].includes(month) ? "Semences sur zones clairsemées" : "Non prévu",
-              keywords:["semences","semis","regarnissage"],
-            },
-            {
-              id:"antimousse", icon:"💊", label:"Anti-mousse",
-              actif: !isSynth && [3,4,9].includes(month),
-              detail: [3,4,9].includes(month) ? "Traitement anti-mousse" : "Non prévu",
-              keywords:["anti_mousse","mousse"],
-            },
-          ];
+          // Actions actives ce mois (pas off_season)
+          const actives  = statuts.filter(a => a.status !== "off_season");
+          // Actions hors saison
+          const horsS    = statuts.filter(a => a.status === "off_season");
 
-          // Statut depuis l'historique
-          const daysSince = (keywords) => {
-            if (!history?.length) return 999;
-            const matches = history.filter(h => keywords.some(kw => h.action?.toLowerCase().includes(kw.toLowerCase())));
-            if (!matches.length) return 999;
-            const days = matches.map(h => {
-              const parts = h.date?.split("/");
-              if (!parts || parts.length !== 3) return 999;
-              return Math.floor((Date.now() - new Date(parts[2], parts[1]-1, parts[0]).getTime()) / 86400000);
-            });
-            return Math.min(...days);
+          const badgeFor = ({ status, daysLeft, blockedReason, exclusiveWith }) => {
+            if (status === "done_today")  return { label:"✓ Fait",           color:"#66BB6A", bg:"rgba(102,187,106,0.18)" };
+            if (status === "too_soon")    return { label:`Dans ${daysLeft}j`, color:"#81c784", bg:"rgba(102,187,106,0.08)" };
+            if (status === "blocked")     return { label:"⛔ Bloqué météo",   color:"#f9a825", bg:"rgba(249,168,37,0.12)" };
+            if (status === "exclusive")   return { label:`⚠️ Excl. ${daysLeft}j`,color:"#f9a825",bg:"rgba(249,168,37,0.10)"};
+            if (status === "recommended") return { label:"À faire",           color:"#f9a825", bg:"rgba(249,168,37,0.15)" };
+            return { label:"Pas prévu", color:"#4a7c5c", bg:"rgba(255,255,255,0.04)" };
           };
 
           return (
             <div style={card()}>
               <div style={cardTitle}>
                 <span>📅 Plan {MONTHS_FR[month]}</span>
-                <span style={{ fontSize:12, color:"#f9a825", fontWeight:700 }}>{plan?.label}</span>
+                <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                  <span style={{ fontSize:12, color:"#f9a825", fontWeight:700 }}>{plan?.label}</span>
+                  <span style={{ fontSize:10, color:"#4a7c5c", background:"rgba(255,255,255,0.05)", borderRadius:20, padding:"1px 7px" }}>
+                    📍 {ZONE_LABELS[zone] || zone}
+                  </span>
+                </div>
               </div>
 
-              {actionsplan.map(({ id, icon, label, actif, detail, produit, keywords }) => {
-                const since = daysSince(keywords);
-                const faitAujourdhui = since === 0;
-                const faitRecemment  = since > 0 && since <= 7;
-                const badge = !actif
-                  ? { label:"Pas prévu", color:"#4a7c5c", bg:"rgba(255,255,255,0.04)" }
-                  : faitAujourdhui
-                  ? { label:"✓ Fait", color:"#66BB6A", bg:"rgba(102,187,106,0.15)" }
-                  : faitRecemment
-                  ? { label:`Fait il y a ${since}j`, color:"#81c784", bg:"rgba(102,187,106,0.08)" }
-                  : { label:"À faire", color:"#f9a825", bg:"rgba(249,168,37,0.12)" };
-
+              {/* Actions actives ce mois */}
+              {actives.map(({ action, status, daysLeft, blockedReason, exclusiveWith }) => {
+                const badge  = badgeFor({ status, daysLeft, blockedReason, exclusiveWith });
+                const detail = action.detail?.(plan, arrosPlan, profile, month, zone);
+                const isBlocked = status === "blocked" || status === "exclusive";
                 return (
-                  <div key={id} style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 0", borderBottom:"1px solid rgba(255,255,255,0.05)", opacity: actif ? 1 : 0.45 }}>
-                    <span style={{ fontSize:18, minWidth:26 }}>{icon}</span>
+                  <div key={action.id} style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
                     <div style={{ flex:1 }}>
-                      <div style={{ fontSize:12, fontWeight:700, color: actif ? "#e8f5e9" : "#81c784" }}>{label}</div>
-                      <div style={{ fontSize:11, color:"#81c784", marginTop:1 }}>{detail}</div>
+                      <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:2 }}>
+                        <span style={{ fontSize:13, fontWeight:700, color: isBlocked ? "#81c784" : "#e8f5e9" }}>{action.label}</span>
+                        <span style={{ fontSize:10, color:badge.color, background:badge.bg, borderRadius:20, padding:"1px 7px", fontWeight:700 }}>
+                          {badge.label}
+                        </span>
+                      </div>
+                      {detail && <div style={{ fontSize:11, color:"#81c784" }}>{detail}</div>}
+                      {isBlocked && blockedReason && <div style={{ fontSize:10, color:"#f9a825", marginTop:2 }}>⛔ {blockedReason}</div>}
+                      {status === "exclusive" && exclusiveWith && <div style={{ fontSize:10, color:"#f9a825", marginTop:2 }}>⚠️ Attendre après {exclusiveWith}</div>}
                     </div>
-                    <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                      <span style={{ fontSize:10, color:badge.color, background:badge.bg, borderRadius:20, padding:"2px 8px", fontWeight:700, whiteSpace:"nowrap" }}>
-                        {badge.label}
-                      </span>
-                      {produit && actif && (
-                        <button onClick={() => navigate("/products")} style={{ background:"rgba(76,175,80,0.2)", border:"1px solid rgba(76,175,80,0.4)", borderRadius:8, padding:"4px 8px", color:"#a5d6a7", fontSize:10, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap" }}>
-                          Acheter →
-                        </button>
-                      )}
-                    </div>
+                    {action.needsProduct && status === "recommended" && (
+                      <button onClick={() => navigate("/products")} style={{ background:"rgba(76,175,80,0.2)", border:"1px solid rgba(76,175,80,0.4)", borderRadius:8, padding:"4px 8px", color:"#a5d6a7", fontSize:10, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap" }}>
+                        Acheter →
+                      </button>
+                    )}
                   </div>
                 );
               })}
+
+              {/* Hors saison — compacts */}
+              {horsS.length > 0 && (
+                <div style={{ marginTop:10, paddingTop:8, borderTop:"1px solid rgba(255,255,255,0.05)" }}>
+                  <div style={{ fontSize:10, color:"#4a7c5c", fontWeight:700, marginBottom:6 }}>PAS PRÉVU CE MOIS</div>
+                  <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
+                    {horsS.map(({ action }) => (
+                      <span key={action.id} style={{ fontSize:10, color:"#4a7c5c", background:"rgba(255,255,255,0.04)", borderRadius:8, padding:"2px 8px", opacity:0.7 }}>
+                        {action.label}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           );
         })()}
