@@ -114,8 +114,7 @@ export default function Pilotage() {
 
   function exportCSV() {
     if (!preinscriptions.length) return;
-    const header = 'Email,Source,Date
-';
+    const header = 'Email,Source,Date\n';
     const rows = preinscriptions.map(p =>
       `${p.email},${p.source},${new Date(p.created_at).toLocaleDateString('fr-FR')}`
     ).join('
