@@ -133,9 +133,10 @@ export default function Pilotage() {
     setPurging(true); setPurgeResult(null);
     try {
       const token = await getToken();
-      const res   = await fetch("/api/purge-diagnostics", {
+      const res   = await fetch("/api/analyze-lawn", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ action: "purge" }),
       });
       const data  = await res.json();
       setPurgeResult(data.message || `${data.deleted} photo(s) supprimée(s)`);

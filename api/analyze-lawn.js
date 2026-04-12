@@ -1,13 +1,74 @@
 // api/analyze-lawn.js
-// Upload image sur Cloudinary puis analyse avec Groq Llama Vision (gratuit)
+// Upload image sur Cloudinary puis analyse avec Groq Llama Vision
+// Gère aussi la purge des anciennes photos (?action=purge)
+
+const crypto = require("crypto");
+const { createClerkClient } = require("@clerk/backend");
+
+const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).end();
 
+  // ── Route purge : POST avec { action: "purge" } ────────────────────────────
+  if (req.body?.action === "purge") {
+    // Auth requis
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "Token manquant" });
+    }
+    try {
+      await clerk.verifyToken(authHeader.replace("Bearer ", ""));
+    } catch {
+      return res.status(401).json({ error: "Token invalide" });
+    }
+
+    try {
+      const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+      const apiKey    = process.env.CLOUDINARY_API_KEY;
+      const apiSecret = process.env.CLOUDINARY_API_SECRET;
+      const authB64   = Buffer.from(`${apiKey}:${apiSecret}`).toString("base64");
+
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - 90);
+
+      const listRes  = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloudName}/resources/image?prefix=mg360-diagnostics&max_results=500`,
+        { headers: { Authorization: `Basic ${authB64}` } }
+      );
+      const listData = await listRes.json();
+      const toDelete = (listData.resources || [])
+        .filter(r => new Date(r.created_at) < cutoff)
+        .map(r => r.public_id);
+
+      if (!toDelete.length) {
+        return res.json({ deleted: 0, message: "Aucune photo à supprimer (toutes < 90 jours)" });
+      }
+
+      const delRes  = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloudName}/resources/image/upload`,
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json", Authorization: `Basic ${authB64}` },
+          body: JSON.stringify({ public_ids: toDelete }),
+        }
+      );
+      const delData = await delRes.json();
+      return res.json({
+        deleted: toDelete.length,
+        message: `${toDelete.length} photo(s) supprimée(s) avec succès`,
+        detail:  delData,
+      });
+    } catch (e) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
+  // ── Route principale : diagnostic photo ────────────────────────────────────
   try {
     const { imageBase64, mimeType = "image/jpeg", profile = {}, weather = {}, score = 0 } = req.body;
     if (!imageBase64) throw new Error("Image manquante");
@@ -18,10 +79,9 @@ module.exports = async function handler(req, res) {
     const apiSecret = process.env.CLOUDINARY_API_SECRET;
     const timestamp = Math.floor(Date.now() / 1000);
     const folder    = "mg360-diagnostics";
-
-    const crypto     = require("crypto");
-    const uploadDate = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+    const uploadDate = new Date().toISOString().split("T")[0];
     const tags       = `mg360,diag-${uploadDate}`;
+
     const signString = `folder=${folder}&tags=${tags}&timestamp=${timestamp}${apiSecret}`;
     const signature  = crypto.createHash("sha1").update(signString).digest("hex");
 
@@ -91,10 +151,7 @@ Si la photo ne montre pas du gazon, retourne score_visuel à 0 et explique dans 
         messages: [{
           role: "user",
           content: [
-            {
-              type:      "image_url",
-              image_url: { url: `data:${mimeType};base64,${imageBase64}` }
-            },
+            { type: "image_url", image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
             { type: "text", text: prompt }
           ]
         }]
@@ -124,56 +181,4 @@ Si la photo ne montre pas du gazon, retourne score_visuel à 0 et explique dans 
     console.error("analyze-lawn:", e.message);
     res.status(500).json({ error: e.message });
   }
-};
-
-// ── Route de purge Cloudinary (appelée par cron ou manuellement) ──────────────
-// GET /api/analyze-lawn?action=purge&secret=PURGE_SECRET
-// Supprime toutes les photos mg360-diagnostics de plus de 90 jours
-module.exports.purge = async function purgeOldDiagnostics() {
-  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-  const apiKey    = process.env.CLOUDINARY_API_KEY;
-  const apiSecret = process.env.CLOUDINARY_API_SECRET;
-  const crypto    = require("crypto");
-
-  // Date limite : aujourd'hui - 90 jours
-  const cutoff    = new Date();
-  cutoff.setDate(cutoff.getDate() - 90);
-  const cutoffTs  = Math.floor(cutoff.getTime() / 1000);
-
-  // Lister les ressources dans mg360-diagnostics uploadées avant la date limite
-  const listRes = await fetch(
-    `https://api.cloudinary.com/v1_1/${cloudName}/resources/image?` +
-    `prefix=mg360-diagnostics&max_results=500`,
-    {
-      headers: {
-        Authorization: "Basic " + Buffer.from(`${apiKey}:${apiSecret}`).toString("base64")
-      }
-    }
-  );
-  const listData = await listRes.json();
-  const toDelete = (listData.resources || [])
-    .filter(r => new Date(r.created_at).getTime() / 1000 < cutoffTs)
-    .map(r => r.public_id);
-
-  if (!toDelete.length) return { deleted: 0 };
-
-  // Suppression par batch de 100
-  const timestamp = Math.floor(Date.now() / 1000);
-  const publicIds = toDelete.join(",");
-  const signStr   = `public_ids=${publicIds}&timestamp=${timestamp}${apiSecret}`;
-  const signature = crypto.createHash("sha1").update(signStr).digest("hex");
-
-  const delRes = await fetch(
-    `https://api.cloudinary.com/v1_1/${cloudName}/resources/image/upload`,
-    {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Basic " + Buffer.from(`${apiKey}:${apiSecret}`).toString("base64")
-      },
-      body: JSON.stringify({ public_ids: toDelete })
-    }
-  );
-  const delData = await delRes.json();
-  return { deleted: toDelete.length, detail: delData };
 };
