@@ -117,8 +117,7 @@ export default function Pilotage() {
     const header = 'Email,Source,Date\n';
     const rows = preinscriptions.map(p =>
       `${p.email},${p.source},${new Date(p.created_at).toLocaleDateString('fr-FR')}`
-    ).join('
-');
+    ).join('\n');
     const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8;' });
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a'); a.href = url;
