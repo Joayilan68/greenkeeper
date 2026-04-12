@@ -433,6 +433,11 @@ export function buildActions(profile, weather, history, score, month, arros) {
 
     // ── 2. Arrosage piloté par météo ──────────────────────────────────────
     if (action.weatherDriven && !arros) {
+      // Si le mois est actif mais arros=null → pluie suffisante ou récent
+      // On affiche "bloqué" uniquement si on est en saison, sinon off_season
+      if (mois.includes(month)) {
+        return { ...base, status: "blocked", daysLeft: null, blockedReason: "Pluie suffisante — arrosage inutile aujourd'hui" };
+      }
       return { ...base, status: "off_season", daysLeft: null };
     }
 
