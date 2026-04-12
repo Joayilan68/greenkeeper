@@ -1,6 +1,7 @@
 // src/pages/Pilotage.jsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@clerk/clerk-react";
 import { useSubscription } from "../lib/useSubscription";
 import { card, cardTitle, btn, scroll, header, appShell } from "../lib/styles";
 import { supabase } from "../lib/supabase";
@@ -66,6 +67,7 @@ const SEV_STYLE = {
 
 export default function Pilotage() {
   const navigate              = useNavigate();
+  const { getToken }          = useAuth();
   const { isAdmin }           = useSubscription() || {};
   const [users, setUsers]     = useState(null);
   const [revenue, setRevenue] = useState(null);
@@ -76,10 +78,12 @@ export default function Pilotage() {
   const [lastUpdate, setLastUpdate] = useState("");
   const [loadingUsers, setLoadingUsers]     = useState(false);
   const [loadingRevenue, setLoadingRevenue] = useState(false);
-  const [tab, setTab]         = useState("activite"); // activite | finances | services | bugs | preinscriptions
+  const [tab, setTab]         = useState("activite");
   const [preinscriptions, setPreinscriptions] = useState([]);
   const [preinscLoading, setPreinscLoading]   = useState(false);
   const [preinscTotal, setPreinscTotal]       = useState(0);
+  const [purging, setPurging]       = useState(false);
+  const [purgeResult, setPurgeResult] = useState(null);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -123,6 +127,22 @@ export default function Pilotage() {
     const a    = document.createElement('a'); a.href = url;
     a.download = `MG360_preinscriptions_${new Date().toISOString().split('T')[0]}.csv`;
     a.click(); URL.revokeObjectURL(url);
+  }
+
+  async function purgeDiagnostics() {
+    setPurging(true); setPurgeResult(null);
+    try {
+      const token = await getToken();
+      const res   = await fetch("/api/purge-diagnostics", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      });
+      const data  = await res.json();
+      setPurgeResult(data.message || `${data.deleted} photo(s) supprimée(s)`);
+    } catch (e) {
+      setPurgeResult("Erreur : " + e.message);
+    }
+    setPurging(false);
   }
 
   function computeLocal() {
@@ -196,12 +216,11 @@ export default function Pilotage() {
     </div>
   );
 
-  // ── TABS ───────────────────────────────────────────────────────────────────
   const tabs = [
-    { id:"activite",       label:"👥 Activité" },
-    { id:"finances",       label:"💰 Finances" },
-    { id:"services",       label:"⚙️ Services" },
-    { id:"bugs",           label:"🐛 Bugs" },
+    { id:"activite",        label:"👥 Activité" },
+    { id:"finances",        label:"💰 Finances" },
+    { id:"services",        label:"⚙️ Services" },
+    { id:"bugs",            label:"🐛 Bugs" },
     { id:"preinscriptions", label:"📬 Pré-inscrits" },
   ];
 
@@ -220,7 +239,6 @@ export default function Pilotage() {
         </div>
       </div>
 
-      {/* ── TABS ── */}
       <div style={{ display:"flex", gap:6, padding:"0 12px 12px", overflowX:"auto" }}>
         {tabs.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{ background: tab===t.id ? "rgba(249,168,37,0.25)" : "rgba(255,255,255,0.06)", border: tab===t.id ? "1px solid rgba(249,168,37,0.5)" : "1px solid rgba(255,255,255,0.1)", borderRadius:20, padding:"6px 14px", color: tab===t.id ? "#f9a825" : "#81c784", fontSize:12, fontWeight: tab===t.id ? 700 : 400, cursor:"pointer", whiteSpace:"nowrap" }}>
@@ -234,31 +252,24 @@ export default function Pilotage() {
         {/* ════════════════ TAB ACTIVITÉ ════════════════ */}
         {tab === "activite" && (
           <>
-            {/* KPIs Utilisateurs */}
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:4 }}>
               <KPI icon="👥" label="Total inscrits" value={loadingUsers ? "..." : (users?.total ?? "—")} sub="Tous comptes" color="#a5d6a7" />
               <KPI icon="🆕" label="Nouveaux 7j" value={loadingUsers ? "..." : (users?.newLast7 ?? "—")} sub={users?.newLast30 ? `+${users.newLast30} ce mois` : ""} color="#90caf9" />
               <KPI icon="✅" label="Actifs 30j" value={loadingUsers ? "..." : (users?.activeL30 ?? "—")} sub="Connectés ce mois" color="#a5d6a7" />
               <KPI icon="📸" label="Diagnostics" value={local?.diagnostics.total ?? "—"} sub={`+${local?.diagnostics.ce7j ?? 0} cette semaine`} color="#ce93d8" />
             </div>
-
-            {/* Graphique inscriptions par semaine */}
             {users?.weeks && (
               <div style={card()}>
                 <div style={cardTitle}><span>📈 Inscriptions — 8 semaines</span></div>
                 <MiniChart data={users.weeks} valueKey="count" color="#43a047" />
               </div>
             )}
-
-            {/* Graphique inscriptions par mois */}
             {users?.months && (
               <div style={card()}>
                 <div style={cardTitle}><span>📅 Inscriptions — 6 mois</span></div>
                 <MiniChart data={users.months} valueKey="count" color="#1565c0" />
               </div>
             )}
-
-            {/* Diagnostics top problèmes */}
             {local?.diagnostics.topProbs?.length > 0 && (
               <div style={card()}>
                 <div style={cardTitle}><span>🔬 Top problèmes détectés</span></div>
@@ -270,7 +281,6 @@ export default function Pilotage() {
                 ))}
               </div>
             )}
-
             {loadingUsers && (
               <div style={{ textAlign:"center", color:"#81c784", fontSize:12, padding:16 }}>🔄 Chargement données Clerk...</div>
             )}
@@ -286,8 +296,6 @@ export default function Pilotage() {
               <KPI icon="📅" label="Premium mensuel" value={loadingRevenue ? "..." : (revenue?.premiumMonthly ?? "—")} sub="Abonnés @ 4,99€/mois" color="#a5d6a7" />
               <KPI icon="🗓️" label="Premium annuel" value={loadingRevenue ? "..." : (revenue?.premiumYearly ?? "—")} sub="Abonnés @ 39,99€/an" color="#90caf9" />
             </div>
-
-            {/* Solde Stripe */}
             {revenue?.balance && (
               <div style={{ ...card(), background:"rgba(249,168,37,0.08)", border:"1px solid rgba(249,168,37,0.25)" }}>
                 <div style={cardTitle}><span>🏦 Solde Stripe</span></div>
@@ -307,30 +315,24 @@ export default function Pilotage() {
                 </div>
               </div>
             )}
-
-            {/* Graphique revenus par semaine */}
             {revenue?.weeks && (
               <div style={card()}>
                 <div style={cardTitle}><span>📈 Revenus — 8 semaines (€)</span></div>
                 <MiniChart data={revenue.weeks} valueKey="revenue" color="#f9a825" unit="€" />
               </div>
             )}
-
-            {/* Graphique revenus par mois */}
             {revenue?.months && (
               <div style={card()}>
                 <div style={cardTitle}><span>📅 Revenus — 6 mois (€)</span></div>
                 <MiniChart data={revenue.months} valueKey="revenue" color="#e65100" unit="€" />
               </div>
             )}
-
-            {/* Sources de revenus */}
             <div style={card()}>
               <div style={cardTitle}><span>💎 Sources de revenus</span></div>
               {[
                 { label:"Abonnements mensuel", val:revenue ? eur((revenue.premiumMonthly||0)*4.99) : "—", statut:"✅ Actif", color:"#a5d6a7" },
                 { label:"Abonnements annuel",  val:revenue ? eur((revenue.premiumYearly||0)*39.99)  : "—", statut:"✅ Actif", color:"#a5d6a7" },
-                { label:"Affiliation Amazon",  val:"0€", statut:"⏳ Phase 3", color:"#ffcc80" },
+                { label:"Affiliation Amazon",  val:"0€", statut:"✅ Actif", color:"#a5d6a7" },
                 { label:"Données anonymisées", val:"0€", statut:"⏳ Phase 4", color:"#f9a825" },
                 { label:"Marque propre MG360", val:"0€", statut:"⏳ Phase 4", color:"#f9a825" },
               ].map(({ label, val, statut, color }) => (
@@ -343,7 +345,6 @@ export default function Pilotage() {
                 </div>
               ))}
             </div>
-
             {loadingRevenue && (
               <div style={{ textAlign:"center", color:"#81c784", fontSize:12, padding:16 }}>🔄 Chargement données Stripe...</div>
             )}
@@ -353,20 +354,19 @@ export default function Pilotage() {
         {/* ════════════════ TAB SERVICES ════════════════ */}
         {tab === "services" && (
           <>
-            {/* Statut services */}
             <div style={card()}>
               <div style={cardTitle}><span>⚙️ Statut des services</span></div>
               {[
-                { name:"Vercel",         status:"✅", ok:true,  detail:"Déployé — greenkeeper-five.vercel.app" },
+                { name:"Vercel",         status:"✅", ok:true,  detail:"Déployé — mongazon360.fr" },
                 { name:"Groq Vision IA", status:"✅", ok:true,  detail:"Llama 4 Scout 17B — Gratuit" },
                 { name:"Cloudinary",     status:"✅", ok:true,  detail:"Stockage photos 25GB gratuit" },
                 { name:"Stripe",         status:"✅", ok:true,  detail:"Paiements actifs" },
                 { name:"Open-Meteo",     status:"✅", ok:true,  detail:"Météo temps réel — Gratuit" },
-                { name:"Clerk",          status:"✅", ok:true,  detail:"Authentification — Mode test" },
+                { name:"Clerk",          status:"✅", ok:true,  detail:"Authentification — Mode production" },
                 { name:"Resend",         status:"✅", ok:true,  detail:"Emails alertes actifs" },
+                { name:"Supabase",       status:"✅", ok:true,  detail:"Pré-inscrits + Rate limiting actifs" },
                 { name:"Anthropic",      status:"⚠️", ok:false, detail:"Crédits à recharger" },
                 { name:"Gemini",         status:"⚠️", ok:false, detail:"Quota limité" },
-                { name:"Supabase",       status:"❌", ok:false, detail:"Non configuré — Phase 3" },
               ].map(s => (
                 <div key={s.name} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"7px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
                   <div style={{ display:"flex", alignItems:"center", gap:8 }}>
@@ -378,15 +378,14 @@ export default function Pilotage() {
               ))}
             </div>
 
-            {/* Roadmap */}
             <div style={card()}>
               <div style={cardTitle}><span>🗺️ Avancement Roadmap</span></div>
               {[
                 { phase:"Phase 1 — Fondations",      pct:100, color:"#43a047" },
                 { phase:"Phase 2 — Diagnostic IA",   pct:100, color:"#43a047" },
                 { phase:"Juridique RGPD",             pct:64,  color:"#ec407a" },
-                { phase:"Phase 3 — Officialisation",  pct:0,   color:"#e65100" },
-                { phase:"Phase 4 — Monétisation",     pct:0,   color:"#6a1b9a" },
+                { phase:"Phase 3 — Officialisation",  pct:45,  color:"#e65100" },
+                { phase:"Phase 4 — Monétisation",     pct:10,  color:"#6a1b9a" },
               ].map(r => (
                 <div key={r.phase} style={{ marginBottom:10 }}>
                   <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, marginBottom:3 }}>
@@ -398,7 +397,26 @@ export default function Pilotage() {
               ))}
             </div>
 
-            {/* Actions */}
+            {/* ── Purge Cloudinary ── */}
+            <div style={card()}>
+              <div style={cardTitle}><span>🗑️ Purge Cloudinary</span></div>
+              <div style={{ fontSize:12, color:"#81c784", marginBottom:12, lineHeight:1.6 }}>
+                Supprime les photos de diagnostic de plus de <strong style={{ color:"#a5d6a7" }}>90 jours</strong> pour libérer du stockage.
+              </div>
+              <button
+                onClick={purgeDiagnostics}
+                disabled={purging}
+                style={{ width:"100%", padding:"10px", borderRadius:10, background:"rgba(198,40,40,0.15)", border:"1px solid rgba(198,40,40,0.3)", color:"#ef9a9a", fontSize:13, fontWeight:700, cursor:"pointer", opacity: purging ? 0.6 : 1 }}
+              >
+                {purging ? "Suppression en cours..." : "🗑️ Purger les anciennes photos"}
+              </button>
+              {purgeResult && (
+                <div style={{ marginTop:10, fontSize:12, color:"#a5d6a7", background:"rgba(76,175,80,0.1)", border:"1px solid rgba(76,175,80,0.25)", borderRadius:8, padding:"8px 12px", textAlign:"center" }}>
+                  {purgeResult}
+                </div>
+              )}
+            </div>
+
             <div style={card()}>
               <div style={cardTitle}><span>⚡ Actions</span></div>
               {sent && (
@@ -438,7 +456,6 @@ export default function Pilotage() {
                 <div style={{ fontSize:10, color:"#81c784" }}>Total logs</div>
               </div>
             </div>
-
             <div style={card()}>
               <div style={cardTitle}>
                 <span>🐛 Logs d'alertes</span>
@@ -474,10 +491,9 @@ export default function Pilotage() {
           </>
         )}
 
-        {/* ── ONGLET PRÉ-INSCRITS ─────────────────────────────────────────── */}
+        {/* ════════════════ TAB PRÉ-INSCRITS ════════════════ */}
         {tab === "preinscriptions" && (
           <>
-            {/* KPI row */}
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, marginBottom:8 }}>
               <KPI icon="📬" label="Total pré-inscrits" value={preinscTotal} color="#64b5f6" />
               <KPI icon="📸" label="Instagram" value={preinscriptions.filter(p=>p.source==='instagram').length} color="#f48fb1" />
@@ -488,8 +504,6 @@ export default function Pilotage() {
               <KPI icon="🐦" label="Twitter/X" value={preinscriptions.filter(p=>p.source==='twitter').length} color="#81d4fa" />
               <KPI icon="🔗" label="Direct" value={preinscriptions.filter(p=>p.source==='direct').length} color="#a5d6a7" />
             </div>
-
-            {/* Export + refresh */}
             <div style={{ display:"flex", gap:8, marginBottom:8 }}>
               <button onClick={fetchPreinscriptions} style={{ flex:1, background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:10, padding:"8px", color:"#81c784", fontSize:12, cursor:"pointer" }}>
                 ↻ Actualiser
@@ -498,8 +512,6 @@ export default function Pilotage() {
                 ⬇ Export CSV
               </button>
             </div>
-
-            {/* Graphe par jour (7 derniers jours) */}
             {(() => {
               const days = Array.from({ length: 7 }, (_, i) => {
                 const d = new Date(); d.setDate(d.getDate() - (6 - i));
@@ -515,8 +527,6 @@ export default function Pilotage() {
                 </div>
               );
             })()}
-
-            {/* Liste emails */}
             <div style={card()}>
               <div style={cardTitle}>
                 <span>📋 Liste ({preinscriptions.length})</span>
@@ -527,7 +537,7 @@ export default function Pilotage() {
                   Aucune pré-inscription pour l'instant.
                 </div>
               )}
-              {preinscriptions.map((p, i) => (
+              {preinscriptions.map((p) => (
                 <div key={p.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 0", borderBottom:"1px solid rgba(255,255,255,0.05)", gap:8 }}>
                   <div style={{ flex:1, minWidth:0 }}>
                     <div style={{ fontSize:12, fontWeight:700, color:"#e8f5e9", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{p.email}</div>

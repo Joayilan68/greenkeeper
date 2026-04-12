@@ -20,7 +20,9 @@ module.exports = async function handler(req, res) {
     const folder    = "mg360-diagnostics";
 
     const crypto     = require("crypto");
-    const signString = `folder=${folder}&timestamp=${timestamp}${apiSecret}`;
+    const uploadDate = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+    const tags       = `mg360,diag-${uploadDate}`;
+    const signString = `folder=${folder}&tags=${tags}&timestamp=${timestamp}${apiSecret}`;
     const signature  = crypto.createHash("sha1").update(signString).digest("hex");
 
     const formData = new URLSearchParams();
@@ -29,6 +31,7 @@ module.exports = async function handler(req, res) {
     formData.append("timestamp", timestamp);
     formData.append("signature", signature);
     formData.append("folder",    folder);
+    formData.append("tags",      tags);
 
     const uploadRes  = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
       method: "POST", body: formData
@@ -82,7 +85,7 @@ Si la photo ne montre pas du gazon, retourne score_visuel à 0 et explique dans 
         "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
       },
       body: JSON.stringify({
-        model: "meta-llama/llama-4-scout-17b-16e-instruct",
+        model:       "llama-3.2-11b-vision-preview",
         max_tokens:  1500,
         temperature: 0.2,
         messages: [{
@@ -121,4 +124,56 @@ Si la photo ne montre pas du gazon, retourne score_visuel à 0 et explique dans 
     console.error("analyze-lawn:", e.message);
     res.status(500).json({ error: e.message });
   }
+};
+
+// ── Route de purge Cloudinary (appelée par cron ou manuellement) ──────────────
+// GET /api/analyze-lawn?action=purge&secret=PURGE_SECRET
+// Supprime toutes les photos mg360-diagnostics de plus de 90 jours
+module.exports.purge = async function purgeOldDiagnostics() {
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+  const apiKey    = process.env.CLOUDINARY_API_KEY;
+  const apiSecret = process.env.CLOUDINARY_API_SECRET;
+  const crypto    = require("crypto");
+
+  // Date limite : aujourd'hui - 90 jours
+  const cutoff    = new Date();
+  cutoff.setDate(cutoff.getDate() - 90);
+  const cutoffTs  = Math.floor(cutoff.getTime() / 1000);
+
+  // Lister les ressources dans mg360-diagnostics uploadées avant la date limite
+  const listRes = await fetch(
+    `https://api.cloudinary.com/v1_1/${cloudName}/resources/image?` +
+    `prefix=mg360-diagnostics&max_results=500`,
+    {
+      headers: {
+        Authorization: "Basic " + Buffer.from(`${apiKey}:${apiSecret}`).toString("base64")
+      }
+    }
+  );
+  const listData = await listRes.json();
+  const toDelete = (listData.resources || [])
+    .filter(r => new Date(r.created_at).getTime() / 1000 < cutoffTs)
+    .map(r => r.public_id);
+
+  if (!toDelete.length) return { deleted: 0 };
+
+  // Suppression par batch de 100
+  const timestamp = Math.floor(Date.now() / 1000);
+  const publicIds = toDelete.join(",");
+  const signStr   = `public_ids=${publicIds}&timestamp=${timestamp}${apiSecret}`;
+  const signature = crypto.createHash("sha1").update(signStr).digest("hex");
+
+  const delRes = await fetch(
+    `https://api.cloudinary.com/v1_1/${cloudName}/resources/image/upload`,
+    {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Basic " + Buffer.from(`${apiKey}:${apiSecret}`).toString("base64")
+      },
+      body: JSON.stringify({ public_ids: toDelete })
+    }
+  );
+  const delData = await delRes.json();
+  return { deleted: toDelete.length, detail: delData };
 };
