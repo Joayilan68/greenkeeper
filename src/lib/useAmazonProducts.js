@@ -15,9 +15,15 @@ import AMAZON_PRODUCTS from './amazonProducts';
  * Adapter les seuils si les valeurs de l'onboarding ont changé.
  */
 const getBudgetTier = (budgetAnnuel) => {
-  const b = typeof budgetAnnuel === 'number'
-    ? budgetAnnuel
-    : parseInt(budgetAnnuel) || 0;
+  // Gère les string ranges du profil onboarding : "0-50", "50-150", "150-300", "300-600", "600+"
+  if (typeof budgetAnnuel === 'string') {
+    if (budgetAnnuel === '0-50'  || budgetAnnuel === 'inconnu') return 'eco';
+    if (budgetAnnuel === '50-150')  return 'standard';
+    if (budgetAnnuel === '150-300') return 'qualite';
+    if (budgetAnnuel === '300-600' || budgetAnnuel === '600+')  return 'premium';
+  }
+  // Fallback numérique
+  const b = typeof budgetAnnuel === 'number' ? budgetAnnuel : parseInt(budgetAnnuel) || 0;
   if (b <= 50)  return 'eco';
   if (b <= 150) return 'standard';
   if (b <= 300) return 'qualite';

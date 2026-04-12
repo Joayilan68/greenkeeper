@@ -11,6 +11,21 @@ import { calcLawnScore } from "../lib/lawnScore";
 import { MONTHLY_PLAN, MONTHS_FR, calcArrosage, DEBIT_DEFAULT_MMH, getDebitMmH } from "../lib/lawn";
 import { buildActions, zoneClimatique, ZONE_LABELS } from "../lib/planEntretien";
 import { card, cardTitle, btn, scroll, header } from "../lib/styles";
+import ProductCard from "../components/ProductCard";
+
+// Mapping action.id → clé amazonProducts.js
+const ACTION_TO_AMAZON = {
+  engrais_starter: "engraisStarter",
+  engrais_ete:     "engraisEte",
+  engrais_automne: "engraisAutomne",
+  engrais_hiver:   "engraisHiver",
+  anti_mousse:     "antiMousse",
+  desherbage:      "desherbage",
+  aeration:        "aeration",
+  verticut:        "verticut",
+  regarnissage:    "regarnissage",
+  biostimulant:    "biostimulant",
+};
 
 // ── Data Phase 2 ─────────────────────────────────────────────────────────────
 const SOLS = [
@@ -416,10 +431,10 @@ export default function MyLawn() {
                       {isBlocked && blockedReason && <div style={{ fontSize:10, color:"#f9a825", marginTop:2 }}>⛔ {blockedReason}</div>}
                       {status === "exclusive" && exclusiveWith && <div style={{ fontSize:10, color:"#f9a825", marginTop:2 }}>⚠️ Attendre après {exclusiveWith}</div>}
                     </div>
-                    {action.needsProduct && status === "recommended" && (
-                      <button onClick={() => navigate("/products")} style={{ background:"rgba(76,175,80,0.2)", border:"1px solid rgba(76,175,80,0.4)", borderRadius:8, padding:"4px 8px", color:"#a5d6a7", fontSize:10, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap" }}>
-                        Acheter →
-                      </button>
+                    {action.needsProduct && status === "recommended" && ACTION_TO_AMAZON[action.id] && profile && (
+                      <div style={{ marginTop:6, width:"100%" }}>
+                        <ProductCard actionKey={ACTION_TO_AMAZON[action.id]} profile={profile} compact />
+                      </div>
                     )}
                   </div>
                 );
@@ -581,27 +596,54 @@ export default function MyLawn() {
         </div>
 
         {/* ── 10. PRODUITS RECOMMANDÉS ── */}
-        <div style={card()}>
-          <div style={cardTitle}><span>🛒 Produits recommandés</span></div>
-          <div style={{ fontSize:11, color:"#81c784", marginBottom:10, fontStyle:"italic", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-            <span>Sélectionnés selon votre score</span>
-            {isPaid && <span style={{ fontSize:10, color:"#66BB6A", background:"rgba(102,187,106,0.1)", border:"1px solid rgba(102,187,106,0.2)", borderRadius:20, padding:"2px 8px", fontStyle:"normal", fontWeight:700 }}>⭐ Personnalisés Premium</span>}
-          </div>
-          {PRODUCTS.slice(0, isPaid ? 3 : 1).map((p, i) => (
-            <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
-              <div style={{ display:"flex", gap:10, alignItems:"center" }}>
-                <span style={{ fontSize:24 }}>{p.icon}</span>
-                <div><div style={{ fontSize:12, fontWeight:700 }}>{p.name}</div><div style={{ fontSize:10, color:"#81c784" }}>{p.reason}</div></div>
+        {(() => {
+          // Mapping issues.id → clé Amazon (selon les problèmes détectés dans le score)
+          // On prend les issues pour déterminer quels produits afficher
+          const ISSUE_TO_AMAZON = {
+            mousse:      "antiMousse",
+            fertilite:   "engraisStarter",
+            nutriments:  "engraisStarter",
+            mauvaises_herbes: "desherbage",
+            sol_compacte: "aeration",
+            thatch:      "verticut",
+            stress_hydrique: "biostimulant",
+          };
+          // Construit la liste des clés Amazon depuis les issues, dédupliqué
+          const issueKeys = issues
+            .map(i => ISSUE_TO_AMAZON[i.id] || ISSUE_TO_AMAZON[i.icon] || null)
+            .filter(Boolean);
+          // Fallback : si aucune issue mappée, on propose les engrais de saison
+          const month = new Date().getMonth() + 1;
+          const seasonKey = month <= 4 || month === 12 ? "engraisStarter"
+            : month <= 8 ? "engraisEte"
+            : "engraisAutomne";
+          const allKeys = issueKeys.length > 0
+            ? [...new Set(issueKeys)]
+            : [seasonKey, "antiMousse", "biostimulant"];
+          const keysToShow = isPaid ? allKeys.slice(0, 3) : allKeys.slice(0, 1);
+
+          return (
+            <div style={card()}>
+              <div style={cardTitle}><span>🛒 Produits recommandés</span></div>
+              <div style={{ fontSize:11, color:"#81c784", marginBottom:12, fontStyle:"italic", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                <span>Sélectionnés selon votre score</span>
+                {isPaid && <span style={{ fontSize:10, color:"#66BB6A", background:"rgba(102,187,106,0.1)", border:"1px solid rgba(102,187,106,0.2)", borderRadius:20, padding:"2px 8px", fontStyle:"normal", fontWeight:700 }}>⭐ Personnalisés Premium</span>}
               </div>
-              <div style={{ textAlign:"right" }}>
-                <div style={{ fontSize:12, color:"#a5d6a7", fontWeight:700 }}>{p.score} pts</div>
-                <div style={{ fontSize:11, color:"#f9a825" }}>{p.price}</div>
+              <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                {profile && keysToShow.map(key => (
+                  <ProductCard key={key} actionKey={key} profile={profile} compact />
+                ))}
               </div>
+              {!isPaid && allKeys.length > 1 && (
+                <div style={{ fontSize:12, color:"#f9a825", textAlign:"center", marginTop:10 }}>
+                  🔒 +{allKeys.length - 1} produit{allKeys.length - 1 > 1 ? "s" : ""} masqué{allKeys.length - 1 > 1 ? "s" : ""} —{" "}
+                  <span style={{ cursor:"pointer", textDecoration:"underline" }} onClick={() => navigate("/subscribe")}>Premium</span>
+                </div>
+              )}
+              <button onClick={() => navigate("/products")} style={{ ...btn.primary, marginTop:12, fontSize:12, padding:"8px" }}>Voir tous les produits →</button>
             </div>
-          ))}
-          {!isPaid && <div style={{ fontSize:12, color:"#f9a825", textAlign:"center", marginTop:8 }}>🔒 +{PRODUCTS.length-1} produits masqués — <span style={{ cursor:"pointer", textDecoration:"underline" }} onClick={() => navigate("/subscribe")}>Premium</span></div>}
-          <button onClick={() => navigate("/products")} style={{ ...btn.primary, marginTop:12, fontSize:12, padding:"8px" }}>Voir tous les produits →</button>
-        </div>
+          );
+        })()}
 
         {/* ── 11. BLOC PREMIUM ── */}
         {!isPaid && (

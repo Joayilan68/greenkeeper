@@ -8,11 +8,26 @@ import { MONTHLY_PLAN, MONTHS_FR, calcArrosage, getWMO, getDebitMmH } from "../l
 import { buildActions, zoneClimatique, ZONE_LABELS } from "../lib/planEntretien";
 import { calcLawnScore } from "../lib/lawnScore";
 import AlertBanner from "../components/AlertBanner";
+import ProductCard from "../components/ProductCard";
 import { card, cardTitle, btn, scroll } from "../lib/styles";
 import { useGreenPoints } from "../lib/useGreenPoints";
 import { useStreak } from "../lib/useStreak";
 import { getConseilApresAction } from "../lib/useRecommandations";
 import { useSaison } from "../lib/useSaison";
+
+// Mapping action.id → clé amazonProducts.js
+const ACTION_TO_AMAZON = {
+  engrais_starter: "engraisStarter",
+  engrais_ete:     "engraisEte",
+  engrais_automne: "engraisAutomne",
+  engrais_hiver:   "engraisHiver",
+  anti_mousse:     "antiMousse",
+  desherbage:      "desherbage",
+  aeration:        "aeration",
+  verticut:        "verticut",
+  regarnissage:    "regarnissage",
+  biostimulant:    "biostimulant",
+};
 
 // Mapping action id → clé conseil post-action
 const CONSEILS_MAP = {
@@ -242,27 +257,37 @@ export default function Today() {
                 À FAIRE AUJOURD'HUI
               </div>
               {recommended.map(({ action }) => {
-                const isFlashing = justLogged.includes(action.id);
-                const detail     = action.detail?.(plan, arros, profile, month, zone);
+                const isFlashing   = justLogged.includes(action.id);
+                const detail       = action.detail?.(plan, arros, profile, month, zone);
+                const amazonKey    = ACTION_TO_AMAZON[action.id];
                 return (
-                  <div key={action.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 12px", marginBottom:6, background:"rgba(102,187,106,0.08)", borderRadius:10, border:"1px solid rgba(102,187,106,0.2)" }}>
-                    <div style={{ flex:1, marginRight:10 }}>
-                      <div style={{ fontSize:13, fontWeight:700, color:"#e8f5e9" }}>{action.label}</div>
-                      {detail && <div style={{ fontSize:11, color:"#81c784", marginTop:2 }}>{detail}</div>}
+                  <div key={action.id} style={{ marginBottom:8 }}>
+                    {/* Ligne action + bouton journaliser */}
+                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 12px", background:"rgba(102,187,106,0.08)", borderRadius:10, border:"1px solid rgba(102,187,106,0.2)" }}>
+                      <div style={{ flex:1, marginRight:10 }}>
+                        <div style={{ fontSize:13, fontWeight:700, color:"#e8f5e9" }}>{action.label}</div>
+                        {detail && <div style={{ fontSize:11, color:"#81c784", marginTop:2 }}>{detail}</div>}
+                      </div>
+                      <button
+                        onClick={() => log(action)}
+                        style={{
+                          background:   isFlashing ? "rgba(102,187,106,0.5)" : "rgba(102,187,106,0.2)",
+                          border:       "1px solid rgba(102,187,106,0.5)",
+                          borderRadius: 10, padding:"8px 14px",
+                          color:"#a5d6a7", fontSize:12, fontWeight:700,
+                          cursor:"pointer", minWidth:76, textAlign:"center",
+                          transition:"background 0.2s", flexShrink:0,
+                        }}
+                      >
+                        {isFlashing ? "✓ Fait !" : "Faire →"}
+                      </button>
                     </div>
-                    <button
-                      onClick={() => log(action)}
-                      style={{
-                        background:   isFlashing ? "rgba(102,187,106,0.5)" : "rgba(102,187,106,0.2)",
-                        border:       "1px solid rgba(102,187,106,0.5)",
-                        borderRadius: 10, padding:"8px 14px",
-                        color:"#a5d6a7", fontSize:12, fontWeight:700,
-                        cursor:"pointer", minWidth:76, textAlign:"center",
-                        transition:"background 0.2s", flexShrink:0,
-                      }}
-                    >
-                      {isFlashing ? "✓ Fait !" : "Faire →"}
-                    </button>
+                    {/* Produit Amazon — si action a un produit et que le profil est chargé */}
+                    {amazonKey && profile && (
+                      <div style={{ marginTop:4 }}>
+                        <ProductCard actionKey={amazonKey} profile={profile} compact />
+                      </div>
+                    )}
                   </div>
                 );
               })}
