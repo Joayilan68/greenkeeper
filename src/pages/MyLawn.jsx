@@ -362,7 +362,7 @@ export default function MyLawn() {
               {(isPaid || i < 2) && <div style={{ height:6, background:"rgba(255,255,255,0.1)", borderRadius:6, overflow:"hidden" }}><div style={{ width:`${item.val}%`, height:"100%", background: item.val >= 70 ? "#43a047" : item.val >= 50 ? "#f9a825" : "#c62828", borderRadius:6 }} /></div>}
             </div>
           ))}
-          {!isPaid && <button onClick={() => navigate("/subscribe")} style={{ ...btn.primary, fontSize:12, padding:"8px 16px", width:"auto", marginTop:4 }}>⭐ Voir le détail complet</button>}
+          {!isPaid && <button onClick={() => navigate("/subscribe")} style={{background:"linear-gradient(135deg,#F59E0B,#D97706)",color:"#1a1a1a",fontWeight:800,border:"none",borderRadius:10,cursor:"pointer",fontSize:12,padding:"8px 16px",width:"auto",marginTop:4}}>⭐ Voir le détail complet</button>}
         </div>
 
         {/* ── 6. PROBLÈMES PRIORITAIRES ── */}
@@ -393,12 +393,12 @@ export default function MyLawn() {
           const horsS    = statuts.filter(a => a.status === "off_season");
 
           const badgeFor = ({ status, daysLeft, blockedReason, exclusiveWith }) => {
-            if (status === "done_today")  return { label:"✓ Fait",           color:"#66BB6A", bg:"rgba(102,187,106,0.18)" };
-            if (status === "too_soon")    return { label:`Dans ${daysLeft}j`, color:"#81c784", bg:"rgba(102,187,106,0.08)" };
-            if (status === "blocked")     return { label:"⛔ Bloqué météo",   color:"#f9a825", bg:"rgba(249,168,37,0.12)" };
-            if (status === "exclusive")   return { label:`⚠️ Excl. ${daysLeft}j`,color:"#f9a825",bg:"rgba(249,168,37,0.10)"};
-            if (status === "recommended") return { label:"À faire",           color:"#f9a825", bg:"rgba(249,168,37,0.15)" };
-            return { label:"Pas prévu", color:"#4a7c5c", bg:"rgba(255,255,255,0.04)" };
+            if (status === "done_today")  return { label:"✓ Fait",            color:"#4ade80", bg:"rgba(74,222,128,0.15)",  border:"rgba(74,222,128,0.35)" };
+            if (status === "too_soon")    return { label:`Dans ${daysLeft}j`,  color:"#fbbf24", bg:"rgba(251,191,36,0.15)", border:"rgba(251,191,36,0.35)" };
+            if (status === "blocked")     return { label:"⛔ Bloqué météo",    color:"#f87171", bg:"rgba(248,113,113,0.15)",border:"rgba(248,113,113,0.35)"};
+            if (status === "exclusive")   return { label:`⚠️ Excl. ${daysLeft}j`,color:"#f87171",bg:"rgba(248,113,113,0.12)",border:"rgba(248,113,113,0.3)"};
+            if (status === "recommended") return { label:"À faire →",          color:"#fbbf24", bg:"rgba(251,191,36,0.15)", border:"rgba(251,191,36,0.35)" };
+            return { label:"Pas prévu", color:"#6b7280", bg:"rgba(255,255,255,0.05)", border:"rgba(255,255,255,0.1)" };
           };
 
           return (
@@ -422,8 +422,8 @@ export default function MyLawn() {
                   <div key={action.id} style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
                     <div style={{ flex:1 }}>
                       <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:2 }}>
-                        <span style={{ fontSize:13, fontWeight:700, color: isBlocked ? "#81c784" : "#e8f5e9" }}>{action.label}</span>
-                        <span style={{ fontSize:10, color:badge.color, background:badge.bg, borderRadius:20, padding:"1px 7px", fontWeight:700 }}>
+                        <span style={{ fontSize:13, fontWeight:700, color:"#e8f5e9" }}>{action.label}</span>
+                        <span style={{ fontSize:10, color:badge.color, background:badge.bg, border:`1px solid ${badge.border}`, borderRadius:20, padding:"2px 9px", fontWeight:700 }}>
                           {badge.label}
                         </span>
                       </div>
@@ -442,11 +442,11 @@ export default function MyLawn() {
 
               {/* Hors saison — compacts */}
               {horsS.length > 0 && (
-                <div style={{ marginTop:10, paddingTop:8, borderTop:"1px solid rgba(255,255,255,0.05)" }}>
-                  <div style={{ fontSize:10, color:"#4a7c5c", fontWeight:700, marginBottom:6 }}>PAS PRÉVU CE MOIS</div>
+                <div style={{ marginTop:10, paddingTop:8, borderTop:"1px solid rgba(255,255,255,0.08)" }}>
+                  <div style={{ fontSize:10, color:"#81c784", fontWeight:800, letterSpacing:1, marginBottom:8 }}>PAS PRÉVU CE MOIS</div>
                   <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
                     {horsS.map(({ action }) => (
-                      <span key={action.id} style={{ fontSize:10, color:"#4a7c5c", background:"rgba(255,255,255,0.04)", borderRadius:8, padding:"2px 8px", opacity:0.7 }}>
+                      <span key={action.id} style={{ fontSize:12, color:"#81c784", background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:8, padding:"4px 11px" }}>
                         {action.label}
                       </span>
                     ))}
@@ -515,7 +515,7 @@ export default function MyLawn() {
               <div style={{ fontSize:12, color:"#81c784", lineHeight:1.6, marginBottom:16 }}>
                 Détection des maladies, carences et zones mortes en moins de 10 secondes.
               </div>
-              <button onClick={() => navigate("/diagnostic")} style={{ ...btn.primary, width:"auto", padding:"12px 28px", fontSize:14 }}>🔬 Lancer un diagnostic →</button>
+              <button onClick={() => navigate("/diagnostic")} style={{background:"linear-gradient(135deg,#43A047,#2E7D32)",color:"#fff",border:"none",borderRadius:10,cursor:"pointer",width:"auto",padding:"12px 28px",fontSize:14}}>🔬 Lancer un diagnostic →</button>
             </div>
           ) : (
             <div style={{ padding:"8px 0" }}>
@@ -524,7 +524,7 @@ export default function MyLawn() {
                   <div key={f} style={{ fontSize:12, color:"#81c784" }}>✓ {f}</div>
                 ))}
               </div>
-              <button onClick={() => navigate("/subscribe")} style={{ ...btn.primary, fontSize:13, padding:"12px" }}>⭐ Passer Premium — 4,99€/mois</button>
+              <button onClick={() => navigate("/subscribe")} style={{background:"linear-gradient(135deg,#F59E0B,#D97706)",color:"#1a1a1a",fontWeight:800,border:"none",borderRadius:10,cursor:"pointer",fontSize:13,padding:"12px",width:"100%"}}>⭐ Passer Premium — 4,99€/mois</button>
             </div>
           )}
         </div>
@@ -588,7 +588,7 @@ export default function MyLawn() {
                   <div key={f} style={{ fontSize:12, color:"#81c784" }}>✓ {f}</div>
                 ))}
               </div>
-              <button onClick={() => navigate("/subscribe")} style={{ ...btn.primary, fontSize:13, padding:"12px" }}>
+              <button onClick={() => navigate("/subscribe")} style={{background:"linear-gradient(135deg,#F59E0B,#D97706)",color:"#1a1a1a",fontWeight:800,border:"none",borderRadius:10,cursor:"pointer",fontSize:13,padding:"12px",width:"100%"}}>
                 ⭐ Passer Premium — 4,99€/mois
               </button>
             </div>
@@ -653,7 +653,7 @@ export default function MyLawn() {
             {["Détail complet du score","Diagnostic illimité","Arrosage précis calculé","Produits personnalisés","Rappels push + email"].map(f => (
               <div key={f} style={{ fontSize:12, color:"#e8f5e9", padding:"3px 0" }}>✔ {f}</div>
             ))}
-            <button onClick={() => navigate("/subscribe")} style={{ ...btn.primary, marginTop:14, padding:"12px 28px", fontSize:14 }}>⭐ Améliorer mon gazon — 4,99€/mois</button>
+            <button onClick={() => navigate("/subscribe")} style={{background:"linear-gradient(135deg,#F59E0B,#D97706)",color:"#1a1a1a",fontWeight:800,border:"none",borderRadius:10,cursor:"pointer",marginTop:14,padding:"12px 28px",fontSize:14}}>⭐ Améliorer mon gazon — 4,99€/mois</button>
           </div>
         )}
 

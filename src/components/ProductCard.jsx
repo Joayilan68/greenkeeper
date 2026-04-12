@@ -126,11 +126,7 @@ const ProductCard = ({ actionKey, profile, compact = false, className = '' }) =>
           </span>
         )}
 
-        {prixTotal && (
-          <span style={{ fontSize: '14px', fontWeight: '700', color: '#111', whiteSpace: 'nowrap' }}>
-            {prixTotal.toFixed(2)} €
-          </span>
-        )}
+
 
         <AmazonBtn
           onClick={handleClick}
@@ -196,20 +192,7 @@ const ProductCard = ({ actionKey, profile, compact = false, className = '' }) =>
         </div>
       )}
 
-      {/* Prix */}
-      {prixTotal > 0 && (
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-          {quantite > 1 && (
-            <span style={{ fontSize: '13px', color: '#6B7280' }}>
-              {produit.prix.toFixed(2)} € × {quantite} =
-            </span>
-          )}
-          <span style={{ fontSize: '20px', fontWeight: '800', color: '#111' }}>
-            {prixTotal.toFixed(2)} €
-          </span>
-          <span style={{ fontSize: '11px', color: '#9CA3AF' }}>environ</span>
-        </div>
-      )}
+
 
       {/* Bouton Amazon */}
       <AmazonBtn
@@ -265,7 +248,7 @@ const ProductCard = ({ actionKey, profile, compact = false, className = '' }) =>
                   whiteSpace:      'nowrap',
                 }}
               >
-                {acc.prix.toFixed(2)} € →
+                Voir →
               </button>
             </div>
           ))}

@@ -113,10 +113,8 @@ function ProductRow({ amazonKey, tier, profile }) {
   let quantite  = 1;
   if (cat.ratioGM2  && cat.conditionnement) quantite = calcQuantite(surface, cat.ratioGM2, cat.conditionnement);
   if (cat.ratioMlM2 && cat.conditionnement) quantite = calcQuantite(surface, cat.ratioMlM2, cat.conditionnement);
-  const prixTotal = produit.prix * quantite;
-
   const handleClick = () => {
-    trackAmazonClick(amazonKey, produit.asin, prixTotal);
+    trackAmazonClick(amazonKey, produit.asin, 0);
     window.open(produit.url, "_blank", "noopener,noreferrer");
   };
 
@@ -153,17 +151,14 @@ function ProductRow({ amazonKey, tier, profile }) {
           </div>
         )}
       </div>
-      <div style={{ textAlign: "right", flexShrink: 0 }}>
-        <div style={{ fontSize: 16, fontWeight: 800, color: "#F1F8F2", marginBottom: 4 }}>
-          {prixTotal.toFixed(2)} €
-        </div>
+      <div style={{ flexShrink: 0 }}>
         <button
           onClick={handleClick}
           style={{
             background:    "#FF9900",
             border:        "none",
             borderRadius:  8,
-            padding:       "6px 12px",
+            padding:       "8px 14px",
             color:         "#111",
             fontSize:      12,
             fontWeight:    700,
@@ -216,7 +211,7 @@ export default function Products() {
             <div style={{ fontSize: 12, color: "#81c784", marginBottom: 10 }}>
               Les membres Premium voient les produits adaptés à leur budget et à la surface de leur gazon
             </div>
-            <button onClick={() => navigate("/subscribe")} style={{ ...btn.primary, width: "auto", padding: "8px 20px", fontSize: 12 }}>
+            <button onClick={() => navigate("/subscribe")} style={{ background:"linear-gradient(135deg,#F59E0B,#D97706)", color:"#1a1a1a", fontWeight:800, border:"none", borderRadius:10, padding:"8px 20px", fontSize:12, cursor:"pointer", width:"auto" }}>
               Passer Premium
             </button>
           </div>

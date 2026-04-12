@@ -166,7 +166,7 @@ export default function Diagnostic() {
                 <div key={f} style={{ fontSize:12, color:"#81c784", textAlign:"left" }}>✓ {f}</div>
               ))}
             </div>
-            <button onClick={() => navigate("/subscribe")} style={{ ...btn.primary, width:"auto", padding:"12px 28px" }}>
+            <button onClick={() => navigate("/subscribe")} style={{background:"linear-gradient(135deg,#F59E0B,#D97706)",color:"#1a1a1a",fontWeight:800,border:"none",borderRadius:10,cursor:"pointer",width:"auto",padding:"12px 28px"}}>
               ⭐ Passer Premium
             </button>
           </div>

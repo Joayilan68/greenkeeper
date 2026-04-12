@@ -147,7 +147,7 @@ export default function Today() {
         </div>
         {isFree && (
           <div style={{ fontSize:11, color:"#81c784", marginTop:4 }}>
-            🆓 Accès gratuit · <span onClick={() => navigate("/subscribe")} style={{ color:"#66BB6A", cursor:"pointer", textDecoration:"underline" }}>Passer Premium</span>
+            🆓 Accès gratuit · <span onClick={() => navigate("/subscribe")} style={{ color:"#F59E0B", cursor:"pointer", fontWeight:700 }}>Passer Premium</span>
           </div>
         )}
       </div>
@@ -184,7 +184,7 @@ export default function Today() {
         {!isPaid && (
           <div style={{...card(),textAlign:"center",padding:14,background:"rgba(255,255,255,0.03)"}}>
             <div style={{fontSize:13,color:"#81c784",marginBottom:8}}>🔒 Météo temps réel — Premium uniquement</div>
-            <button onClick={()=>navigate("/subscribe")} style={{...btn.primary,width:"auto",padding:"8px 20px",fontSize:12}}>Passer Premium</button>
+            <button onClick={()=>navigate("/subscribe")} style={{background:"linear-gradient(135deg,#F59E0B,#D97706)",color:"#1a1a1a",fontWeight:800,border:"none",borderRadius:10,padding:"8px 20px",fontSize:12,cursor:"pointer",width:"auto"}}>Passer Premium</button>
           </div>
         )}
 
@@ -224,7 +224,7 @@ export default function Today() {
             <div style={{textAlign:"center",padding:"16px 0"}}>
               <div style={{fontSize:28,marginBottom:8}}>🔒</div>
               <div style={{fontSize:13,color:"#81c784",marginBottom:12}}>Fonctionnalité Premium uniquement</div>
-              <button onClick={()=>navigate("/subscribe")} style={{...btn.primary,width:"auto",padding:"10px 24px"}}>Passer Premium 🌿</button>
+              <button onClick={()=>navigate("/subscribe")} style={{background:"linear-gradient(135deg,#F59E0B,#D97706)",color:"#1a1a1a",fontWeight:800,border:"none",borderRadius:10,padding:"10px 24px",fontSize:14,cursor:"pointer",width:"auto"}}>Passer Premium 🌿</button>
             </div>
           ) : aiLoading ? (
             <div style={{textAlign:"center",padding:"20px 0"}}>
@@ -301,32 +301,41 @@ export default function Today() {
           {/* PRÉVOIR */}
           {prevoyez.length > 0 && (
             <div style={{ marginBottom:10 }}>
-              <div style={{ fontSize:10, fontWeight:800, color:"#81c784", letterSpacing:1, marginBottom:8, opacity:0.8 }}>
+              <div style={{ fontSize:10, fontWeight:800, color:"#a5d6a7", letterSpacing:1, marginBottom:8 }}>
                 PRÉVOIR
               </div>
-              {prevoyez.map(({ action, status, daysLeft, blockedReason, exclusiveWith }) => (
-                <div key={action.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"7px 10px", marginBottom:4, borderRadius:8, background:"rgba(255,255,255,0.03)", opacity:0.55 }}>
-                  <div style={{ fontSize:12, color:"#a5d6a7" }}>{action.label}</div>
-                  <div style={{ fontSize:11, color:"#81c784", background:"rgba(255,255,255,0.06)", borderRadius:8, padding:"3px 10px", whiteSpace:"nowrap", maxWidth:160, textAlign:"right" }}>
-                    {status === "done_today"  && "✓ Fait aujourd'hui"}
-                    {status === "too_soon"    && `Dans ${daysLeft}j`}
-                    {status === "blocked"     && `⛔ ${blockedReason?.split(" — ")[0] || "Bloqué"}`}
-                    {status === "exclusive"   && `⚠️ Excl. ${daysLeft}j`}
+              {prevoyez.map(({ action, status, daysLeft, blockedReason, exclusiveWith }) => {
+                const badgeStyle = status === "done_today"
+                  ? { color:"#4ade80", bg:"rgba(74,222,128,0.15)", border:"rgba(74,222,128,0.3)" }
+                  : status === "too_soon"
+                  ? { color:"#fbbf24", bg:"rgba(251,191,36,0.15)", border:"rgba(251,191,36,0.3)" }
+                  : { color:"#f87171", bg:"rgba(248,113,113,0.15)", border:"rgba(248,113,113,0.3)" };
+                const badgeText =
+                  status === "done_today" ? "✓ Fait aujourd'hui" :
+                  status === "too_soon"   ? `Dans ${daysLeft}j` :
+                  status === "blocked"    ? `⛔ ${blockedReason?.split(" — ")[0] || "Bloqué"}` :
+                  `⚠️ Excl. ${daysLeft}j`;
+                return (
+                  <div key={action.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"9px 12px", marginBottom:5, borderRadius:9, background:"rgba(255,255,255,0.07)", border:"1px solid rgba(255,255,255,0.08)" }}>
+                    <div style={{ fontSize:13, fontWeight:600, color:"#c8e6c9" }}>{action.label}</div>
+                    <div style={{ fontSize:11, fontWeight:700, color:badgeStyle.color, background:badgeStyle.bg, border:`1px solid ${badgeStyle.border}`, borderRadius:8, padding:"3px 10px", whiteSpace:"nowrap", marginLeft:8 }}>
+                      {badgeText}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
           {/* PAS PRÉVU CE MOIS */}
           {pasPrevu.length > 0 && (
             <div>
-              <div style={{ fontSize:10, fontWeight:800, color:"#4a7c5c", letterSpacing:1, marginBottom:6 }}>
+              <div style={{ fontSize:10, fontWeight:800, color:"#81c784", letterSpacing:1, marginBottom:6 }}>
                 PAS PRÉVU CE MOIS
               </div>
               <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
                 {pasPrevu.map(({ action }) => (
-                  <div key={action.id} style={{ fontSize:11, color:"#8aab96", background:"rgba(255,255,255,0.05)", borderRadius:8, padding:"3px 10px", opacity:0.65 }}>
+                  <div key={action.id} style={{ fontSize:12, color:"#81c784", background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:8, padding:"4px 11px" }}>
                     {action.label}
                   </div>
                 ))}

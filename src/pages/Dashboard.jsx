@@ -268,7 +268,7 @@ export default function Dashboard() {
               <div style={{ fontSize:12, color:"#81c784", marginBottom:8 }}>
                 🔒 Diagnostic complet — <span style={{ color:"#f9a825", fontWeight:700 }}>+{potential-score} pts possibles</span>
               </div>
-              <button onClick={() => navigate("/subscribe")} style={{ ...btn.primary, width:"auto", padding:"8px 20px", fontSize:12 }}>
+              <button onClick={() => navigate("/subscribe")} style={{background:"linear-gradient(135deg,#F59E0B,#D97706)",color:"#1a1a1a",fontWeight:800,border:"none",borderRadius:10,cursor:"pointer",width:"auto",padding:"8px 20px",fontSize:12}}>
                 ⭐ Améliorer mon gazon
               </button>
             </div>
@@ -432,7 +432,7 @@ export default function Dashboard() {
             {!isPaid && notifications.length > 1 && (
               <div style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:14, padding:"10px 14px", textAlign:"center", fontSize:12, color:"#81c784" }}>
                 🔒 {notifications.length - 1} alerte{notifications.length-1>1?"s":""} supplémentaire{notifications.length-1>1?"s":""} —
-                <span style={{ color:"#a5d6a7", cursor:"pointer", textDecoration:"underline", marginLeft:4 }} onClick={() => navigate("/subscribe")}>Passer Premium</span>
+                <span style={{ color:"#F59E0B", cursor:"pointer", fontWeight:700, marginLeft:4 }} onClick={() => navigate("/subscribe")}>Passer Premium</span>
               </div>
             )}
           </div>
@@ -496,7 +496,7 @@ export default function Dashboard() {
         ) : (
           <div style={{ ...card(), textAlign:"center", padding:14 }}>
             <div style={{ fontSize:13, color:"#81c784", marginBottom:8 }}>🔒 Météo temps réel — Premium uniquement</div>
-            <button onClick={() => navigate("/subscribe")} style={{ ...btn.primary, width:"auto", padding:"8px 20px", fontSize:13 }}>Passer Premium</button>
+            <button onClick={() => navigate("/subscribe")} style={{background:"linear-gradient(135deg,#F59E0B,#D97706)",color:"#1a1a1a",fontWeight:800,border:"none",borderRadius:10,cursor:"pointer",width:"auto",padding:"8px 20px",fontSize:13}}>Passer Premium</button>
           </div>
         )}
 
