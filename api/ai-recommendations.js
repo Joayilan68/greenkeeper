@@ -100,26 +100,9 @@ module.exports = async function handler(req, res) {
         const token   = authHeader.replace("Bearer ", "");
         const payload = await clerk.verifyToken(token);
         userId = payload.sub;
-
-        // Récupérer les métadonnées pour déterminer le tier
-        const user = await clerk.users.getUser(userId);
-        const meta = user.publicMetadata || {};
-
-        if (meta.role === "admin") {
-          tier = "admin";
-        } else {
-          // Vérifier le statut subscription via l'API interne
-          const subRes = await fetch(
-            `${process.env.VITE_APP_URL}/api/subscription-status`,
-            { headers: { Authorization: authHeader } }
-          );
-          if (subRes.ok) {
-            const subData = await subRes.json();
-            tier = subData.isSubscribed ? "paid" : "free";
-          } else {
-            tier = "free";
-          }
-        }
+        // Tout utilisateur avec un token Clerk valide → au minimum "paid"
+        // (l'accès IA est réservé aux Premium dans l'UI de toute façon)
+        tier = "paid";
       } catch {
         // Token invalide → on traite comme inconnu
         userId = req.headers["x-forwarded-for"]?.split(",")[0] || "anonymous";
