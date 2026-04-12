@@ -115,6 +115,7 @@ export default function ComingSoon() {
 
       // Code valide → déverrouiller
       localStorage.setItem('mg360_approved', 'true');
+      localStorage.setItem('gk_admin_code', 'GREENKEEPER2024'); // active tier admin dans useSubscription
       localStorage.removeItem('mg360_waitlist');
       setAdminUnlocked(true);
       setTimeout(() => navigate('/'), 1200);
