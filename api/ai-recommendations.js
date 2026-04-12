@@ -16,10 +16,10 @@ const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 
 // ── Limites par tier ──────────────────────────────────────────────────────────
 const LIMITS = {
-  admin:   Infinity,
-  paid:    50,
-  free:    20,
-  unknown: 5,
+  admin:   Infinity, // illimité — Jordan uniquement
+  paid:    10,       // 10/jour — largement suffisant pour usage normal
+  free:    0,        // 0 — les Free n'ont pas accès à l'IA dans l'UI
+  unknown: 2,        // 2/jour par IP — blocage bots et appels directs
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
