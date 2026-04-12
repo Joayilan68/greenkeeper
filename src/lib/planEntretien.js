@@ -96,7 +96,8 @@ export const ACTIONS_PLAN = [
     // Intervalle : printemps=5j, été=4j, automne=7j
     getInterval: (month) => month >= 6 && month <= 8 ? 4 : month >= 3 && month <= 5 ? 5 : 7,
     getBlocked: (w) => {
-      if (ventFort(w))                    return { blocked: true, raison: "Vents forts (≥40km/h) — reporter" };
+      if (pluiePrevue(w, 5)) return { blocked: true, raison: "Pluie prévue (>5mm) — gazon glissant, risque fongique" };
+      if (ventFort(w))       return { blocked: true, raison: "Vents forts (≥40km/h) — reporter" };
       if (w?.temp_min !== undefined && w.temp_min <= 0) return { blocked: true, raison: "Gel — ne pas tondre le gazon gelé" };
       return { blocked: false };
     },
