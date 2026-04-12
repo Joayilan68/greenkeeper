@@ -29,6 +29,21 @@ const TIER_COLORS = {
   premium:  '#D97706', // amber
 };
 
+// Fonds semi-transparents pour les badges dans le mode compact
+const TIER_BG = {
+  eco:      'rgba(107,114,128,0.3)',
+  standard: 'rgba(22,163,74,0.3)',
+  qualite:  'rgba(37,99,235,0.3)',
+  premium:  'rgba(217,119,6,0.3)',
+};
+
+const TIER_TEXT = {
+  eco:      '#e5e7eb',
+  standard: '#86efac',
+  qualite:  '#93c5fd',
+  premium:  '#fcd34d',
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // SOUS-COMPOSANT : Bouton Amazon
 // ─────────────────────────────────────────────────────────────────────────────
@@ -107,7 +122,10 @@ const ProductCard = ({ actionKey, profile, compact = false, className = '' }) =>
           style={{
             fontSize:        '11px',
             fontWeight:      '700',
-            color:           tierColor,
+            color:           TIER_TEXT[tier] || '#e5e7eb',
+            backgroundColor: TIER_BG[tier]   || 'rgba(102,187,106,0.25)',
+            borderRadius:    '5px',
+            padding:         '2px 7px',
             textTransform:   'uppercase',
             letterSpacing:   '0.05em',
             whiteSpace:      'nowrap',

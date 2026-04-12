@@ -336,27 +336,6 @@ export default function Dashboard() {
             </div>
           )}
 
-          <div style={{
-            display:      "flex",
-            alignItems:   "center",
-            gap:          8,
-            padding:      "8px 10px",
-            background:   enDanger ? "rgba(230,81,0,0.15)" : modeHiver ? "rgba(21,101,192,0.15)" : "rgba(76,175,80,0.15)",
-            borderRadius: 10,
-            border:       `1px solid ${enDanger ? "rgba(239,108,0,0.3)" : modeHiver ? "rgba(66,165,245,0.3)" : "rgba(76,175,80,0.2)"}`,
-          }}>
-            <span style={{ fontSize:20 }}>
-              {modeHiver ? "🛡️" : enDanger ? "⚠️" : "🔥"}
-            </span>
-            <div style={{ flex:1 }}>
-              <div style={{ fontWeight:600, fontSize:13, color: enDanger ? "#ef9a9a" : modeHiver ? "#90caf9" : "#a5d6a7" }}>
-                {modeHiver ? `Streak protégé — ${streak} jours` : `${streak} jour${streak > 1 ? "s" : ""} de streak`}
-              </div>
-              <div style={{ fontSize:10, color:"#81c784" }}>
-                {modeHiver ? "1 connexion/semaine suffit cet hiver" : enDanger ? "Connecte-toi aujourd'hui !" : "Continue comme ça !"}
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* ── WIDGET CLASSEMENT ─────────────────────────────────────────────── */}
