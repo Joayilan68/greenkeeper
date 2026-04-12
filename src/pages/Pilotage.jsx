@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSubscription } from "../lib/useSubscription";
 import { card, cardTitle, btn, scroll, header, appShell } from "../lib/styles";
+import { supabase } from "../lib/supabase";
 
 function safeGet(key, fallback = null) {
   try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch { return fallback; }
@@ -75,7 +76,10 @@ export default function Pilotage() {
   const [lastUpdate, setLastUpdate] = useState("");
   const [loadingUsers, setLoadingUsers]     = useState(false);
   const [loadingRevenue, setLoadingRevenue] = useState(false);
-  const [tab, setTab]         = useState("activite"); // activite | finances | services | bugs
+  const [tab, setTab]         = useState("activite"); // activite | finances | services | bugs | preinscriptions
+  const [preinscriptions, setPreinscriptions] = useState([]);
+  const [preinscLoading, setPreinscLoading]   = useState(false);
+  const [preinscTotal, setPreinscTotal]       = useState(0);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -88,7 +92,39 @@ export default function Pilotage() {
     computeLocal();
     fetchUsers();
     fetchRevenue();
+    fetchPreinscriptions();
     setLastUpdate(new Date().toLocaleTimeString("fr-FR"));
+  }
+
+  async function fetchPreinscriptions() {
+    setPreinscLoading(true);
+    try {
+      const { data, count, error } = await supabase
+        .from('preinscriptions')
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .limit(200);
+      if (!error) {
+        setPreinscriptions(data || []);
+        setPreinscTotal(count || 0);
+      }
+    } catch {}
+    setPreinscLoading(false);
+  }
+
+  function exportCSV() {
+    if (!preinscriptions.length) return;
+    const header = 'Email,Source,Date
+';
+    const rows = preinscriptions.map(p =>
+      `${p.email},${p.source},${new Date(p.created_at).toLocaleDateString('fr-FR')}`
+    ).join('
+');
+    const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a'); a.href = url;
+    a.download = `MG360_preinscriptions_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click(); URL.revokeObjectURL(url);
   }
 
   function computeLocal() {
@@ -164,10 +200,11 @@ export default function Pilotage() {
 
   // ── TABS ───────────────────────────────────────────────────────────────────
   const tabs = [
-    { id:"activite",  label:"👥 Activité" },
-    { id:"finances",  label:"💰 Finances" },
-    { id:"services",  label:"⚙️ Services" },
-    { id:"bugs",      label:"🐛 Bugs" },
+    { id:"activite",       label:"👥 Activité" },
+    { id:"finances",       label:"💰 Finances" },
+    { id:"services",       label:"⚙️ Services" },
+    { id:"bugs",           label:"🐛 Bugs" },
+    { id:"preinscriptions", label:"📬 Pré-inscrits" },
   ];
 
   return (
@@ -435,6 +472,74 @@ export default function Pilotage() {
                   );
                 })
               )}
+            </div>
+          </>
+        )}
+
+        {/* ── ONGLET PRÉ-INSCRITS ─────────────────────────────────────────── */}
+        {tab === "preinscriptions" && (
+          <>
+            {/* KPI row */}
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, marginBottom:8 }}>
+              <KPI icon="📬" label="Total pré-inscrits" value={preinscTotal} color="#64b5f6" />
+              <KPI icon="📸" label="Instagram" value={preinscriptions.filter(p=>p.source==='instagram').length} color="#f48fb1" />
+              <KPI icon="🎵" label="TikTok" value={preinscriptions.filter(p=>p.source==='tiktok').length} color="#80deea" />
+            </div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, marginBottom:8 }}>
+              <KPI icon="📘" label="Facebook" value={preinscriptions.filter(p=>p.source==='facebook').length} color="#90caf9" />
+              <KPI icon="🐦" label="Twitter/X" value={preinscriptions.filter(p=>p.source==='twitter').length} color="#81d4fa" />
+              <KPI icon="🔗" label="Direct" value={preinscriptions.filter(p=>p.source==='direct').length} color="#a5d6a7" />
+            </div>
+
+            {/* Export + refresh */}
+            <div style={{ display:"flex", gap:8, marginBottom:8 }}>
+              <button onClick={fetchPreinscriptions} style={{ flex:1, background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:10, padding:"8px", color:"#81c784", fontSize:12, cursor:"pointer" }}>
+                ↻ Actualiser
+              </button>
+              <button onClick={exportCSV} disabled={!preinscriptions.length} style={{ flex:1, background:"rgba(100,181,246,0.15)", border:"1px solid rgba(100,181,246,0.3)", borderRadius:10, padding:"8px", color:"#64b5f6", fontSize:12, fontWeight:700, cursor:"pointer", opacity: preinscriptions.length ? 1 : 0.5 }}>
+                ⬇ Export CSV
+              </button>
+            </div>
+
+            {/* Graphe par jour (7 derniers jours) */}
+            {(() => {
+              const days = Array.from({ length: 7 }, (_, i) => {
+                const d = new Date(); d.setDate(d.getDate() - (6 - i));
+                const label = d.toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit' });
+                const key   = d.toISOString().split('T')[0];
+                const count = preinscriptions.filter(p => p.created_at?.startsWith(key)).length;
+                return { label, count };
+              });
+              return (
+                <div style={card()}>
+                  <div style={cardTitle}><span>📈 Inscriptions 7 derniers jours</span></div>
+                  <MiniChart data={days} valueKey="count" color="#64b5f6" />
+                </div>
+              );
+            })()}
+
+            {/* Liste emails */}
+            <div style={card()}>
+              <div style={cardTitle}>
+                <span>📋 Liste ({preinscriptions.length})</span>
+                {preinscLoading && <span style={{ fontSize:11, color:"#81c784" }}>Chargement…</span>}
+              </div>
+              {preinscriptions.length === 0 && !preinscLoading && (
+                <div style={{ fontSize:12, color:"#4a7c5c", textAlign:"center", padding:"16px 0" }}>
+                  Aucune pré-inscription pour l'instant.
+                </div>
+              )}
+              {preinscriptions.map((p, i) => (
+                <div key={p.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 0", borderBottom:"1px solid rgba(255,255,255,0.05)", gap:8 }}>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ fontSize:12, fontWeight:700, color:"#e8f5e9", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{p.email}</div>
+                    <div style={{ fontSize:10, color:"#81c784" }}>{new Date(p.created_at).toLocaleDateString('fr-FR')} · {p.source}</div>
+                  </div>
+                  <span style={{ fontSize:10, fontWeight:700, color:"#64b5f6", background:"rgba(100,181,246,0.12)", border:"1px solid rgba(100,181,246,0.25)", borderRadius:6, padding:"2px 7px", whiteSpace:"nowrap" }}>
+                    {p.source}
+                  </span>
+                </div>
+              ))}
             </div>
           </>
         )}
