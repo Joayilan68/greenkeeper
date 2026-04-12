@@ -275,6 +275,26 @@ export default function Dashboard() {
           )}
         </div>
 
+        {/* ── TUILE STREAK ─────────────────────────────────────────────────────── */}
+        {streak > 0 && (
+          <div style={{
+            background: enDanger ? "rgba(230,81,0,0.15)" : modeHiver ? "rgba(21,101,192,0.12)" : "rgba(76,175,80,0.12)",
+            border:     `1px solid ${enDanger ? "rgba(239,108,0,0.4)" : modeHiver ? "rgba(66,165,245,0.3)" : "rgba(102,187,106,0.35)"}`,
+            borderRadius: 12, padding: "10px 14px",
+            display: "flex", alignItems: "center", gap: 10, marginBottom: 4,
+          }}>
+            <span style={{ fontSize:22 }}>{modeHiver ? "🛡️" : enDanger ? "⚠️" : "🔥"}</span>
+            <div style={{ flex:1 }}>
+              <div style={{ fontWeight:700, fontSize:14, color: enDanger ? "#ef9a9a" : modeHiver ? "#90caf9" : "#a5d6a7" }}>
+                {modeHiver ? `Streak protégé — ${streak} jours` : `${streak} jour${streak > 1 ? "s" : ""} de streak`}
+              </div>
+              <div style={{ fontSize:11, color: enDanger ? "#f57c00" : modeHiver ? "#64b5f6" : "#66BB6A", marginTop:2 }}>
+                {modeHiver ? "1 connexion/semaine suffit cet hiver" : enDanger ? "Connecte-toi aujourd'hui pour garder ton streak !" : "Continue comme ça !"}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ── WIDGET GREENPOINTS + STREAK ───────────────────────────────────── */}
         <div style={{ ...card(), padding:14 }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>

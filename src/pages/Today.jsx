@@ -154,19 +154,7 @@ export default function Today() {
 
       <div style={scroll}>
 
-        {/* Streak */}
-        {streak > 0 && (
-          <div style={{ background:enDanger?"#fff3e0":"#e8f5e9", border:`1px solid ${enDanger?"#f9a825":"#a5d6a7"}`, borderRadius:12, padding:"10px 14px", display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
-            <span style={{ fontSize:22 }}>{enDanger?"⚠️":"🔥"}</span>
-            <div style={{ flex:1 }}>
-              <div style={{ fontWeight:600, color:enDanger?"#e65100":"#2e7d32", fontSize:14 }}>{streakMsg}</div>
-              {enDanger && <div style={{ fontSize:11, color:"#f57c00" }}>Connecte-toi aujourd'hui pour garder ton streak !</div>}
-            </div>
-            <div style={{ background:"#e8f5e9", color:"#2e7d32", borderRadius:20, padding:"3px 10px", fontSize:11, fontWeight:600 }}>
-              {palier?.icone} {gpTotal.toLocaleString("fr-FR")} pts
-            </div>
-          </div>
-        )}
+
 
         {/* Météo — Premium uniquement */}
         {isPaid && weather && (()=>{ const w=getWMO(weather.code); return (

@@ -97,9 +97,9 @@ const ProductCard = ({ actionKey, profile, compact = false, className = '' }) =>
           alignItems:     'center',
           gap:            '10px',
           padding:        '10px 14px',
-          backgroundColor: '#F9FAFB',
+          backgroundColor: 'rgba(102,187,106,0.08)',
           borderRadius:   '10px',
-          border:         '1px solid #E5E7EB',
+          border:         '1px solid rgba(102,187,106,0.22)',
           flexWrap:       'wrap',
         }}
       >
@@ -116,12 +116,12 @@ const ProductCard = ({ actionKey, profile, compact = false, className = '' }) =>
           {tierLabel}
         </span>
 
-        <span style={{ fontSize: '13px', color: '#374151', flex: 1 }}>
+        <span style={{ fontSize: '13px', color: '#c8e6c9', flex: 1 }}>
           {produit.label}
         </span>
 
         {quantite > 1 && (
-          <span style={{ fontSize: '13px', color: '#6B7280', whiteSpace: 'nowrap' }}>
+          <span style={{ fontSize: '13px', color: '#81c784', whiteSpace: 'nowrap' }}>
             ×{quantite}
           </span>
         )}
@@ -142,11 +142,11 @@ const ProductCard = ({ actionKey, profile, compact = false, className = '' }) =>
     <div
       className={`mg360-product-card ${className}`}
       style={{
-        backgroundColor: '#FFFFFF',
+        backgroundColor: 'rgba(15,47,31,0.85)',
         borderRadius:    '14px',
-        border:          '1px solid #E5E7EB',
+        border:          '1px solid rgba(102,187,106,0.25)',
         padding:         '16px',
-        boxShadow:       '0 1px 4px rgba(0,0,0,0.06)',
+        boxShadow:       '0 2px 8px rgba(0,0,0,0.2)',
         display:         'flex',
         flexDirection:   'column',
         gap:             '12px',
@@ -172,7 +172,7 @@ const ProductCard = ({ actionKey, profile, compact = false, className = '' }) =>
       </div>
 
       {/* Nom du produit */}
-      <p style={{ margin: 0, fontSize: '15px', fontWeight: '600', color: '#111827', lineHeight: 1.4 }}>
+      <p style={{ margin: 0, fontSize: '15px', fontWeight: '600', color: '#e8f5e9', lineHeight: 1.4 }}>
         {produit.label}
       </p>
 
@@ -180,11 +180,11 @@ const ProductCard = ({ actionKey, profile, compact = false, className = '' }) =>
       {quantite > 1 && (
         <div
           style={{
-            backgroundColor: '#F0FDF4',
+            backgroundColor: 'rgba(102,187,106,0.12)',
             borderRadius:    '8px',
             padding:         '8px 12px',
             fontSize:        '13px',
-            color:           '#15803D',
+            color:           '#81c784',
           }}
         >
           🌱 Pour votre gazon de <strong>{surface} m²</strong> :{' '}
@@ -205,7 +205,7 @@ const ProductCard = ({ actionKey, profile, compact = false, className = '' }) =>
         style={{
           margin:    0,
           fontSize:  '11px',
-          color:     '#D1D5DB',
+          color:     'rgba(165,214,167,0.5)',
           textAlign: 'center',
           lineHeight: 1.4,
         }}
@@ -215,8 +215,8 @@ const ProductCard = ({ actionKey, profile, compact = false, className = '' }) =>
 
       {/* Accessoires contextuels (ex: souffleur en automne) */}
       {accessoires?.length > 0 && (
-        <div style={{ borderTop: '1px solid #F3F4F6', paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <p style={{ margin: 0, fontSize: '12px', color: '#6B7280', fontWeight: '600' }}>
+        <div style={{ borderTop: '1px solid rgba(102,187,106,0.2)', paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <p style={{ margin: 0, fontSize: '12px', color: '#81c784', fontWeight: '600' }}>
             💡 À avoir aussi
           </p>
           {accessoires.map((acc) => (
@@ -230,7 +230,7 @@ const ProductCard = ({ actionKey, profile, compact = false, className = '' }) =>
                 flexWrap:       'wrap',
               }}
             >
-              <span style={{ fontSize: '13px', color: '#374151', flex: 1 }}>{acc.label}</span>
+              <span style={{ fontSize: '13px', color: '#c8e6c9', flex: 1 }}>{acc.label}</span>
               <button
                 onClick={() => {
                   trackAmazonClick(`${actionKey}_accessoire`, acc.asin, acc.prix);
