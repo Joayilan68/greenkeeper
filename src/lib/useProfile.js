@@ -74,14 +74,19 @@ export function useProfile() {
           .eq("user_id", userId)
           .single();
 
-        if (!error && data?.data) {
-          // Supabase a une version → l'utiliser si plus récente
+        const local = loadLocal();
+        if (!error && data?.data && Object.keys(data.data).length > 0) {
+          // Supabase a des données → merger avec préférence pour cityVerified local
           const remote = data.data;
-          const local  = loadLocal();
-          // Préférer Supabase (source de vérité) sauf si local a cityVerified récent
           const merged = { ...remote, ...(local?.cityVerified ? { lat: local.lat, lon: local.lon, ville: local.ville, cityVerified: true } : {}) };
           setProfile(merged);
           saveLocal(merged);
+        } else if (local && Object.keys(local).length > 0) {
+          // Supabase vide mais localStorage a un profil → migration initiale
+          supabase.from("profiles").upsert(
+            { user_id: userId, data: local, updated_at: new Date().toISOString() },
+            { onConflict: "user_id" }
+          ).catch(() => {});
         }
         setSynced(true);
       } catch {

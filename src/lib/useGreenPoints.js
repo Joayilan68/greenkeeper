@@ -124,18 +124,23 @@ export function useGreenPoints() {
           .eq("user_id", userId)
           .single();
 
-        if (!error && data) {
+        const local = getLocal();
+        if (!error && data && data.total > 0) {
+          // Supabase a des données → garder le total le plus élevé
           const remote = {
             total:                data.total || 0,
             historique:           data.historique || [],
             recompenses_obtenues: data.recompenses || [],
             derniere_action:      {},
           };
-          // Garder le total le plus élevé (évite régression)
-          const local = getLocal();
           const merged = remote.total >= local.total ? remote : local;
           setState(merged);
           saveLocal(merged);
+          // Si local a plus de points → resync
+          if (local.total > remote.total) syncToSupabase(userId, local);
+        } else if (local.total > 0) {
+          // Supabase vide mais localStorage a des données → migration initiale
+          syncToSupabase(userId, local);
         }
       } catch {}
     })();

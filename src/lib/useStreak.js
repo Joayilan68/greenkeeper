@@ -81,19 +81,24 @@ export function useStreak() {
           .eq("user_id", userId)
           .single();
 
-        if (!error && data) {
+        const local = getLocal();
+        if (!error && data && (data.actuel > 0 || data.record > 0)) {
+          // Supabase a des données → garder le streak le plus élevé
           const remote = {
-            actuel:             data.actuel || 0,
-            record:             data.record || 0,
-            derniere_connexion: data.derniere_connexion,
-            protege_hiver:      data.protege_hiver || false,
+            actuel:              data.actuel || 0,
+            record:              data.record || 0,
+            derniere_connexion:  data.derniere_connexion,
+            protege_hiver:       data.protege_hiver || false,
             milestones_atteints: data.milestones || [],
           };
-          // Garder le streak le plus élevé
-          const local = getLocal();
           const merged = remote.actuel >= local.actuel ? remote : local;
           setState(merged);
           saveLocal(merged);
+          // Si local a un meilleur streak → resync
+          if (local.actuel > remote.actuel) syncToSupabase(userId, local);
+        } else if (local.actuel > 0 || local.record > 0) {
+          // Supabase vide mais localStorage a des données → migration initiale
+          syncToSupabase(userId, local);
         }
       } catch {}
     })();
