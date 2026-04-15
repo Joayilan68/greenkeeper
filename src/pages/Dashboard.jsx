@@ -22,7 +22,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useUser();
   const { weather, location, locationName, alerts = [], loading, locLoading, refreshLocation } = useWeather() || {};
-  const { profile, saveProfile } = useProfile();
+  const { profile, saveProfile, synced } = useProfile();
   const { history = [] } = useHistory();
   const { isPaid = false, isAdmin = false } = useSubscription() || {};
   const [showIssues, setShowIssues]           = useState(false);
@@ -42,9 +42,15 @@ export default function Dashboard() {
   } = useClassement(gpHistorique, profile, isPaid);
 
   useEffect(() => {
-    const done = localStorage.getItem("mg360_onboarding_done") || localStorage.getItem("gk_onboarding_done"); // rétrocompat
+    // Attendre la sync Supabase avant de décider — évite faux positif après vidage cache
+    if (!synced) return;
+    const done = localStorage.getItem("mg360_onboarding_done") || localStorage.getItem("gk_onboarding_done");
     if (!done && !profile) setTimeout(() => setShowOnboarding(true), 800);
-  }, [profile]);
+    // Si profil existant → marquer onboarding comme fait
+    if (profile && !done) {
+      localStorage.setItem("mg360_onboarding_done", "true");
+    }
+  }, [profile, synced]);
 
   const GAZON_LABELS = {
     sport: "Sport / résistant", ombre: "Ombre / mi-ombre", sec: "Sec / méditerranéen",
