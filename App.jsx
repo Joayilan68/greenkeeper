@@ -1,6 +1,6 @@
 // src/App.jsx
 import { SignedIn, SignedOut, RedirectToSignIn, useUser } from "@clerk/clerk-react";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "./lib/supabase";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
@@ -31,67 +31,77 @@ function AppWithWeather({ children }) {
   return <WeatherProvider>{children}</WeatherProvider>;
 }
 
-// ── Emails admin — accès permanent sans waitlist ──────────────────────────────
+// ── Emails admin — accès permanent garanti ───────────────────────────────────
 const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
 
-// ── Auto-approve admin depuis Supabase ─────────────────────────────────────────
-async function autoApproveFromSupabase(userId) {
-  if (!userId) return false;
-  try {
-    // Vérifier si le user a un profil existant en Supabase → déjà approuvé
-    const { data } = await supabase
-      .from("profiles")
-      .select("user_id")
-      .eq("user_id", userId)
-      .single();
-    if (data) {
+function isAdminEmail(user) {
+  if (!user) return false;
+  const email = user.primaryEmailAddress?.emailAddress || "";
+  return ADMIN_EMAILS.includes(email) || user.publicMetadata?.role === "admin";
+}
+
+// ── Hook de vérification accès ────────────────────────────────────────────────
+function useAccessCheck() {
+  const { user, isLoaded } = useUser();
+  const [approved, setApproved] = useState(null); // null = checking
+
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    if (!user) { setApproved(false); return; }
+
+    // Admin → approuvé immédiatement, sans attendre
+    if (isAdminEmail(user)) {
       localStorage.setItem("mg360_approved", "true");
+      localStorage.setItem("gk_admin_code", "GREENKEEPER2024");
       localStorage.removeItem("mg360_waitlist");
-      return true;
+      setApproved(true);
+      return;
     }
-  } catch {}
-  return false;
+
+    // localStorage déjà approuvé
+    if (localStorage.getItem("mg360_approved") === "true") {
+      setApproved(true);
+      return;
+    }
+
+    // Vérifier Supabase — profil existant = déjà approuvé
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from("profiles")
+          .select("user_id")
+          .eq("user_id", user.id)
+          .single();
+        if (data) {
+          localStorage.setItem("mg360_approved", "true");
+          localStorage.removeItem("mg360_waitlist");
+          setApproved(true);
+        } else {
+          setApproved(false);
+        }
+      } catch {
+        // Erreur Supabase — fallback localStorage
+        setApproved(localStorage.getItem("mg360_approved") === "true");
+      }
+    })();
+  }, [isLoaded, user]);
+
+  return { approved, isLoaded };
 }
 
 // ── Route protégée avec vérification waitlist ─────────────────────────────────
 function ProtectedRoute({ children }) {
-  const { user, isLoaded } = useUser();
+  const { approved, isLoaded } = useAccessCheck();
+  const onWaitlist = localStorage.getItem("mg360_waitlist") === "true";
 
-  useEffect(() => {
-    if (!isLoaded || !user) return;
-    const email = user.primaryEmailAddress?.emailAddress || "";
-
-    // Admin → approve automatiquement
-    if (ADMIN_EMAILS.includes(email) || user.publicMetadata?.role === "admin") {
-      localStorage.setItem("mg360_approved", "true");
-      localStorage.setItem("gk_admin_code", "GREENKEEPER2024");
-      localStorage.removeItem("mg360_waitlist");
-      return;
-    }
-
-    // Sinon vérifier Supabase si pas encore approuvé localement
-    if (localStorage.getItem("mg360_approved") !== "true") {
-      autoApproveFromSupabase(user.id);
-    }
-  }, [isLoaded, user]);
-
-  const isApproved = () => {
-    if (!isLoaded || !user) return false;
-    const email = user.primaryEmailAddress?.emailAddress || "";
-    if (ADMIN_EMAILS.includes(email) || user.publicMetadata?.role === "admin") return true;
-    try { return localStorage.getItem("mg360_approved") === "true"; } catch { return false; }
-  };
-
-  const onWaitlist = () => {
-    try {
-      return localStorage.getItem("mg360_waitlist") === "true" && !isApproved();
-    } catch { return false; }
-  };
+  // Attendre le check avant de décider
+  if (!isLoaded || approved === null) return null;
 
   return (
     <>
       <SignedIn>
-        {isLoaded && onWaitlist()
+        {!approved && onWaitlist
           ? <Navigate to="/coming-soon" replace />
           : children
         }
@@ -103,20 +113,16 @@ function ProtectedRoute({ children }) {
   );
 }
 
-// ── Route post-inscription : redirige vers coming-soon si waitlist ────────────
+// ── Route post-inscription ────────────────────────────────────────────────────
 function RegisterRoute() {
-  const { user, isLoaded } = useUser();
+  const { approved, isLoaded } = useAccessCheck();
+  const onWaitlist = localStorage.getItem("mg360_waitlist") === "true";
 
-  const isApproved = () => {
-    if (!isLoaded || !user) return false;
-    const email = user.primaryEmailAddress?.emailAddress || "";
-    if (ADMIN_EMAILS.includes(email) || user.publicMetadata?.role === "admin") return true;
-    try { return localStorage.getItem("mg360_approved") === "true"; } catch { return false; }
-  };
+  if (!isLoaded || approved === null) return null;
 
   return (
     <SignedIn>
-      {isLoaded && localStorage.getItem("mg360_waitlist") === "true" && !isApproved()
+      {!approved && onWaitlist
         ? <Navigate to="/coming-soon" replace />
         : <Register />
       }
