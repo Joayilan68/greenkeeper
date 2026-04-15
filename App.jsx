@@ -1,7 +1,5 @@
 // src/App.jsx
 import { SignedIn, SignedOut, RedirectToSignIn, useUser } from "@clerk/clerk-react";
-import { useState, useEffect } from "react";
-import { supabase } from "./lib/supabase";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import Diagnostic from "./pages/Diagnostic";
@@ -31,149 +29,108 @@ function AppWithWeather({ children }) {
   return <WeatherProvider>{children}</WeatherProvider>;
 }
 
-// ── Emails admin — accès permanent garanti ───────────────────────────────────
+// ── Emails admin — accès garanti sans localStorage ───────────────────────────
 const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
 
-function isAdminEmail(user) {
-  if (!user) return false;
-  const email = user.primaryEmailAddress?.emailAddress || "";
-  return ADMIN_EMAILS.includes(email) || user.publicMetadata?.role === "admin";
-}
-
-// ── Hook de vérification accès ────────────────────────────────────────────────
-function useAccessCheck() {
+// ── Wrapper qui attend Clerk ET set les flags admin avant tout routing ────────
+function ClerkReadyRoutes() {
   const { user, isLoaded } = useUser();
-  const [approved, setApproved] = useState(null); // null = checking
 
-  useEffect(() => {
-    if (!isLoaded) return;
+  // Attendre que Clerk soit prêt — aucune route ne se rend avant
+  if (!isLoaded) return null;
 
-    if (!user) { setApproved(false); return; }
-
-    // Admin → approuvé immédiatement, sans attendre
-    if (isAdminEmail(user)) {
+  // Clerk est prêt — vérifier admin de façon synchrone
+  if (user) {
+    const email = user.primaryEmailAddress?.emailAddress || "";
+    const isAdmin = ADMIN_EMAILS.includes(email) || user.publicMetadata?.role === "admin";
+    if (isAdmin) {
       localStorage.setItem("mg360_approved", "true");
       localStorage.setItem("gk_admin_code", "GREENKEEPER2024");
       localStorage.removeItem("mg360_waitlist");
-      setApproved(true);
-      return;
     }
+  }
 
-    // localStorage déjà approuvé
-    if (localStorage.getItem("mg360_approved") === "true") {
-      setApproved(true);
-      return;
-    }
-
-    // Vérifier Supabase — profil existant = déjà approuvé
-    (async () => {
-      try {
-        const { data } = await supabase
-          .from("profiles")
-          .select("user_id")
-          .eq("user_id", user.id)
-          .single();
-        if (data) {
-          localStorage.setItem("mg360_approved", "true");
-          localStorage.removeItem("mg360_waitlist");
-          setApproved(true);
-        } else {
-          setApproved(false);
-        }
-      } catch {
-        // Erreur Supabase — fallback localStorage
-        setApproved(localStorage.getItem("mg360_approved") === "true");
-      }
-    })();
-  }, [isLoaded, user]);
-
-  return { approved, isLoaded };
-}
-
-// ── Route protégée avec vérification waitlist ─────────────────────────────────
-function ProtectedRoute({ children }) {
-  const { approved, isLoaded } = useAccessCheck();
-  const onWaitlist = localStorage.getItem("mg360_waitlist") === "true";
-
-  // Attendre le check avant de décider
-  if (!isLoaded || approved === null) return null;
+  const isApproved = localStorage.getItem("mg360_approved") === "true";
+  const onWaitlist = localStorage.getItem("mg360_waitlist") === "true" && !isApproved;
 
   return (
-    <>
-      <SignedIn>
-        {!approved && onWaitlist
-          ? <Navigate to="/coming-soon" replace />
-          : children
-        }
-      </SignedIn>
-      <SignedOut>
-        <RedirectToSignIn />
-      </SignedOut>
-    </>
+    <Routes>
+      {/* ── Auth ── */}
+      <Route path="/login"             element={<Login />} />
+      <Route path="/admin"             element={<Admin />} />
+
+      {/* ── Onboarding & consentements RGPD ── */}
+      <Route path="/register"          element={
+        <SignedIn>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Register />}</SignedIn>
+      } />
+
+      {/* ── Liste d'attente ── */}
+      <Route path="/coming-soon"       element={<SignedIn><ComingSoon /></SignedIn>} />
+
+      {/* ── Abonnement ── */}
+      <Route path="/free"              element={<SignedIn><Layout><Free /></Layout></SignedIn>} />
+      <Route path="/subscribe"         element={<SignedIn><Subscribe /></SignedIn>} />
+      <Route path="/subscribe/success" element={<SignedIn><SubscribeSuccess /></SignedIn>} />
+
+      {/* ── Pages légales ── */}
+      <Route path="/mentions-legales"  element={<MentionsLegales />} />
+      <Route path="/confidentialite"   element={<Confidentialite />} />
+      <Route path="/cgu"               element={<CGU />} />
+      <Route path="/cgv"               element={<CGV />} />
+      <Route path="/cookies"           element={<Cookies />} />
+
+      {/* ── Paramètres ── */}
+      <Route path="/parametres"        element={
+        <SignedIn>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Settings /></Layout>}</SignedIn>
+      } />
+
+      {/* ── Pilotage Admin ── */}
+      <Route path="/pilotage"          element={<Layout><Pilotage /></Layout>} />
+
+      {/* ── App principale ── */}
+      <Route path="/"                  element={
+        <SignedIn>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Dashboard /></Layout>}</SignedIn>
+      } />
+      <Route path="/diagnostic"        element={
+        <SignedIn>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Diagnostic /></Layout>}</SignedIn>
+      } />
+      <Route path="/my-lawn"           element={
+        <SignedIn>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><MyLawn /></Layout>}</SignedIn>
+      } />
+      <Route path="/today"             element={
+        <SignedIn>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Today /></Layout>}</SignedIn>
+      } />
+      <Route path="/products"          element={
+        <SignedIn>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Products /></Layout>}</SignedIn>
+      } />
+      <Route path="/history"           element={
+        <SignedIn>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><History /></Layout>}</SignedIn>
+      } />
+      <Route path="/setup"             element={
+        <SignedIn>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Setup /></Layout>}</SignedIn>
+      } />
+      <Route path="/classement"        element={
+        <SignedIn>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Classement /></Layout>}</SignedIn>
+      } />
+      <Route path="/rappels"           element={
+        <SignedIn>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Rappels /></Layout>}</SignedIn>
+      } />
+
+      {/* Redirect non-signed-in users */}
+      <Route path="*"                  element={<SignedOut><RedirectToSignIn /></SignedOut>} />
+    </Routes>
   );
 }
 
-// ── Route post-inscription ────────────────────────────────────────────────────
-function RegisterRoute() {
-  const { approved, isLoaded } = useAccessCheck();
-  const onWaitlist = localStorage.getItem("mg360_waitlist") === "true";
-
-  if (!isLoaded || approved === null) return null;
-
-  return (
-    <SignedIn>
-      {!approved && onWaitlist
-        ? <Navigate to="/coming-soon" replace />
-        : <Register />
-      }
-    </SignedIn>
-  );
-}
+// ── Gardes inutilisés — remplacés par ClerkReadyRoutes ───────────────────────
+function ProtectedRoute({ children }) { return children; }
+function RegisterRoute() { return <Register />; }
 
 export default function App() {
   return (
     <BrowserRouter>
       <AppWithWeather>
-        <Routes>
-          {/* ── Auth ── */}
-          <Route path="/login"             element={<Login />} />
-          <Route path="/admin"             element={<Admin />} />
-
-          {/* ── Onboarding & consentements RGPD ── */}
-          <Route path="/register"          element={<RegisterRoute />} />
-
-          {/* ── Liste d'attente ── */}
-          <Route path="/coming-soon"       element={<SignedIn><ComingSoon /></SignedIn>} />
-
-          {/* ── Abonnement ── */}
-          <Route path="/free"              element={<SignedIn><Layout><Free /></Layout></SignedIn>} />
-          <Route path="/subscribe"         element={<SignedIn><Subscribe /></SignedIn>} />
-          <Route path="/subscribe/success" element={<SignedIn><SubscribeSuccess /></SignedIn>} />
-
-          {/* ── Pages légales ── */}
-          <Route path="/mentions-legales"  element={<MentionsLegales />} />
-          <Route path="/confidentialite"   element={<Confidentialite />} />
-          <Route path="/cgu"               element={<CGU />} />
-          <Route path="/cgv"               element={<CGV />} />
-          <Route path="/cookies"           element={<Cookies />} />
-
-          {/* ── Paramètres ── */}
-          <Route path="/parametres"        element={<ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>} />
-
-          {/* ── Pilotage Admin ── */}
-          <Route path="/pilotage"          element={<Layout><Pilotage /></Layout>} />
-
-          {/* ── App principale ── */}
-          <Route path="/"                  element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
-          <Route path="/diagnostic"        element={<ProtectedRoute><Layout><Diagnostic /></Layout></ProtectedRoute>} />
-          <Route path="/my-lawn"           element={<ProtectedRoute><Layout><MyLawn /></Layout></ProtectedRoute>} />
-          <Route path="/today"             element={<ProtectedRoute><Layout><Today /></Layout></ProtectedRoute>} />
-          <Route path="/products"          element={<ProtectedRoute><Layout><Products /></Layout></ProtectedRoute>} />
-          <Route path="/history"           element={<ProtectedRoute><Layout><History /></Layout></ProtectedRoute>} />
-          <Route path="/setup"             element={<ProtectedRoute><Layout><Setup /></Layout></ProtectedRoute>} />
-          <Route path="/classement"        element={<ProtectedRoute><Layout><Classement /></Layout></ProtectedRoute>} />
-          <Route path="/rappels"           element={<ProtectedRoute><Layout><Rappels /></Layout></ProtectedRoute>} />
-        </Routes>
+        <ClerkReadyRoutes />
       </AppWithWeather>
     </BrowserRouter>
   );
