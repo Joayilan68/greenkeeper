@@ -7,7 +7,7 @@ import { useSubscription } from "../lib/useSubscription";
 import { useDiagnostic } from "../lib/useDiagnostic";
 import { calcLawnScore } from "../lib/lawnScore";
 import { useHistory } from "../lib/useHistory";
-import { card, cardTitle, btn, scroll } from "../lib/styles";
+import { card, cardTitle, btn, scroll, header } from "../lib/styles";
 
 const SEV_COLORS = {
   faible:   { bg:"rgba(76,175,80,0.15)",   border:"rgba(76,175,80,0.4)",   text:"#a5d6a7", badge:"#2e7d32" },
