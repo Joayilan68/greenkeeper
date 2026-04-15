@@ -1,36 +1,37 @@
 // src/lib/useSubscription.js
-// ─────────────────────────────────────────────────────────────────────────────
-// Lit isSubscribed depuis les publicMetadata Clerk (écrites par le webhook Stripe)
-// Zéro appel API — lecture directe du token JWT
-// ─────────────────────────────────────────────────────────────────────────────
 import { useState, useEffect } from "react";
 import { useAuth, useUser } from "@clerk/clerk-react";
 
 const ADMIN_CODE = "GREENKEEPER2024";
 
 export function useSubscription() {
-  const { isSignedIn }    = useAuth();
+  const { isSignedIn }     = useAuth();
   const { user, isLoaded } = useUser();
   const [tier, setTier]    = useState("free");
   const [isLoading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Admin via localStorage
+    // 1. Admin via localStorage (code secret)
     const savedCode = localStorage.getItem("gk_admin_code");
     if (savedCode === ADMIN_CODE) {
       setTier("admin"); setLoading(false); return;
     }
 
-    if (!isLoaded) return; // attendre que Clerk soit prêt
+    if (!isLoaded) return;
     if (!isSignedIn || !user) { setTier("free"); setLoading(false); return; }
 
-    // Lire isSubscribed depuis les publicMetadata Clerk
-    // Écrites par webhook.js à chaque événement Stripe
+    // 2. Lire les publicMetadata Clerk
     const meta = user.publicMetadata || {};
+
+    // Role admin → tier admin (accès complet)
+    if (meta.role === "admin") {
+      setTier("admin"); setLoading(false); return;
+    }
+
+    // isSubscribed → tier paid
     const subscribed = meta.isSubscribed === true ||
                        meta.subscriptionStatus === "active" ||
                        meta.subscriptionStatus === "trialing";
-
     setTier(subscribed ? "paid" : "free");
     setLoading(false);
   }, [isSignedIn, isLoaded, user]);
