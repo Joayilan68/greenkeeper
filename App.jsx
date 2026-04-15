@@ -1,5 +1,7 @@
 // src/App.jsx
 import { SignedIn, SignedOut, RedirectToSignIn, useUser } from "@clerk/clerk-react";
+import { useEffect } from "react";
+import { supabase } from "./lib/supabase";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import Diagnostic from "./pages/Diagnostic";
@@ -18,7 +20,7 @@ import Register from "./pages/Register";
 import Settings from "./pages/Settings";
 import Pilotage from "./pages/Pilotage";
 import Rappels from "./pages/Rappels";
-import { MentionsLegales, Confidentialite, CGU, CGV } from "./pages/Legal";
+import { MentionsLegales, Confidentialite, CGU, CGV, Cookies } from "./pages/Legal";
 import Layout from "./components/Layout";
 import ComingSoon from "./components/ComingSoon";
 import { WeatherProvider } from "./lib/WeatherContext";
@@ -29,20 +31,67 @@ function AppWithWeather({ children }) {
   return <WeatherProvider>{children}</WeatherProvider>;
 }
 
-// ── Helpers waitlist ──────────────────────────────────────────────────────────
-function isOnWaitlist() {
+// ── Emails admin — accès permanent sans waitlist ──────────────────────────────
+const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
+
+// ── Auto-approve admin depuis Supabase ─────────────────────────────────────────
+async function autoApproveFromSupabase(userId) {
+  if (!userId) return false;
   try {
-    return localStorage.getItem("mg360_waitlist") === "true" &&
-           localStorage.getItem("mg360_approved") !== "true";
-  } catch { return false; }
+    // Vérifier si le user a un profil existant en Supabase → déjà approuvé
+    const { data } = await supabase
+      .from("profiles")
+      .select("user_id")
+      .eq("user_id", userId)
+      .single();
+    if (data) {
+      localStorage.setItem("mg360_approved", "true");
+      localStorage.removeItem("mg360_waitlist");
+      return true;
+    }
+  } catch {}
+  return false;
 }
 
 // ── Route protégée avec vérification waitlist ─────────────────────────────────
 function ProtectedRoute({ children }) {
+  const { user, isLoaded } = useUser();
+
+  useEffect(() => {
+    if (!isLoaded || !user) return;
+    const email = user.primaryEmailAddress?.emailAddress || "";
+
+    // Admin → approve automatiquement
+    if (ADMIN_EMAILS.includes(email) || user.publicMetadata?.role === "admin") {
+      localStorage.setItem("mg360_approved", "true");
+      localStorage.setItem("gk_admin_code", "GREENKEEPER2024");
+      localStorage.removeItem("mg360_waitlist");
+      return;
+    }
+
+    // Sinon vérifier Supabase si pas encore approuvé localement
+    if (localStorage.getItem("mg360_approved") !== "true") {
+      autoApproveFromSupabase(user.id);
+    }
+  }, [isLoaded, user]);
+
+  const isApproved = () => {
+    if (!isLoaded || !user) return false;
+    const email = user.primaryEmailAddress?.emailAddress || "";
+    if (ADMIN_EMAILS.includes(email) || user.publicMetadata?.role === "admin") return true;
+    try { return localStorage.getItem("mg360_approved") === "true"; } catch { return false; }
+  };
+
+  const onWaitlist = () => {
+    try {
+      return localStorage.getItem("mg360_waitlist") === "true" && !isApproved();
+    } catch { return false; }
+  };
+
   return (
     <>
       <SignedIn>
-        {isOnWaitlist()
+        {isLoaded && onWaitlist()
           ? <Navigate to="/coming-soon" replace />
           : children
         }
@@ -56,9 +105,18 @@ function ProtectedRoute({ children }) {
 
 // ── Route post-inscription : redirige vers coming-soon si waitlist ────────────
 function RegisterRoute() {
+  const { user, isLoaded } = useUser();
+
+  const isApproved = () => {
+    if (!isLoaded || !user) return false;
+    const email = user.primaryEmailAddress?.emailAddress || "";
+    if (ADMIN_EMAILS.includes(email) || user.publicMetadata?.role === "admin") return true;
+    try { return localStorage.getItem("mg360_approved") === "true"; } catch { return false; }
+  };
+
   return (
     <SignedIn>
-      {isOnWaitlist()
+      {isLoaded && localStorage.getItem("mg360_waitlist") === "true" && !isApproved()
         ? <Navigate to="/coming-soon" replace />
         : <Register />
       }
@@ -91,6 +149,7 @@ export default function App() {
           <Route path="/confidentialite"   element={<Confidentialite />} />
           <Route path="/cgu"               element={<CGU />} />
           <Route path="/cgv"               element={<CGV />} />
+          <Route path="/cookies"           element={<Cookies />} />
 
           {/* ── Paramètres ── */}
           <Route path="/parametres"        element={<ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>} />
