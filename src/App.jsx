@@ -55,7 +55,7 @@ function ClerkReadyRoutes() {
     // Timeout de sécurité — jamais bloqué plus de 3 secondes
     const timeout = setTimeout(() => setReady(true), 3000);
 
-    if (!isLoaded) return () => clearTimeout(timeout);
+    // Ne pas retourner si !isLoaded — le timeout gère le fallback
 
     // Pas connecté → prêt immédiatement
     if (!user) {
@@ -102,7 +102,7 @@ function ClerkReadyRoutes() {
   }, [isLoaded, user]); // eslint-disable-line
 
   // Fond sombre neutre pendant la vérification — pas de spinner visible
-  if (!isLoaded || !ready) return (
+  if (!ready) return (
     <div style={{ minHeight: "100vh", background: "#0f2419" }} />
   );
 
