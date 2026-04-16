@@ -1,4 +1,5 @@
 // src/App.jsx
+import { useState, useEffect } from "react";
 import { SignedIn, SignedOut, RedirectToSignIn, useUser } from "@clerk/clerk-react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
@@ -24,32 +25,86 @@ import ComingSoon from "./components/ComingSoon";
 import { WeatherProvider } from "./lib/WeatherContext";
 import { usePilotage } from "./lib/usePilotage";
 
+// ── Emails admin — accès permanent garanti ────────────────────────────────────
+const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
+
+// ── Set tous les flags d'accès ─────────────────────────────────────────────────
+function setAccessFlags() {
+  localStorage.setItem("mg360_approved",        "true");
+  localStorage.setItem("mg360_onboarding_done",  "true");
+  localStorage.removeItem("mg360_waitlist");
+}
+
+function setAdminFlags() {
+  setAccessFlags();
+  localStorage.setItem("gk_admin_code", "GREENKEEPER2024");
+}
+
 function AppWithWeather({ children }) {
   usePilotage();
   return <WeatherProvider>{children}</WeatherProvider>;
 }
 
-// ── Emails admin — accès garanti sans localStorage ───────────────────────────
-const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
-
-// ── Wrapper qui attend Clerk ET set les flags admin avant tout routing ────────
+// ── Wrapper principal — attend Clerk + vérifie Supabase avant tout routing ────
 function ClerkReadyRoutes() {
   const { user, isLoaded } = useUser();
+  const [ready, setReady]  = useState(false);
 
-  // Attendre que Clerk soit prêt — aucune route ne se rend avant
-  if (!isLoaded) return null;
+  useEffect(() => {
+    // Timeout de sécurité — jamais bloqué plus de 3 secondes
+    const timeout = setTimeout(() => setReady(true), 3000);
 
-  // Clerk est prêt — vérifier admin de façon synchrone
-  if (user) {
-    const email = user.primaryEmailAddress?.emailAddress || "";
-    const isAdmin = ADMIN_EMAILS.includes(email) || user.publicMetadata?.role === "admin";
-    if (isAdmin) {
-      localStorage.setItem("mg360_approved", "true");
-      localStorage.setItem("gk_admin_code", "GREENKEEPER2024");
-      localStorage.setItem("mg360_onboarding_done", "true"); // empêche onboarding Dashboard
-      localStorage.removeItem("mg360_waitlist");
+    // Ne pas retourner si !isLoaded — le timeout gère le fallback
+
+    // Pas connecté → prêt immédiatement
+    if (!user) {
+      clearTimeout(timeout);
+      setReady(true);
+      return;
     }
-  }
+
+    const email   = user.primaryEmailAddress?.emailAddress || "";
+    const isAdmin = ADMIN_EMAILS.includes(email) || user.publicMetadata?.role === "admin";
+
+    // Admin → flags immédiats, pas besoin de Supabase
+    if (isAdmin) {
+      setAdminFlags();
+      clearTimeout(timeout);
+      setReady(true);
+      return;
+    }
+
+    // User normal → déjà approuvé en localStorage ? Prêt immédiatement
+    if (localStorage.getItem("mg360_approved") === "true") {
+      clearTimeout(timeout);
+      setReady(true);
+      return;
+    }
+
+    // User normal sans localStorage → vérifier Supabase (import dynamique — évite crash Chrome)
+    (async () => {
+      try {
+        const { supabase } = await import("./lib/supabase");
+        const { data } = await supabase
+          .from("profiles")
+          .select("user_id")
+          .eq("user_id", user.id)
+          .single();
+        if (data) setAccessFlags();
+      } catch {}
+      finally {
+        clearTimeout(timeout);
+        setReady(true);
+      }
+    })();
+
+    return () => clearTimeout(timeout);
+  }, [isLoaded, user]); // eslint-disable-line
+
+  // Fond sombre neutre pendant la vérification — pas de spinner visible
+  if (!ready) return (
+    <div style={{ minHeight: "100vh", background: "#0f2419" }} />
+  );
 
   const isApproved = localStorage.getItem("mg360_approved") === "true";
   const onWaitlist = localStorage.getItem("mg360_waitlist") === "true" && !isApproved;
@@ -60,7 +115,7 @@ function ClerkReadyRoutes() {
       <Route path="/login"             element={<Login />} />
       <Route path="/admin"             element={<Admin />} />
 
-      {/* ── Onboarding & consentements RGPD ── */}
+      {/* ── Onboarding ── */}
       <Route path="/register"          element={
         <SignedIn>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Register />}</SignedIn>
       } />
@@ -117,15 +172,10 @@ function ClerkReadyRoutes() {
         <SignedIn>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Rappels /></Layout>}</SignedIn>
       } />
 
-      {/* Redirect non-signed-in users */}
-      <Route path="*"                  element={<SignedOut><RedirectToSignIn /></SignedOut>} />
+      <Route path="*" element={<SignedOut><RedirectToSignIn /></SignedOut>} />
     </Routes>
   );
 }
-
-// ── Gardes inutilisés — remplacés par ClerkReadyRoutes ───────────────────────
-function ProtectedRoute({ children }) { return children; }
-function RegisterRoute() { return <Register />; }
 
 export default function App() {
   return (
