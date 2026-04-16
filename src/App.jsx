@@ -31,8 +31,8 @@ const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
 
 // ── Set tous les flags d'accès ─────────────────────────────────────────────────
 function setAccessFlags() {
-  localStorage.setItem("mg360_approved",       "true");
-  localStorage.setItem("mg360_onboarding_done", "true");
+  localStorage.setItem("mg360_approved",        "true");
+  localStorage.setItem("mg360_onboarding_done",  "true");
   localStorage.removeItem("mg360_waitlist");
 }
 
@@ -52,10 +52,17 @@ function ClerkReadyRoutes() {
   const [ready, setReady]  = useState(false);
 
   useEffect(() => {
-    if (!isLoaded) return;
+    // Timeout de sécurité — jamais bloqué plus de 3 secondes
+    const timeout = setTimeout(() => setReady(true), 3000);
+
+    if (!isLoaded) return () => clearTimeout(timeout);
 
     // Pas connecté → prêt immédiatement
-    if (!user) { setReady(true); return; }
+    if (!user) {
+      clearTimeout(timeout);
+      setReady(true);
+      return;
+    }
 
     const email   = user.primaryEmailAddress?.emailAddress || "";
     const isAdmin = ADMIN_EMAILS.includes(email) || user.publicMetadata?.role === "admin";
@@ -63,18 +70,19 @@ function ClerkReadyRoutes() {
     // Admin → flags immédiats, pas besoin de Supabase
     if (isAdmin) {
       setAdminFlags();
+      clearTimeout(timeout);
       setReady(true);
       return;
     }
 
     // User normal → déjà approuvé en localStorage ? Prêt immédiatement
     if (localStorage.getItem("mg360_approved") === "true") {
+      clearTimeout(timeout);
       setReady(true);
       return;
     }
 
     // User normal sans localStorage → vérifier Supabase
-    // Si profil ou historique ou greenpoints existent → user connu → approuver
     (async () => {
       try {
         const { data } = await supabase
@@ -82,28 +90,20 @@ function ClerkReadyRoutes() {
           .select("user_id")
           .eq("user_id", user.id)
           .single();
-
-        if (data) {
-          // Profil existant en base → user connu, skip onboarding
-          setAccessFlags();
-        }
-      } catch {
-        // Supabase indisponible ou pas de profil → on laisse le flux normal
-      } finally {
+        if (data) setAccessFlags();
+      } catch {}
+      finally {
+        clearTimeout(timeout);
         setReady(true);
       }
     })();
+
+    return () => clearTimeout(timeout);
   }, [isLoaded, user]); // eslint-disable-line
 
-  // Spinner minimal pendant la vérification (< 1 seconde en général)
+  // Fond sombre neutre pendant la vérification — pas de spinner visible
   if (!isLoaded || !ready) return (
-    <div style={{
-      minHeight: "100vh",
-      background: "#0f2419",
-      display: "flex", alignItems: "center", justifyContent: "center",
-    }}>
-      <div style={{ fontSize: 40 }}>🌿</div>
-    </div>
+    <div style={{ minHeight: "100vh", background: "#0f2419" }} />
   );
 
   const isApproved = localStorage.getItem("mg360_approved") === "true";
