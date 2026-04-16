@@ -17,10 +17,25 @@ const C = {
   textMuted:  "#4a7c5c",
 };
 
+const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
+
 export default function ComingSoon() {
   const navigate    = useNavigate();
   const { user }    = useUser();
   const { signOut } = useClerk();
+
+  // Auto-redirect admin — ne jamais bloquer un admin sur ComingSoon
+  useEffect(() => {
+    if (!user) return;
+    const email = user.primaryEmailAddress?.emailAddress || "";
+    if (ADMIN_EMAILS.includes(email) || user.publicMetadata?.role === "admin") {
+      localStorage.setItem("mg360_approved",       "true");
+      localStorage.setItem("gk_admin_code",         "GREENKEEPER2024");
+      localStorage.setItem("mg360_onboarding_done", "true");
+      localStorage.removeItem("mg360_waitlist");
+      navigate("/", { replace: true });
+    }
+  }, [user, navigate]);
 
   const [tapCount, setTapCount]           = useState(0);
   const [profile, setProfile]             = useState(null);
