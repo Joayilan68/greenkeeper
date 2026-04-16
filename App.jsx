@@ -46,6 +46,7 @@ function ClerkReadyRoutes() {
     if (isAdmin) {
       localStorage.setItem("mg360_approved", "true");
       localStorage.setItem("gk_admin_code", "GREENKEEPER2024");
+      localStorage.setItem("mg360_onboarding_done", "true"); // empêche onboarding Dashboard
       localStorage.removeItem("mg360_waitlist");
     }
   }
