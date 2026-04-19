@@ -46,6 +46,7 @@
     }
   ],
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/sw.js",           "destination": "/sw.js"       },
+    { "source": "/((?!sw\\.js).*)", "destination": "/index.html"  }
   ]
 }
