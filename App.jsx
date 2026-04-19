@@ -1,5 +1,5 @@
 // src/App.jsx
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { SignedIn, SignedOut, RedirectToSignIn, useUser } from "@clerk/clerk-react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
@@ -28,16 +28,17 @@ import { usePilotage } from "./lib/usePilotage";
 // ── Emails admin — accès permanent garanti ────────────────────────────────────
 const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
 
-// ── Set tous les flags d'accès ─────────────────────────────────────────────────
-function setAccessFlags() {
+function setAdminFlags() {
   localStorage.setItem("mg360_approved",        "true");
   localStorage.setItem("mg360_onboarding_done",  "true");
+  localStorage.setItem("gk_admin_code",          "GREENKEEPER2024");
   localStorage.removeItem("mg360_waitlist");
 }
 
-function setAdminFlags() {
-  setAccessFlags();
-  localStorage.setItem("gk_admin_code", "GREENKEEPER2024");
+function setUserFlags() {
+  localStorage.setItem("mg360_approved",        "true");
+  localStorage.setItem("mg360_onboarding_done",  "true");
+  localStorage.removeItem("mg360_waitlist");
 }
 
 function AppWithWeather({ children }) {
@@ -45,69 +46,50 @@ function AppWithWeather({ children }) {
   return <WeatherProvider>{children}</WeatherProvider>;
 }
 
-// ── Wrapper principal — attend Clerk + vérifie Supabase avant tout routing ────
-function ClerkReadyRoutes() {
+// ── Hook qui set les flags en arrière-plan — sans bloquer le rendu ────────────
+function useAccessFlags() {
   const { user, isLoaded } = useUser();
-  const [ready, setReady]  = useState(false);
 
   useEffect(() => {
-    // Timeout de sécurité — jamais bloqué plus de 3 secondes
-    const timeout = setTimeout(() => setReady(true), 3000);
-
-    // Ne pas retourner si !isLoaded — le timeout gère le fallback
-
-    // Pas connecté → prêt immédiatement
-    if (!user) {
-      clearTimeout(timeout);
-      setReady(true);
-      return;
-    }
+    if (!isLoaded || !user) return;
 
     const email   = user.primaryEmailAddress?.emailAddress || "";
     const isAdmin = ADMIN_EMAILS.includes(email) || user.publicMetadata?.role === "admin";
 
-    // Admin → flags immédiats, pas besoin de Supabase
     if (isAdmin) {
       setAdminFlags();
-      clearTimeout(timeout);
-      setReady(true);
       return;
     }
 
-    // User normal → déjà approuvé en localStorage ? Prêt immédiatement
-    if (localStorage.getItem("mg360_approved") === "true") {
-      clearTimeout(timeout);
-      setReady(true);
-      return;
+    // User normal — vérifier Supabase si pas encore approuvé
+    if (localStorage.getItem("mg360_approved") !== "true") {
+      (async () => {
+        try {
+          const { supabase } = await import("./lib/supabase");
+          const { data } = await supabase
+            .from("profiles")
+            .select("user_id")
+            .eq("user_id", user.id)
+            .single();
+          if (data) setUserFlags();
+        } catch {}
+      })();
     }
-
-    // User normal sans localStorage → vérifier Supabase (import dynamique — évite crash Chrome)
-    (async () => {
-      try {
-        const { supabase } = await import("./lib/supabase");
-        const { data } = await supabase
-          .from("profiles")
-          .select("user_id")
-          .eq("user_id", user.id)
-          .single();
-        if (data) setAccessFlags();
-      } catch {}
-      finally {
-        clearTimeout(timeout);
-        setReady(true);
-      }
-    })();
-
-    return () => clearTimeout(timeout);
   }, [isLoaded, user]); // eslint-disable-line
+}
 
-  // Fond sombre neutre pendant la vérification — pas de spinner visible
-  if (!ready) return (
-    <div style={{ minHeight: "100vh", background: "#0f2419" }} />
-  );
+// ── Vérification waitlist synchrone ──────────────────────────────────────────
+function isOnWaitlist() {
+  try {
+    return localStorage.getItem("mg360_waitlist") === "true" &&
+           localStorage.getItem("mg360_approved") !== "true";
+  } catch { return false; }
+}
 
-  const isApproved = localStorage.getItem("mg360_approved") === "true";
-  const onWaitlist = localStorage.getItem("mg360_waitlist") === "true" && !isApproved;
+// ── Routes principales ────────────────────────────────────────────────────────
+function AppRoutes() {
+  useAccessFlags(); // Set flags en arrière-plan, ne bloque pas le rendu
+  const onWaitlist = isOnWaitlist();
 
   return (
     <Routes>
@@ -181,7 +163,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <AppWithWeather>
-        <ClerkReadyRoutes />
+        <AppRoutes />
       </AppWithWeather>
     </BrowserRouter>
   );
