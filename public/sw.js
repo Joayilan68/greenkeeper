@@ -1,12 +1,8 @@
 // ─── SERVICE WORKER — Mongazon360 ────────────────────────────────────────────
-const CACHE_NAME = 'mg360-v3'; // ← incrémenté pour forcer le remplacement
+const CACHE_NAME = 'mg360-v4'; // ← incrémenté : force la suppression de mg360-v3
 
 // ── Install ───────────────────────────────────────────────────────────────────
 self.addEventListener('install', () => {
-  // skipWaiting() est OBLIGATOIRE :
-  // Sans lui, l'ancien SW (qui cachait l'ancien bundle) reste actif indéfiniment.
-  // L'utilisateur doit fermer TOUS ses onglets pour que le nouveau SW prenne effet.
-  // Avec skipWaiting(), le nouveau SW s'active immédiatement après l'installation.
   self.skipWaiting();
 });
 
@@ -14,12 +10,7 @@ self.addEventListener('install', () => {
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     Promise.all([
-      // clients.claim() est OBLIGATOIRE :
-      // Prend le contrôle de tous les onglets ouverts immédiatement.
-      // Sans lui, les onglets existants continuent avec l'ancien SW.
       self.clients.claim(),
-
-      // Supprime tous les anciens caches (dont celui qui contenait l'ancien bundle)
       caches.keys().then(keys =>
         Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
       ),
@@ -27,26 +18,22 @@ self.addEventListener('activate', (e) => {
   );
 });
 
-// ── Fetch — network-first pour HTML, cache-first pour assets hashés ───────────
-// OBLIGATOIRE : sans fetch handler, l'ancien SW interceptait les requêtes.
-// Maintenant c'est ce SW qui contrôle — avec la bonne stratégie.
+// ── Fetch ─────────────────────────────────────────────────────────────────────
 self.addEventListener('fetch', (e) => {
   const { request } = e;
 
-  // Ignorer les non-GET et le cross-origin (Clerk, Supabase, Stripe…)
   if (request.method !== 'GET') return;
   if (!request.url.startsWith(self.location.origin)) return;
 
   const url = new URL(request.url);
 
-  // API : network-only, jamais de cache
+  // API : network-only
   if (url.pathname.startsWith('/api/')) {
     e.respondWith(fetch(request));
     return;
   }
 
-  // Assets Vite hashés (/assets/index-HASH.js) : cache-first
-  // Sûr : si le contenu change, Vite change le nom du fichier
+  // Assets Vite hashés : cache-first (sûr car le nom change à chaque build)
   if (url.pathname.startsWith('/assets/')) {
     e.respondWith(
       caches.match(request).then(cached => {
@@ -63,21 +50,11 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // index.html et navigation : network-first TOUJOURS
-  // Règle critique — on va chercher le HTML frais sur Vercel
-  // pour obtenir les bons hashes de bundle.
+  // index.html et toute navigation : network-only, JAMAIS mis en cache
+  // C'est la règle critique — on va toujours chercher le HTML frais sur Vercel.
+  // Ne pas mettre en cache garantit que Vercel sert toujours la dernière version.
   if (request.mode === 'navigate' || (request.headers.get('accept') || '').includes('text/html')) {
-    e.respondWith(
-      fetch(request)
-        .then(res => {
-          if (res.ok) {
-            const clone = res.clone();
-            caches.open(CACHE_NAME).then(c => c.put(request, clone));
-          }
-          return res;
-        })
-        .catch(() => caches.match('/') || caches.match(request))
-    );
+    e.respondWith(fetch(request));
     return;
   }
 
