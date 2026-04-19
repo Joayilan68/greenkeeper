@@ -1,80 +1,23 @@
 // ─── SERVICE WORKER — Mongazon360 ────────────────────────────────────────────
-const CACHE_NAME = 'mg360-v4'; // ← incrémenté : force la suppression de mg360-v3
+// Stratégie : SW minimal — pas de cache, pas de fetch handler.
+// Vercel + Chrome gèrent le cache HTTP via les headers Cache-Control.
+// Le SW ne fait qu'une chose : gérer les push notifications.
 
 // ── Install ───────────────────────────────────────────────────────────────────
 self.addEventListener('install', () => {
-  self.skipWaiting();
+  self.skipWaiting(); // Activation immédiate sans attendre la fermeture des onglets
 });
 
 // ── Activate ──────────────────────────────────────────────────────────────────
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     Promise.all([
-      self.clients.claim(),
-      caches.keys().then(keys =>
-        Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+      self.clients.claim(), // Prend le contrôle de tous les onglets immédiatement
+      caches.keys().then(keys => // Supprime tous les anciens caches
+        Promise.all(keys.map(k => caches.delete(k)))
       ),
     ])
   );
-});
-
-// ── Fetch ─────────────────────────────────────────────────────────────────────
-self.addEventListener('fetch', (e) => {
-  const { request } = e;
-
-  if (request.method !== 'GET') return;
-  if (!request.url.startsWith(self.location.origin)) return;
-
-  const url = new URL(request.url);
-
-  // API : network-only
-  if (url.pathname.startsWith('/api/')) {
-    e.respondWith(fetch(request));
-    return;
-  }
-
-  // Assets Vite hashés : cache-first (sûr car le nom change à chaque build)
-  if (url.pathname.startsWith('/assets/')) {
-    e.respondWith(
-      caches.match(request).then(cached => {
-        if (cached) return cached;
-        return fetch(request).then(res => {
-          if (res.ok) {
-            const clone = res.clone();
-            caches.open(CACHE_NAME).then(c => c.put(request, clone));
-          }
-          return res;
-        });
-      })
-    );
-    return;
-  }
-
-  // index.html et toute navigation : network-only, JAMAIS mis en cache
-  // C'est la règle critique — on va toujours chercher le HTML frais sur Vercel.
-  // Ne pas mettre en cache garantit que Vercel sert toujours la dernière version.
-  if (request.mode === 'navigate' || (request.headers.get('accept') || '').includes('text/html')) {
-    e.respondWith(fetch(request));
-    return;
-  }
-
-  // Reste (icons, manifest…) : network-first avec fallback cache
-  e.respondWith(
-    fetch(request)
-      .then(res => {
-        if (res.ok) {
-          const clone = res.clone();
-          caches.open(CACHE_NAME).then(c => c.put(request, clone));
-        }
-        return res;
-      })
-      .catch(() => caches.match(request))
-  );
-});
-
-// ── Message depuis main.jsx → activation immédiate ───────────────────────────
-self.addEventListener('message', (e) => {
-  if (e.data?.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 // ── Réception d'une push notification ────────────────────────────────────────
