@@ -166,7 +166,7 @@ export default function Pilotage() {
   async function fetchUsers() {
     setLoadingUsers(true);
     try {
-      const res  = await fetch("/api/stats-users");
+      const res  = await fetch("/api/stats?type=users");
       const data = await res.json();
       if (data.success) setUsers(data);
     } catch {}
@@ -176,7 +176,7 @@ export default function Pilotage() {
   async function fetchRevenue() {
     setLoadingRevenue(true);
     try {
-      const res  = await fetch("/api/stats-revenue");
+      const res  = await fetch("/api/stats?type=revenue");
       const data = await res.json();
       if (data.success) setRevenue(data);
     } catch {}
