@@ -144,11 +144,18 @@ export default function Today() {
       });
 
       if (res.status === 429) {
-        // Limite atteinte — afficher silencieusement la dernière reco en cache
+        // Limite atteinte — afficher dernière reco en cache + message reset
         try {
           const saved = JSON.parse(localStorage.getItem(AI_RECO_KEY) || "{}");
-          if (saved.text) setAiReco(saved.text);
-        } catch {}
+          if (saved.text) {
+            setAiReco(saved.text);
+          } else {
+            // Pas de cache → message explicite
+            setAiReco("⏳ Limite quotidienne atteinte. Revenez demain pour une nouvelle recommandation IA.");
+          }
+        } catch {
+          setAiReco("⏳ Limite quotidienne atteinte. Revenez demain pour une nouvelle recommandation IA.");
+        }
         setAiLoading(false);
         return;
       }
