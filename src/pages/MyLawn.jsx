@@ -597,43 +597,78 @@ export default function MyLawn() {
 
         {/* ── 10. PRODUITS RECOMMANDÉS ── */}
         {(() => {
-          // Mapping issues.id → clé Amazon (selon les problèmes détectés dans le score)
-          // On prend les issues pour déterminer quels produits afficher
+          // ── Source unique : buildActions() ───────────────────────────────
+          // On recalcule les actions recommandées pour cette section.
+          // Garantit cohérence avec le Plan du Mois et Today.jsx.
+          const arrosProd   = profile && weather ? calcArrosage(month, profile, weather, history, getDebitMmH()) : null;
+          const allStatuts  = buildActions(profile, weather, history, score, month, arrosProd);
+          const isSynth     = profile?.isSynthetique || profile?.pelouse === "synthetique";
+
+          // Produits liés aux actions recommandées avec needsProduct=true
+          const actionKeys = allStatuts
+            .filter(a => a.status === "recommended" && a.action.needsProduct && ACTION_TO_AMAZON[a.action.id])
+            .map(a => ACTION_TO_AMAZON[a.action.id]);
+
+          // Fallback si aucune action recommandée avec produit :
+          // utiliser les issues du score comme signal secondaire
           const ISSUE_TO_AMAZON = {
-            mousse:      "antiMousse",
-            fertilite:   "engraisStarter",
-            nutriments:  "engraisStarter",
+            mousse:           "antiMousse",
+            fertilite:        month <= 4 || month === 12 ? "engraisStarter" : month <= 8 ? "engraisEte" : "engraisAutomne",
+            nutriments:       month <= 4 || month === 12 ? "engraisStarter" : month <= 8 ? "engraisEte" : "engraisAutomne",
             mauvaises_herbes: "desherbage",
-            sol_compacte: "aeration",
-            thatch:      "verticut",
-            stress_hydrique: "biostimulant",
+            sol_compacte:     "aeration",
+            thatch:           "verticut",
+            stress_hydrique:  "biostimulant",
           };
-          // Construit la liste des clés Amazon depuis les issues, dédupliqué
           const issueKeys = issues
-            .map(i => ISSUE_TO_AMAZON[i.id] || ISSUE_TO_AMAZON[i.icon] || null)
+            .map(i => ISSUE_TO_AMAZON[i.id] || null)
             .filter(Boolean);
-          // Fallback : si aucune issue mappée, on propose les engrais de saison
-          const month = new Date().getMonth() + 1;
-          const seasonKey = month <= 4 || month === 12 ? "engraisStarter"
-            : month <= 8 ? "engraisEte"
-            : "engraisAutomne";
-          const allKeys = issueKeys.length > 0
-            ? [...new Set(issueKeys)]
-            : [seasonKey, "antiMousse", "biostimulant"];
+
+          // Gazon synthétique : produits d'entretien uniquement (brosse, souffleur)
+          // Les produits d'engrais/traitement sont exclus
+          const syntheticKeys = [];
+
+          const allKeys = isSynth
+            ? syntheticKeys
+            : [...new Set([...actionKeys, ...issueKeys])];
+
+          // Limiter l'affichage selon le tier
           const keysToShow = isPaid ? allKeys.slice(0, 3) : allKeys.slice(0, 1);
+
+          if (isSynth) {
+            return (
+              <div style={card()}>
+                <div style={cardTitle}><span>🛒 Produits recommandés</span></div>
+                <div style={{ fontSize:12, color:"#81c784", lineHeight:1.6 }}>
+                  🌿 Gazon synthétique : pas de produits chimiques nécessaires.<br/>
+                  Consultez la page <span style={{ color:"#a5d6a7", cursor:"pointer", textDecoration:"underline" }} onClick={() => navigate("/products")}>Produits</span> pour les accessoires d'entretien.
+                </div>
+              </div>
+            );
+          }
 
           return (
             <div style={card()}>
               <div style={cardTitle}><span>🛒 Produits recommandés</span></div>
               <div style={{ fontSize:11, color:"#81c784", marginBottom:12, fontStyle:"italic", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-                <span>Sélectionnés selon votre score</span>
+                <span>
+                  {actionKeys.length > 0
+                    ? "Liés aux actions prioritaires du jour"
+                    : "Sélectionnés selon votre score"}
+                </span>
                 {isPaid && <span style={{ fontSize:10, color:"#66BB6A", background:"rgba(102,187,106,0.1)", border:"1px solid rgba(102,187,106,0.2)", borderRadius:20, padding:"2px 8px", fontStyle:"normal", fontWeight:700 }}>⭐ Personnalisés Premium</span>}
               </div>
-              <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-                {profile && keysToShow.map(key => (
-                  <ProductCard key={key} actionKey={key} profile={profile} compact />
-                ))}
-              </div>
+              {keysToShow.length > 0 ? (
+                <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                  {profile && keysToShow.map(key => (
+                    <ProductCard key={key} actionKey={key} profile={profile} compact />
+                  ))}
+                </div>
+              ) : (
+                <div style={{ fontSize:12, color:"#81c784", textAlign:"center", padding:"12px 0" }}>
+                  ✅ Aucun produit nécessaire pour le moment — votre gazon est en bonne santé !
+                </div>
+              )}
               {!isPaid && allKeys.length > 1 && (
                 <div style={{ fontSize:12, color:"#f9a825", textAlign:"center", marginTop:10 }}>
                   🔒 +{allKeys.length - 1} produit{allKeys.length - 1 > 1 ? "s" : ""} masqué{allKeys.length - 1 > 1 ? "s" : ""} —{" "}

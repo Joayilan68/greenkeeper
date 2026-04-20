@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useWeather } from "../lib/useWeather";
 import { useProfile } from "../lib/useProfile";
 import { useHistory } from "../lib/useHistory";
+import { useAuth } from "@clerk/clerk-react";
 import { useSubscription } from "../lib/useSubscription";
 import { MONTHLY_PLAN, MONTHS_FR, calcArrosage, getWMO, getDebitMmH } from "../lib/lawn";
 import { buildActions, zoneClimatique, ZONE_LABELS } from "../lib/planEntretien";
@@ -45,6 +46,7 @@ export default function Today() {
   const { weather, alerts } = useWeather();
   const { profile }         = useProfile();
   const { history, addEntry } = useHistory();
+  const { getToken } = useAuth();
   const { isPaid, isAdmin, isFree } = useSubscription();
   const [aiReco, setAiReco]       = useState("");
   const [aiLoading, setAiLoading] = useState(false);
@@ -77,33 +79,124 @@ export default function Today() {
     setTimeout(() => setToastPoints(null), 3500);
   };
 
-  // ── Prompt IA enrichi avec zone + profil complet ──────────────────────────
-  const fetchAI = useCallback(async () => {
-    if (!weather || !isPaid) return;
-    setAiLoading(true); setAiReco("");
-    const zoneLabel = ZONE_LABELS[zone] || zone;
-    const prompt = [
-      `Tu es un expert gazon pour Mongazon360. Recommandations concises pour aujourd'hui.`,
-      `Profil: type=${profile?.pelouse||"?"} sol=${profile?.sol||"?"} expo=${profile?.exposition||"?"}`,
-      `surface=${profile?.surface||"?"}m² score=${score}/100 zone=${zoneLabel}`,
-      `Date: ${today.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"})} — ${plan?.label}`,
-      `Météo: ${weather.temp_max}°C/${weather.temp_min}°C · ${weather.precip}mm pluie · hum ${weather.humidity}% · vent ${weather.wind}km/h`,
-      `Arrosage: ${arros ? arros.mm+"mm/session · "+arros.minutes+"min" : "non recommandé"}`,
-      `4-5 points max, emojis, français, personnalisé à la zone ${zoneLabel}.`,
-    ].join(" ");
+  // ── Clé localStorage pour la recommandation IA du jour ───────────────────
+  const AI_RECO_KEY = "mg360_ai_reco_today";
+
+  // ── Charger la recommandation du jour depuis localStorage au montage ──────
+  useEffect(() => {
     try {
-      const res  = await fetch("/api/ai-recommendations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const saved = JSON.parse(localStorage.getItem(AI_RECO_KEY) || "{}");
+      const today = new Date().toISOString().slice(0, 10);
+      if (saved.date === today && saved.text) {
+        setAiReco(saved.text);
+      }
+    } catch {}
+  }, []); // eslint-disable-line
+
+  // ── Prompt IA — cohérent avec buildActions() + gazon synthétique ──────────
+  const fetchAI = useCallback(async () => {
+    if (!isPaid) return;
+    setAiLoading(true);
+
+    const isSynth   = profile?.pelouse === "synthetique" || profile?.isSynthetique;
+    const zoneLabel = ZONE_LABELS[zone] || zone;
+
+    // ── Actions recommandées par buildActions() — source de vérité ──────────
+    // Le prompt IA enrichit ces actions plutôt que d'en inventer de nouvelles.
+    // Garantit cohérence parfaite entre Today, MyLawn et les recommandations IA.
+    const actionsAFaire = recommended.map(a => a.action.label);
+    const actionsBloquees = actionStatuses
+      .filter(a => a.status === "blocked" || a.status === "too_soon")
+      .map(a => `${a.action.label} (${a.blockedReason || `dans ${a.daysLeft}j`})`);
+
+    let prompt;
+
+    if (isSynth) {
+      // ── Gazon synthétique : recommandations adaptées uniquement ─────────
+      prompt = [
+        `Tu es un expert gazon synthétique pour Mongazon360.`,
+        `IMPORTANT: Ce gazon est SYNTHÉTIQUE. Ne jamais recommander tonte, engrais, arrosage, désherbage, scarification, aération, semences. Ces actions sont incompatibles avec le gazon synthétique.`,
+        `Profil: surface=${profile?.surface || "?"}m² · exposition=${profile?.exposition || "?"} · zone=${zoneLabel}`,
+        weather
+          ? `Météo: ${weather.temp_max}°C · ${weather.precip}mm pluie · vent ${weather.wind}km/h`
+          : `Météo non disponible.`,
+        `Donne 3-4 conseils pratiques d'entretien spécifiques au gazon synthétique (nettoyage, brossage, drainage, UV, joints de sable). Emojis, français, concis.`,
+      ].join(" ");
+    } else {
+      // ── Gazon naturel : enrichit les actions déjà calculées ─────────────
+      prompt = [
+        `Tu es un expert gazon pour Mongazon360. Enrichis les recommandations du jour avec des conseils pratiques.`,
+        `Profil: type=${profile?.pelouse || "?"} · sol=${profile?.sol || "?"} · expo=${profile?.exposition || "?"} · surface=${profile?.surface || "?"}m² · score=${score}/100 · zone=${zoneLabel}`,
+        `Date: ${today.toLocaleDateString("fr-FR", { weekday:"long", day:"numeric", month:"long" })} — ${plan?.label}`,
+        weather
+          ? `Météo: ${weather.temp_max}°C/${weather.temp_min}°C · ${weather.precip}mm pluie · humidité ${weather.humidity}% · vent ${weather.wind}km/h`
+          : `Géolocalisation non activée — conseille sur la base du profil uniquement.`,
+        arros
+          ? `Arrosage: ${arros.mm}mm/session · ${arros.minutes}min · ${arros.freq}x/semaine`
+          : ``,
+        actionsAFaire.length > 0
+          ? `ACTIONS PRIORITAIRES calculées par le système pour aujourd'hui: ${actionsAFaire.join(", ")}. Enrichis UNIQUEMENT ces actions avec des conseils pratiques (timing, dosage, technique). Ne propose pas d'autres actions.`
+          : `Aucune action prioritaire aujourd'hui. Donne 2-3 conseils de vigilance adaptés au profil.`,
+        actionsBloquees.length > 0
+          ? `Actions bloquées (ne pas recommander): ${actionsBloquees.join(", ")}.`
+          : ``,
+        `4-5 points max, emojis, français, personnalisé.`,
+      ].filter(Boolean).join(" ");
+    }
+
+    try {
+      const token = await getToken();
+      const res   = await fetch("/api/ai-recommendations", {
+        method:  "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ prompt }),
       });
-      const data = await res.json();
-      setAiReco(data.text || "");
-    } catch { setAiReco("Impossible de contacter l'IA."); }
-    setAiLoading(false);
-  }, [weather, profile, month, arros, isPaid, zone, score]); // eslint-disable-line
 
-  useEffect(() => { if (weather && isPaid) fetchAI(); }, [weather, isPaid]); // eslint-disable-line
+      if (res.status === 429) {
+        // Limite atteinte — afficher la dernière recommandation en cache
+        try {
+          const saved = JSON.parse(localStorage.getItem(AI_RECO_KEY) || "{}");
+          if (saved.text) {
+            setAiReco(saved.text + "\n\n_(Limite quotidienne atteinte — recommandation d'hier)_");
+          } else {
+            setAiReco("Limite quotidienne atteinte. Revenez demain pour de nouvelles recommandations 🌿");
+          }
+        } catch {
+          setAiReco("Limite quotidienne atteinte. Revenez demain 🌿");
+        }
+        setAiLoading(false);
+        return;
+      }
+
+      const data = await res.json();
+      const text  = data.text || "";
+      if (text) {
+        setAiReco(text);
+        // Persiste en localStorage avec la date du jour
+        localStorage.setItem(AI_RECO_KEY, JSON.stringify({
+          date: new Date().toISOString().slice(0, 10),
+          text,
+        }));
+      }
+    } catch {
+      setAiReco("Impossible de contacter l'IA.");
+    }
+    setAiLoading(false);
+  }, [weather, profile, month, arros, isPaid, zone, score, recommended, actionStatuses]); // eslint-disable-line
+
+  // ── Déclenche l'IA une fois par jour si Premium ───────────────────────────
+  useEffect(() => {
+    if (!isPaid) return;
+    try {
+      const saved   = JSON.parse(localStorage.getItem(AI_RECO_KEY) || "{}");
+      const todayIso = new Date().toISOString().slice(0, 10);
+      // Relance si pas de recommandation pour aujourd'hui
+      if (saved.date !== todayIso) fetchAI();
+    } catch { fetchAI(); }
+  }, [isPaid, fetchAI]); // eslint-disable-line
 
   // ── Journalisation ────────────────────────────────────────────────────────
   const log = (action) => {
@@ -214,6 +307,46 @@ export default function Today() {
               <div style={{fontSize:13,color:"#81c784",marginBottom:12}}>Fonctionnalité Premium uniquement</div>
               <button onClick={()=>navigate("/subscribe")} style={{background:"linear-gradient(135deg,#F59E0B,#D97706)",color:"#1a1a1a",fontWeight:800,border:"none",borderRadius:10,padding:"10px 24px",fontSize:14,cursor:"pointer",width:"auto"}}>Passer Premium 🌿</button>
             </div>
+          ) : !weather ? (
+            <div style={{textAlign:"center",padding:"16px 0"}}>
+              <div style={{fontSize:28,marginBottom:8}}>📍</div>
+              <div style={{fontSize:13,color:"#81c784",marginBottom:12}}>
+                Activez la géolocalisation pour des recommandations adaptées à votre météo locale.
+              </div>
+              <button
+                onClick={() => {
+                  if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                      (pos) => {
+                        try {
+                          localStorage.setItem("gk_location", JSON.stringify({
+                            lat: pos.coords.latitude,
+                            lon: pos.coords.longitude,
+                          }));
+                          window.location.reload();
+                        } catch {}
+                      },
+                      () => alert("Géolocalisation refusée. Vérifiez les permissions de votre navigateur.")
+                    );
+                  }
+                }}
+                style={{background:"linear-gradient(135deg,#1565c0,#0d47a1)",color:"#fff",fontWeight:800,border:"none",borderRadius:10,padding:"10px 24px",fontSize:13,cursor:"pointer",width:"auto",marginBottom:8}}
+              >
+                📍 Activer la géolocalisation
+              </button>
+              {aiReco && (
+                <div style={{marginTop:12,fontSize:13,lineHeight:1.8,whiteSpace:"pre-wrap",textAlign:"left"}}>
+                  {aiReco}
+                </div>
+              )}
+              {!aiReco && isPaid && (
+                <div style={{marginTop:8}}>
+                  <button onClick={fetchAI} style={{background:"rgba(76,175,80,0.15)",border:"1px solid rgba(76,175,80,0.3)",borderRadius:10,padding:"8px 18px",color:"#a5d6a7",fontSize:12,cursor:"pointer"}}>
+                    🤖 Recommandations sans météo
+                  </button>
+                </div>
+              )}
+            </div>
           ) : aiLoading ? (
             <div style={{textAlign:"center",padding:"20px 0"}}>
               <div style={{fontSize:28,display:"inline-block",animation:"spin 1.2s linear infinite"}}>🌿</div>
@@ -223,7 +356,7 @@ export default function Today() {
             <div style={{fontSize:13,lineHeight:1.8,whiteSpace:"pre-wrap"}}>{aiReco}</div>
           ) : (
             <div style={{fontSize:13,color:"#81c784",textAlign:"center",padding:"12px 0"}}>
-              {!weather ? "Activez la géolocalisation" : "Appuyez sur ↻"}
+              Appuyez sur ↻ pour obtenir vos recommandations
             </div>
           )}
         </div>
