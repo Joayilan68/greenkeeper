@@ -86,9 +86,21 @@ function isOnWaitlist() {
   } catch { return false; }
 }
 
+// ── Wrapper pour protéger les routes privées ──────────────────────────────────
+// Affiche le contenu si connecté, redirige vers /login si non connecté.
+// Résout le bug "écran vert vide" quand SignedIn rend rien sans SignedOut.
+function PrivateRoute({ children }) {
+  return (
+    <>
+      <SignedIn>{children}</SignedIn>
+      <SignedOut><RedirectToSignIn /></SignedOut>
+    </>
+  );
+}
+
 // ── Routes principales ────────────────────────────────────────────────────────
 function AppRoutes() {
-  useAccessFlags(); // Set flags en arrière-plan, ne bloque pas le rendu
+  useAccessFlags();
   const onWaitlist = isOnWaitlist();
 
   return (
@@ -99,16 +111,16 @@ function AppRoutes() {
 
       {/* ── Onboarding ── */}
       <Route path="/register"          element={
-        <SignedIn>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Register />}</SignedIn>
+        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Register />}</PrivateRoute>
       } />
 
       {/* ── Liste d'attente ── */}
-      <Route path="/coming-soon"       element={<SignedIn><ComingSoon /></SignedIn>} />
+      <Route path="/coming-soon"       element={<PrivateRoute><ComingSoon /></PrivateRoute>} />
 
       {/* ── Abonnement ── */}
-      <Route path="/free"              element={<SignedIn><Layout><Free /></Layout></SignedIn>} />
-      <Route path="/subscribe"         element={<SignedIn><Subscribe /></SignedIn>} />
-      <Route path="/subscribe/success" element={<SignedIn><SubscribeSuccess /></SignedIn>} />
+      <Route path="/free"              element={<PrivateRoute><Layout><Free /></Layout></PrivateRoute>} />
+      <Route path="/subscribe"         element={<PrivateRoute><Subscribe /></PrivateRoute>} />
+      <Route path="/subscribe/success" element={<PrivateRoute><SubscribeSuccess /></PrivateRoute>} />
 
       {/* ── Pages légales ── */}
       <Route path="/mentions-legales"  element={<MentionsLegales />} />
@@ -119,7 +131,7 @@ function AppRoutes() {
 
       {/* ── Paramètres ── */}
       <Route path="/parametres"        element={
-        <SignedIn>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Settings /></Layout>}</SignedIn>
+        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Settings /></Layout>}</PrivateRoute>
       } />
 
       {/* ── Pilotage Admin ── */}
@@ -127,31 +139,31 @@ function AppRoutes() {
 
       {/* ── App principale ── */}
       <Route path="/"                  element={
-        <SignedIn>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Dashboard /></Layout>}</SignedIn>
+        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Dashboard /></Layout>}</PrivateRoute>
       } />
       <Route path="/diagnostic"        element={
-        <SignedIn>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Diagnostic /></Layout>}</SignedIn>
+        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Diagnostic /></Layout>}</PrivateRoute>
       } />
       <Route path="/my-lawn"           element={
-        <SignedIn>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><MyLawn /></Layout>}</SignedIn>
+        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><MyLawn /></Layout>}</PrivateRoute>
       } />
       <Route path="/today"             element={
-        <SignedIn>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Today /></Layout>}</SignedIn>
+        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Today /></Layout>}</PrivateRoute>
       } />
       <Route path="/products"          element={
-        <SignedIn>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Products /></Layout>}</SignedIn>
+        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Products /></Layout>}</PrivateRoute>
       } />
       <Route path="/history"           element={
-        <SignedIn>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><History /></Layout>}</SignedIn>
+        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><History /></Layout>}</PrivateRoute>
       } />
       <Route path="/setup"             element={
-        <SignedIn>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Setup /></Layout>}</SignedIn>
+        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Setup /></Layout>}</PrivateRoute>
       } />
       <Route path="/classement"        element={
-        <SignedIn>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Classement /></Layout>}</SignedIn>
+        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Classement /></Layout>}</PrivateRoute>
       } />
       <Route path="/rappels"           element={
-        <SignedIn>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Rappels /></Layout>}</SignedIn>
+        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Rappels /></Layout>}</PrivateRoute>
       } />
 
       <Route path="*" element={<SignedOut><RedirectToSignIn /></SignedOut>} />
