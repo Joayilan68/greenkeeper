@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWeather } from "../lib/useWeather";
 import { useProfile } from "../lib/useProfile";
@@ -79,37 +79,129 @@ export default function Today() {
     setTimeout(() => setToastPoints(null), 3500);
   };
 
-  // ── Prompt IA enrichi avec zone + profil complet ──────────────────────────
-  const fetchAI = useCallback(async () => {
-    if (!weather || !isPaid) return;
-    setAiLoading(true); setAiReco("");
+  // ── Calcul des statuts (source unique planEntretien.js) ───────────────────
+  // Déclaré AVANT fetchAI pour éviter la TDZ (Temporal Dead Zone) en prod Vite
+  const actionStatuses = buildActions(profile, weather, history, score, month, arros);
+  const recommended = actionStatuses.filter(a => a.status === "recommended");
+  const prevoyez    = actionStatuses.filter(a =>
+    a.status === "done_today" || a.status === "too_soon" ||
+    a.status === "blocked"    || a.status === "exclusive"
+  );
+  const pasPrevu    = actionStatuses.filter(a => a.status === "off_season");
+
+  // ── Clé localStorage IA du jour ─────────────────────────────────────────
+  const AI_RECO_KEY = "mg360_ai_reco_today";
+  // Ref : empêche les appels multiples (closure stale proof)
+  const aiCalledRef = React.useRef(false);
+
+  // ── Fonction d'appel API IA ───────────────────────────────────────────────
+  // Pas de useCallback — évite les closures stales sur weather/recommended
+  const fetchAI = async () => {
+    if (!isPaid) return;
+    setAiLoading(true);
+
+    const isSynth   = profile?.pelouse === "synthetique" || profile?.isSynthetique;
     const zoneLabel = ZONE_LABELS[zone] || zone;
-    const prompt = [
-      `Tu es un expert gazon pour Mongazon360. Recommandations concises pour aujourd'hui.`,
-      `Profil: type=${profile?.pelouse||"?"} sol=${profile?.sol||"?"} expo=${profile?.exposition||"?"}`,
-      `surface=${profile?.surface||"?"}m² score=${score}/100 zone=${zoneLabel}`,
-      `Date: ${today.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"})} — ${plan?.label}`,
-      `Météo: ${weather.temp_max}°C/${weather.temp_min}°C · ${weather.precip}mm pluie · hum ${weather.humidity}% · vent ${weather.wind}km/h`,
-      `Arrosage: ${arros ? arros.mm+"mm/session · "+arros.minutes+"min" : "non recommandé"}`,
-      `4-5 points max, emojis, français, personnalisé à la zone ${zoneLabel}.`,
-    ].join(" ");
+    const actionsAFaire   = recommended.map(a => a.action.label);
+    const actionsBloquees = actionStatuses
+      .filter(a => a.status === "blocked" || a.status === "too_soon")
+      .map(a => `${a.action.label} (${a.blockedReason || `dans ${a.daysLeft}j`})`);
+
+    const prompt = isSynth
+      ? [
+          `Tu es un expert gazon synthétique pour Mongazon360.`,
+          `IMPORTANT: gazon SYNTHÉTIQUE — ne jamais recommander tonte, engrais, arrosage, désherbage, scarification, aération.`,
+          `Profil: surface=${profile?.surface || "?"}m² expo=${profile?.exposition || "?"} zone=${zoneLabel}.`,
+          weather ? `Météo: ${weather.temp_max}°C ${weather.precip}mm pluie.` : "",
+          `Donne 3-4 conseils d'entretien synthétique (nettoyage, brossage, drainage, UV). Emojis, français, concis.`,
+        ].filter(Boolean).join(" ")
+      : [
+          `Tu es un expert gazon pour Mongazon360. Enrichis les recommandations du jour.`,
+          `Profil: type=${profile?.pelouse||"?"} sol=${profile?.sol||"?"} expo=${profile?.exposition||"?"} surface=${profile?.surface||"?"}m² score=${score}/100 zone=${zoneLabel}.`,
+          `Date: ${today.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"})} — ${plan?.label}.`,
+          weather
+            ? `Météo: ${weather.temp_max}°C/${weather.temp_min}°C ${weather.precip}mm pluie humidité ${weather.humidity}% vent ${weather.wind}km/h.`
+            : `Pas de météo locale — conseille selon le profil.`,
+          arros ? `Arrosage: ${arros.mm}mm/session ${arros.minutes}min ${arros.freq}x/sem.` : "",
+          actionsAFaire.length > 0
+            ? `ACTIONS DU JOUR: ${actionsAFaire.join(", ")}. Enrichis ces actions uniquement (timing, dosage, technique). Ne propose pas d'autres actions.`
+            : `Aucune action prioritaire. Donne 2-3 conseils de vigilance.`,
+          actionsBloquees.length > 0
+            ? `Bloquées (ne pas recommander): ${actionsBloquees.join(", ")}.`
+            : "",
+          `4-5 points max, emojis, français.`,
+        ].filter(Boolean).join(" ");
+
     try {
       const token = await getToken();
-      const res  = await fetch("/api/ai-recommendations", {
-        method: "POST",
+      const res   = await fetch("/api/ai-recommendations", {
+        method:  "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({ prompt }),
       });
-      const data = await res.json();
-      setAiReco(data.text || "");
-    } catch { setAiReco("Impossible de contacter l'IA."); }
-    setAiLoading(false);
-  }, [weather, profile, month, arros, isPaid, zone, score]); // eslint-disable-line
 
-  useEffect(() => { if (weather && isPaid) fetchAI(); }, [weather, isPaid]); // eslint-disable-line
+      if (res.status === 429) {
+        // Limite atteinte — afficher silencieusement la dernière reco en cache
+        try {
+          const saved = JSON.parse(localStorage.getItem(AI_RECO_KEY) || "{}");
+          if (saved.text) setAiReco(saved.text);
+        } catch {}
+        setAiLoading(false);
+        return;
+      }
+
+      const data = await res.json();
+      const text = data.text || "";
+      if (text) {
+        setAiReco(text);
+        localStorage.setItem(AI_RECO_KEY, JSON.stringify({
+          date: new Date().toISOString().slice(0, 10),
+          text,
+        }));
+      }
+    } catch {
+      // Erreur réseau — silencieux si déjà une reco affichée
+      if (!aiReco) setAiReco("Impossible de contacter l'IA.");
+    }
+    setAiLoading(false);
+  };
+
+  // ── Trigger 1 : dès que weather est disponible (cas normal) ──────────────
+  useEffect(() => {
+    if (!isPaid || !weather || aiCalledRef.current) return;
+    aiCalledRef.current = true;
+    try {
+      const saved    = JSON.parse(localStorage.getItem(AI_RECO_KEY) || "{}");
+      const todayStr = new Date().toISOString().slice(0, 10);
+      if (saved.date === todayStr && saved.text) {
+        setAiReco(saved.text); // Cache du jour → pas d'appel API
+      } else {
+        fetchAI();
+      }
+    } catch { fetchAI(); }
+  }, [isPaid, weather]); // eslint-disable-line
+
+  // ── Trigger 2 : fallback 3s pour utilisateurs sans géolocalisation ────────
+  useEffect(() => {
+    if (!isPaid) return;
+    const timer = setTimeout(() => {
+      if (aiCalledRef.current) return; // Déjà déclenché via weather
+      aiCalledRef.current = true;
+      try {
+        const saved    = JSON.parse(localStorage.getItem(AI_RECO_KEY) || "{}");
+        const todayStr = new Date().toISOString().slice(0, 10);
+        if (saved.date === todayStr && saved.text) {
+          setAiReco(saved.text);
+        } else {
+          fetchAI(); // fetchAI gère le cas weather=null
+        }
+      } catch { fetchAI(); }
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [isPaid]); // eslint-disable-line
 
   // ── Journalisation ────────────────────────────────────────────────────────
   const log = (action) => {
@@ -121,16 +213,6 @@ export default function Today() {
     const conseil = consKey ? getConseilApresAction(consKey, mois, profile, score) : null;
     afficherToast(res, conseil);
   };
-
-  // ── Calcul des statuts (source unique planEntretien.js) ───────────────────
-  const actionStatuses = buildActions(profile, weather, history, score, month, arros);
-
-  const recommended = actionStatuses.filter(a => a.status === "recommended");
-  const prevoyez    = actionStatuses.filter(a =>
-    a.status === "done_today" || a.status === "too_soon" ||
-    a.status === "blocked"    || a.status === "exclusive"
-  );
-  const pasPrevu    = actionStatuses.filter(a => a.status === "off_season");
 
   return (
     <div>
@@ -220,6 +302,46 @@ export default function Today() {
               <div style={{fontSize:13,color:"#81c784",marginBottom:12}}>Fonctionnalité Premium uniquement</div>
               <button onClick={()=>navigate("/subscribe")} style={{background:"linear-gradient(135deg,#F59E0B,#D97706)",color:"#1a1a1a",fontWeight:800,border:"none",borderRadius:10,padding:"10px 24px",fontSize:14,cursor:"pointer",width:"auto"}}>Passer Premium 🌿</button>
             </div>
+          ) : !weather ? (
+            <div style={{textAlign:"center",padding:"16px 0"}}>
+              <div style={{fontSize:28,marginBottom:8}}>📍</div>
+              <div style={{fontSize:13,color:"#81c784",marginBottom:12}}>
+                Activez la géolocalisation pour des recommandations adaptées à votre météo locale.
+              </div>
+              <button
+                onClick={() => {
+                  if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                      (pos) => {
+                        try {
+                          localStorage.setItem("gk_location", JSON.stringify({
+                            lat: pos.coords.latitude,
+                            lon: pos.coords.longitude,
+                          }));
+                          window.location.reload();
+                        } catch {}
+                      },
+                      () => alert("Géolocalisation refusée. Vérifiez les permissions de votre navigateur.")
+                    );
+                  }
+                }}
+                style={{background:"linear-gradient(135deg,#1565c0,#0d47a1)",color:"#fff",fontWeight:800,border:"none",borderRadius:10,padding:"10px 24px",fontSize:13,cursor:"pointer",width:"auto",marginBottom:8}}
+              >
+                📍 Activer la géolocalisation
+              </button>
+              {aiReco && (
+                <div style={{marginTop:12,fontSize:13,lineHeight:1.8,whiteSpace:"pre-wrap",textAlign:"left"}}>
+                  {aiReco}
+                </div>
+              )}
+              {!aiReco && isPaid && (
+                <div style={{marginTop:8}}>
+                  <button onClick={fetchAI} style={{background:"rgba(76,175,80,0.15)",border:"1px solid rgba(76,175,80,0.3)",borderRadius:10,padding:"8px 18px",color:"#a5d6a7",fontSize:12,cursor:"pointer"}}>
+                    🤖 Recommandations sans météo
+                  </button>
+                </div>
+              )}
+            </div>
           ) : aiLoading ? (
             <div style={{textAlign:"center",padding:"20px 0"}}>
               <div style={{fontSize:28,display:"inline-block",animation:"spin 1.2s linear infinite"}}>🌿</div>
@@ -229,7 +351,7 @@ export default function Today() {
             <div style={{fontSize:13,lineHeight:1.8,whiteSpace:"pre-wrap"}}>{aiReco}</div>
           ) : (
             <div style={{fontSize:13,color:"#81c784",textAlign:"center",padding:"12px 0"}}>
-              {!weather ? "Activez la géolocalisation" : "Appuyez sur ↻"}
+              Appuyez sur ↻ pour obtenir vos recommandations
             </div>
           )}
         </div>
