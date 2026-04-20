@@ -16,7 +16,6 @@ module.exports = async function handler(req, res) {
 
   // ── Route purge : POST avec { action: "purge" } ────────────────────────────
   if (req.body?.action === "purge") {
-    // Auth requis
     const authHeader = req.headers.authorization;
     if (!authHeader?.startsWith("Bearer ")) {
       return res.status(401).json({ error: "Token manquant" });
@@ -145,32 +144,63 @@ Si la photo ne montre pas du gazon, retourne score_visuel à 0 et explique dans 
         "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
       },
       body: JSON.stringify({
-        model:       "llama-3.2-11b-vision-preview",
+        // llama-4-scout-17b-16e-instruct : modèle vision stable de la stack MG360
+        // Remplace llama-3.2-11b-vision-preview qui causait des erreurs texte brut
+        // sur les images volumineuses ("Request Entity Too Large" non parseable en JSON)
+        model:       "meta-llama/llama-4-scout-17b-16e-instruct",
         max_tokens:  1500,
         temperature: 0.2,
         messages: [{
           role: "user",
           content: [
-            { type: "image_url", image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
+            { type: "image_url", image_url: { url: imageUrl } },
             { type: "text", text: prompt }
           ]
         }]
       })
     });
 
-    const groqData = await groqRes.json();
-    if (groqData.error) throw new Error("Groq: " + (groqData.error.message || JSON.stringify(groqData.error)));
+    // ── Gestion robuste de la réponse Groq ───────────────────────────────
+    // Lire le texte brut AVANT de tenter JSON.parse
+    // Évite "Unexpected token 'R'" quand Groq renvoie une erreur HTTP en texte
+    const groqRawText = await groqRes.text();
+    let groqData;
+    try {
+      groqData = JSON.parse(groqRawText);
+    } catch {
+      // Groq a retourné du texte brut (erreur HTTP, rate limit, etc.)
+      console.error("Groq réponse non-JSON:", groqRawText.slice(0, 200));
+      throw new Error("Service IA temporairement indisponible. Réessaie dans quelques secondes.");
+    }
+
+    if (groqData.error) {
+      throw new Error("Groq: " + (groqData.error.message || JSON.stringify(groqData.error)));
+    }
 
     const rawText = groqData.choices?.[0]?.message?.content || "";
+
+    // Extraire le JSON de la réponse en nettoyant les balises markdown éventuelles
     let analysis;
     try {
-      analysis = JSON.parse(rawText.replace(/```json|```/g, "").trim());
+      const cleaned = rawText
+        .replace(/```json\s*/gi, "")
+        .replace(/```\s*/g, "")
+        .trim();
+      // Trouver le premier { et le dernier } pour isoler le JSON
+      const start = cleaned.indexOf("{");
+      const end   = cleaned.lastIndexOf("}");
+      if (start === -1 || end === -1) throw new Error("Pas de JSON trouvé");
+      analysis = JSON.parse(cleaned.slice(start, end + 1));
     } catch {
+      // Fallback si l'IA ne retourne pas du JSON valide
       analysis = {
-        etat_general: "moyen", score_visuel: 50, emoji: "😐",
-        resume: "Analyse incomplète. Prenez une photo plus nette en pleine lumière.",
-        problemes: [], points_positifs: [],
-        actions_urgentes: ["Relancer le diagnostic avec une meilleure photo"],
+        etat_general:       "moyen",
+        score_visuel:       50,
+        emoji:              "😐",
+        resume:             "Analyse incomplète. Prenez une photo plus nette en pleine lumière.",
+        problemes:          [],
+        points_positifs:    [],
+        actions_urgentes:   ["Relancer le diagnostic avec une meilleure photo"],
         actions_prochaines: []
       };
     }

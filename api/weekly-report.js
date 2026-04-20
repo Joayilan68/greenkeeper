@@ -41,7 +41,6 @@ module.exports = async function handler(req, res) {
     try {
       const stripeKey = process.env.STRIPE_SECRET_KEY;
 
-      // Abonnements actifs
       const subRes = await fetch(
         "https://api.stripe.com/v1/subscriptions?status=active&limit=100&expand[]=data.items.data.price",
         { headers: { "Authorization":`Bearer ${stripeKey}` } }
@@ -61,7 +60,6 @@ module.exports = async function handler(req, res) {
         revenue.totalPremium = revenue.premiumMonthly + revenue.premiumYearly;
       }
 
-      // Revenus 6 derniers mois
       for (let i = 5; i >= 0; i--) {
         const d     = new Date(); d.setDate(1); d.setMonth(d.getMonth() - i);
         const start = Math.floor(d.getTime() / 1000);
@@ -76,7 +74,6 @@ module.exports = async function handler(req, res) {
         }
       }
 
-      // Solde
       const balRes = await fetch("https://api.stripe.com/v1/balance", { headers: { "Authorization":`Bearer ${stripeKey}` } });
       if (balRes.ok) {
         const bal = await balRes.json();
@@ -87,24 +84,25 @@ module.exports = async function handler(req, res) {
 
     // ── 3. SERVICES ───────────────────────────────────────────────────────────
     const services = [
-      { name:"Vercel",         status:"✅", detail:"Déployé" },
-      { name:"Groq Vision IA", status:"✅", detail:"Llama 4 Scout — Gratuit" },
-      { name:"Cloudinary",     status:"✅", detail:"Photos 25GB gratuit" },
-      { name:"Stripe",         status:"✅", detail:"Paiements actifs" },
-      { name:"Open-Meteo",     status:"✅", detail:"Météo gratuit" },
-      { name:"Clerk",          status:"✅", detail:"Auth — Mode test" },
-      { name:"Resend",         status:"✅", detail:"Emails actifs" },
-      { name:"Anthropic",      status:"⚠️", detail:"Crédits à recharger" },
-      { name:"Supabase",       status:"❌", detail:"Phase 3 — Non configuré" },
+      { name:"Vercel",              status:"✅", detail:"Déployé — mongazon360.fr" },
+      { name:"Groq Llama 4 Vision", status:"✅", detail:"llama-4-scout-17b — Gratuit" },
+      { name:"Cloudinary",          status:"✅", detail:"Photos 25GB gratuit" },
+      { name:"Stripe",              status:"✅", detail:"Paiements actifs — Live" },
+      { name:"Open-Meteo",          status:"✅", detail:"Météo gratuit" },
+      { name:"Clerk",               status:"✅", detail:"Auth — Mode Production" },
+      { name:"Resend",              status:"✅", detail:"Emails actifs" },
+      { name:"Supabase",            status:"✅", detail:"Pré-inscrits + Rate limiting actifs" },
+      { name:"Anthropic",           status:"⚠️", detail:"Crédits à recharger" },
+      { name:"Gemini",              status:"⚠️", detail:"Quota limité" },
     ];
 
     // ── 4. ACTIONS PRIORITAIRES ───────────────────────────────────────────────
     const nextActions = [
-      "Acheter domaines mongazon360.fr + .com sur OVH (~17€/an)",
-      "Créer structure auto-entrepreneur sur urssaf.fr",
-      "Recharger crédits Anthropic pour Vision de qualité",
-      "Valider documents juridiques avec un avocat RGPD",
-      "Configurer Supabase pour centraliser les données utilisateurs",
+      "Valider documents juridiques avec avocat RGPD (Cabinet Victoris — en cours)",
+      "Souscrire RC Pro (~150€/an)",
+      "Communiquer sur les réseaux sociaux pour remplir la liste d'attente",
+      "Migrer les profils utilisateurs de localStorage vers Supabase",
+      "Souscrire Open-Meteo licence commerciale dès 50 abonnés Premium",
     ];
 
     // ── HTML EMAIL ────────────────────────────────────────────────────────────
@@ -120,7 +118,7 @@ module.exports = async function handler(req, res) {
     <div style="display:flex;align-items:center;gap:16px;margin-bottom:8px;">
       <span style="font-size:36px;">🌿</span>
       <div>
-        <div style="color:#a5d6a7;font-size:22px;font-weight:800;">Mon Gazon 360</div>
+        <div style="color:#a5d6a7;font-size:22px;font-weight:800;">Mongazon360</div>
         <div style="color:#81c784;font-size:13px;">Rapport Hebdomadaire Complet</div>
       </div>
     </div>
@@ -148,9 +146,9 @@ module.exports = async function handler(req, res) {
     <h2 style="color:#1a4731;font-size:17px;margin:0 0 12px;padding-bottom:8px;border-bottom:3px solid #fff9e6;">💰 Finances & Revenus</h2>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;">
       ${[
-        ["MRR",              eur(revenue.mrr),          "#e65100"],
-        ["ARR projeté",      eur(revenue.arr),          "#f9a825"],
-        ["Solde disponible", eur(revenue.available),    "#1a4731"],
+        ["MRR",              eur(revenue.mrr),       "#e65100"],
+        ["ARR projeté",      eur(revenue.arr),       "#f9a825"],
+        ["Solde disponible", eur(revenue.available), "#1a4731"],
       ].map(([label, val, bg]) => `
         <div style="background:${bg};border-radius:10px;padding:12px 8px;text-align:center;">
           <div style="color:#fff;font-size:18px;font-weight:800;">${val}</div>
@@ -207,11 +205,11 @@ module.exports = async function handler(req, res) {
     <h2 style="color:#1a4731;font-size:17px;margin:0 0 12px;padding-bottom:8px;border-bottom:3px solid #e8f5e9;">🗺️ Avancement Roadmap</h2>
     <table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:13px;">
       ${[
-        ["Phase 1 — Fondations",     "✅ 100%", "#e8f5e9"],
-        ["Phase 2 — Diagnostic IA",  "✅ 100%", "#e8f5e9"],
-        ["Juridique RGPD",           "✅ 64%",  "#fce4ec"],
-        ["Phase 3 — Officialisation","❌ 0%",   "#ffebee"],
-        ["Phase 4 — Monétisation",   "❌ 0%",   "#f3e5f5"],
+        ["Phase 1 — Fondations",      "✅ 100%", "#e8f5e9"],
+        ["Phase 2 — Diagnostic IA",   "✅ 100%", "#e8f5e9"],
+        ["Juridique RGPD",            "⚠️ 64%",  "#fce4ec"],
+        ["Phase 3 — Officialisation", "⚠️ 75%",  "#fff9e6"],
+        ["Phase 4 — Monétisation",    "❌ 10%",  "#f3e5f5"],
       ].map(([phase, statut, bg]) => `
       <tr style="background:${bg}">
         <td style="padding:8px 12px;border-bottom:1px solid rgba(0,0,0,0.05);font-weight:600;">${phase}</td>
@@ -229,8 +227,8 @@ module.exports = async function handler(req, res) {
 
   <!-- FOOTER -->
   <div style="background:#f9fbe7;padding:16px 32px;border-top:1px solid #e8f5e9;text-align:center;">
-    <div style="color:#4a7c5c;font-size:11px;">Mon Gazon 360 — Rapport automatique hebdomadaire — Lundi 8h00</div>
-    <div style="color:#81c784;font-size:11px;margin-top:4px;">jordankrebs1@gmail.com</div>
+    <div style="color:#4a7c5c;font-size:11px;">Mongazon360 — Rapport automatique hebdomadaire — Lundi 8h00</div>
+    <div style="color:#81c784;font-size:11px;margin-top:4px;">mongazon360@gmail.com</div>
   </div>
 </div>
 </body></html>`;
@@ -239,8 +237,8 @@ module.exports = async function handler(req, res) {
       method: "POST",
       headers: { "Content-Type":"application/json", "Authorization":`Bearer ${process.env.RESEND_API_KEY}` },
       body: JSON.stringify({
-        from:    "Mon Gazon 360 <pilotage@mongazon360.fr>",
-        to:      ["jordankrebs1@gmail.com"],
+        from:    "Mongazon360 Pilotage <bonjour@mongazon360.fr>",
+        to:      ["mongazon360@gmail.com"],
         subject: `📊 [MG360] Rapport hebdomadaire — ${week}`,
         html
       })
