@@ -1,5 +1,5 @@
 // src/App.jsx
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { SignedIn, SignedOut, RedirectToSignIn, useUser } from "@clerk/clerk-react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
@@ -46,36 +46,90 @@ function AppWithWeather({ children }) {
   return <WeatherProvider>{children}</WeatherProvider>;
 }
 
-// ── Hook qui set les flags en arrière-plan — sans bloquer le rendu ────────────
-function useAccessFlags() {
+// ── Écran de chargement pendant la vérification d'accès ──────────────────────
+function LoadingScreen() {
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: "linear-gradient(180deg, #1a3d2b 0%, #0f2419 100%)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+    }}>
+      <div style={{ textAlign: "center" }}>
+        <div style={{ fontSize: 40, marginBottom: 16 }}>🌿</div>
+        <div style={{ width: 32, height: 32, border: "3px solid rgba(82,183,136,0.3)",
+          borderTop: "3px solid #52b788", borderRadius: "50%",
+          animation: "spin 1s linear infinite", margin: "0 auto" }}
+        />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    </div>
+  );
+}
+
+// ── Hook qui vérifie l'accès et retourne l'état de chargement ────────────────
+// Bloque le rendu des routes jusqu'à ce que la vérification Supabase soit terminée.
+// Sans ça, isOnWaitlist() retourne false avant que le flag soit posé → Dashboard visible.
+function useAccessCheck() {
   const { user, isLoaded } = useUser();
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    if (!isLoaded || !user) return;
+    // Clerk pas encore chargé → on attend
+    if (!isLoaded) return;
+
+    // Pas d'utilisateur connecté → pas de vérification nécessaire
+    if (!user) {
+      setChecking(false);
+      return;
+    }
 
     const email   = user.primaryEmailAddress?.emailAddress || "";
     const isAdmin = ADMIN_EMAILS.includes(email) || user.publicMetadata?.role === "admin";
 
+    // Admin → flags immédiats, pas besoin de Supabase
     if (isAdmin) {
       setAdminFlags();
+      setChecking(false);
       return;
     }
 
-    // User normal — vérifier Supabase si pas encore approuvé
-    if (localStorage.getItem("mg360_approved") !== "true") {
-      (async () => {
-        try {
-          const { supabase } = await import("./lib/supabase");
-          const { data } = await supabase
-            .from("profiles")
-            .select("user_id")
-            .eq("user_id", user.id)
-            .single();
-          if (data) setUserFlags();
-        } catch {}
-      })();
+    // Déjà approuvé en localStorage → pas besoin de vérifier Supabase
+    if (localStorage.getItem("mg360_approved") === "true") {
+      setChecking(false);
+      return;
     }
+
+    // Déjà en waitlist → pas besoin de vérifier Supabase
+    if (localStorage.getItem("mg360_waitlist") === "true") {
+      setChecking(false);
+      return;
+    }
+
+    // Nouvel utilisateur inconnu → vérifier Supabase avant d'afficher quoi que ce soit
+    (async () => {
+      try {
+        const { supabase } = await import("./lib/supabase");
+        const { data } = await supabase
+          .from("profiles")
+          .select("user_id")
+          .eq("user_id", user.id)
+          .single();
+
+        if (data) {
+          setUserFlags();
+        } else {
+          localStorage.setItem("mg360_waitlist", "true");
+        }
+      } catch {
+        // Erreur réseau → waitlist par sécurité
+        localStorage.setItem("mg360_waitlist", "true");
+      } finally {
+        setChecking(false);
+      }
+    })();
   }, [isLoaded, user]); // eslint-disable-line
+
+  return { checking };
 }
 
 // ── Vérification waitlist synchrone ──────────────────────────────────────────
@@ -86,9 +140,23 @@ function isOnWaitlist() {
   } catch { return false; }
 }
 
+// ── Wrapper pour protéger les routes privées ──────────────────────────────────
+function PrivateRoute({ children }) {
+  return (
+    <>
+      <SignedIn>{children}</SignedIn>
+      <SignedOut><RedirectToSignIn /></SignedOut>
+    </>
+  );
+}
+
 // ── Routes principales ────────────────────────────────────────────────────────
 function AppRoutes() {
-  useAccessFlags(); // Set flags en arrière-plan, ne bloque pas le rendu
+  const { checking } = useAccessCheck();
+
+  // Bloque tout rendu jusqu'à ce que la vérification d'accès soit terminée
+  if (checking) return <LoadingScreen />;
+
   const onWaitlist = isOnWaitlist();
 
   return (
@@ -99,16 +167,16 @@ function AppRoutes() {
 
       {/* ── Onboarding ── */}
       <Route path="/register"          element={
-        <SignedIn>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Register />}</SignedIn>
+        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Register />}</PrivateRoute>
       } />
 
       {/* ── Liste d'attente ── */}
-      <Route path="/coming-soon"       element={<SignedIn><ComingSoon /></SignedIn>} />
+      <Route path="/coming-soon"       element={<PrivateRoute><ComingSoon /></PrivateRoute>} />
 
       {/* ── Abonnement ── */}
-      <Route path="/free"              element={<SignedIn><Layout><Free /></Layout></SignedIn>} />
-      <Route path="/subscribe"         element={<SignedIn><Subscribe /></SignedIn>} />
-      <Route path="/subscribe/success" element={<SignedIn><SubscribeSuccess /></SignedIn>} />
+      <Route path="/free"              element={<PrivateRoute><Layout><Free /></Layout></PrivateRoute>} />
+      <Route path="/subscribe"         element={<PrivateRoute><Subscribe /></PrivateRoute>} />
+      <Route path="/subscribe/success" element={<PrivateRoute><SubscribeSuccess /></PrivateRoute>} />
 
       {/* ── Pages légales ── */}
       <Route path="/mentions-legales"  element={<MentionsLegales />} />
@@ -119,7 +187,7 @@ function AppRoutes() {
 
       {/* ── Paramètres ── */}
       <Route path="/parametres"        element={
-        <SignedIn>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Settings /></Layout>}</SignedIn>
+        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Settings /></Layout>}</PrivateRoute>
       } />
 
       {/* ── Pilotage Admin ── */}
@@ -127,31 +195,31 @@ function AppRoutes() {
 
       {/* ── App principale ── */}
       <Route path="/"                  element={
-        <SignedIn>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Dashboard /></Layout>}</SignedIn>
+        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Dashboard /></Layout>}</PrivateRoute>
       } />
       <Route path="/diagnostic"        element={
-        <SignedIn>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Diagnostic /></Layout>}</SignedIn>
+        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Diagnostic /></Layout>}</PrivateRoute>
       } />
       <Route path="/my-lawn"           element={
-        <SignedIn>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><MyLawn /></Layout>}</SignedIn>
+        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><MyLawn /></Layout>}</PrivateRoute>
       } />
       <Route path="/today"             element={
-        <SignedIn>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Today /></Layout>}</SignedIn>
+        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Today /></Layout>}</PrivateRoute>
       } />
       <Route path="/products"          element={
-        <SignedIn>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Products /></Layout>}</SignedIn>
+        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Products /></Layout>}</PrivateRoute>
       } />
       <Route path="/history"           element={
-        <SignedIn>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><History /></Layout>}</SignedIn>
+        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><History /></Layout>}</PrivateRoute>
       } />
       <Route path="/setup"             element={
-        <SignedIn>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Setup /></Layout>}</SignedIn>
+        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Setup /></Layout>}</PrivateRoute>
       } />
       <Route path="/classement"        element={
-        <SignedIn>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Classement /></Layout>}</SignedIn>
+        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Classement /></Layout>}</PrivateRoute>
       } />
       <Route path="/rappels"           element={
-        <SignedIn>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Rappels /></Layout>}</SignedIn>
+        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Rappels /></Layout>}</PrivateRoute>
       } />
 
       <Route path="*" element={<SignedOut><RedirectToSignIn /></SignedOut>} />
