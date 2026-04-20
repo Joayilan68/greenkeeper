@@ -166,17 +166,12 @@ export default function Today() {
       });
 
       if (res.status === 429) {
-        // Limite atteinte — afficher la dernière recommandation en cache
+        // Limite atteinte — afficher silencieusement la dernière recommandation en cache
+        // Pas de message "limite atteinte" — l'utilisateur voit simplement la dernière reco
         try {
           const saved = JSON.parse(localStorage.getItem(AI_RECO_KEY) || "{}");
-          if (saved.text) {
-            setAiReco(saved.text + "\n\n_(Limite quotidienne atteinte — recommandation d'hier)_");
-          } else {
-            setAiReco("Limite quotidienne atteinte. Revenez demain pour de nouvelles recommandations 🌿");
-          }
-        } catch {
-          setAiReco("Limite quotidienne atteinte. Revenez demain 🌿");
-        }
+          if (saved.text) setAiReco(saved.text);
+        } catch {}
         setAiLoading(false);
         return;
       }
@@ -198,15 +193,24 @@ export default function Today() {
   }, [weather, profile, month, arros, isPaid, zone, score, recommended, actionStatuses]); // eslint-disable-line
 
   // ── Déclenche l'IA une fois par jour si Premium ───────────────────────────
+  // N'utilise PAS fetchAI comme dépendance pour éviter les re-déclenchements
+  // chaque fois que weather/profile changent de référence.
   useEffect(() => {
     if (!isPaid) return;
     try {
-      const saved   = JSON.parse(localStorage.getItem(AI_RECO_KEY) || "{}");
+      const saved    = JSON.parse(localStorage.getItem(AI_RECO_KEY) || "{}");
       const todayIso = new Date().toISOString().slice(0, 10);
-      // Relance si pas de recommandation pour aujourd'hui
-      if (saved.date !== todayIso) fetchAI();
-    } catch { fetchAI(); }
-  }, [isPaid, fetchAI]); // eslint-disable-line
+      // Déjà une recommandation pour aujourd'hui → pas d'appel API
+      if (saved.date === todayIso && saved.text) return;
+      // Pas de recommandation du jour → fetch (légèrement différé pour laisser
+      // le composant se stabiliser avec weather + profile)
+      const timer = setTimeout(() => fetchAI(), 800);
+      return () => clearTimeout(timer);
+    } catch {
+      const timer = setTimeout(() => fetchAI(), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [isPaid]); // eslint-disable-line — fetchAI intentionnellement exclu des deps
 
   // ── Journalisation ────────────────────────────────────────────────────────
   const log = (action) => {
@@ -299,65 +303,72 @@ export default function Today() {
         <div style={card()}>
           <div style={cardTitle}>
             <span>🤖 Recommandations IA</span>
-            {isPaid && <button onClick={fetchAI} style={{background:"rgba(76,175,80,0.2)",border:"none",borderRadius:8,padding:"4px 10px",color:"#a5d6a7",fontSize:11,cursor:"pointer"}}>↻</button>}
+            {isPaid && !aiLoading && (
+              <button onClick={fetchAI} style={{background:"rgba(76,175,80,0.2)",border:"none",borderRadius:8,padding:"4px 10px",color:"#a5d6a7",fontSize:11,cursor:"pointer"}}>↻</button>
+            )}
           </div>
+
+          {/* ── Free ── */}
           {!isPaid ? (
             <div style={{textAlign:"center",padding:"16px 0"}}>
               <div style={{fontSize:28,marginBottom:8}}>🔒</div>
               <div style={{fontSize:13,color:"#81c784",marginBottom:12}}>Fonctionnalité Premium uniquement</div>
               <button onClick={()=>navigate("/subscribe")} style={{background:"linear-gradient(135deg,#F59E0B,#D97706)",color:"#1a1a1a",fontWeight:800,border:"none",borderRadius:10,padding:"10px 24px",fontSize:14,cursor:"pointer",width:"auto"}}>Passer Premium 🌿</button>
             </div>
-          ) : !weather ? (
-            <div style={{textAlign:"center",padding:"16px 0"}}>
-              <div style={{fontSize:28,marginBottom:8}}>📍</div>
-              <div style={{fontSize:13,color:"#81c784",marginBottom:12}}>
-                Activez la géolocalisation pour des recommandations adaptées à votre météo locale.
-              </div>
-              <button
-                onClick={() => {
-                  if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                      (pos) => {
-                        try {
-                          localStorage.setItem("gk_location", JSON.stringify({
-                            lat: pos.coords.latitude,
-                            lon: pos.coords.longitude,
-                          }));
-                          window.location.reload();
-                        } catch {}
-                      },
-                      () => alert("Géolocalisation refusée. Vérifiez les permissions de votre navigateur.")
-                    );
-                  }
-                }}
-                style={{background:"linear-gradient(135deg,#1565c0,#0d47a1)",color:"#fff",fontWeight:800,border:"none",borderRadius:10,padding:"10px 24px",fontSize:13,cursor:"pointer",width:"auto",marginBottom:8}}
-              >
-                📍 Activer la géolocalisation
-              </button>
-              {aiReco && (
-                <div style={{marginTop:12,fontSize:13,lineHeight:1.8,whiteSpace:"pre-wrap",textAlign:"left"}}>
+
+          ) : (
+            <>
+              {/* ── Contenu : recommandation ou spinner ── */}
+              {aiReco ? (
+                // Recommandation disponible — toujours affichée, même pendant un rechargement
+                <div style={{fontSize:13,lineHeight:1.8,whiteSpace:"pre-wrap",position:"relative"}}>
                   {aiReco}
+                  {aiLoading && (
+                    <div style={{display:"inline-block",marginLeft:8,fontSize:14,animation:"spin 1.2s linear infinite"}}>🌿</div>
+                  )}
+                </div>
+              ) : aiLoading ? (
+                // Pas encore de contenu + chargement en cours
+                <div style={{textAlign:"center",padding:"20px 0"}}>
+                  <div style={{fontSize:28,display:"inline-block",animation:"spin 1.2s linear infinite"}}>🌿</div>
+                  <div style={{fontSize:12,color:"#81c784",marginTop:8}}>Analyse en cours...</div>
+                </div>
+              ) : (
+                // Pas de contenu, pas de chargement
+                <div style={{fontSize:13,color:"#81c784",textAlign:"center",padding:"12px 0"}}>
+                  Appuyez sur ↻ pour obtenir vos recommandations
                 </div>
               )}
-              {!aiReco && isPaid && (
-                <div style={{marginTop:8}}>
-                  <button onClick={fetchAI} style={{background:"rgba(76,175,80,0.15)",border:"1px solid rgba(76,175,80,0.3)",borderRadius:10,padding:"8px 18px",color:"#a5d6a7",fontSize:12,cursor:"pointer"}}>
-                    🤖 Recommandations sans météo
+
+              {/* ── Géolocalisation manquante ── */}
+              {!weather && (
+                <div style={{marginTop:12,padding:"12px 14px",background:"rgba(25,118,210,0.08)",border:"1px solid rgba(100,181,246,0.2)",borderRadius:10}}>
+                  <div style={{fontSize:12,color:"#81c784",marginBottom:8}}>
+                    📍 Sans géolocalisation, les recommandations ne tiennent pas compte de votre météo locale.
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (!navigator.geolocation) return;
+                      navigator.geolocation.getCurrentPosition(
+                        (pos) => {
+                          try {
+                            localStorage.setItem("gk_location", JSON.stringify({
+                              lat: pos.coords.latitude,
+                              lon: pos.coords.longitude,
+                            }));
+                            window.location.reload();
+                          } catch {}
+                        },
+                        () => alert("Géolocalisation refusée. Activez-la dans les paramètres de votre navigateur.")
+                      );
+                    }}
+                    style={{background:"linear-gradient(135deg,#1565c0,#0d47a1)",color:"#fff",fontWeight:700,border:"none",borderRadius:8,padding:"8px 16px",fontSize:12,cursor:"pointer"}}
+                  >
+                    📍 Activer la géolocalisation
                   </button>
                 </div>
               )}
-            </div>
-          ) : aiLoading ? (
-            <div style={{textAlign:"center",padding:"20px 0"}}>
-              <div style={{fontSize:28,display:"inline-block",animation:"spin 1.2s linear infinite"}}>🌿</div>
-              <div style={{fontSize:12,color:"#81c784",marginTop:8}}>Analyse en cours...</div>
-            </div>
-          ) : aiReco ? (
-            <div style={{fontSize:13,lineHeight:1.8,whiteSpace:"pre-wrap"}}>{aiReco}</div>
-          ) : (
-            <div style={{fontSize:13,color:"#81c784",textAlign:"center",padding:"12px 0"}}>
-              Appuyez sur ↻ pour obtenir vos recommandations
-            </div>
+            </>
           )}
         </div>
 
