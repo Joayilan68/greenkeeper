@@ -79,6 +79,16 @@ export default function Today() {
     setTimeout(() => setToastPoints(null), 3500);
   };
 
+  // ── Calcul des statuts (source unique planEntretien.js) ───────────────────
+  // Déclaré AVANT fetchAI pour éviter la TDZ (Temporal Dead Zone) en prod Vite
+  const actionStatuses = buildActions(profile, weather, history, score, month, arros);
+  const recommended = actionStatuses.filter(a => a.status === "recommended");
+  const prevoyez    = actionStatuses.filter(a =>
+    a.status === "done_today" || a.status === "too_soon" ||
+    a.status === "blocked"    || a.status === "exclusive"
+  );
+  const pasPrevu    = actionStatuses.filter(a => a.status === "off_season");
+
   // ── Clé localStorage pour la recommandation IA du jour ───────────────────
   const AI_RECO_KEY = "mg360_ai_reco_today";
 
@@ -208,16 +218,6 @@ export default function Today() {
     const conseil = consKey ? getConseilApresAction(consKey, mois, profile, score) : null;
     afficherToast(res, conseil);
   };
-
-  // ── Calcul des statuts (source unique planEntretien.js) ───────────────────
-  const actionStatuses = buildActions(profile, weather, history, score, month, arros);
-
-  const recommended = actionStatuses.filter(a => a.status === "recommended");
-  const prevoyez    = actionStatuses.filter(a =>
-    a.status === "done_today" || a.status === "too_soon" ||
-    a.status === "blocked"    || a.status === "exclusive"
-  );
-  const pasPrevu    = actionStatuses.filter(a => a.status === "off_season");
 
   return (
     <div>
