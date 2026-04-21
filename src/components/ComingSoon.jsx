@@ -159,52 +159,52 @@ export default function ComingSoon() {
   const handleGuestCode = async () => {
     if (!guestCode.trim()) return;
     setGuestLoading(true);
-    setGuestError('');
+    setGuestError("");
 
     try {
       const { data, error } = await supabase
-        .from('guest_codes')
-        .select('id, max_uses, uses_count, expires_at')
-        .eq('code', guestCode.trim().toUpperCase())
-        .eq('actif', true)
+        .from("guest_codes")
+        .select("id, max_uses, uses_count, expires_at")
+        .eq("code", guestCode.trim().toUpperCase())
+        .eq("actif", true)
         .single();
 
       if (error || !data) {
-        setGuestError('Code invalide ou expiré.');
+        setGuestError("Code invalide ou expiré.");
         setGuestLoading(false);
         return;
       }
 
       // Vérifier expiration
       if (data.expires_at && new Date(data.expires_at) < new Date()) {
-        setGuestError('Ce code a expiré.');
+        setGuestError("Ce code a expiré.");
         setGuestLoading(false);
         return;
       }
 
       // Vérifier limite d'utilisations
       if (data.max_uses !== null && data.uses_count >= data.max_uses) {
-        setGuestError('Ce code a atteint sa limite d'utilisations.');
+        setGuestError("Ce code a atteint sa limite d’utilisations.");
         setGuestLoading(false);
         return;
       }
 
       // Incrémenter le compteur d'utilisations
       await supabase
-        .from('guest_codes')
+        .from("guest_codes")
         .update({ uses_count: (data.uses_count || 0) + 1 })
-        .eq('id', data.id);
+        .eq("id", data.id);
 
       // Activer l'accès Premium invité
-      localStorage.setItem('mg360_guest_validated', 'true');
-      localStorage.setItem('mg360_guest_code', guestCode.trim().toUpperCase());
-      localStorage.setItem('mg360_approved', 'true');
-      localStorage.removeItem('mg360_waitlist');
+      localStorage.setItem("mg360_guest_validated", "true");
+      localStorage.setItem("mg360_guest_code", guestCode.trim().toUpperCase());
+      localStorage.setItem("mg360_approved", "true");
+      localStorage.removeItem("mg360_waitlist");
 
       setGuestUnlocked(true);
-      setTimeout(() => navigate('/'), 1500);
+      setTimeout(() => navigate("/"), 1500);
     } catch {
-      setGuestError('Erreur de connexion. Réessaie.');
+      setGuestError("Erreur de connexion. Réessaie.");
     }
     setGuestLoading(false);
   };
@@ -395,8 +395,8 @@ export default function ComingSoon() {
           </div>
         )}
 
-        {/* ── Code d'invitation (visible) ──────────────────── */}
-        {!guestUnlocked && (
+        {/* ── Code invitation (visible) ─────────────────────── */}
+        {!guestUnlocked ? (
           <div style={{ marginBottom: 20 }}>
             {!showGuestInput ? (
               <button
@@ -423,8 +423,8 @@ export default function ComingSoon() {
                     type="text"
                     placeholder="Ex : FAMILLE2026"
                     value={guestCode}
-                    onChange={e => { setGuestCode(e.target.value.toUpperCase()); setGuestError(''); }}
-                    onKeyDown={e => e.key === 'Enter' && handleGuestCode()}
+                    onChange={e => { setGuestCode(e.target.value.toUpperCase()); setGuestError(""); }}
+                    onKeyDown={e => e.key === "Enter" && handleGuestCode()}
                     style={{
                       flex: 1, padding: "10px 14px", borderRadius: 10,
                       background: "rgba(255,255,255,0.07)", border: "1px solid rgba(100,181,246,0.3)",
@@ -449,17 +449,10 @@ export default function ComingSoon() {
                 {guestError && (
                   <div style={{ fontSize: 11, color: "#ef9a9a", marginTop: 8 }}>{guestError}</div>
                 )}
-                {guestUnlocked && (
-                  <div style={{ fontSize: 12, color: C.freshGreen, fontWeight: 800, marginTop: 8 }}>
-                    ✅ Accès activé ! Redirection en cours...
-                  </div>
-                )}
               </div>
             )}
           </div>
-        )}
-
-        {guestUnlocked && (
+        ) : (
           <div style={{
             background: "rgba(82,183,136,0.15)", border: "1px solid rgba(82,183,136,0.4)",
             borderRadius: 14, padding: "14px 16px", marginBottom: 20, textAlign: "center",
