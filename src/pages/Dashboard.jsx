@@ -29,6 +29,10 @@ export default function Dashboard() {
   const [dismissedNotifs, setDismissedNotifs] = useState([]);
   const [pushActivated, setPushActivated]     = useState(false);
   const [showOnboarding, setShowOnboarding]   = useState(false);
+  const [showNotifBanner, setShowNotifBanner] = useState(() => {
+    // Afficher uniquement si l'utilisateur n'a pas encore répondu
+    return localStorage.getItem("mg360_notif_banner_seen") !== "true";
+  });
 
   const { permission, subscribe, sendTestNotification, sendAlert, isSupported } = usePushNotifications(user?.id);
 
@@ -99,6 +103,12 @@ export default function Dashboard() {
     } else {
       navigate(actionRoute);
     }
+  };
+
+  const dismissNotifBanner = (activate) => {
+    localStorage.setItem("mg360_notif_banner_seen", "true");
+    setShowNotifBanner(false);
+    if (activate) navigate("/parametres");
   };
 
   const NOTIF_COLORS = {
@@ -173,6 +183,52 @@ export default function Dashboard() {
       </div>
 
       <div style={scroll}>
+
+        {/* ── BANDEAU NOTIFICATIONS/EMAILS ─────────────────────────────────── */}
+        {showNotifBanner && (
+          <div style={{
+            background: "linear-gradient(135deg, rgba(27,94,32,0.6), rgba(13,43,26,0.8))",
+            border: "1px solid rgba(102,187,106,0.35)",
+            borderRadius: 14, padding: "14px 16px", marginBottom: 4,
+            display: "flex", flexDirection: "column", gap: 10,
+          }}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+              <span style={{ fontSize: 24, flexShrink: 0 }}>🔔</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: "#F1F8F2", marginBottom: 3 }}>
+                  Restez informé de votre gazon
+                </div>
+                <div style={{ fontSize: 12, color: "#81c784", lineHeight: 1.6 }}>
+                  Activez les alertes push et les emails pour recevoir vos conseils d'entretien hebdomadaires et les alertes météo importantes.
+                </div>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button
+                onClick={() => dismissNotifBanner(true)}
+                style={{
+                  flex: 1, padding: "10px", borderRadius: 10,
+                  background: "linear-gradient(135deg,#43a047,#2e7d32)",
+                  border: "none", color: "#fff", fontWeight: 800,
+                  fontSize: 13, cursor: "pointer",
+                }}
+              >
+                ✅ Activer les alertes
+              </button>
+              <button
+                onClick={() => dismissNotifBanner(false)}
+                style={{
+                  padding: "10px 16px", borderRadius: 10,
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  color: "#81c784", fontSize: 12, cursor: "pointer",
+                }}
+              >
+                Non merci
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* ── BANNIÈRE VILLE NON VÉRIFIÉE ───────────────────────────────────── */}
         {profile?.cityNotFound && (
