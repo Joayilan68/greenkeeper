@@ -42,7 +42,7 @@ export default function ComingSoon() {
   const [adminUnlocked, setAdminUnlocked] = useState(false);
 
   // Pré-inscription
-  const [email, setEmail]         = useState("");
+  const [email, setEmail]           = useState("");
   const [emailStatus, setEmailStatus] = useState(null); // "ok" | "already" | "error"
   const [emailLoading, setEmailLoading] = useState(false);
 
@@ -52,7 +52,14 @@ export default function ComingSoon() {
   const [adminError, setAdminError]         = useState("");
   const [adminLoading, setAdminLoading]     = useState(false);
 
-  // Compteur pré-inscrits (optionnel — social proof)
+  // Code invité (famille / proches)
+  const [guestCode, setGuestCode]           = useState("");
+  const [guestError, setGuestError]         = useState("");
+  const [guestLoading, setGuestLoading]     = useState(false);
+  const [guestUnlocked, setGuestUnlocked]   = useState(false);
+  const [showGuestInput, setShowGuestInput] = useState(false);
+
+  // Compteur pré-inscrits (social proof)
   const [preinscritsCount, setPreinscritsCount] = useState(null);
 
   useEffect(() => {
@@ -84,7 +91,6 @@ export default function ComingSoon() {
     setEmailLoading(true);
     setEmailStatus(null);
 
-    // Récupérer utm_source depuis l'URL si présent
     const params = new URLSearchParams(window.location.search);
     const source = params.get('utm_source') || 'direct';
 
@@ -94,10 +100,20 @@ export default function ComingSoon() {
         .insert({ email: email.toLowerCase().trim(), source });
 
       if (error?.code === '23505') {
-        setEmailStatus('already'); // unique constraint → déjà inscrit
+        setEmailStatus('already');
       } else if (error) {
         setEmailStatus('error');
       } else {
+        // Envoyer l'email de confirmation via Resend
+        try {
+          await fetch('/api/confirm-preinscription', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email.toLowerCase().trim() }),
+          });
+        } catch {
+          // L'email de confirmation est best-effort — pas bloquant
+        }
         setEmailStatus('ok');
         setEmail('');
         fetchCount();
@@ -128,9 +144,8 @@ export default function ComingSoon() {
         return;
       }
 
-      // Code valide → déverrouiller
       localStorage.setItem('mg360_approved', 'true');
-      localStorage.setItem('gk_admin_code', 'GREENKEEPER2024'); // active tier admin dans useSubscription
+      localStorage.setItem('gk_admin_code', 'GREENKEEPER2024');
       localStorage.removeItem('mg360_waitlist');
       setAdminUnlocked(true);
       setTimeout(() => navigate('/'), 1200);
@@ -138,6 +153,60 @@ export default function ComingSoon() {
       setAdminError('Erreur de connexion. Réessaie.');
     }
     setAdminLoading(false);
+  };
+
+  // ── Validation code invité ────────────────────────────────
+  const handleGuestCode = async () => {
+    if (!guestCode.trim()) return;
+    setGuestLoading(true);
+    setGuestError('');
+
+    try {
+      const { data, error } = await supabase
+        .from('guest_codes')
+        .select('id, max_uses, uses_count, expires_at')
+        .eq('code', guestCode.trim().toUpperCase())
+        .eq('actif', true)
+        .single();
+
+      if (error || !data) {
+        setGuestError('Code invalide ou expiré.');
+        setGuestLoading(false);
+        return;
+      }
+
+      // Vérifier expiration
+      if (data.expires_at && new Date(data.expires_at) < new Date()) {
+        setGuestError('Ce code a expiré.');
+        setGuestLoading(false);
+        return;
+      }
+
+      // Vérifier limite d'utilisations
+      if (data.max_uses !== null && data.uses_count >= data.max_uses) {
+        setGuestError('Ce code a atteint sa limite d'utilisations.');
+        setGuestLoading(false);
+        return;
+      }
+
+      // Incrémenter le compteur d'utilisations
+      await supabase
+        .from('guest_codes')
+        .update({ uses_count: (data.uses_count || 0) + 1 })
+        .eq('id', data.id);
+
+      // Activer l'accès Premium invité
+      localStorage.setItem('mg360_guest_validated', 'true');
+      localStorage.setItem('mg360_guest_code', guestCode.trim().toUpperCase());
+      localStorage.setItem('mg360_approved', 'true');
+      localStorage.removeItem('mg360_waitlist');
+
+      setGuestUnlocked(true);
+      setTimeout(() => navigate('/'), 1500);
+    } catch {
+      setGuestError('Erreur de connexion. Réessaie.');
+    }
+    setGuestLoading(false);
   };
 
   const handleSignOut = async () => {
@@ -267,7 +336,7 @@ export default function ComingSoon() {
             <div style={{ fontSize: 22, marginBottom: 6 }}>🎉</div>
             <div style={{ fontSize: 14, fontWeight: 800, color: C.lightGreen }}>C'est noté !</div>
             <div style={{ fontSize: 12, color: C.textSoft, marginTop: 4 }}>
-              Vous serez parmi les premiers à accéder à Mongazon360.
+              Un email de confirmation vous a été envoyé. Vous serez parmi les premiers à accéder à Mongazon360.
             </div>
           </div>
         )}
@@ -323,6 +392,81 @@ export default function ComingSoon() {
                 <span style={{ fontWeight: 700, color: C.text, textTransform: "capitalize" }}>{val}</span>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* ── Code d'invitation (visible) ──────────────────── */}
+        {!guestUnlocked && (
+          <div style={{ marginBottom: 20 }}>
+            {!showGuestInput ? (
+              <button
+                onClick={() => setShowGuestInput(true)}
+                style={{
+                  width: "100%", padding: "12px 16px", borderRadius: 14,
+                  background: "rgba(100,181,246,0.08)", border: "1px solid rgba(100,181,246,0.2)",
+                  color: "#64b5f6", fontWeight: 700, fontSize: 13,
+                  cursor: "pointer", fontFamily: "inherit",
+                }}
+              >
+                🎟️ J'ai un code d'invitation
+              </button>
+            ) : (
+              <div style={{
+                background: "rgba(100,181,246,0.08)", border: "1px solid rgba(100,181,246,0.25)",
+                borderRadius: 14, padding: "14px 16px",
+              }}>
+                <div style={{ fontSize: 12, fontWeight: 800, color: "#64b5f6", marginBottom: 10 }}>
+                  🎟️ Code d'invitation
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input
+                    type="text"
+                    placeholder="Ex : FAMILLE2026"
+                    value={guestCode}
+                    onChange={e => { setGuestCode(e.target.value.toUpperCase()); setGuestError(''); }}
+                    onKeyDown={e => e.key === 'Enter' && handleGuestCode()}
+                    style={{
+                      flex: 1, padding: "10px 14px", borderRadius: 10,
+                      background: "rgba(255,255,255,0.07)", border: "1px solid rgba(100,181,246,0.3)",
+                      color: C.text, fontSize: 13, fontFamily: "inherit", outline: "none",
+                      textTransform: "uppercase", letterSpacing: "0.05em",
+                    }}
+                  />
+                  <button
+                    onClick={handleGuestCode}
+                    disabled={guestLoading || !guestCode}
+                    style={{
+                      padding: "10px 16px", borderRadius: 10,
+                      background: "linear-gradient(135deg,#1565c0,#0d47a1)",
+                      border: "none", color: "#fff", fontWeight: 800,
+                      fontSize: 13, cursor: "pointer", fontFamily: "inherit",
+                      opacity: guestLoading || !guestCode ? 0.6 : 1,
+                    }}
+                  >
+                    {guestLoading ? "..." : "→"}
+                  </button>
+                </div>
+                {guestError && (
+                  <div style={{ fontSize: 11, color: "#ef9a9a", marginTop: 8 }}>{guestError}</div>
+                )}
+                {guestUnlocked && (
+                  <div style={{ fontSize: 12, color: C.freshGreen, fontWeight: 800, marginTop: 8 }}>
+                    ✅ Accès activé ! Redirection en cours...
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {guestUnlocked && (
+          <div style={{
+            background: "rgba(82,183,136,0.15)", border: "1px solid rgba(82,183,136,0.4)",
+            borderRadius: 14, padding: "14px 16px", marginBottom: 20, textAlign: "center",
+          }}>
+            <div style={{ fontSize: 22, marginBottom: 6 }}>🎉</div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: C.lightGreen }}>Accès activé !</div>
+            <div style={{ fontSize: 12, color: C.textSoft, marginTop: 4 }}>Bienvenue sur Mongazon360 🌿</div>
           </div>
         )}
 
