@@ -43,9 +43,14 @@ export function useSubscription() {
       setTier("admin"); setLoading(false); return;
     }
 
+    // 3. Code invité validé (famille, proches) → accès Premium sans paiement
+    if (localStorage.getItem("mg360_guest_validated") === "true") {
+      setTier("paid"); setLoading(false); return;
+    }
+
     if (!isSignedIn || !user) { setTier("free"); setLoading(false); return; }
 
-    // 3. Abonnement Stripe actif
+    // 4. Abonnement Stripe actif
     const meta = user.publicMetadata || {};
     const subscribed = meta.isSubscribed === true ||
                        meta.subscriptionStatus === "active" ||
