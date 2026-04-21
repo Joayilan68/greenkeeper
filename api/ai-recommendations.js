@@ -1,7 +1,7 @@
 // api/ai-recommendations.js
 // ─────────────────────────────────────────────────────────────────────────────
 // Route IA Groq avec rate limiting Supabase
-// Limites : Free = 20 req/jour · Premium = 50 req/jour · Admin = illimité
+// Limites : Free = 0 · Premium = 10/jour (reset minuit UTC) · Admin = illimité · Unknown = 2/jour par IP
 // ─────────────────────────────────────────────────────────────────────────────
 
 const { createClient } = require("@supabase/supabase-js");
@@ -100,9 +100,19 @@ module.exports = async function handler(req, res) {
         const token   = authHeader.replace("Bearer ", "");
         const payload = await clerk.verifyToken(token);
         userId = payload.sub;
-        // Tout utilisateur avec un token Clerk valide → au minimum "paid"
-        // (l'accès IA est réservé aux Premium dans l'UI de toute façon)
-        tier = "paid";
+        // Vérifier si admin via metadata Clerk
+        try {
+          const user = await clerk.users.getUser(userId);
+          const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
+          const email = user.emailAddresses?.[0]?.emailAddress || "";
+          if (user.publicMetadata?.role === "admin" || ADMIN_EMAILS.includes(email)) {
+            tier = "admin";
+          } else {
+            tier = "paid";
+          }
+        } catch {
+          tier = "paid"; // fallback si erreur Clerk
+        }
       } catch {
         // Token invalide → on traite comme inconnu
         userId = req.headers["x-forwarded-for"]?.split(",")[0] || "anonymous";
