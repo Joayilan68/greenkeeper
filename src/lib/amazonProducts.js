@@ -2,8 +2,8 @@
 // amazonProducts.js — Catalogue Amazon Affilié Mongazon360
 // Tag: mongazon360-21 | Généré depuis MG360_Amazon_Catalogue.xlsx
 //
-// ⚠️  ASINs marqués null = 🔵 à remplir (utilisent le fallback recherche Amazon)
-// ⚠️  Vérifier tous les ASINs IA sur amazon.fr avant déploiement production
+// ✅ Option 1 active : tous les liens pointent vers une recherche Amazon (jamais obsolètes)
+// 📌 Les ASINs sont conservés en référence pour la future migration vers PA API (Amazon Product API)
 // ─────────────────────────────────────────────────────────────────────────────
 
 const TAG = 'mongazon360-21';
@@ -12,11 +12,10 @@ const TAG = 'mongazon360-21';
  * Construit l'URL Amazon affiliée.
  * Si l'ASIN est null ou invalide, redirige vers une recherche Amazon.
  */
-const url = (asin, fallback) => {
-  if (asin && asin !== '🔵') {
-    return `https://www.amazon.fr/dp/${asin}?tag=${TAG}&linkCode=ogi&th=1&psc=1`;
-  }
-  return `https://www.amazon.fr/s?k=${encodeURIComponent(fallback)}&tag=${TAG}`;
+// Option 1 — Liens de recherche uniquement (jamais obsolètes, zero maintenance ASIN)
+// Quand la PA API sera activée (50+ abonnés Premium), basculer sur les ASINs.
+const url = (asin, searchTerms) => {
+  return `https://www.amazon.fr/s?k=${encodeURIComponent(searchTerms)}&tag=${TAG}`;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
