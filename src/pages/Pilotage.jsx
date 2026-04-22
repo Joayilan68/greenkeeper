@@ -82,8 +82,16 @@ export default function Pilotage() {
   const [preinscriptions, setPreinscriptions] = useState([]);
   const [preinscLoading, setPreinscLoading]   = useState(false);
   const [preinscTotal, setPreinscTotal]       = useState(0);
-  const [purging, setPurging]       = useState(false);
-  const [purgeResult, setPurgeResult] = useState(null);
+  const [purging, setPurging]             = useState(false);
+  const [purgeResult, setPurgeResult]     = useState(null);
+  const [expandedPhases, setExpandedPhases] = useState({});
+
+  // ── Roadmap Google Sheets ──────────────────────────────────────────────────
+  const SHEETS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQMeodlcbKo7_nRw6rxVJhk7eFZPQWTlFNrP1hC47ZlVipF9fKyuqQJES5EZx4GF8Tv7BOKtqmQn0Pw/pub?gid=317142764&single=true&output=csv";
+  const [roadmap, setRoadmap]           = useState([]);
+  const [roadmapLoading, setRoadmapLoading] = useState(false);
+  const [roadmapError, setRoadmapError]     = useState(null);
+  const [roadmapMeta, setRoadmapMeta]       = useState(null); // { date, pctGlobal }
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -97,7 +105,67 @@ export default function Pilotage() {
     fetchUsers();
     fetchRevenue();
     fetchPreinscriptions();
+    fetchRoadmap();
     setLastUpdate(new Date().toLocaleTimeString("fr-FR"));
+  }
+
+  // ── Parser CSV Google Sheets ───────────────────────────────────────────────
+  async function fetchRoadmap() {
+    setRoadmapLoading(true);
+    setRoadmapError(null);
+    try {
+      const res = await fetch(SHEETS_CSV_URL + "&cacheBust=" + Date.now());
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const text = await res.text();
+
+      // Parse CSV — 4 lignes de header (titre, date, instructions, colonnes)
+      const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+      
+      // Extraire la date de mise à jour (ligne 2)
+      const dateLine = lines[1] || "";
+      const dateMatch = dateLine.match(/Mis à jour le (\d{2}\/\d{2}\/\d{4})/);
+      const majDate   = dateMatch ? dateMatch[1] : null;
+
+      // Trouver la ligne d'entêtes (contient "Phase")
+      const headerIdx = lines.findIndex(l => l.startsWith("Phase"));
+      if (headerIdx < 0) throw new Error("Format CSV inattendu");
+
+      const dataLines = lines.slice(headerIdx + 1);
+      const tasks = [];
+      let pctGlobal = null;
+
+      for (const line of dataLines) {
+        // Parsing CSV basique (gère les virgules dans les champs entre guillemets)
+        const cols = [];
+        let cur = ""; let inQ = false;
+        for (let i = 0; i < line.length; i++) {
+          const ch = line[i];
+          if (ch === '"') { inQ = !inQ; }
+          else if (ch === "," && !inQ) { cols.push(cur.trim()); cur = ""; }
+          else { cur += ch; }
+        }
+        cols.push(cur.trim());
+
+        const [phase, etape, desc, statut, priorite, dateCible, notes, pctRaw] = cols;
+        if (!phase) continue;
+
+        // Ligne TOTAL
+        if (phase.includes("TOTAL")) {
+          const pctStr = (pctRaw || "").replace(/[^0-9,.]/g, "").replace(",", ".");
+          pctGlobal = parseFloat(pctStr) || null;
+          continue;
+        }
+
+        const pct = parseInt((pctRaw || "0").replace(/[^0-9]/g, "")) || 0;
+        tasks.push({ phase, etape, desc, statut, priorite, dateCible, notes, pct });
+      }
+
+      setRoadmap(tasks);
+      setRoadmapMeta({ date: majDate, pctGlobal });
+    } catch (e) {
+      setRoadmapError("Impossible de charger la roadmap : " + e.message);
+    }
+    setRoadmapLoading(false);
   }
 
   async function fetchPreinscriptions() {
@@ -220,10 +288,34 @@ export default function Pilotage() {
   const tabs = [
     { id:"activite",        label:"👥 Activité" },
     { id:"finances",        label:"💰 Finances" },
+    { id:"roadmap",         label:"📊 Roadmap" },
     { id:"services",        label:"⚙️ Services" },
     { id:"bugs",            label:"🐛 Bugs" },
     { id:"preinscriptions", label:"📬 Pré-inscrits" },
   ];
+
+  // ── Calcul stats roadmap par phase ────────────────────────────────────────
+  const PHASE_ORDER = ["Phase 1","Juridique","Phase 2","Phase 3","Sécurité","Branding","Phase 4"];
+  const PHASE_COLORS = {
+    "Phase 1":   "#43a047", "Phase 2":   "#1565c0",
+    "Phase 3":   "#00897b", "Phase 4":   "#6a1b9a",
+    "Juridique": "#e65100", "Sécurité":  "#558b2f",
+    "Branding":  "#ad1457",
+  };
+  const STATUT_STYLE = {
+    "✅ Terminé":   { bg:"rgba(67,160,71,0.15)",  border:"rgba(67,160,71,0.4)",   color:"#a5d6a7" },
+    "⚠️ En cours": { bg:"rgba(230,81,0,0.15)",   border:"rgba(230,81,0,0.4)",    color:"#ffcc80" },
+    "🔵 Partiel":   { bg:"rgba(21,101,192,0.15)", border:"rgba(66,165,245,0.35)", color:"#90caf9" },
+    "❌ À faire":   { bg:"rgba(198,40,40,0.12)",  border:"rgba(229,57,53,0.3)",   color:"#ef9a9a" },
+  };
+
+  const phaseStats = PHASE_ORDER.map(phase => {
+    const tasks  = roadmap.filter(t => t.phase === phase);
+    if (!tasks.length) return null;
+    const done   = tasks.filter(t => t.statut === "✅ Terminé").length;
+    const pct    = Math.round((done / tasks.length) * 100);
+    return { phase, tasks, done, total: tasks.length, pct };
+  }).filter(Boolean);
 
   return (
     <div>
@@ -348,6 +440,99 @@ export default function Pilotage() {
             </div>
             {loadingRevenue && (
               <div style={{ textAlign:"center", color:"#81c784", fontSize:12, padding:16 }}>🔄 Chargement données Stripe...</div>
+            )}
+          </>
+        )}
+
+        {/* ════════════════ TAB ROADMAP ════════════════ */}
+        {tab === "roadmap" && (
+          <>
+            {/* Header */}
+            <div style={{ ...card(), background:"rgba(249,168,37,0.06)", border:"1px solid rgba(249,168,37,0.2)" }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                <div>
+                  <div style={{ fontSize:13, fontWeight:800, color:"#f9a825" }}>📊 Suivi de Projet MG360</div>
+                  {roadmapMeta?.date && (
+                    <div style={{ fontSize:10, color:"#81c784", marginTop:2 }}>Mis à jour le {roadmapMeta.date} — Google Sheets live</div>
+                  )}
+                </div>
+                <div style={{ textAlign:"right" }}>
+                  {roadmapMeta?.pctGlobal !== null && (
+                    <div style={{ fontSize:22, fontWeight:900, color:"#f9a825" }}>{roadmapMeta.pctGlobal?.toFixed(0)}%</div>
+                  )}
+                  <div style={{ fontSize:10, color:"#81c784" }}>Avancement global</div>
+                </div>
+              </div>
+              <button onClick={fetchRoadmap} disabled={roadmapLoading} style={{ marginTop:10, width:"100%", background:"rgba(249,168,37,0.1)", border:"1px solid rgba(249,168,37,0.25)", borderRadius:8, padding:"7px", color:"#f9a825", fontSize:11, cursor:"pointer", opacity: roadmapLoading ? 0.6 : 1 }}>
+                {roadmapLoading ? "🔄 Synchronisation..." : "↻ Synchroniser depuis Google Sheets"}
+              </button>
+              {roadmapError && (
+                <div style={{ marginTop:8, fontSize:11, color:"#ef9a9a", background:"rgba(198,40,40,0.1)", borderRadius:8, padding:"6px 10px" }}>{roadmapError}</div>
+              )}
+            </div>
+
+            {/* Avancement par phase */}
+            {phaseStats.length > 0 && (
+              <div style={card()}>
+                <div style={cardTitle}><span>🗺️ Avancement par phase</span></div>
+                {phaseStats.map(({ phase, done, total, pct }) => (
+                  <div key={phase} style={{ marginBottom:12 }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, marginBottom:3 }}>
+                      <span style={{ fontWeight:700 }}>{phase}</span>
+                      <span style={{ color: PHASE_COLORS[phase] || "#a5d6a7", fontWeight:700 }}>{done}/{total} — {pct}%</span>
+                    </div>
+                    <Bar value={pct} color={PHASE_COLORS[phase] || "#43a047"} />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Liste des tâches par phase */}
+            {phaseStats.map(({ phase, tasks }) => {
+              const urgent    = tasks.filter(t => t.statut !== "✅ Terminé");
+              const isExpanded = expandedPhases[phase] || false;
+              return (
+                <div key={phase} style={card()}>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom: isExpanded ? 12 : 0 }}>
+                    <div>
+                      <span style={{ fontSize:13, fontWeight:800, color: PHASE_COLORS[phase] || "#a5d6a7" }}>{phase}</span>
+                      {urgent.length > 0 && (
+                        <span style={{ marginLeft:8, fontSize:10, color:"#f9a825", background:"rgba(249,168,37,0.15)", borderRadius:20, padding:"2px 7px" }}>
+                          {urgent.length} en attente
+                        </span>
+                      )}
+                    </div>
+                    <button onClick={() => setExpandedPhases(p => ({ ...p, [phase]: !p[phase] }))} style={{ background:"none", border:"none", color:"#81c784", fontSize:12, cursor:"pointer" }}>
+                      {isExpanded ? "▲ Masquer" : "▼ Voir"}
+                    </button>
+                  </div>
+                  {isExpanded && tasks.map((t, i) => {
+                    const s = STATUT_STYLE[t.statut] || STATUT_STYLE["❌ À faire"];
+                    return (
+                      <div key={i} style={{ padding:"8px 10px", marginBottom:4, borderRadius:8, background:s.bg, border:`1px solid ${s.border}` }}>
+                        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:8 }}>
+                          <div style={{ flex:1 }}>
+                            <div style={{ fontSize:12, fontWeight:700, color:"#e8f5e9" }}>{t.etape}</div>
+                            {t.desc && t.desc !== "nan" && (
+                              <div style={{ fontSize:10, color:"#81c784", marginTop:2, lineHeight:1.4 }}>{t.desc}</div>
+                            )}
+                            {t.dateCible && t.dateCible !== "nan" && (
+                              <div style={{ fontSize:9, color:"#4a7c5c", marginTop:3 }}>📅 {t.dateCible}</div>
+                            )}
+                          </div>
+                          <span style={{ fontSize:10, fontWeight:700, color:s.color, whiteSpace:"nowrap", flexShrink:0 }}>{t.statut}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+
+            {roadmapLoading && !roadmap.length && (
+              <div style={{ textAlign:"center", color:"#81c784", fontSize:13, padding:32 }}>
+                🔄 Chargement depuis Google Sheets...
+              </div>
             )}
           </>
         )}
