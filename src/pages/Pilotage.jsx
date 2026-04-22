@@ -257,7 +257,7 @@ export default function Pilotage() {
     try {
       const res  = await fetch("/api/weekly-report");
       const data = await res.json();
-      setSent(data.success ? "✅ Rapport envoyé à jordankrebs1@gmail.com !" : "❌ Erreur : " + data.error);
+      setSent(data.success ? "✅ Rapport envoyé à mongazon360@gmail.com !" : "❌ Erreur : " + data.error);
     } catch (e) { setSent("❌ Erreur : " + e.message); }
     setSending(false);
     setTimeout(() => setSent(""), 5000);
@@ -626,7 +626,7 @@ export default function Pilotage() {
                 </button>
               </div>
               <div style={{ fontSize:10, color:"#4a7c5c", marginTop:10, textAlign:"center" }}>
-                📅 Rapport automatique chaque lundi à 8h00 → jordankrebs1@gmail.com
+                📅 Rapport automatique chaque lundi à 8h00 → mongazon360@gmail.com
               </div>
             </div>
           </>
