@@ -87,7 +87,8 @@ export default function Pilotage() {
   const [expandedPhases, setExpandedPhases] = useState({});
 
   // ── Roadmap Google Sheets ──────────────────────────────────────────────────
-  const SHEETS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQMeodlcbKo7_nRw6rxVJhk7eFZPQWTlFNrP1hC47ZlVipF9fKyuqQJES5EZx4GF8Tv7BOKtqmQn0Pw/pub?gid=317142764&single=true&output=csv";
+  const SHEETS_CSV_URL  = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQMeodlcbKo7_nRw6rxVJhk7eFZPQWTlFNrP1hC47ZlVipF9fKyuqQJES5EZx4GF8Tv7BOKtqmQn0Pw/pub?gid=317142764&single=true&output=csv";
+  const SHEETS_EDIT_URL = "https://docs.google.com/spreadsheets/d/1r3mjQKz5Z_0guBloGFKO1NLc5cFKjPCr/edit?gid=258715190#gid=258715190"; // TODO: coller ici l'URL de ton navigateur quand le sheet est ouvert
   const [roadmap, setRoadmap]           = useState([]);
   const [roadmapLoading, setRoadmapLoading] = useState(false);
   const [roadmapError, setRoadmapError]     = useState(null);
@@ -465,6 +466,12 @@ export default function Pilotage() {
               </div>
               <button onClick={fetchRoadmap} disabled={roadmapLoading} style={{ marginTop:10, width:"100%", background:"rgba(249,168,37,0.1)", border:"1px solid rgba(249,168,37,0.25)", borderRadius:8, padding:"7px", color:"#f9a825", fontSize:11, cursor:"pointer", opacity: roadmapLoading ? 0.6 : 1 }}>
                 {roadmapLoading ? "🔄 Synchronisation..." : "↻ Synchroniser depuis Google Sheets"}
+              </button>
+              <button
+                onClick={() => window.open(SHEETS_EDIT_URL, "_blank", "noopener,noreferrer")}
+                style={{ marginTop:6, width:"100%", background:"rgba(52,168,83,0.12)", border:"1px solid rgba(52,168,83,0.3)", borderRadius:8, padding:"7px", color:"#52d48a", fontSize:11, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}
+              >
+                <span style={{ fontSize:14 }}>📝</span> Modifier dans Google Sheets
               </button>
               {roadmapError && (
                 <div style={{ marginTop:8, fontSize:11, color:"#ef9a9a", background:"rgba(198,40,40,0.1)", borderRadius:8, padding:"6px 10px" }}>{roadmapError}</div>
