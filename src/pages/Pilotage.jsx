@@ -458,8 +458,8 @@ export default function Pilotage() {
                   )}
                 </div>
                 <div style={{ textAlign:"right" }}>
-                  {roadmapMeta?.pctGlobal !== null && (
-                    <div style={{ fontSize:22, fontWeight:900, color:"#f9a825" }}>{roadmapMeta.pctGlobal?.toFixed(0)}%</div>
+                  {roadmapMeta?.pctGlobal != null && (
+                    <div style={{ fontSize:22, fontWeight:900, color:"#f9a825" }}>{roadmapMeta?.pctGlobal?.toFixed(0)}%</div>
                   )}
                   <div style={{ fontSize:10, color:"#81c784" }}>Avancement global</div>
                 </div>
