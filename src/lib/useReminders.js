@@ -49,6 +49,84 @@ export function useReminders() {
     save({ ...reminders, [id]: { ...reminders[id], lastSent: new Date().toISOString() } });
   };
 
+  // ── Envoi réel des rappels dus (push + email) ─────────────────────────────
+  // Appelé 1x/jour depuis Dashboard au chargement.
+  const sendDueReminders = async ({ user, profile, score, history = [], subscription }) => {
+    // Rate limit : 1 envoi max par jour
+    const today = new Date().toISOString().slice(0, 10);
+    if (localStorage.getItem(`mg360_reminders_sent_${today}`)) return;
+
+    // Vérifier les consentements (Settings)
+    let consents = {};
+    try {
+      const c = localStorage.getItem("mg360_consents");
+      if (c) consents = JSON.parse(c);
+    } catch {}
+
+    const due = getDueReminders(history);
+    if (!due.length) return;
+
+    const sub = subscription || JSON.parse(localStorage.getItem("gk_push_sub") || "null");
+    const sentIds = new Set();
+
+    // ── Push : consentement global ON + permission navigateur + souscription ─
+    if (consents.notifications && sub && Notification.permission === "granted") {
+      for (const r of due.filter(r => reminders[r.id]?.push)) {
+        try {
+          await fetch("/api/send?type=notification", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              subscription: sub,
+              notification: {
+                title: `🌿 Mongazon360 — ${r.label}`,
+                body: `Il est temps de faire votre ${r.label.toLowerCase()} !`,
+                tag: `reminder-${r.id}`,
+                actionRoute: "/today",
+              },
+            }),
+          });
+          sentIds.add(r.id);
+        } catch {}
+      }
+    }
+
+    // ── Email : consentement marketing ON + email disponible ─────────────────
+    const userEmail = user?.emailAddresses?.[0]?.emailAddress;
+    if (consents.marketing && userEmail) {
+      const emailDue = due.filter(r => reminders[r.id]?.email);
+      if (emailDue.length > 0) {
+        try {
+          await fetch("/api/send?type=reminder", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              reminders: emailDue.map(r => ({
+                icon: r.icon, label: r.label, desc: r.desc,
+                days: reminders[r.id]?.days || r.defaultDays,
+              })),
+              userEmail,
+              userName: user?.firstName || "Jardinier",
+              profile,
+              score,
+            }),
+          });
+          emailDue.forEach(r => sentIds.add(r.id));
+        } catch {}
+      }
+    }
+
+    // ── Batch markSent — 1 seul appel setState ───────────────────────────────
+    if (sentIds.size > 0) {
+      const now = new Date().toISOString();
+      const updated = { ...reminders };
+      sentIds.forEach(id => { updated[id] = { ...updated[id], lastSent: now }; });
+      save(updated);
+    }
+
+    localStorage.setItem(`mg360_reminders_sent_${today}`, "1");
+  };
+
   const activeCount = Object.values(reminders).filter(r => r.enabled).length;
 
   // Vérifie quels rappels sont dus aujourd'hui
@@ -72,5 +150,5 @@ export function useReminders() {
       });
   };
 
-  return { reminders, toggle, setDays, toggleChannel, markSent, activeCount, getDueReminders };
+  return { reminders, toggle, setDays, toggleChannel, markSent, activeCount, getDueReminders, sendDueReminders };
 }

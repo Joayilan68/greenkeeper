@@ -1,16 +1,41 @@
 // src/pages/Rappels.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useUser } from "@clerk/clerk-react";
 import { useReminders, REMINDER_TYPES } from "../lib/useReminders";
 import { useHistory } from "../lib/useHistory";
+import { usePushNotifications } from "../lib/usePushNotifications";
 import { card, scroll } from "../lib/styles";
 
 export default function Rappels() {
   const navigate = useNavigate();
+  const { user } = useUser();
   const { reminders, toggle, setDays, toggleChannel, activeCount, getDueReminders } = useReminders();
   const { history = [] } = useHistory();
+  const { permission, subscribe } = usePushNotifications(user?.id);
   const [expanded, setExpanded] = useState(null);
   const dueReminders = getDueReminders(history);
+
+  // Activation Push sur un rappel : vérifie la permission navigateur avant
+  const handlePushToggle = async (typeId) => {
+    const isCurrentlyOn = !!reminders[typeId]?.push;
+    if (!isCurrentlyOn && permission !== "granted") {
+      // Demander la permission push
+      const success = await subscribe();
+      if (!success) return; // Permission refusée — ne pas activer
+      // Synchroniser le consentement global (Settings)
+      try {
+        const saved = localStorage.getItem("mg360_consents");
+        const existing = saved ? JSON.parse(saved) : {};
+        localStorage.setItem("mg360_consents", JSON.stringify({
+          ...existing,
+          notifications: true,
+          lastUpdated: new Date().toISOString(),
+        }));
+      } catch {}
+    }
+    toggleChannel(typeId, "push");
+  };
 
   return (
     <div>
@@ -103,7 +128,7 @@ export default function Rappels() {
                   </div>
                   <div style={{ display:"flex", gap:8, marginTop:14 }}>
                     {[{k:"push",i:"📱",l:"Push"},{k:"email",i:"📧",l:"Email"}].map(({k,i,l}) => (
-                      <button key={k} onClick={() => toggleChannel(type.id, k)} style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:6, background: r[k] ? "rgba(102,187,106,0.2)" : "rgba(255,255,255,0.05)", border:`1px solid ${r[k] ? "#66BB6A" : "rgba(149,213,178,0.18)"}`, borderRadius:10, padding:"8px", color: r[k] ? "#66BB6A" : "#4a7c5c", fontSize:12, cursor:"pointer", fontFamily:"inherit", fontWeight:600 }}>
+                      <button key={k} onClick={() => k === "push" ? handlePushToggle(type.id) : toggleChannel(type.id, k)} style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:6, background: r[k] ? "rgba(102,187,106,0.2)" : "rgba(255,255,255,0.05)", border:`1px solid ${r[k] ? "#66BB6A" : "rgba(149,213,178,0.18)"}`, borderRadius:10, padding:"8px", color: r[k] ? "#66BB6A" : "#4a7c5c", fontSize:12, cursor:"pointer", fontFamily:"inherit", fontWeight:600 }}>
                         {i} {l}{r[k] ? " ✓" : ""}
                       </button>
                     ))}

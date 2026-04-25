@@ -90,13 +90,13 @@ export function usePushNotifications(userId) {
   // Envoyer une notification de test
   const sendTestNotification = async () => {
     if (!subscription) return;
-    await fetch('/api/send-notification', {
+    await fetch('/api/send?type=notification', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         subscription,
         notification: {
-          title: "🌿 GreenKeeper",
+          title: "🌿 Mongazon360",
           body: "Vos notifications sont activées !",
           actionRoute: "/",
           tag: "test",
@@ -118,7 +118,7 @@ export function usePushNotifications(userId) {
       if (daysSince < 7) return; // Max 1 fois par semaine
     }
 
-    await fetch('/api/send-notification', {
+    await fetch('/api/send?type=notification', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
