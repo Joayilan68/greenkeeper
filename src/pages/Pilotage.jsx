@@ -87,7 +87,6 @@ export default function Pilotage() {
   const [expandedPhases, setExpandedPhases] = useState({});
 
   // ── Roadmap Google Sheets ──────────────────────────────────────────────────
-  const SHEETS_CSV_URL  = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQMeodlcbKo7_nRw6rxVJhk7eFZPQWTlFNrP1hC47ZlVipF9fKyuqQJES5EZx4GF8Tv7BOKtqmQn0Pw/pub?gid=317142764&single=true&output=csv";
   const SHEETS_EDIT_URL = "https://docs.google.com/spreadsheets/d/1r3mjQKz5Z_0guBloGFKO1NLc5cFKjPCr/edit?gid=258715190#gid=258715190"; // TODO: coller ici l'URL de ton navigateur quand le sheet est ouvert
   const [roadmap, setRoadmap]           = useState([]);
   const [roadmapLoading, setRoadmapLoading] = useState(false);
@@ -115,40 +114,35 @@ export default function Pilotage() {
     setRoadmapLoading(true);
     setRoadmapError(null);
     try {
-      const res = await fetch(SHEETS_CSV_URL + "&cacheBust=" + Date.now());
-      if (!res.ok) throw new Error("HTTP " + res.status);
-      const text = await res.text();
+      // ── Google Sheets API v4 — temps réel, pas de cache CSV ───────────────
+      const SHEET_ID  = "1r3mjQKz5Z_0guBloGFKO1NLc5cFKjPCr";
+      const API_KEY   = import.meta.env.VITE_GOOGLE_SHEETS_API_KEY;
+      const RANGE     = encodeURIComponent("📊 Tableau de bord!A1:H200");
+      const apiUrl    = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${RANGE}?key=${API_KEY}`;
 
-      // Parse CSV — 4 lignes de header (titre, date, instructions, colonnes)
-      const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
-      
-      // Extraire la date de mise à jour (ligne 2)
-      const dateLine = lines[1] || "";
+      const res = await fetch(apiUrl);
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const json = await res.json();
+      const rows = json.values || [];
+
+      if (!rows.length) throw new Error("Feuille vide");
+
+      // Extraire la date de mise à jour (ligne 2, index 1)
+      const dateLine  = (rows[1]?.[0] || "");
       const dateMatch = dateLine.match(/Mis à jour le (\d{2}\/\d{2}\/\d{4})/);
       const majDate   = dateMatch ? dateMatch[1] : null;
 
       // Trouver la ligne d'entêtes (contient "Phase")
-      const headerIdx = lines.findIndex(l => l.startsWith("Phase"));
-      if (headerIdx < 0) throw new Error("Format CSV inattendu");
+      const headerIdx = rows.findIndex(r => r[0] === "Phase");
+      if (headerIdx < 0) throw new Error("Format inattendu — colonne Phase introuvable");
 
-      const dataLines = lines.slice(headerIdx + 1);
-      const tasks = [];
-      let pctGlobal = null;
+      const dataRows  = rows.slice(headerIdx + 1);
+      const tasks     = [];
+      let pctGlobal   = null;
 
-      for (const line of dataLines) {
-        // Parsing CSV basique (gère les virgules dans les champs entre guillemets)
-        const cols = [];
-        let cur = ""; let inQ = false;
-        for (let i = 0; i < line.length; i++) {
-          const ch = line[i];
-          if (ch === '"') { inQ = !inQ; }
-          else if (ch === "," && !inQ) { cols.push(cur.trim()); cur = ""; }
-          else { cur += ch; }
-        }
-        cols.push(cur.trim());
-
-        const [phase, etape, desc, statut, priorite, dateCible, notes, pctRaw] = cols;
-        if (!phase) continue;
+      for (const cols of dataRows) {
+        const [phase="", etape="", desc="", statut="", priorite="", dateCible="", notes="", pctRaw=""] = cols;
+        if (!phase.trim()) continue;
 
         // Ligne TOTAL
         if (phase.includes("TOTAL")) {
@@ -158,7 +152,16 @@ export default function Pilotage() {
         }
 
         const pct = parseInt((pctRaw || "0").replace(/[^0-9]/g, "")) || 0;
-        tasks.push({ phase, etape, desc, statut, priorite, dateCible, notes, pct });
+        tasks.push({
+          phase:     phase.trim(),
+          etape:     etape.trim(),
+          desc:      desc.trim(),
+          statut:    statut.trim(),
+          priorite:  priorite.trim(),
+          dateCible: dateCible.trim(),
+          notes:     notes.trim(),
+          pct,
+        });
       }
 
       setRoadmap(tasks);
