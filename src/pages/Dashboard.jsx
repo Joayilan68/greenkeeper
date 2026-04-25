@@ -89,7 +89,20 @@ export default function Dashboard() {
 
   const handleActivatePush = async () => {
     const success = await subscribe();
-    if (success) { setPushActivated(true); await sendTestNotification(); }
+    if (success) {
+      setPushActivated(true);
+      await sendTestNotification();
+      // Synchroniser le consentement avec Settings
+      try {
+        const saved = localStorage.getItem("mg360_consents");
+        const existing = saved ? JSON.parse(saved) : {};
+        localStorage.setItem("mg360_consents", JSON.stringify({
+          ...existing,
+          notifications: true,
+          lastUpdated: new Date().toISOString(),
+        }));
+      } catch {}
+    }
   };
 
   const handleOnboardingComplete = (newProfile) => {

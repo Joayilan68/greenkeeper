@@ -5,6 +5,7 @@ import { useSubscription } from "../lib/useSubscription";
 import { useHistory } from "../lib/useHistory";
 import { useProfile } from "../lib/useProfile";
 import { useWeather } from "../lib/useWeather";
+import { usePushNotifications } from "../lib/usePushNotifications";
 import { card, cardTitle, btn, scroll } from "../lib/styles";
 
 // ── Clé unifiée — même clé que Register.jsx ──────────────────────────────────
@@ -19,6 +20,7 @@ export default function Settings() {
   const { history } = useHistory();
   const { profile } = useProfile();
   const { locationName } = useWeather() || {};
+  const { permission, subscribe: subscribePush, isSupported } = usePushNotifications(user?.id);
 
   const [consents, setConsents] = useState({});
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -49,6 +51,22 @@ export default function Settings() {
     const updated = { ...consents, [key]: value, lastUpdated: new Date().toISOString() };
     setConsents(updated);
     localStorage.setItem(CONSENTS_KEY, JSON.stringify(updated));
+  };
+
+  // Handler spécifique pour le toggle notifications push
+  const handleNotifToggle = async () => {
+    if (!consents.notifications) {
+      // Activation → déclencher la vraie permission push si pas encore accordée
+      if (isSupported && permission !== "granted") {
+        await subscribePush();
+      }
+      updateConsent("notifications", true);
+    } else {
+      // Désactivation → on retire le consentement (la permission navigateur
+      // ne peut pas être révoquée programmatiquement — l'utilisateur doit
+      // le faire depuis les paramètres de son navigateur/téléphone)
+      updateConsent("notifications", false);
+    }
   };
 
   const revokeGeolocation = () => {
@@ -297,13 +315,24 @@ export default function Settings() {
             <div key={key} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
               <div style={{ flex:1 }}>
                 <div style={{ fontSize:13, fontWeight:600 }}>{label}</div>
-                <div style={{ fontSize:11, color:"#81c784" }}>{desc}</div>
+                <div style={{ fontSize:11, color:"#81c784" }}>
+                  {desc}
+                  {key === "notifications" && !consents.notifications && permission === "granted" && (
+                    <span style={{ color:"#f9a825", marginLeft:4 }}>— Permission accordée, réactivez pour recevoir les alertes</span>
+                  )}
+                  {key === "notifications" && consents.notifications && (
+                    <span style={{ color:"#a5d6a7", marginLeft:4 }}>— {permission === "granted" ? "Actives ✅" : "En attente de permission navigateur"}</span>
+                  )}
+                </div>
               </div>
-              <div onClick={() => updateConsent(key, !consents[key])} style={{
-                width:44, height:24, borderRadius:12, cursor:"pointer", flexShrink:0, marginLeft:8,
-                background: consents[key] ? "#43a047" : "rgba(255,255,255,0.1)",
-                position:"relative", transition:"background 0.2s"
-              }}>
+              <div
+                onClick={key === "notifications" ? handleNotifToggle : () => updateConsent(key, !consents[key])}
+                style={{
+                  width:44, height:24, borderRadius:12, cursor:"pointer", flexShrink:0, marginLeft:8,
+                  background: consents[key] ? "#43a047" : "rgba(255,255,255,0.1)",
+                  position:"relative", transition:"background 0.2s"
+                }}
+              >
                 <div style={{
                   position:"absolute", top:3, left: consents[key] ? 22 : 3,
                   width:18, height:18, borderRadius:"50%", background:"#fff",
