@@ -15,7 +15,7 @@ export const REMINDER_TYPES = [
 const defaultReminders = () =>
   REMINDER_TYPES.reduce((acc, r) => ({
     ...acc,
-    [r.id]: { enabled: false, days: r.defaultDays, lastSent: null, email: true, push: true }
+    [r.id]: { enabled: false, days: r.defaultDays, lastSent: null, email: false, push: false }
   }), {});
 
 export function useReminders() {
