@@ -3,9 +3,34 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Mongazon360 – Entretien Pelouse</title>
-    <meta name="description" content="Votre expert pelouse intelligent : météo temps réel, IA, planning hebdomadaire" />
-    <!-- PWA -->
+
+    <!-- ── SEO de base ─────────────────────────────────────────────────────── -->
+    <title>Mongazon360 – Votre Expert Gazon Intelligent</title>
+    <meta name="description" content="Mongazon360 : l'app qui entretient votre gazon à votre place. Météo temps réel, IA agronomique, planning personnalisé, diagnostic photo. Essayez gratuitement." />
+    <meta name="keywords" content="entretien gazon, pelouse, tonte, engrais, arrosage, diagnostic pelouse, application gazon, expert gazon, IA gazon" />
+    <meta name="author" content="Mongazon360" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://mongazon360.fr" />
+
+    <!-- ── Open Graph (Facebook, WhatsApp, LinkedIn) ──────────────────────── -->
+    <meta property="og:type"        content="website" />
+    <meta property="og:url"         content="https://mongazon360.fr" />
+    <meta property="og:title"       content="Mongazon360 – Votre Expert Gazon Intelligent" />
+    <meta property="og:description" content="L'app qui entretient votre gazon à votre place. Météo temps réel, IA agronomique, planning personnalisé, diagnostic photo." />
+    <meta property="og:image"       content="https://mongazon360.fr/og-image.png" />
+    <meta property="og:image:width"  content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale"      content="fr_FR" />
+    <meta property="og:site_name"   content="Mongazon360" />
+
+    <!-- ── Twitter Card ───────────────────────────────────────────────────── -->
+    <meta name="twitter:card"        content="summary_large_image" />
+    <meta name="twitter:url"         content="https://mongazon360.fr" />
+    <meta name="twitter:title"       content="Mongazon360 – Votre Expert Gazon Intelligent" />
+    <meta name="twitter:description" content="L'app qui entretient votre gazon à votre place. Météo, IA, planning personnalisé, diagnostic photo." />
+    <meta name="twitter:image"       content="https://mongazon360.fr/og-image.png" />
+
+    <!-- ── PWA ────────────────────────────────────────────────────────────── -->
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#1a4731" />
     <meta name="mobile-web-app-capable" content="yes" />
@@ -13,7 +38,33 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Mongazon360" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
-    <!-- Font -->
+
+    <!-- ── Données structurées JSON-LD (Google) ───────────────────────────── -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Mongazon360",
+      "description": "Application intelligente d'entretien du gazon — météo temps réel, IA agronomique, planning personnalisé, diagnostic photo.",
+      "url": "https://mongazon360.fr",
+      "applicationCategory": "LifestyleApplication",
+      "operatingSystem": "Web, iOS, Android",
+      "offers": {
+        "@type": "Offer",
+        "price": "4.99",
+        "priceCurrency": "EUR",
+        "priceValidUntil": "2027-12-31"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "Mongazon360",
+        "url": "https://mongazon360.fr",
+        "email": "contact@mongazon360.fr"
+      }
+    }
+    </script>
+
+    <!-- ── Font ───────────────────────────────────────────────────────────── -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
   </head>
