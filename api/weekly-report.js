@@ -85,24 +85,24 @@ module.exports = async function handler(req, res) {
     // ── 3. SERVICES ───────────────────────────────────────────────────────────
     const services = [
       { name:"Vercel",              status:"✅", detail:"Déployé — mongazon360.fr" },
-      { name:"Groq Llama 4 Vision", status:"✅", detail:"llama-4-scout-17b — Gratuit" },
+      { name:"Groq Llama 4 Scout",  status:"✅", detail:"llama-4-scout-17b-16e-instruct — Gratuit" },
       { name:"Cloudinary",          status:"✅", detail:"Photos 25GB gratuit" },
       { name:"Stripe",              status:"✅", detail:"Paiements actifs — Live" },
-      { name:"Open-Meteo",          status:"✅", detail:"Météo gratuit" },
-      { name:"Clerk",               status:"✅", detail:"Auth — Mode Production" },
-      { name:"Resend",              status:"✅", detail:"Emails actifs" },
-      { name:"Supabase",            status:"✅", detail:"Pré-inscrits + Rate limiting actifs" },
-      { name:"Anthropic",           status:"⚠️", detail:"Crédits à recharger" },
-      { name:"Gemini",              status:"⚠️", detail:"Quota limité" },
+      { name:"Open-Meteo",          status:"⚠️", detail:"Gratuit — Licence commerciale requise dès 50 abonnés" },
+      { name:"Clerk",               status:"✅", detail:"Auth — Mode Production — mongazon360.fr" },
+      { name:"Resend",              status:"✅", detail:"Emails actifs — bonjour@mongazon360.fr" },
+      { name:"Supabase",            status:"✅", detail:"Profiles + Histories + GreenPoints + Streaks — RLS actif" },
+      { name:"Google Sheets API",   status:"✅", detail:"Roadmap temps réel — Pilotage connecté" },
+      { name:"Amazon Partenaires",  status:"✅", detail:"Tag mongazon360-21 — Liens recherche actifs" },
     ];
 
     // ── 4. ACTIONS PRIORITAIRES ───────────────────────────────────────────────
     const nextActions = [
       "Valider documents juridiques avec avocat RGPD (Cabinet Victoris — en cours)",
-      "Souscrire RC Pro (~150€/an)",
+      "Souscrire RC Pro (~150€/an) — obligatoire avant lancement public",
       "Communiquer sur les réseaux sociaux pour remplir la liste d'attente",
-      "Migrer les profils utilisateurs de localStorage vers Supabase",
       "Souscrire Open-Meteo licence commerciale dès 50 abonnés Premium",
+      "Activer la liste d'attente → lancement public",
     ];
 
     // ── HTML EMAIL ────────────────────────────────────────────────────────────
@@ -207,9 +207,10 @@ module.exports = async function handler(req, res) {
       ${[
         ["Phase 1 — Fondations",      "✅ 100%", "#e8f5e9"],
         ["Phase 2 — Diagnostic IA",   "✅ 100%", "#e8f5e9"],
-        ["Juridique RGPD",            "⚠️ 64%",  "#fce4ec"],
-        ["Phase 3 — Officialisation", "⚠️ 75%",  "#fff9e6"],
-        ["Phase 4 — Monétisation",    "❌ 10%",  "#f3e5f5"],
+        ["Juridique RGPD",            "⚠️ 75%",  "#fce4ec"],
+        ["Phase 3 — Officialisation", "✅ 92%",  "#e8f5e9"],
+        ["Sécurité & Branding",       "✅ 95%",  "#e8f5e9"],
+        ["Phase 4 — Monétisation",    "⚠️ 25%",  "#fff9e6"],
       ].map(([phase, statut, bg]) => `
       <tr style="background:${bg}">
         <td style="padding:8px 12px;border-bottom:1px solid rgba(0,0,0,0.05);font-weight:600;">${phase}</td>
