@@ -6,7 +6,7 @@
     "api/weekly-report.js": {
       "maxDuration": 30
     },
-    "api/send-alert.js": {
+    "api/send.js": {
       "maxDuration": 10
     }
   },
