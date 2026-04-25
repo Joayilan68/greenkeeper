@@ -87,7 +87,7 @@ export default function Pilotage() {
   const [expandedPhases, setExpandedPhases] = useState({});
 
   // ── Roadmap Google Sheets ──────────────────────────────────────────────────
-  const SHEETS_EDIT_URL = "https://docs.google.com/spreadsheets/d/1r3mjQKz5Z_0guBloGFKO1NLc5cFKjPCr/edit?gid=258715190#gid=258715190"; // TODO: coller ici l'URL de ton navigateur quand le sheet est ouvert
+  const SHEETS_EDIT_URL = "https://docs.google.com/spreadsheets/d/1RzCsdKNeBtYjWkAUXPm7X7Xg1nA1dufq6ka2jzhMJBM/edit"; // TODO: coller ici l'URL de ton navigateur quand le sheet est ouvert
   const [roadmap, setRoadmap]           = useState([]);
   const [roadmapLoading, setRoadmapLoading] = useState(false);
   const [roadmapError, setRoadmapError]     = useState(null);
@@ -115,9 +115,9 @@ export default function Pilotage() {
     setRoadmapError(null);
     try {
       // ── Google Sheets API v4 — temps réel, pas de cache CSV ───────────────
-      const SHEET_ID  = "1r3mjQKz5Z_0guBloGFKO1NLc5cFKjPCr";
+      const SHEET_ID  = "1RzCsdKNeBtYjWkAUXPm7X7Xg1nA1dufq6ka2jzhMJBM";
       const API_KEY   = import.meta.env.VITE_GOOGLE_SHEETS_API_KEY;
-      const RANGE     = encodeURIComponent("Tableau de bord!A1:H200");
+      const RANGE     = encodeURIComponent("📊 Tableau de bord!A1:H200");
       const apiUrl    = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${RANGE}?key=${API_KEY}`;
 
       const res = await fetch(apiUrl);
