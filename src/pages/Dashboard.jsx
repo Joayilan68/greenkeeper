@@ -35,7 +35,7 @@ export default function Dashboard() {
     return localStorage.getItem("mg360_notif_banner_seen") !== "true";
   });
 
-  const { permission, subscribe, sendTestNotification, sendAlert, isSupported } = usePushNotifications(user?.id);
+  const { permission, subscribe, sendTestNotification, sendAlert, isSupported, subscription } = usePushNotifications(user?.id);
 
   // ── Nouveaux hooks ──────────────────────────────────────────────────────────
   const { classementActif } = useSaison();
