@@ -117,7 +117,7 @@ export default function Pilotage() {
       // ── Google Sheets API v4 — temps réel, pas de cache CSV ───────────────
       const SHEET_ID  = "1r3mjQKz5Z_0guBloGFKO1NLc5cFKjPCr";
       const API_KEY   = import.meta.env.VITE_GOOGLE_SHEETS_API_KEY;
-      const RANGE     = encodeURIComponent("📊 Tableau de bord!A1:H200");
+      const RANGE     = encodeURIComponent("Tableau de bord!A1:H200");
       const apiUrl    = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${RANGE}?key=${API_KEY}`;
 
       const res = await fetch(apiUrl);
