@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useUser, useClerk } from "@clerk/clerk-react";
+import { useUser, useClerk, useAuth } from "@clerk/clerk-react";
 import { useSubscription } from "../lib/useSubscription";
 import { useHistory } from "../lib/useHistory";
 import { useProfile } from "../lib/useProfile";
@@ -14,6 +14,7 @@ export default function Settings() {
   const navigate = useNavigate();
   const { user } = useUser();
   const { signOut } = useClerk();
+  const { getToken } = useAuth();
   const { isPaid, isAdmin } = useSubscription();
   const { history } = useHistory();
   const { profile } = useProfile();
@@ -23,7 +24,9 @@ export default function Settings() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showAccountDeleteConfirm, setShowAccountDeleteConfirm] = useState(false);
   const [deleted, setDeleted] = useState(false);
-  const [geoStatus, setGeoStatus] = useState("unknown"); // "granted" | "denied" | "unknown"
+  const [geoStatus, setGeoStatus]   = useState("unknown"); // "granted" | "denied" | "unknown"
+  const [exportLoading, setExportLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Charger les consentements (clé unifiée mg360_consents)
   useEffect(() => {
@@ -70,40 +73,85 @@ export default function Settings() {
     );
   };
 
-  const exportData = () => {
-    const data = {
-      exportDate:   new Date().toISOString(),
-      droits_rgpd:  "Données exportées conformément au RGPD — Article 20 (portabilité)",
-      user: {
-        email:       user?.emailAddresses[0]?.emailAddress,
-        name:        user?.fullName,
-        clerk_id:    user?.id,
-        created_at:  user?.createdAt,
-      },
-      abonnement:   isPaid ? "Premium" : "Gratuit",
-      profil:       profile,
-      historique:   history,
-      consentements: consents,
-      localisation: locationName,
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement("a");
-    a.href = url;
-    a.download = `mg360-mes-donnees-${new Date().toISOString().slice(0,10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+  // ── Export RGPD — données locales + Supabase ──────────────────────────────
+  const exportData = async () => {
+    setExportLoading(true);
+    try {
+      const token = await getToken();
+      let serverData = null;
+
+      // Tentative récupération données Supabase via API
+      if (token) {
+        try {
+          const res = await fetch("/api/user-data", {
+            headers: { "Authorization": `Bearer ${token}` },
+          });
+          if (res.ok) serverData = await res.json();
+        } catch {}
+      }
+
+      // Fusion données serveur + locales
+      const data = {
+        export_date:  new Date().toISOString(),
+        droits_rgpd:  "Données exportées conformément au RGPD — Article 20 (droit à la portabilité)",
+        responsable:  "Mongazon360 — contact@mongazon360.fr",
+        user: {
+          email:      user?.emailAddresses[0]?.emailAddress,
+          nom:        user?.fullName,
+          clerk_id:   user?.id,
+          created_at: user?.createdAt,
+        },
+        abonnement:   isPaid ? "Premium" : "Gratuit",
+        consentements: consents,
+        localisation: locationName,
+        // Données serveur (Supabase) si disponibles, sinon localStorage
+        profil:       serverData?.profil    || profile,
+        historique:   serverData?.historique || history,
+        greenpoints:  serverData?.greenpoints || null,
+        streak:       serverData?.streak     || null,
+      };
+
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement("a");
+      a.href = url;
+      a.download = `mg360-mes-donnees-${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error("export:", e);
+    }
+    setExportLoading(false);
   };
 
-  const deleteLocalData = () => {
+  // ── Suppression RGPD — localStorage + Supabase ───────────────────────────
+  const deleteLocalData = async () => {
+    setDeleteLoading(true);
+    // 1. Supprimer données locales
     [
       "gk_location", "gk_location_name", "gk_profile", "mg360_profile_v1",
-      "gk_history", CONSENTS_KEY, "gk_consents", "gk_push_sub",
+      "gk_history", "gk_history_v1", CONSENTS_KEY, "gk_consents", "gk_push_sub",
       "gk_diagnostics", "gk_admin_code", "mg360_guest_validated",
       "mg360_guest_code", "mg360_approved", "mg360_onboarding_done",
       "mg360_waitlist", "mg360_ai_reco_today", "mg360_debit_mmh",
-      "mg360_amazon_clicks", "mg360_budget_spent",
+      "mg360_amazon_clicks", "mg360_budget_spent", "mg360_greenpoints",
+      "mg360_notif_banner_seen", "gk_streak",
     ].forEach(k => localStorage.removeItem(k));
+
+    // 2. Supprimer données Supabase via API
+    try {
+      const token = await getToken();
+      if (token) {
+        await fetch("/api/user-data", {
+          method:  "DELETE",
+          headers: { "Authorization": `Bearer ${token}` },
+        });
+      }
+    } catch (e) {
+      console.warn("Supabase delete error:", e);
+    }
+
+    setDeleteLoading(false);
     setDeleted(true);
   };
 
@@ -167,8 +215,8 @@ export default function Settings() {
               <span style={{ fontWeight:600, textAlign:"right", maxWidth:"55%", fontSize:12 }}>{val}</span>
             </div>
           ))}
-          <button onClick={exportData} style={{ ...btn.ghost, marginTop:12, fontSize:12, padding:"8px" }}>
-            📥 Télécharger mes données (Art. 20 RGPD)
+          <button onClick={exportData} disabled={exportLoading} style={{ ...btn.ghost, marginTop:12, fontSize:12, padding:"8px", opacity: exportLoading ? 0.6 : 1 }}>
+            {exportLoading ? "⏳ Export en cours..." : "📥 Télécharger mes données (Art. 20 RGPD)"}
           </button>
         </div>
 
@@ -325,8 +373,8 @@ export default function Settings() {
                 ⚠️ Action irréversible — historique, profil et diagnostics supprimés.
               </div>
               <div style={{ display:"flex", gap:8 }}>
-                <button onClick={deleteLocalData} style={{ background:"#c62828", border:"none", borderRadius:10, padding:"10px", color:"#fff", fontSize:13, cursor:"pointer", flex:1, fontWeight:700 }}>
-                  Confirmer
+                <button onClick={deleteLocalData} disabled={deleteLoading} style={{ background:"#c62828", border:"none", borderRadius:10, padding:"10px", color:"#fff", fontSize:13, cursor:"pointer", flex:1, fontWeight:700, opacity: deleteLoading ? 0.6 : 1 }}>
+                  {deleteLoading ? "⏳ Suppression..." : "Confirmer"}
                 </button>
                 <button onClick={() => setShowDeleteConfirm(false)} style={{ ...btn.ghost, flex:1, fontSize:13 }}>
                   Annuler
