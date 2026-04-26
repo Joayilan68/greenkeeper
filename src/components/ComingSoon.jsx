@@ -199,6 +199,7 @@ export default function ComingSoon() {
       localStorage.setItem("mg360_guest_validated", "true");
       localStorage.setItem("mg360_guest_code", guestCode.trim().toUpperCase());
       localStorage.setItem("mg360_approved", "true");
+      localStorage.setItem("mg360_onboarding_done", "true");
       localStorage.removeItem("mg360_waitlist");
 
       setGuestUnlocked(true);
@@ -273,12 +274,7 @@ export default function ComingSoon() {
             Mongazon360 est en cours de déploiement. Laissez votre email pour être alerté à l'ouverture.
           </div>
 
-          {/* Social proof compteur */}
-          {preinscritsCount > 0 && (
-            <div style={{ marginTop: 10, fontSize: 12, color: C.freshGreen, fontWeight: 700 }}>
-              🌱 {preinscritsCount} personne{preinscritsCount > 1 ? 's' : ''} déjà sur la liste
-            </div>
-          )}
+
         </div>
 
         {/* ── Formulaire pré-inscription ────────────────────── */}
@@ -374,26 +370,7 @@ export default function ComingSoon() {
           </div>
         )}
 
-        {/* Résumé profil */}
-        {profileItems.length > 0 && (
-          <div style={{
-            background: C.bgCard, border: `1px solid ${C.border}`,
-            borderRadius: 16, padding: 16, marginBottom: 20,
-          }}>
-            <div style={{ fontSize: 12, fontWeight: 800, color: C.lightGreen, marginBottom: 12 }}>
-              📋 Votre profil est prêt
-            </div>
-            {profileItems.map(([label, val]) => (
-              <div key={label} style={{
-                display: "flex", justifyContent: "space-between",
-                padding: "5px 0", borderBottom: "1px solid rgba(255,255,255,0.05)", fontSize: 12,
-              }}>
-                <span style={{ color: C.textSoft }}>{label}</span>
-                <span style={{ fontWeight: 700, color: C.text, textTransform: "capitalize" }}>{val}</span>
-              </div>
-            ))}
-          </div>
-        )}
+
 
         {/* ── Code invitation (visible) ─────────────────────── */}
         {!guestUnlocked ? (
@@ -421,7 +398,7 @@ export default function ComingSoon() {
                 <div style={{ display: "flex", gap: 8 }}>
                   <input
                     type="text"
-                    placeholder="Ex : FAMILLE2026"
+                    placeholder=""
                     value={guestCode}
                     onChange={e => { setGuestCode(e.target.value.toUpperCase()); setGuestError(""); }}
                     onKeyDown={e => e.key === "Enter" && handleGuestCode()}
