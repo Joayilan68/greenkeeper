@@ -16,7 +16,7 @@ export default function Login() {
       <SignIn
         routing="hash"
         afterSignInUrl="/"
-        afterSignUpUrl="/subscribe"
+        afterSignUpUrl="/"
         appearance={{
           variables: {
             colorPrimary: "#43a047",
