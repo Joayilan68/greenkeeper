@@ -207,8 +207,6 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  const { type } = req.query;
-
   // ── ALERT ─────────────────────────────────────────────────────────────────
   if (type === "alert") {
     try {
