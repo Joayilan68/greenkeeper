@@ -49,6 +49,19 @@ export function useReminders() {
     save({ ...reminders, [id]: { ...reminders[id], lastSent: new Date().toISOString() } });
   };
 
+  // ── Sync préférences vers Supabase (non bloquant) ─────────────────────────
+  const syncToServer = async (userId, email, consents) => {
+    if (!userId) return;
+    try {
+      const prefs = JSON.parse(localStorage.getItem(KEY) || "{}");
+      await fetch("/api/send?type=save-reminders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, email: email || null, preferences: prefs, consents: consents || {} }),
+      });
+    } catch {}
+  };
+
   // ── Envoi réel des rappels dus (push + email) ─────────────────────────────
   // Appelé 1x/jour depuis Dashboard au chargement.
   const sendDueReminders = async ({ user, profile, score, history = [], subscription }) => {
@@ -150,5 +163,5 @@ export function useReminders() {
       });
   };
 
-  return { reminders, toggle, setDays, toggleChannel, markSent, activeCount, getDueReminders, sendDueReminders };
+  return { reminders, toggle, setDays, toggleChannel, markSent, activeCount, getDueReminders, sendDueReminders, syncToServer };
 }

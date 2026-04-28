@@ -1,13 +1,211 @@
 // api/send.js
-// Fusion de send-alert.js + send-notification.js + send-reminder.js
-// Usage : POST /api/send?type=alert|notification|reminder
+// POST /api/send?type=alert|notification|reminder|save-sub|save-reminders
+// GET  /api/send → cron quotidien 8h00 (Vercel cron)
+
+const REMINDER_LABELS = {
+  tonte:     { icon:"✂️", label:"Tonte",               desc:"Fréquence de tonte recommandée" },
+  arrosage:  { icon:"💧", label:"Arrosage",             desc:"Rappel d'arrosage régulier" },
+  engrais:   { icon:"🌱", label:"Engrais",              desc:"Application d'engrais" },
+  fongicide: { icon:"💊", label:"Traitement fongicide", desc:"Prévention maladies fongiques" },
+  aeration:  { icon:"🌀", label:"Aération",             desc:"Aération du sol" },
+  desherbage:{ icon:"🪴", label:"Désherbage",           desc:"Élimination des mauvaises herbes" },
+};
+
+function buildReminderHtml(reminders, userName, profile, score) {
+  return `<!DOCTYPE html>
+<html><head><meta charset="utf-8"/></head>
+<body style="font-family:Arial,sans-serif;background:#f5f5f5;margin:0;padding:20px;">
+<div style="max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 20px rgba(0,0,0,0.1);">
+  <div style="background:#1a4731;padding:24px 28px;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span style="font-size:32px;">🌿</span>
+      <div>
+        <div style="color:#a5d6a7;font-size:18px;font-weight:800;">Mongazon360</div>
+        <div style="color:#4a7c5c;font-size:11px;font-style:italic;">Tant qu'il y a gazon, il y a match</div>
+      </div>
+    </div>
+  </div>
+  <div style="padding:24px 28px;">
+    <div style="font-size:20px;font-weight:800;color:#1a4731;margin-bottom:6px;">👋 Bonjour ${userName} !</div>
+    <div style="font-size:13px;color:#555;margin-bottom:20px;line-height:1.6;">
+      Voici vos rappels d'entretien du jour. Votre score actuel est de <strong style="color:#1a4731;">${score}/100</strong>.
+      ${profile && profile.pelouse ? `<br/>Gazon : ${profile.pelouse} — Sol : ${profile.sol} — ${profile.surface}m²` : ""}
+    </div>
+    <div style="margin-bottom:24px;">
+      ${reminders.map(r => `
+      <div style="display:flex;align-items:flex-start;gap:14px;padding:14px;background:#f9fbe7;border-radius:12px;border-left:4px solid #43a047;margin-bottom:10px;">
+        <span style="font-size:28px;line-height:1;">${r.icon}</span>
+        <div style="flex:1;">
+          <div style="font-size:15px;font-weight:800;color:#1a4731;margin-bottom:4px;">${r.label}</div>
+          <div style="font-size:12px;color:#555;line-height:1.5;">${r.desc}</div>
+          <div style="font-size:11px;color:#888;margin-top:6px;">📅 Fréquence : tous les ${r.days} jours</div>
+        </div>
+      </div>`).join("")}
+    </div>
+    <div style="text-align:center;margin-bottom:20px;">
+      <a href="https://mongazon360.fr/today" style="background:#1a4731;color:#fff;text-decoration:none;padding:14px 32px;border-radius:12px;font-size:14px;font-weight:800;display:inline-block;">
+        🌿 Ouvrir Mongazon360 →
+      </a>
+    </div>
+  </div>
+  <div style="background:#f9fbe7;padding:14px 28px;border-top:1px solid #e8f5e9;text-align:center;">
+    <div style="color:#4a7c5c;font-size:10px;">Mongazon360 — Rappels personnalisés</div>
+  </div>
+</div>
+</body></html>`;
+}
 
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(200).end();
+
+  // ── GET = CRON QUOTIDIEN (8h00 via Vercel) ────────────────────────────────
+  if (req.method === "GET") {
+    try {
+      const { createClient } = require("@supabase/supabase-js");
+      const supabase = createClient(
+        process.env.SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_KEY
+      );
+      const webpush = require("web-push");
+      webpush.setVapidDetails(
+        process.env.VAPID_EMAIL || "mailto:contact@mongazon360.fr",
+        process.env.VAPID_PUBLIC_KEY,
+        process.env.VAPID_PRIVATE_KEY
+      );
+
+      // Récupérer rappels + souscriptions
+      const [{ data: remindersData }, { data: subsData }] = await Promise.all([
+        supabase.from("reminders").select("*"),
+        supabase.from("push_subscriptions").select("*"),
+      ]);
+
+      const subMap = {};
+      (subsData || []).forEach(s => { subMap[s.user_id] = s.subscription; });
+
+      let pushSent = 0, emailSent = 0;
+      const today = new Date().toISOString().slice(0, 10);
+
+      for (const row of (remindersData || [])) {
+        const { user_id, email, preferences, consents } = row;
+        const prefs = preferences || {};
+        const due = [];
+
+        // Calculer rappels dus
+        for (const [id, r] of Object.entries(prefs)) {
+          if (!r.enabled) continue;
+          const lastSent = r.lastSent ? new Date(r.lastSent) : null;
+          const daysSince = lastSent
+            ? Math.floor((Date.now() - lastSent.getTime()) / 86400000)
+            : 999;
+          if (daysSince >= (r.days || 7)) {
+            const info = REMINDER_LABELS[id] || { icon:"🌿", label:id, desc:"" };
+            due.push({ id, ...r, ...info });
+          }
+        }
+
+        if (!due.length) continue;
+        const updatedPrefs = { ...prefs };
+
+        // ── Push ────────────────────────────────────────────────────────────
+        const sub = subMap[user_id];
+        if (consents?.notifications && sub) {
+          for (const r of due.filter(r => r.push)) {
+            try {
+              await webpush.sendNotification(sub, JSON.stringify({
+                title: `🌿 Mongazon360 — ${r.label}`,
+                body:  `Il est temps de faire votre ${r.label.toLowerCase()} !`,
+                icon:  "/icon-192.png",
+                tag:   `reminder-${r.id}`,
+                url:   "/today",
+                actionRoute: "/today",
+              }));
+              updatedPrefs[r.id] = { ...updatedPrefs[r.id], lastSent: new Date().toISOString() };
+              pushSent++;
+            } catch {}
+          }
+        }
+
+        // ── Email ───────────────────────────────────────────────────────────
+        if (consents?.marketing && email) {
+          const emailDue = due.filter(r => r.email);
+          if (emailDue.length) {
+            try {
+              const emailRes = await fetch("https://api.resend.com/emails", {
+                method: "POST",
+                headers: { "Content-Type":"application/json", "Authorization":`Bearer ${process.env.RESEND_API_KEY}` },
+                body: JSON.stringify({
+                  from:    "Mongazon360 <bonjour@mongazon360.fr>",
+                  to:      [email],
+                  subject: `🌿 [MG360] Rappel : ${emailDue.map(r => r.label).join(", ")}`,
+                  html:    buildReminderHtml(emailDue, "Jardinier", {}, 0),
+                }),
+              });
+              const d = await emailRes.json();
+              if (!d.error) {
+                emailDue.forEach(r => {
+                  updatedPrefs[r.id] = { ...updatedPrefs[r.id], lastSent: new Date().toISOString() };
+                });
+                emailSent++;
+              }
+            } catch {}
+          }
+        }
+
+        // Mettre à jour lastSent dans Supabase
+        await supabase.from("reminders")
+          .update({ preferences: updatedPrefs, updated_at: new Date().toISOString() })
+          .eq("user_id", user_id);
+      }
+
+      return res.json({ success: true, date: today, pushSent, emailSent });
+    } catch (e) {
+      console.error("cron reminders:", e.message);
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
   if (req.method !== "POST") return res.status(405).end();
+
+  const { type } = req.query;
+
+  // ── SAVE-SUB (souscription push → Supabase) ───────────────────────────────
+  if (type === "save-sub") {
+    try {
+      const { subscription, userId } = req.body;
+      if (!subscription || !userId) throw new Error("Données manquantes");
+      const { createClient } = require("@supabase/supabase-js");
+      const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+      await supabase.from("push_subscriptions").upsert(
+        { user_id: userId, subscription, updated_at: new Date().toISOString() },
+        { onConflict: "user_id" }
+      );
+      return res.json({ success: true });
+    } catch (e) {
+      console.error("save-sub:", e.message);
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
+  // ── SAVE-REMINDERS (préférences rappels → Supabase) ───────────────────────
+  if (type === "save-reminders") {
+    try {
+      const { userId, email, preferences, consents } = req.body;
+      if (!userId) throw new Error("userId manquant");
+      const { createClient } = require("@supabase/supabase-js");
+      const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+      await supabase.from("reminders").upsert(
+        { user_id: userId, email: email || null, preferences, consents, updated_at: new Date().toISOString() },
+        { onConflict: "user_id" }
+      );
+      return res.json({ success: true });
+    } catch (e) {
+      console.error("save-reminders:", e.message);
+      return res.status(500).json({ error: e.message });
+    }
+  }
 
   const { type } = req.query;
 
@@ -126,48 +324,6 @@ module.exports = async function handler(req, res) {
       const { reminders, userEmail, userName = "Jardinier", profile = {}, score = 0 } = req.body;
       if (!reminders?.length || !userEmail) throw new Error("Données manquantes");
 
-      const html = `<!DOCTYPE html>
-<html><head><meta charset="utf-8"/></head>
-<body style="font-family:Arial,sans-serif;background:#f5f5f5;margin:0;padding:20px;">
-<div style="max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 20px rgba(0,0,0,0.1);">
-  <div style="background:#1a4731;padding:24px 28px;">
-    <div style="display:flex;align-items:center;gap:12px;">
-      <span style="font-size:32px;">🌿</span>
-      <div>
-        <div style="color:#a5d6a7;font-size:18px;font-weight:800;">Mongazon360</div>
-        <div style="color:#4a7c5c;font-size:11px;font-style:italic;">Tant qu'il y a gazon, il y a match</div>
-      </div>
-    </div>
-  </div>
-  <div style="padding:24px 28px;">
-    <div style="font-size:20px;font-weight:800;color:#1a4731;margin-bottom:6px;">👋 Bonjour ${userName} !</div>
-    <div style="font-size:13px;color:#555;margin-bottom:20px;line-height:1.6;">
-      Voici vos rappels d'entretien du jour. Votre score actuel est de <strong style="color:#1a4731;">${score}/100</strong>.
-      ${profile.pelouse ? `<br/>Gazon : ${profile.pelouse} — Sol : ${profile.sol} — ${profile.surface}m²` : ""}
-    </div>
-    <div style="margin-bottom:24px;">
-      ${reminders.map(r => `
-      <div style="display:flex;align-items:flex-start;gap:14px;padding:14px;background:#f9fbe7;border-radius:12px;border-left:4px solid #43a047;margin-bottom:10px;">
-        <span style="font-size:28px;line-height:1;">${r.icon}</span>
-        <div style="flex:1;">
-          <div style="font-size:15px;font-weight:800;color:#1a4731;margin-bottom:4px;">${r.label}</div>
-          <div style="font-size:12px;color:#555;line-height:1.5;">${r.desc}</div>
-          <div style="font-size:11px;color:#888;margin-top:6px;">📅 Fréquence : tous les ${r.days} jours</div>
-        </div>
-      </div>`).join("")}
-    </div>
-    <div style="text-align:center;margin-bottom:20px;">
-      <a href="https://mongazon360.fr/today" style="background:#1a4731;color:#fff;text-decoration:none;padding:14px 32px;border-radius:12px;font-size:14px;font-weight:800;display:inline-block;">
-        🌿 Ouvrir Mongazon360 →
-      </a>
-    </div>
-  </div>
-  <div style="background:#f9fbe7;padding:14px 28px;border-top:1px solid #e8f5e9;text-align:center;">
-    <div style="color:#4a7c5c;font-size:10px;">Mongazon360 — Rappels personnalisés</div>
-  </div>
-</div>
-</body></html>`;
-
       const emailRes = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${process.env.RESEND_API_KEY}` },
@@ -175,7 +331,7 @@ module.exports = async function handler(req, res) {
           from:    "Mongazon360 <bonjour@mongazon360.fr>",
           to:      [userEmail],
           subject: `🌿 [MG360] Rappel : ${reminders.map(r => r.label).join(", ")}`,
-          html,
+          html:    buildReminderHtml(reminders, userName, profile, score),
         }),
       });
 

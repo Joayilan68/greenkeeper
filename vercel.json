@@ -7,13 +7,17 @@
       "maxDuration": 30
     },
     "api/send.js": {
-      "maxDuration": 10
+      "maxDuration": 30
     }
   },
   "crons": [
     {
       "path": "/api/weekly-report",
       "schedule": "0 8 * * 1"
+    },
+    {
+      "path": "/api/send",
+      "schedule": "0 8 * * *"
     }
   ],
   "headers": [

@@ -69,17 +69,17 @@ export function usePushNotifications(userId) {
       });
       setSubscription(sub);
 
-      // Sauvegarder localement (prioritaire — ne dépend pas du serveur)
+      // Sauvegarder localement (prioritaire)
       localStorage.setItem('gk_push_sub', JSON.stringify(sub));
 
-      // Sauvegarder côté serveur (non bloquant — ne doit pas faire échouer le flux)
+      // Sauvegarder dans Supabase via API (non bloquant)
       try {
-        await fetch('/api/save-subscription', {
+        await fetch('/api/send?type=save-sub', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ subscription: sub, userId }),
         });
-      } catch {} // Echec silencieux — localStorage suffit pour le fonctionnement
+      } catch {} // Echec silencieux — localStorage suffit
       setLoading(false);
       return true;
     } catch (e) {
@@ -126,7 +126,7 @@ export function usePushNotifications(userId) {
       body: JSON.stringify({
         subscription: sub,
         notification: {
-          title: `🌿 GreenKeeper — ${notif.title}`,
+          title: `🌿 Mongazon360 — ${notif.title}`,
           body: notif.message,
           actionRoute: notif.actionRoute,
           action: notif.action,

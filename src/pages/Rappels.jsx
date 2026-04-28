@@ -10,32 +10,36 @@ import { card, scroll } from "../lib/styles";
 export default function Rappels() {
   const navigate = useNavigate();
   const { user } = useUser();
-  const { reminders, toggle, setDays, toggleChannel, activeCount, getDueReminders } = useReminders();
+  const { reminders, toggle, setDays, toggleChannel, activeCount, getDueReminders, syncToServer } = useReminders();
   const { history = [] } = useHistory();
   const { permission, subscribe } = usePushNotifications(user?.id);
   const [expanded, setExpanded] = useState(null);
   const dueReminders = getDueReminders(history);
 
-  // Activation Push sur un rappel : vérifie la permission ET la souscription avant
+  // Sync vers Supabase après chaque modification
+  const syncUserReminders = () => {
+    if (!user?.id) return;
+    const consents = JSON.parse(localStorage.getItem("mg360_consents") || "{}");
+    syncToServer(user.id, user.primaryEmailAddress?.emailAddress, consents);
+  };
+
+  // Activation Push sur un rappel : vérifie la permission navigateur avant
   const handlePushToggle = async (typeId) => {
     const isCurrentlyOn = !!reminders[typeId]?.push;
-    if (!isCurrentlyOn) {
-      const existingSub = localStorage.getItem("gk_push_sub");
-      // Demander permission si pas accordée OU si souscription manquante
-      if (permission !== "granted" || !existingSub) {
-        const success = await subscribe();
-        if (!success) return; // Permission refusée — ne pas activer
-        // Synchroniser le consentement global (Settings)
-        try {
-          const saved = localStorage.getItem("mg360_consents");
-          const existing = saved ? JSON.parse(saved) : {};
-          localStorage.setItem("mg360_consents", JSON.stringify({
-            ...existing,
-            notifications: true,
-            lastUpdated: new Date().toISOString(),
-          }));
-        } catch {}
-      }
+    if (!isCurrentlyOn && permission !== "granted") {
+      // Demander la permission push
+      const success = await subscribe();
+      if (!success) return; // Permission refusée — ne pas activer
+      // Synchroniser le consentement global (Settings)
+      try {
+        const saved = localStorage.getItem("mg360_consents");
+        const existing = saved ? JSON.parse(saved) : {};
+        localStorage.setItem("mg360_consents", JSON.stringify({
+          ...existing,
+          notifications: true,
+          lastUpdated: new Date().toISOString(),
+        }));
+      } catch {}
     }
     toggleChannel(typeId, "push");
   };
@@ -105,7 +109,7 @@ export default function Rappels() {
                   </div>
                 </div>
 
-                <div onClick={() => toggle(type.id)} style={{ width:44, height:24, borderRadius:12, cursor:"pointer", background: isActive ? "#66BB6A" : "rgba(255,255,255,0.15)", position:"relative", transition:"background 0.3s", flexShrink:0 }}>
+                <div onClick={() => { toggle(type.id); syncUserReminders(); }} style={{ width:44, height:24, borderRadius:12, cursor:"pointer", background: isActive ? "#66BB6A" : "rgba(255,255,255,0.15)", position:"relative", transition:"background 0.3s", flexShrink:0 }}>
                   <div style={{ width:18, height:18, borderRadius:"50%", background:"#fff", position:"absolute", top:3, left: isActive ? 23 : 3, transition:"left 0.3s", boxShadow:"0 1px 4px rgba(0,0,0,0.3)" }} />
                 </div>
 
@@ -121,17 +125,17 @@ export default function Rappels() {
                   <div style={{ fontSize:12, fontWeight:700, color:"#A5D6A7", marginBottom:10 }}>
                     ⏱️ Tous les <span style={{ fontSize:16, color:"#F1F8F2" }}>{r.days}</span> jours
                   </div>
-                  <input type="range" min={1} max={90} value={r.days} onChange={e => setDays(type.id, e.target.value)} style={{ width:"100%", accentColor:"#66BB6A" }} />
+                  <input type="range" min={1} max={90} value={r.days} onChange={e => { setDays(type.id, e.target.value); syncUserReminders(); }} style={{ width:"100%", accentColor:"#66BB6A" }} />
                   <div style={{ display:"flex", gap:6, marginTop:10 }}>
                     {[{l:"3j",v:3},{l:"7j",v:7},{l:"14j",v:14},{l:"30j",v:30},{l:"90j",v:90}].map(({l,v}) => (
-                      <button key={v} onClick={() => setDays(type.id, v)} style={{ flex:1, background: r.days===v ? "rgba(102,187,106,0.3)" : "rgba(255,255,255,0.05)", border:`1px solid ${r.days===v ? "#66BB6A" : "rgba(149,213,178,0.18)"}`, borderRadius:8, padding:"5px 4px", color: r.days===v ? "#66BB6A" : "#4a7c5c", fontSize:11, cursor:"pointer", fontFamily:"inherit" }}>
+                      <button key={v} onClick={() => { setDays(type.id, v); syncUserReminders(); }} style={{ flex:1, background: r.days===v ? "rgba(102,187,106,0.3)" : "rgba(255,255,255,0.05)", border:`1px solid ${r.days===v ? "#66BB6A" : "rgba(149,213,178,0.18)"}`, borderRadius:8, padding:"5px 4px", color: r.days===v ? "#66BB6A" : "#4a7c5c", fontSize:11, cursor:"pointer", fontFamily:"inherit" }}>
                         {l}
                       </button>
                     ))}
                   </div>
                   <div style={{ display:"flex", gap:8, marginTop:14 }}>
                     {[{k:"push",i:"📱",l:"Push"},{k:"email",i:"📧",l:"Email"}].map(({k,i,l}) => (
-                      <button key={k} onClick={() => k === "push" ? handlePushToggle(type.id) : toggleChannel(type.id, k)} style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:6, background: r[k] ? "rgba(102,187,106,0.2)" : "rgba(255,255,255,0.05)", border:`1px solid ${r[k] ? "#66BB6A" : "rgba(149,213,178,0.18)"}`, borderRadius:10, padding:"8px", color: r[k] ? "#66BB6A" : "#4a7c5c", fontSize:12, cursor:"pointer", fontFamily:"inherit", fontWeight:600 }}>
+                      <button key={k} onClick={() => { if (k === "push") { handlePushToggle(type.id).then(syncUserReminders); } else { toggleChannel(type.id, k); syncUserReminders(); } }} style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:6, background: r[k] ? "rgba(102,187,106,0.2)" : "rgba(255,255,255,0.05)", border:`1px solid ${r[k] ? "#66BB6A" : "rgba(149,213,178,0.18)"}`, borderRadius:10, padding:"8px", color: r[k] ? "#66BB6A" : "#4a7c5c", fontSize:12, cursor:"pointer", fontFamily:"inherit", fontWeight:600 }}>
                         {i} {l}{r[k] ? " ✓" : ""}
                       </button>
                     ))}
