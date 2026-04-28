@@ -228,7 +228,10 @@ export default function Dashboard() {
             </div>
             <div style={{ display: "flex", gap: 8 }}>
               <button
-                onClick={() => dismissNotifBanner(true)}
+                onClick={async () => {
+                  dismissNotifBanner(false);
+                  await handleActivatePush();
+                }}
                 style={{
                   flex: 1, padding: "10px", borderRadius: 10,
                   background: "linear-gradient(135deg,#43a047,#2e7d32)",

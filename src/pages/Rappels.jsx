@@ -16,23 +16,26 @@ export default function Rappels() {
   const [expanded, setExpanded] = useState(null);
   const dueReminders = getDueReminders(history);
 
-  // Activation Push sur un rappel : vérifie la permission navigateur avant
+  // Activation Push sur un rappel : vérifie la permission ET la souscription avant
   const handlePushToggle = async (typeId) => {
     const isCurrentlyOn = !!reminders[typeId]?.push;
-    if (!isCurrentlyOn && permission !== "granted") {
-      // Demander la permission push
-      const success = await subscribe();
-      if (!success) return; // Permission refusée — ne pas activer
-      // Synchroniser le consentement global (Settings)
-      try {
-        const saved = localStorage.getItem("mg360_consents");
-        const existing = saved ? JSON.parse(saved) : {};
-        localStorage.setItem("mg360_consents", JSON.stringify({
-          ...existing,
-          notifications: true,
-          lastUpdated: new Date().toISOString(),
-        }));
-      } catch {}
+    if (!isCurrentlyOn) {
+      const existingSub = localStorage.getItem("gk_push_sub");
+      // Demander permission si pas accordée OU si souscription manquante
+      if (permission !== "granted" || !existingSub) {
+        const success = await subscribe();
+        if (!success) return; // Permission refusée — ne pas activer
+        // Synchroniser le consentement global (Settings)
+        try {
+          const saved = localStorage.getItem("mg360_consents");
+          const existing = saved ? JSON.parse(saved) : {};
+          localStorage.setItem("mg360_consents", JSON.stringify({
+            ...existing,
+            notifications: true,
+            lastUpdated: new Date().toISOString(),
+          }));
+        } catch {}
+      }
     }
     toggleChannel(typeId, "push");
   };
