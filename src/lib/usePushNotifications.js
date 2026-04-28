@@ -69,15 +69,17 @@ export function usePushNotifications(userId) {
       });
       setSubscription(sub);
 
-      // Sauvegarder côté serveur
-      await fetch('/api/save-subscription', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subscription: sub, userId }),
-      });
-
-      // Sauvegarder localement
+      // Sauvegarder localement (prioritaire — ne dépend pas du serveur)
       localStorage.setItem('gk_push_sub', JSON.stringify(sub));
+
+      // Sauvegarder côté serveur (non bloquant — ne doit pas faire échouer le flux)
+      try {
+        await fetch('/api/save-subscription', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ subscription: sub, userId }),
+        });
+      } catch {} // Echec silencieux — localStorage suffit pour le fonctionnement
       setLoading(false);
       return true;
     } catch (e) {
