@@ -17,7 +17,6 @@ import { useGreenPoints } from "../lib/useGreenPoints";
 import { useStreak } from "../lib/useStreak";
 import { useClassement } from "../lib/useClassement";
 import { useSaison } from "../lib/useSaison";
-import { useReminders } from "../lib/useReminders";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -35,7 +34,7 @@ export default function Dashboard() {
     return localStorage.getItem("mg360_notif_banner_seen") !== "true";
   });
 
-  const { permission, subscribe, sendTestNotification, sendAlert, isSupported, subscription } = usePushNotifications(user?.id);
+  const { permission, subscribe, sendTestNotification, sendAlert, isSupported } = usePushNotifications(user?.id);
 
   // ── Nouveaux hooks ──────────────────────────────────────────────────────────
   const { classementActif } = useSaison();
@@ -45,15 +44,6 @@ export default function Dashboard() {
     ligueActuelle, position, totalJoueurs, pointsSemaine,
     enZonePromotion, enZoneRetrogradation, joursRestants, messageClassement
   } = useClassement(gpHistorique, profile, isPaid);
-  const { sendDueReminders } = useReminders();
-
-  // ── Envoi rappels dus — 1x par jour au chargement ───────────────────────
-  useEffect(() => {
-    if (!user || !synced) return;
-    const today = new Date().toISOString().slice(0, 10);
-    if (localStorage.getItem(`mg360_reminders_sent_${today}`)) return;
-    sendDueReminders({ user, profile, score, history, subscription });
-  }, [user, synced]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     // Attendre la sync Supabase avant de décider — évite faux positif après vidage cache
