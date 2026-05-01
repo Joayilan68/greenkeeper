@@ -1,6 +1,7 @@
 // src/pages/Diagnostic.jsx
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useUser } from "@clerk/clerk-react";
 import { useProfile } from "../lib/useProfile";
 import { useWeather } from "../lib/useWeather";
 import { useSubscription } from "../lib/useSubscription";
@@ -23,6 +24,7 @@ const ETAT_COLORS = {
 
 export default function Diagnostic() {
   const navigate   = useNavigate();
+  const { user }   = useUser();
   const { profile }  = useProfile();
   const { weather }  = useWeather() || {};
   const { isPaid, isAdmin } = useSubscription() || {};
@@ -37,6 +39,19 @@ export default function Diagnostic() {
   const [mimeType, setMimeType] = useState("image/jpeg");
   const [result, setResult]     = useState(null);
   const [selected, setSelected] = useState(null);
+  const [histoSupabase, setHistoSupabase] = useState([]);
+  const [histoLoading, setHistoLoading]   = useState(false);
+
+  // Charger l'historique Supabase au montage
+  useEffect(() => {
+    if (!user?.id) return;
+    setHistoLoading(true);
+    fetch(`/api/diagnostics?userId=${user.id}`)
+      .then(r => r.json())
+      .then(d => { if (Array.isArray(d)) setHistoSupabase(d); })
+      .catch(() => {})
+      .finally(() => setHistoLoading(false));
+  }, [user?.id]);
 
   const fileRef    = useRef(); // caméra (capture="environment")
   const galleryRef = useRef(); // galerie (sans capture)
@@ -67,7 +82,7 @@ export default function Diagnostic() {
       const res = await fetch("/api/analyze-lawn", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageBase64: imageB64, mimeType, profile: profile || {}, weather: weather || {}, score })
+        body: JSON.stringify({ imageBase64: imageB64, mimeType, profile: profile || {}, weather: weather || {}, score, userId: user?.id })
       });
       const data = await res.json();
       if (!res.ok || data.error) throw new Error(data.error || "Erreur serveur");
@@ -429,13 +444,36 @@ export default function Diagnostic() {
           </div>
         </div>
         <div style={scroll}>
-          {diagnostics.length === 0 ? (
-            <div style={{ ...card(), textAlign:"center", padding:24 }}>
-              <div style={{ fontSize:40, marginBottom:12 }}>📷</div>
-              <div style={{ fontSize:14, color:"#81c784" }}>Aucun diagnostic encore</div>
-            </div>
-          ) : (
-            diagnostics.map(d => {
+          {histoLoading ? (
+            <div style={{ textAlign:"center", padding:40, color:"#81c784" }}>Chargement...</div>
+          ) : (() => {
+            // Fusionner Supabase (priorité) + localStorage (fallback)
+            const supaIds = new Set(histoSupabase.map(d => d.public_id));
+            const localOnly = diagnostics.filter(d => !supaIds.has(d.publicId));
+            const allDiags = [
+              ...histoSupabase.map(d => ({
+                id: d.id,
+                date: d.created_at,
+                imageUrl: d.image_url,
+                analysis: {
+                  etat_general: d.etat_general,
+                  score_visuel: d.score_visuel,
+                  resume: d.resume,
+                  emoji: d.score_visuel >= 80 ? "😊" : d.score_visuel >= 60 ? "😐" : d.score_visuel >= 40 ? "😟" : "😰",
+                  problemes: d.problemes || [],
+                  points_positifs: d.points_positifs || [],
+                  actions_urgentes: d.actions_urgentes || [],
+                }
+              })),
+              ...localOnly,
+            ].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            return allDiags.length === 0 ? (
+              <div style={{ ...card(), textAlign:"center", padding:24 }}>
+                <div style={{ fontSize:40, marginBottom:12 }}>📷</div>
+                <div style={{ fontSize:14, color:"#81c784" }}>Aucun diagnostic encore</div>
+              </div>
+            ) : allDiags.map(d => {
               const etatColor = ETAT_COLORS[d.analysis.etat_general] || "#a5d6a7";
               return (
                 <div key={d.id} onClick={() => setSelected(d)} style={{ ...card(), cursor:"pointer", display:"flex", alignItems:"center", gap:14, padding:14 }}>
@@ -459,8 +497,8 @@ export default function Diagnostic() {
                   </div>
                 </div>
               );
-            })
-          )}
+            });
+          })()}
           <button onClick={reset} style={{ ...btn.ghost, marginBottom:24 }}>← Retour accueil</button>
         </div>
       </div>

@@ -69,7 +69,7 @@ module.exports = async function handler(req, res) {
 
   // ── Route principale : diagnostic photo ────────────────────────────────────
   try {
-    const { imageBase64, mimeType = "image/jpeg", profile = {}, weather = {}, score = 0 } = req.body;
+    const { imageBase64, mimeType = "image/jpeg", profile = {}, weather = {}, score = 0, userId } = req.body;
     if (!imageBase64) throw new Error("Image manquante");
 
     // ── 1. UPLOAD CLOUDINARY ──────────────────────────────────────────────
@@ -203,6 +203,31 @@ Si la photo ne montre pas du gazon, retourne score_visuel à 0 et explique dans 
         actions_urgentes:   ["Relancer le diagnostic avec une meilleure photo"],
         actions_prochaines: []
       };
+    }
+
+    // ── 3. SAUVEGARDE SUPABASE ────────────────────────────────────────────
+    if (userId) {
+      try {
+        const { createClient } = require("@supabase/supabase-js");
+        const supabase = createClient(
+          process.env.SUPABASE_URL,
+          process.env.SUPABASE_SERVICE_KEY
+        );
+        await supabase.from("diagnostics").insert({
+          user_id:        userId,
+          image_url:      imageUrl,
+          public_id:      publicId,
+          etat_general:   analysis.etat_general || null,
+          score_visuel:   analysis.score_visuel || null,
+          resume:         analysis.resume || null,
+          problemes:      analysis.problemes || [],
+          points_positifs: analysis.points_positifs || [],
+          actions_urgentes: analysis.actions_urgentes || [],
+        });
+      } catch (e) {
+        console.error("Supabase save diagnostic:", e.message);
+        // Non bloquant — on renvoie quand même le résultat au client
+      }
     }
 
     res.json({ success: true, imageUrl, publicId, analysis, date: new Date().toISOString() });
