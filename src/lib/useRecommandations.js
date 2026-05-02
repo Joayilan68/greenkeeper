@@ -67,6 +67,19 @@ function humideEtFroid(meteo) {
 }
 const DELAI_MIN_JOURS   = 7;
 
+// ── Helpers type de gazon (alignés sur planEntretien.js) ─────────────────────
+const isGazonSynth    = (p) => p?.isSynthetique || p?.pelouse === "synthetique" ||
+  (Array.isArray(p?.gazons) && p.gazons.includes("synthetique"));
+const isGazonOmbre    = (p) => p?.pelouse === "ombre" ||
+  (Array.isArray(p?.gazons) && p.gazons.includes("ombre"));
+const isGazonBermuda  = (p) => p?.pelouse === "bermuda" ||
+  (Array.isArray(p?.gazons) && p.gazons.includes("bermuda"));
+const isGazonRustique = (p) => p?.pelouse === "rustique" ||
+  (Array.isArray(p?.gazons) && p.gazons.includes("rustique"));
+const isObjectifNaturel = (p) => p?.objectif === "naturel";
+const isObjectifCreer   = (p) => p?.objectif === "creer";
+const isObjectifRenover = (p) => p?.objectif === "renover";
+
 // ── Grilles budget ────────────────────────────────────────────────────────────
 // Retourne la gamme de produit adaptée au budget déclaré
 function gamme(budget) {
@@ -146,10 +159,11 @@ const CALENDRIER = {
     icone:        "🌱",
     mois_valides: [2, 3],
     conditions:   (profil, score, meteo, history) => {
-      if (profil?.pelouse === "synthetique") return false;
+      if (isGazonSynth(profil)) return false;
+      if (isGazonBermuda(profil)) return false; // dormance
+      if (isObjectifNaturel(profil)) return false; // → organique suggéré ailleurs
       if (gelPossible(meteo)) return false;
       if (tropFroid(meteo, 8)) return false;
-      // Pas si engrais appliqué récemment (< 45 jours)
       if (dernierJour(history, "engrais") < 45) return false;
       const zone = zoneClimatique(profil?.ville, profil?._coords);
       if (zone === "nord_est" || zone === "nord") return score < 80 && (meteo?.temp_max || 0) >= 10;
@@ -173,8 +187,8 @@ const CALENDRIER = {
     icone:        "🌿",
     mois_valides: [3, 4, 9],
     conditions:   (profil, score, meteo, history) => {
-      if (profil?.pelouse === "synthetique") return false;
-      // Pas si traitement anti-mousse récent (< 30 jours)
+      if (isGazonSynth(profil)) return false;
+      if (isGazonBermuda(profil)) return false;
       if (dernierJour(history, "anti_mousse") < 30) return false;
       if (dernierJour(history, "mousse") < 30) return false;
       const zone = zoneClimatique(profil?.ville, profil?._coords);
@@ -204,10 +218,13 @@ const CALENDRIER = {
     icone:        "🪴",
     mois_valides: [4, 5, 9],
     conditions:   (profil, score, meteo, history) => {
-      if (profil?.pelouse === "synthetique") return false;
+      if (isGazonSynth(profil)) return false;
+      if (isGazonBermuda(profil)) return false;
+      if (isObjectifNaturel(profil)) return false; // désherbant chimique bloqué
+      if (isObjectifCreer(profil)) return false;   // création : pas de désherbant avant J45
+      if (isGazonRustique(profil)) return false;   // trèfle protégé
       if (pluiePrevue(meteo, 3)) return false;
       if (tropFroid(meteo, 10)) return false;
-      // Pas si désherbé récemment (< 21 jours)
       if (dernierJour(history, "desherb") < 21) return false;
       if (dernierJour(history, "désherb") < 21) return false;
       return score < 70;
@@ -230,9 +247,11 @@ const CALENDRIER = {
     icone:        "☀️",
     mois_valides: [5, 6],
     conditions:   (profil, score, meteo, history) => {
-      if (profil?.pelouse === "synthetique") return false;
+      if (isGazonSynth(profil)) return false;
+      if (isGazonBermuda(profil)) return false;
+      if (isObjectifNaturel(profil)) return false;
+      if (isObjectifCreer(profil)) return false; // J0-J60 bloqué
       if (solDetrempé(meteo)) return false;
-      // Pas si engrais appliqué récemment (< 45 jours)
       if (dernierJour(history, "engrais") < 45) return false;
       if (profil?.pelouse === "sec" || profil?.pelouse === "chaud") return score < 75;
       const zone = zoneClimatique(profil?.ville, profil?._coords);
@@ -256,16 +275,14 @@ const CALENDRIER = {
     icone:        "💧",
     mois_valides: [3, 4, 5, 6, 7, 8, 9, 10],
     conditions:   (profil, score, meteo, history) => {
-      if (profil?.pelouse === "synthetique") return false;
-      // Respecter délai minimum 42 jours (6 semaines) entre applications
+      if (isGazonSynth(profil)) return false;
+      if (isGazonBermuda(profil)) return false;
       if (dernierJour(history, "biostimulant") < 42) return false;
       if (dernierJour(history, "stimulant") < 42) return false;
       const zone = zoneClimatique(profil?.ville, profil?._coords);
       const moisActuel = new Date().getMonth() + 1;
-      // Hors saison de croissance → pas utile
       if (gelPossible(meteo)) return false;
       if (tropFroid(meteo, 8)) return false;
-      // En pleine saison chaude (juin-août) : seuil température
       if (moisActuel >= 6 && moisActuel <= 8) {
         const seuilTemp = (zone === "sud" || zone === "sud_ouest") ? 22 : 25;
         const chaud = (meteo?.temp_max || 0) > seuilTemp;
@@ -273,7 +290,6 @@ const CALENDRIER = {
         if (zone === "sud" || zone === "sud_ouest") return chaud || score < 65;
         return chaud || score < 70;
       }
-      // Hors été (mars-mai, sept-oct) : recommandé si score < 80
       return score < 80;
     },
     max_par_an:   6,
@@ -298,18 +314,16 @@ const CALENDRIER = {
     icone:        "🌾",
     mois_valides: [3, 4, 5, 6, 8, 9],
     conditions:   (profil, score, meteo, history) => {
-      if (profil?.pelouse === "synthetique") return false;
-      // Pas si gel — semences ne germent pas
+      if (isGazonSynth(profil)) return false;
+      if (isGazonBermuda(profil)) return false;
       if (gelPossible(meteo)) return false;
-      // Pas si trop chaud — germination compromise
       if ((meteo?.temp_max || 0) > 28) return false;
-      // Pas si semé récemment (< 60 jours)
       if (dernierJour(history, "semences") < 60) return false;
       if (dernierJour(history, "semis") < 60) return false;
-      // Juin : conditions plus strictes (chaleur naissante, risque stress hydrique)
       const moisActuel = new Date().getMonth() + 1;
+      // Objectif Créer : toujours prioritaire en bonne saison
+      if (isObjectifCreer(profil)) return true;
       if (moisActuel === 6) return score < 65 && (meteo?.temp_max || 30) < 26;
-      // Mars-avril : sol doit être suffisamment chaud
       if (moisActuel === 3 || moisActuel === 4) {
         if ((meteo?.temp_max || 0) < 10) return false;
       }
@@ -348,10 +362,11 @@ const CALENDRIER = {
     icone:        "🍂",
     mois_valides: [9, 10],
     conditions:   (profil, score, meteo, history) => {
-      if (profil?.pelouse === "synthetique") return false;
+      if (isGazonSynth(profil)) return false;
+      if (isGazonBermuda(profil)) return false;
+      if (isObjectifNaturel(profil)) return false;
       if (gelPossible(meteo)) return false;
       if (solDetrempé(meteo)) return false;
-      // Pas si engrais appliqué récemment (< 45 jours)
       if (dernierJour(history, "engrais") < 45) return false;
       return score < 80;
     },
@@ -373,7 +388,9 @@ const CALENDRIER = {
     icone:        "❄️",
     mois_valides: [11],
     conditions:   (profil, score, meteo, history) => {
-      if (profil?.pelouse === "synthetique") return false;
+      if (isGazonSynth(profil)) return false;
+      if (isGazonBermuda(profil)) return false; // dormance
+      if (isObjectifNaturel(profil)) return false;
       if (dernierJour(history, "engrais") < 45) return false;
       return score < 70;
     },
@@ -391,9 +408,9 @@ const CALENDRIER = {
     icone:        "🌀",
     mois_valides: [3, 4, 9],
     conditions:   (profil, score, meteo, history) => {
-      if (profil?.pelouse === "synthetique") return false;
+      if (isGazonSynth(profil)) return false;
+      if (isGazonBermuda(profil)) return false;
       if (solDetrempé(meteo)) return false;
-      // Pas si aération effectuée récemment (< 90 jours)
       if (dernierJour(history, "aération") < 90) return false;
       if (dernierJour(history, "aeration") < 90) return false;
       return profil?.sol === "argileux" || profil?.sol === "compacte" || score < 70;
@@ -415,7 +432,9 @@ const CALENDRIER = {
     icone:        "🔩",
     mois_valides: [3, 4, 9],
     conditions:   (profil, score, meteo, history) => {
-      if (profil?.pelouse === "synthetique") return false;
+      if (isGazonSynth(profil)) return false;
+      if (isGazonBermuda(profil)) return false;
+      if (isGazonOmbre(profil)) return false; // ombre : scarification déconseillée
       if (pluiePrevue(meteo, 3)) return false;
       if (tropFroid(meteo, 10)) return false;
       if (dernierJour(history, "scarif") < 180) return false;
@@ -435,46 +454,40 @@ const CALENDRIER = {
     icone:        "💧",
     mois_valides: [3, 4, 5, 6, 7, 8, 9, 10],
     conditions:   (profil, score, meteo, history) => {
-      if (profil?.pelouse === "synthetique") return false;
-      // Pas si gel — ne pas arroser par gel
+      if (isGazonSynth(profil)) return false;
+      if (isGazonBermuda(profil)) return false;
       if (gelPossible(meteo)) return false;
-      // Pas si pluie suffisante (≥ 8mm) — pas besoin d'arroser
       if ((meteo?.precip || 0) >= 8) return false;
-      // Pas si arrosé récemment (< 20h = même journée)
       if (dernierJour(history, "arrosage") < 1) return false;
-      // Pas si mode d'arrosage = automatique (géré sans intervention)
       if (profil?.arrosage === "automatique") return false;
-      // Pas si pas d'arrosage déclaré
       if (profil?.arrosage === "aucun") return false;
       const zone = zoneClimatique(profil?.ville, profil?._coords);
       const moisActuel = new Date().getMonth() + 1;
-      // Sol sableux → sèche vite → plus sensible
       const solSensible = profil?.sol === "sableux";
-      // Gazon exigeant en eau
       const gazonExigeant = profil?.pelouse === "sport" || profil?.pelouse === "ornemental";
-      // Chaleur + pas de pluie récente → arrosage nécessaire
       const chaud = (meteo?.temp_max || 0) > 22;
       const treschaud = (meteo?.temp_max || 0) > 30;
-      // Été → toujours recommander si pas de pluie
       if (moisActuel >= 6 && moisActuel <= 8) return chaud || score < 75;
-      // Printemps/automne → uniquement si chaleur ou sol sensible
       if (solSensible || gazonExigeant) return chaud || score < 70;
-      // Zone Sud → seuil plus bas (sécheresse plus fréquente)
       if (zone === "sud" || zone === "sud_ouest") return chaud || score < 75;
       return treschaud || score < 65;
     },
     max_par_an:   52,
     message:      (score, profil, history) => {
-      const meteoMsg = ""; // accès via closure non disponible — message générique
       const zone = zoneClimatique(profil?.ville, profil?._coords);
-      const solInfo = profil?.sol === "sableux" ? "Votre sol sableux sèche rapidement — " :
-                      profil?.sol === "argileux" ? "Votre sol argileux retient l'eau — " : "";
-      const freq = profil?.sol === "sableux" ? "tous les 2-3 jours" :
-                   (zone === "sud" || zone === "sud_ouest") ? "tous les 2-3 jours" :
-                   "2 à 3 fois par semaine";
+      // Volumes par type de sol (KB v3 — Arrosage Précis)
+      const volumeParSol = {
+        sableux:  { vol: "15-20mm", freq: "tous les 2-3j", note: "Sol sableux sèche rapidement — " },
+        limoneux: { vol: "10-15mm", freq: "tous les 3-4j", note: "" },
+        argileux: { vol: "8-12mm (2 passages)", freq: "tous les 4-5j", note: "Sol argileux : 2 passages courts valent mieux qu'un long — " },
+        calcaire: { vol: "10-14mm", freq: "tous les 3-4j", note: "" },
+        humifere: { vol: "8-10mm", freq: "tous les 4-5j", note: "Sol humifère retient bien l'eau — " },
+        compacte: { vol: "6-8mm", freq: "tous les 3-4j", note: "Sol compacté : aérez pour améliorer la pénétration — " },
+      };
+      const s = volumeParSol[profil?.sol] || { vol: "10-15mm", freq: "2-3 fois/semaine", note: "" };
       const surface = profil?.surface;
-      const conseil = surface ? ` Pour vos ${surface}m², prévoyez ~${Math.round(surface * 0.004 * 10)/10}L/m² par arrosage.` : "";
-      return `${solInfo}Un arrosage est recommandé aujourd'hui. Arrosez ${freq} tôt le matin (6h-9h) pour limiter l'évaporation.${conseil}`;
+      const conseil = surface ? ` Pour vos ${surface}m², prévoyez ~${Math.round(surface * 0.012 * 10)/10}L.` : "";
+      return `${s.note}Arrosez ${s.freq} · ${s.vol}/session · uniquement 5h-8h du matin.${conseil}`;
     },
     impact_score: "+3 à +8 pts potentiels",
     urgence:      "haute",

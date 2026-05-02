@@ -57,6 +57,59 @@ const pluiePrevue = (w, s = 5)  => w?.precip   !== undefined && w.precip > s;
 const solDetrempé = (w) => w?.precip !== undefined && w.precip > 15;
 const ventFort    = (w) => w?.wind   !== undefined && w.wind >= 40;
 
+// ── Helpers type de gazon ─────────────────────────────────────────────────────
+// Compatible multi-select (gazons[]) ET single-select (pelouse)
+const isGazonSynth    = (p) => p?.isSynthetique || p?.pelouse === "synthetique" ||
+  (Array.isArray(p?.gazons) && p.gazons.includes("synthetique"));
+const isGazonOmbre    = (p) => p?.pelouse === "ombre" ||
+  (Array.isArray(p?.gazons) && p.gazons.includes("ombre"));
+const isGazonSport    = (p) => p?.pelouse === "sport" ||
+  (Array.isArray(p?.gazons) && p.gazons.includes("sport"));
+const isGazonBermuda  = (p) => p?.pelouse === "bermuda" ||
+  (Array.isArray(p?.gazons) && p.gazons.includes("bermuda"));
+const isGazonRustique = (p) => p?.pelouse === "rustique" ||
+  (Array.isArray(p?.gazons) && p.gazons.includes("rustique"));
+
+// ── Helpers objectif profil ───────────────────────────────────────────────────
+const isObjectifCreer   = (p) => p?.objectif === "creer";
+const isObjectifRenover = (p) => p?.objectif === "renover";
+const isObjectifNaturel = (p) => p?.objectif === "naturel";
+
+// ── Alertes maladies fongiques ────────────────────────────────────────────────
+// Retourne la maladie détectée ou null selon les conditions météo
+export function detecterMaladie(weather, profile, month) {
+  if (!weather) return null;
+  const { temp_min, temp_max, humidity, precip } = weather;
+  const isOmbre = isGazonOmbre(profile);
+  const isSport = isGazonSport(profile);
+
+  // Fusariose : gel/froid + humidité élevée 48h
+  if (temp_min < 5 && (humidity || 0) > 85 && [10,11,2,3,4].includes(month))
+    return { id: "fusariose", label: "Risque Fusariose", urgence: "haute",
+      message: "Températures basses + humidité élevée : conditions idéales pour la fusariose. Traitement préventif recommandé.",
+      traitement: "Fongicide préventif (iprodione ou thirame)" };
+
+  // Pythium : chaleur + pluie nocturne
+  if ((temp_max || 0) > 30 && (precip || 0) > 3 && [6,7,8].includes(month))
+    return { id: "pythium", label: "Risque Pythium ⚠️", urgence: "haute",
+      message: "Chaleur extrême + pluie récente : risque Pythium élevé (taches grasses gris-vert). Agir sous 24h.",
+      traitement: "Fongicide spécifique (métalaxyl). Éviter arrosage soir." };
+
+  // Oïdium : ombrage + conditions douces
+  if (isOmbre && (temp_max || 0) >= 18 && (temp_max || 0) <= 24 && (humidity || 0) >= 70 && [4,5,9,10].includes(month))
+    return { id: "oidium", label: "Risque Oïdium", urgence: "normale",
+      message: "Gazon ombre + conditions douces : surveillez l'apparition de poudre blanche sur les brins.",
+      traitement: "Soufre micronisé (bio) ou fongicide soufre" };
+
+  // Helminthosporiose : stress hydrique + chaleur (sport surtout)
+  if (isSport && (temp_max || 0) > 25 && (precip || 0) < 2 && [5,6,7,8,9].includes(month))
+    return { id: "helmintho", label: "Risque Helminthosporiose", urgence: "normale",
+      message: "Chaleur + sécheresse sur gazon sport : taches brun-noir possibles. Arrosez tôt le matin.",
+      traitement: "Engrais équilibré + arrosage matinal régulier" };
+
+  return null;
+}
+
 // ── Helpers historique ────────────────────────────────────────────────────────
 export function daysSince(history, keywords) {
   if (!history?.length) return 999;
@@ -87,8 +140,10 @@ export const ACTIONS_PLAN = [
     label: "Tonte ✂️",
     gp:    "tonte",
     // Mars → Novembre. Fév inclus en zone Sud/SO/Corse si repousse.
-    getMois: (zone, sol, isSynth) => {
-      if (isSynth) return [];
+    getMois: (zone, sol, isSynth, profile) => {
+      if (isSynth || isGazonSynth(profile)) return [];
+      // Bermuda : dormance nov-mars → pas de tonte
+      if (isGazonBermuda(profile)) return [4,5,6,7,8,9,10];
       const base = [3,4,5,6,7,8,9,10,11];
       return (zone === "sud" || zone === "sud_ouest" || zone === "corse")
         ? [2, ...base] : base;
@@ -113,8 +168,10 @@ export const ACTIONS_PLAN = [
     label: "Arrosage 💧",
     gp:    "arrosage",
     // Zone Sud/SO/Corse : dès février (~65x/an). Autres : mars-octobre (~50x/an)
-    getMois: (zone, sol, isSynth) => {
-      if (isSynth) return [];
+    getMois: (zone, sol, isSynth, profile) => {
+      if (isSynth || isGazonSynth(profile)) return [];
+      // Bermuda : dormance → pas d'arrosage nov-mars
+      if (isGazonBermuda(profile)) return [4,5,6,7,8,9,10];
       const base = [3,4,5,6,7,8,9,10];
       return (zone === "sud" || zone === "sud_ouest" || zone === "corse")
         ? [2, ...base] : base;
@@ -143,12 +200,14 @@ export const ACTIONS_PLAN = [
     id:    "engrais_starter",
     label: "Engrais Starter 🌱",
     gp:    "engrais",
-    getMois: (zone, sol, isSynth) => {
-      if (isSynth) return [];
+    getMois: (zone, sol, isSynth, profile) => {
+      if (isSynth || isGazonSynth(profile)) return [];
+      if (isGazonBermuda(profile)) return []; // dormance
       return (zone === "nord_est" || zone === "nord") ? [3] : [2, 3];
     },
     getInterval: () => 45,
     getBlocked: (w, profile, zone) => {
+      if (isObjectifNaturel(profile)) return { blocked: true, raison: "Objectif Naturel — utilisez un engrais organique (farine de corne, guano)" };
       if (gelPossible(w))   return { blocked: true, raison: "Gel possible — engrais brûlerait le gazon" };
       if (tropFroid(w, 8))  return { blocked: true, raison: "Trop froid (<8°C) — engrais inefficace" };
       if ((zone === "nord_est" || zone === "nord") && tropFroid(w, 10))
@@ -168,9 +227,13 @@ export const ACTIONS_PLAN = [
     id:    "engrais_ete",
     label: "Engrais Été ☀️",
     gp:    "engrais",
-    getMois: (zone, sol, isSynth) => isSynth ? [] : [5, 6],
+    getMois: (zone, sol, isSynth, profile) => {
+      if (isSynth || isGazonSynth(profile) || isGazonBermuda(profile)) return [];
+      return [5, 6];
+    },
     getInterval: () => 45,
-    getBlocked: (w) => {
+    getBlocked: (w, profile) => {
+      if (isObjectifNaturel(profile)) return { blocked: true, raison: "Objectif Naturel — utilisez un engrais organique d'été (algues marines, acides humiques)" };
       if (solDetrempé(w)) return { blocked: true, raison: "Sol détrempé (>15mm) — lessivage immédiat" };
       return { blocked: false };
     },
@@ -187,9 +250,13 @@ export const ACTIONS_PLAN = [
     id:    "engrais_automne",
     label: "Engrais Automne 🍂",
     gp:    "engrais",
-    getMois: (zone, sol, isSynth) => isSynth ? [] : [9, 10],
+    getMois: (zone, sol, isSynth, profile) => {
+      if (isSynth || isGazonSynth(profile) || isGazonBermuda(profile)) return [];
+      return [9, 10];
+    },
     getInterval: () => 45,
-    getBlocked: (w) => {
+    getBlocked: (w, profile) => {
+      if (isObjectifNaturel(profile)) return { blocked: true, raison: "Objectif Naturel — utilisez un engrais organique d'automne" };
       if (gelPossible(w)) return { blocked: true, raison: "Gel possible — engrais non absorbé" };
       if (solDetrempé(w)) return { blocked: true, raison: "Sol détrempé — lessivage" };
       return { blocked: false };
@@ -207,7 +274,10 @@ export const ACTIONS_PLAN = [
     id:    "engrais_hiver",
     label: "Engrais Hiver ❄️",
     gp:    "engrais",
-    getMois: (zone, sol, isSynth) => isSynth ? [] : [11],
+    getMois: (zone, sol, isSynth, profile) => {
+      if (isSynth || isGazonSynth(profile) || isGazonBermuda(profile)) return [];
+      return [11];
+    },
     getInterval: () => 45,
     getBlocked: () => ({ blocked: false }),
     keywords:     ["engrais hiver", "engrais ❄️", "chaux", "engrais"],
@@ -224,9 +294,8 @@ export const ACTIONS_PLAN = [
     id:    "verticut",
     label: "Verticut 🔧",
     gp:    "scarification",
-    getMois: (zone, sol, isSynth) => {
-      if (isSynth) return [];
-      // Dérivé de MONTHLY_PLAN — même source que MyLawn
+    getMois: (zone, sol, isSynth, profile) => {
+      if (isSynth || isGazonSynth(profile) || isGazonBermuda(profile)) return [];
       return Object.entries(MONTHLY_PLAN).filter(([,p]) => p.verticut).map(([m]) => +m);
     },
     getInterval: () => 180,
@@ -251,8 +320,8 @@ export const ACTIONS_PLAN = [
     id:    "aeration",
     label: "Aération 🌀",
     gp:    "aeration",
-    getMois: (zone, sol, isSynth) => {
-      if (isSynth) return [];
+    getMois: (zone, sol, isSynth, profile) => {
+      if (isSynth || isGazonSynth(profile) || isGazonBermuda(profile)) return [];
       const base = [3, 9];
       return (sol === "argileux" || sol === "compacte")
         ? [3, 4, 9, 10] : base;
@@ -282,14 +351,17 @@ export const ACTIONS_PLAN = [
     id:    "scarification",
     label: "Scarification 🔩",
     gp:    "scarification",
-    getMois: (zone, sol, isSynth) => isSynth ? [] : [3, 4, 9],
+    getMois: (zone, sol, isSynth, profile) => {
+      if (isSynth || isGazonSynth(profile) || isGazonBermuda(profile)) return [];
+      if (isGazonOmbre(profile)) return []; // Ombre : scarification déconseillée
+      return [3, 4, 9];
+    },
     getInterval: () => 180,
     getBlocked: (w) => {
       if (pluiePrevue(w, 3)) return { blocked: true, raison: "Pluie prévue — reporter" };
       if (tropFroid(w, 10))  return { blocked: true, raison: "Trop froid (<10°C)" };
       return { blocked: false };
     },
-    keywords:       ["scarif", "scarification"],
     detail:         () => "Élimine le feutre — améliore densité et absorption",
     needsProduct:   false,
     exclusive:      ["aeration"],
@@ -304,7 +376,13 @@ export const ACTIONS_PLAN = [
     id:    "desherbage",
     label: "Désherbage 🪴",
     gp:    "desherbage",
-    getMois: (zone, sol, isSynth) => isSynth ? [] : [4, 5, 9],
+    getMois: (zone, sol, isSynth, profile) => {
+      if (isSynth || isGazonSynth(profile) || isGazonBermuda(profile)) return [];
+      if (isObjectifNaturel(profile)) return []; // Naturel : pas de désherbant chimique
+      if (isObjectifCreer(profile)) return [];   // Création : pas de désherbant avant J45
+      if (isGazonRustique(profile)) return [];   // Rustique : trèfle protégé
+      return [4, 5, 9];
+    },
     getInterval: (month) => month === 9 ? 14 : 7,
     getBlocked: (w) => {
       if (pluiePrevue(w, 3)) return { blocked: true, raison: "Pluie prévue — désherbant lessivé avant absorption" };
@@ -328,10 +406,10 @@ export const ACTIONS_PLAN = [
     id:    "antimousse",
     label: "Anti-mousse 💊",
     gp:    "anti_mousse",
-    getMois: (zone, sol, isSynth) => isSynth ? [] : [3, 4, 9],
-    getInterval: () => 30,
-    getBlocked:  () => ({ blocked: false }),
-    conditionActive: (profile, score, weather, zone) => {
+    getMois: (zone, sol, isSynth, profile) => {
+      if (isSynth || isGazonSynth(profile) || isGazonBermuda(profile)) return [];
+      return [3, 4, 9];
+    },
       const seuil   = (zone === "ouest" || zone === "nord") ? 75 : 65;
       const humid   = weather?.humidity > 70 && weather?.temp_max < 18;
       return profile?.sol === "argileux"        ||
@@ -357,7 +435,10 @@ export const ACTIONS_PLAN = [
     id:    "biostimulant",
     label: "Biostimulant 🌿",
     gp:    "anti_mousse",
-    getMois: (zone, sol, isSynth) => isSynth ? [] : [3,4,5,6,7,8,9,10],
+    getMois: (zone, sol, isSynth, profile) => {
+      if (isSynth || isGazonSynth(profile) || isGazonBermuda(profile)) return [];
+      return [3,4,5,6,7,8,9,10];
+    },
     getInterval: () => 42,
     getBlocked:  () => ({ blocked: false }),
     conditionActive: (profile, score, weather, zone) => {
@@ -382,7 +463,12 @@ export const ACTIONS_PLAN = [
     id:    "regarnissage",
     label: "Regarnissage 🌾",
     gp:    "semences",
-    getMois: (zone, sol, isSynth) => isSynth ? [] : [3, 4, 5, 8, 9],
+    getMois: (zone, sol, isSynth, profile) => {
+      if (isSynth || isGazonSynth(profile) || isGazonBermuda(profile)) return [];
+      // Objectif Créer : semences disponibles toute la bonne saison
+      if (isObjectifCreer(profile)) return [3,4,5,8,9];
+      return [3, 4, 5, 8, 9];
+    },
     getInterval: () => 60,
     getBlocked: (w) => {
       if ((w?.temp_max || 0) > 28) return { blocked: true, raison: "Trop chaud (>28°C) — germination compromise" };
@@ -412,14 +498,14 @@ export const ACTIONS_PLAN = [
 //           | "blocked" | "exclusive"
 // ══════════════════════════════════════════════════════════════════════════════
 export function buildActions(profile, weather, history, score, month, arros) {
-  const isSynth = profile?.isSynthetique || profile?.pelouse === "synthetique";
+  const isSynth = isGazonSynth(profile);
   const sol     = profile?.sol;
   const zone    = zoneClimatique(profile);
   const plan    = MONTHLY_PLAN[month];
-  const sc      = score ?? 70; // score par défaut si non fourni
+  const sc      = score ?? 70;
 
   return ACTIONS_PLAN.map(action => {
-    const mois     = action.getMois(zone, sol, isSynth);
+    const mois     = action.getMois(zone, sol, isSynth, profile);
     const since    = daysSince(history, action.keywords);
     const interval = action.getInterval(month, zone, plan);
 
