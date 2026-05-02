@@ -499,10 +499,13 @@ export default function MyLawn() {
                   </div>
                   {isActive && (
                     <div style={{ marginTop:8, paddingLeft:38 }}>
+                      <div style={{ fontSize:12, color:"#a5d6a7", marginBottom:4, fontWeight:600 }}>
+                        Tous les <span style={{ fontSize:15, color:"#F1F8F2", fontWeight:800 }}>{r.days || type.defaultDays}</span> jours
+                      </div>
                       <input type="range" min={1} max={90} value={r.days || type.defaultDays} onChange={e => { setDays(type.id, e.target.value); syncReminders(); }} style={{ width:"100%", accentColor:"#66BB6A" }} />
-                      <div style={{ display:"flex", gap:4, marginTop:4 }}>
+                      <div style={{ display:"flex", gap:4, marginTop:6 }}>
                         {[{l:"3j",v:3},{l:"7j",v:7},{l:"14j",v:14},{l:"30j",v:30},{l:"90j",v:90}].map(({l,v}) => (
-                          <button key={v} onClick={() => { setDays(type.id, v); syncReminders(); }} style={{ flex:1, background: (r.days||type.defaultDays)===v ? "rgba(102,187,106,0.3)" : "rgba(255,255,255,0.05)", border:`1px solid ${(r.days||type.defaultDays)===v ? "#66BB6A" : "rgba(149,213,178,0.18)"}`, borderRadius:6, padding:"3px 2px", color:(r.days||type.defaultDays)===v ? "#66BB6A" : "#4a7c5c", fontSize:10, cursor:"pointer" }}>
+                          <button key={v} onClick={() => { setDays(type.id, v); syncReminders(); }} style={{ flex:1, background: (r.days||type.defaultDays)===v ? "rgba(102,187,106,0.35)" : "rgba(255,255,255,0.1)", border:`1px solid ${(r.days||type.defaultDays)===v ? "#66BB6A" : "rgba(255,255,255,0.2)"}`, borderRadius:6, padding:"5px 2px", color:(r.days||type.defaultDays)===v ? "#a5d6a7" : "#e8f5e9", fontSize:11, fontWeight:(r.days||type.defaultDays)===v ? 700 : 400, cursor:"pointer" }}>
                             {l}
                           </button>
                         ))}
@@ -512,8 +515,9 @@ export default function MyLawn() {
                 </div>
               );
             })}
-            <div style={{ fontSize:11, color:"#4a7c5c", marginTop:4 }}>
-              📧 Push et emails configurables dans <span onClick={() => navigate("/parametres")} style={{ color:"#66BB6A", cursor:"pointer", textDecoration:"underline" }}>Paramètres</span>
+            <div style={{ fontSize:11, color:"#f9a825", marginTop:8, padding:"8px 10px", background:"rgba(249,168,37,0.1)", border:"1px solid rgba(249,168,37,0.3)", borderRadius:8, lineHeight:1.5 }}>
+              ⚠️ Pour recevoir les notifications et rappels, vous devez activer Push et Emails dans{" "}
+              <span onClick={() => navigate("/parametres")} style={{ color:"#66BB6A", cursor:"pointer", textDecoration:"underline", fontWeight:700 }}>Paramètres</span>
             </div>
           </div>
         )}
