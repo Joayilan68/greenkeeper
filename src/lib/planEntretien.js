@@ -410,6 +410,9 @@ export const ACTIONS_PLAN = [
       if (isSynth || isGazonSynth(profile) || isGazonBermuda(profile)) return [];
       return [3, 4, 9];
     },
+    getInterval: () => 30,
+    getBlocked:  () => ({ blocked: false }),
+    conditionActive: (profile, score, weather, zone) => {
       const seuil   = (zone === "ouest" || zone === "nord") ? 75 : 65;
       const humid   = weather?.humidity > 70 && weather?.temp_max < 18;
       return profile?.sol === "argileux"        ||
