@@ -102,23 +102,74 @@ module.exports = async function handler(req, res) {
     const publicId = uploadData.public_id;
 
     // ── 2. ANALYSE GROQ VISION ────────────────────────────────────────────
-    const profileCtx = profile.pelouse
-      ? `Type : ${profile.pelouse}, Sol : ${profile.sol}, Surface : ${profile.surface}m²`
-      : "Profil non renseigné";
+    const isSynth   = profile?.isSynthetique || profile?.pelouse === "synthetique" ||
+      (Array.isArray(profile?.gazons) && profile.gazons.includes("synthetique"));
+    const isBermuda = profile?.pelouse === "bermuda" ||
+      (Array.isArray(profile?.gazons) && profile.gazons.includes("bermuda"));
+    const isOmbre   = profile?.pelouse === "ombre" ||
+      (Array.isArray(profile?.gazons) && profile.gazons.includes("ombre"));
+    const isRustiq  = profile?.pelouse === "rustique" ||
+      (Array.isArray(profile?.gazons) && profile.gazons.includes("rustique"));
+    const isSport   = profile?.pelouse === "sport" ||
+      (Array.isArray(profile?.gazons) && profile.gazons.includes("sport"));
+    const isNaturel = profile?.objectif === "naturel";
+
+    const typeGazon  = profile?.gazons?.join("+") || profile?.pelouse || "universel";
+    const moisActuel = new Date().getMonth() + 1;
+
+    // Règles KB v3 injectées selon le profil
+    const reglesProfil = [
+      isSynth   ? "GAZON SYNTHÉTIQUE : solutions uniquement mécaniques (nettoyage, brossage, granulats). Ne jamais recommander tonte, engrais, arrosage, désherbant, scarification, aération, semences." : null,
+      isBermuda && [11,12,1,2,3].includes(moisActuel) ? "BERMUDA DORMANT (hiver) : brun normal, aucune intervention. Ne pas recommander de traitement." : null,
+      isOmbre   ? "GAZON OMBRE : hauteur tonte minimum 6-8cm. Pas de scarification. Surveiller oïdium et mousse." : null,
+      isRustiq  ? "GAZON RUSTIQUE : tonte haute 7-10cm minimum. Pas de désherbant (trèfle protégé). Engrais organique uniquement." : null,
+      isSport   ? "GAZON SPORT : sensible helminthosporiose par chaleur. Hauteur tonte 3-4cm, jamais <2.5cm. Besoin eau élevé." : null,
+      isNaturel ? "OBJECTIF NATUREL : recommander uniquement produits bio (engrais organique, soufre anti-mousse, désherbage manuel). Pas de chimique." : null,
+      profile?.sol === "calcaire" ? "SOL CALCAIRE : risque chlorose (carence fer/manganèse). Pas d'engrais acide. Signaler si jaunissement." : null,
+      profile?.sol === "argileux" ? "SOL ARGILEUX : risque compaction et anaérobie. Priorité aération si sol dur." : null,
+    ].filter(Boolean).join(" | ");
+
+    const profileCtx = [
+      `Type: ${typeGazon}`,
+      profile?.sol ? `Sol: ${profile.sol}` : null,
+      profile?.surface ? `Surface: ${profile.surface}m²` : null,
+      profile?.exposition ? `Exposition: ${profile.exposition}` : null,
+      profile?.objectif ? `Objectif: ${profile.objectif}` : null,
+    ].filter(Boolean).join(", ");
+
     const weatherCtx = weather.temp_max
-      ? `Temp max : ${Math.round(weather.temp_max)}°C, Pluie : ${weather.precip}mm`
+      ? `Temp: ${Math.round(weather.temp_max)}°C/${Math.round(weather.temp_min||0)}°C, Pluie: ${weather.precip||0}mm, Humidité: ${weather.humidity||0}%`
       : "Météo indisponible";
 
-    const prompt = `Tu es un expert agronome spécialisé en gazon et pelouses.
+    const prompt = isSynth
+      ? `Tu es un expert gazon synthétique pour Mongazon360.
+Analyse cette photo de gazon synthétique.
+RÈGLE ABSOLUE: ne jamais recommander tonte, engrais, arrosage, scarification, aération ou désherbant.
+Profil: ${profileCtx}. ${weatherCtx}. Score actuel: ${score}/100.
+
+Réponds UNIQUEMENT avec ce JSON valide (sans balises markdown) :
+{
+  "etat_general": "excellent|bon|moyen|mauvais|critique",
+  "score_visuel": <0-100>,
+  "emoji": "😊|😐|😟|😰|💀",
+  "resume": "2 phrases maximum sur l'état du synthétique",
+  "problemes": [{"id":"slug","nom":"Nom","description":"Description","severite":"faible|moyenne|elevee|critique","impact_score":<-30 à 0>,"solution":"Action mécanique uniquement"}],
+  "points_positifs": ["Point 1"],
+  "actions_urgentes": ["Action entretien synthétique uniquement"],
+  "actions_prochaines": ["Action entretien synthétique uniquement"]
+}
+Problèmes synthétique à détecter : granulats tassés, drainage obstrué, décoloration UV, saleté, moisissures, dégradation fibres.`
+      : `Tu es un expert agronome spécialisé en gazon et pelouses pour Mongazon360.
 Analyse cette photo de gazon et fournis un diagnostic complet.
-Contexte : ${profileCtx}. ${weatherCtx}. Score actuel : ${score}/100.
+Contexte: ${profileCtx}. ${weatherCtx}. Score actuel: ${score}/100.
+${reglesProfil ? `RÈGLES KB OBLIGATOIRES: ${reglesProfil}` : ""}
 
 Réponds UNIQUEMENT avec ce JSON valide (sans balises markdown, sans texte avant ou après) :
 {
   "etat_general": "excellent|bon|moyen|mauvais|critique",
   "score_visuel": <0-100>,
   "emoji": "😊|😐|😟|😰|💀",
-  "resume": "2 phrases maximum",
+  "resume": "2 phrases maximum adaptées au type de gazon et objectif",
   "problemes": [
     {
       "id": "slug_unique",
@@ -126,15 +177,19 @@ Réponds UNIQUEMENT avec ce JSON valide (sans balises markdown, sans texte avant
       "description": "Description courte et claire",
       "severite": "faible|moyenne|elevee|critique",
       "impact_score": <-30 à 0>,
-      "solution": "Action concrète à faire"
+      "solution": "Action concrète adaptée au profil (bio si objectif naturel)"
     }
   ],
   "points_positifs": ["Point 1", "Point 2"],
-  "actions_urgentes": ["Action urgente 1"],
-  "actions_prochaines": ["Action prochaine 1"]
+  "actions_urgentes": ["Action urgente adaptée au profil"],
+  "actions_prochaines": ["Action prochaine adaptée au profil"]
 }
 
-Problèmes à détecter : oïdium, helminthosporiose, fusariose, anthracnose, mousse, mauvaises herbes, zones mortes, manque eau, brûlures azote, sol compacté, tallage excessif, hauteur tonte incorrecte.
+Problèmes à détecter selon le type de gazon :
+- Universel/Sport/Ornement : oïdium, helminthosporiose, fusariose, anthracnose, mousse, mauvaises herbes, zones mortes, manque eau, brûlures azote, sol compacté, tallage excessif, hauteur tonte incorrecte
+- Ombre : oïdium prioritaire, mousse, tallage faible
+- Rustique : envahissement espèces indésirables, zones sèches
+- Bermuda : dormance vs maladie, pythium en été
 Si la photo ne montre pas du gazon, retourne score_visuel à 0 et explique dans resume.`;
 
     const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -144,9 +199,6 @@ Si la photo ne montre pas du gazon, retourne score_visuel à 0 et explique dans 
         "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
       },
       body: JSON.stringify({
-        // llama-4-scout-17b-16e-instruct : modèle vision stable de la stack MG360
-        // Remplace llama-3.2-11b-vision-preview qui causait des erreurs texte brut
-        // sur les images volumineuses ("Request Entity Too Large" non parseable en JSON)
         model:       "meta-llama/llama-4-scout-17b-16e-instruct",
         max_tokens:  1500,
         temperature: 0.2,

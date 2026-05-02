@@ -170,8 +170,36 @@ export default function Today() {
     if (!isPaid) return;
     setAiLoading(true);
 
-    const isSynth   = profile?.pelouse === "synthetique" || profile?.isSynthetique;
+    const isSynth   = profile?.isSynthetique || profile?.pelouse === "synthetique" ||
+      (Array.isArray(profile?.gazons) && profile.gazons.includes("synthetique"));
+    const isBermuda = profile?.pelouse === "bermuda" ||
+      (Array.isArray(profile?.gazons) && profile.gazons.includes("bermuda"));
+    const isOmbre   = profile?.pelouse === "ombre" ||
+      (Array.isArray(profile?.gazons) && profile.gazons.includes("ombre"));
+    const isRustiq  = profile?.pelouse === "rustique" ||
+      (Array.isArray(profile?.gazons) && profile.gazons.includes("rustique"));
+    const isSport   = profile?.pelouse === "sport" ||
+      (Array.isArray(profile?.gazons) && profile.gazons.includes("sport"));
+    const isNaturel = profile?.objectif === "naturel";
+    const isCreer   = profile?.objectif === "creer";
+    const isRenover = profile?.objectif === "renover";
     const zoneLabel = ZONE_LABELS[zone] || zone;
+
+    // Règles KB v3 à injecter dans le prompt selon le profil
+    const reglesProfil = [
+      isSynth   ? "GAZON SYNTHÉTIQUE : ne jamais recommander tonte, engrais, arrosage, désherbage, scarification, aération, biostimulant, semences. Conseils autorisés : nettoyage, brossage, contrôle granulats, drainage." : null,
+      isBermuda && [11,12,1,2,3].includes(month) ? "BERMUDA EN DORMANCE (nov-mars) : gazon brun normal. Aucune intervention. Ne pas tondre, ne pas engraisser, ne pas arroser." : null,
+      isOmbre   ? "GAZON OMBRE : hauteur tonte 6-8cm minimum (jamais <5cm). Pas de scarification. Anti-mousse fréquent. Tonte tous les 10-14j." : null,
+      isRustiq  ? "GAZON RUSTIQUE : tonte haute 7-10cm. Ne jamais couper ras. Pas de désherbant (trèfle protégé). Engrais minimal organique uniquement." : null,
+      isSport   ? "GAZON SPORT : tonte 3-4cm, jamais <2.5cm. Engrais azoté fréquent. Arrosage intensif 25-30mm/sem. Très sensible Helminthosporiose par chaleur." : null,
+      isNaturel ? "OBJECTIF NATUREL : pas d'engrais NPK chimique (→ bio : farine de corne, guano, compost). Pas de désherbant chimique (→ manuel). Pas de fongicide chimique (→ soufre, bicarbonate)." : null,
+      isCreer   ? "OBJECTIF CRÉATION : arrosage quotidien obligatoire J0-J60. Pas d'engrais standard avant J30. Pas de désherbant avant J45. Pas de scarification avant J90." : null,
+      isRenover ? "OBJECTIF RÉNOVATION : scarification profonde → aération → semences + starter → arrosage intensif 30j. Pas d'engrais été avant J60." : null,
+      profile?.sol === "argileux" ? "SOL ARGILEUX : arrosage fractionné 2 passages (8-12mm total). Aération prioritaire. Risque compaction élevé." : null,
+      profile?.sol === "sableux"  ? "SOL SABLEUX : arrosage 15-20mm tous les 2-3j. Dessèchement rapide. Attention canicule." : null,
+      profile?.sol === "calcaire" ? "SOL CALCAIRE : pas d'engrais acides. Engrais chélatés uniquement. Risque chlorose (carence fer)." : null,
+    ].filter(Boolean).join(" | ");
+
     const actionsAFaire   = recommended.map(a => a.action.label);
     const actionsBloquees = actionStatuses
       .filter(a => a.status === "blocked" || a.status === "too_soon")
@@ -186,20 +214,21 @@ export default function Today() {
           `Donne 3-4 conseils d'entretien synthétique (nettoyage, brossage, drainage, UV). Emojis, français, concis.`,
         ].filter(Boolean).join(" ")
       : [
-          `Tu es un expert gazon pour Mongazon360. Enrichis les recommandations du jour.`,
-          `Profil: type=${profile?.pelouse||"?"} sol=${profile?.sol||"?"} expo=${profile?.exposition||"?"} surface=${profile?.surface||"?"}m² score=${score}/100 zone=${zoneLabel}.`,
+          `Tu es un expert agronome gazon pour Mongazon360.`,
+          `Profil: type=${profile?.pelouse||profile?.gazons?.join("+")||"?"} sol=${profile?.sol||"?"} expo=${profile?.exposition||"?"} surface=${profile?.surface||"?"}m² score=${score}/100 zone=${zoneLabel} objectif=${profile?.objectif||"?"}`,
+          reglesProfil ? `RÈGLES KB OBLIGATOIRES: ${reglesProfil}` : "",
           `Date: ${today.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"})} — ${plan?.label}.`,
           weather
             ? `Météo: ${weather.temp_max}°C/${weather.temp_min}°C ${weather.precip}mm pluie humidité ${weather.humidity}% vent ${weather.wind}km/h.`
             : `Pas de météo locale — conseille selon le profil.`,
-          arros ? `Arrosage: ${arros.mm}mm/session ${arros.minutes}min ${arros.freq}x/sem.` : "",
+          arros ? `Arrosage calculé: ${arros.mm}mm/session ${arros.minutes}min ${arros.freq}x/sem.` : "",
           actionsAFaire.length > 0
             ? `ACTIONS DU JOUR: ${actionsAFaire.join(", ")}. Enrichis ces actions uniquement (timing, dosage, technique). Ne propose pas d'autres actions.`
-            : `Aucune action prioritaire. Donne 2-3 conseils de vigilance.`,
+            : `Aucune action prioritaire. Donne 2-3 conseils de vigilance adaptés au profil.`,
           actionsBloquees.length > 0
-            ? `Bloquées (ne pas recommander): ${actionsBloquees.join(", ")}.`
+            ? `BLOQUÉES - NE PAS RECOMMANDER: ${actionsBloquees.join(", ")}.`
             : "",
-          `4-5 points max, emojis, français.`,
+          `4-5 points max, emojis, français, adapté au profil exact.`,
         ].filter(Boolean).join(" ");
 
     try {

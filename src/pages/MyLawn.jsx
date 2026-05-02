@@ -192,7 +192,8 @@ export default function MyLawn() {
     budget:     profile?.budget     || null,
   });
 
-  const isSynthetique = profile?.isSynthetique || profile?.pelouse === "synthetique";
+  const isSynthetique = profile?.isSynthetique || profile?.pelouse === "synthetique" ||
+    (Array.isArray(profile?.gazons) && profile.gazons.includes("synthetique"));
   const completion    = calcCompletion(profile, isPaid);
 
   const toggleMulti = (field, id) => {
@@ -667,7 +668,8 @@ export default function MyLawn() {
           // Garantit cohérence avec le Plan du Mois et Today.jsx.
           const arrosProd   = profile && weather ? calcArrosage(month, profile, weather, history, getDebitMmH()) : null;
           const allStatuts  = buildActions(profile, weather, history, score, month, arrosProd);
-          const isSynth     = profile?.isSynthetique || profile?.pelouse === "synthetique";
+          const isSynth     = profile?.isSynthetique || profile?.pelouse === "synthetique" ||
+            (Array.isArray(profile?.gazons) && profile.gazons.includes("synthetique"));
 
           // Produits liés aux actions recommandées avec needsProduct=true
           const actionKeys = allStatuts
