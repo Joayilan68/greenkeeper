@@ -27,12 +27,7 @@ export default function Dashboard() {
   const { isPaid = false, isAdmin = false } = useSubscription() || {};
   const [showIssues, setShowIssues]           = useState(false);
   const [dismissedNotifs, setDismissedNotifs] = useState([]);
-  const [pushActivated, setPushActivated]     = useState(false);
   const [showOnboarding, setShowOnboarding]   = useState(false);
-  const [showNotifBanner, setShowNotifBanner] = useState(() => {
-    // Afficher uniquement si l'utilisateur n'a pas encore répondu
-    return localStorage.getItem("mg360_notif_banner_seen") !== "true";
-  });
 
   const { permission, subscribe, sendTestNotification, sendAlert, isSupported } = usePushNotifications(user?.id);
 
@@ -90,7 +85,6 @@ export default function Dashboard() {
   const handleActivatePush = async () => {
     const success = await subscribe();
     if (success) {
-      setPushActivated(true);
       await sendTestNotification();
       // Synchroniser le consentement avec Settings
       try {
@@ -116,12 +110,6 @@ export default function Dashboard() {
     } else {
       navigate(actionRoute);
     }
-  };
-
-  const dismissNotifBanner = (activate) => {
-    localStorage.setItem("mg360_notif_banner_seen", "true");
-    setShowNotifBanner(false);
-    if (activate) navigate("/parametres");
   };
 
   const NOTIF_COLORS = {
@@ -197,52 +185,34 @@ export default function Dashboard() {
 
       <div style={scroll}>
 
-        {/* ── BANDEAU NOTIFICATIONS/EMAILS ─────────────────────────────────── */}
-        {showNotifBanner && (
+        {/* ── NOTIFICATIONS — tuile unique, visible uniquement si non accordé ── */}
+        {isSupported && isPaid && permission !== "granted" && (
           <div style={{
             background: "linear-gradient(135deg, rgba(27,94,32,0.6), rgba(13,43,26,0.8))",
             border: "1px solid rgba(102,187,106,0.35)",
             borderRadius: 14, padding: "14px 16px", marginBottom: 4,
-            display: "flex", flexDirection: "column", gap: 10,
+            display: "flex", alignItems: "center", gap: 12,
           }}>
-            <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-              <span style={{ fontSize: 24, flexShrink: 0 }}>🔔</span>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 13, fontWeight: 800, color: "#F1F8F2", marginBottom: 3 }}>
-                  Restez informé de votre gazon
-                </div>
-                <div style={{ fontSize: 12, color: "#81c784", lineHeight: 1.6 }}>
-                  Activez les alertes push et les emails pour recevoir vos conseils d'entretien hebdomadaires et les alertes météo importantes.
-                </div>
+            <span style={{ fontSize: 24, flexShrink: 0 }}>🔔</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: "#F1F8F2", marginBottom: 3 }}>
+                Activez les alertes
+              </div>
+              <div style={{ fontSize: 12, color: "#81c784", lineHeight: 1.5 }}>
+                Recevez vos rappels d'entretien et alertes météo même app fermée.
               </div>
             </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button
-                onClick={async () => {
-                  dismissNotifBanner(false);
-                  await handleActivatePush();
-                }}
-                style={{
-                  flex: 1, padding: "10px", borderRadius: 10,
-                  background: "linear-gradient(135deg,#43a047,#2e7d32)",
-                  border: "none", color: "#fff", fontWeight: 800,
-                  fontSize: 13, cursor: "pointer",
-                }}
-              >
-                ✅ Activer les alertes
-              </button>
-              <button
-                onClick={() => dismissNotifBanner(false)}
-                style={{
-                  padding: "10px 16px", borderRadius: 10,
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  color: "#81c784", fontSize: 12, cursor: "pointer",
-                }}
-              >
-                Non merci
-              </button>
-            </div>
+            <button
+              onClick={handleActivatePush}
+              style={{
+                flexShrink: 0, padding: "8px 14px", borderRadius: 10,
+                background: "linear-gradient(135deg,#43a047,#2e7d32)",
+                border: "none", color: "#fff", fontWeight: 800,
+                fontSize: 12, cursor: "pointer",
+              }}
+            >
+              Activer
+            </button>
           </div>
         )}
 
@@ -512,26 +482,6 @@ export default function Dashboard() {
                 <span style={{ color:"#F59E0B", cursor:"pointer", fontWeight:700, marginLeft:4 }} onClick={() => navigate("/subscribe")}>Passer Premium</span>
               </div>
             )}
-          </div>
-        )}
-
-        {/* ── PUSH NOTIFICATIONS ────────────────────────────────────────────── */}
-        {isSupported && isPaid && permission !== "granted" && (
-          <div style={{ ...card(), background:"rgba(76,175,80,0.1)", border:"1px solid rgba(76,175,80,0.3)", textAlign:"center", padding:16 }}>
-            <div style={{ fontSize:22, marginBottom:8 }}>🔔</div>
-            <div style={{ fontSize:13, fontWeight:700, color:"#a5d6a7", marginBottom:6 }}>Activez les alertes sur votre téléphone</div>
-            <div style={{ fontSize:12, color:"#81c784", marginBottom:12, lineHeight:1.5 }}>
-              Recevez des alertes même quand l'app est fermée — canicule, gel, tonte en retard...
-            </div>
-            <button onClick={handleActivatePush} style={{ ...btn.primary, width:"auto", padding:"10px 24px" }}>
-              🔔 Activer les notifications
-            </button>
-          </div>
-        )}
-
-        {isSupported && isPaid && permission === "granted" && !pushActivated && (
-          <div style={{ ...card(), background:"rgba(76,175,80,0.08)", border:"1px solid rgba(76,175,80,0.2)", textAlign:"center", padding:12 }}>
-            <div style={{ fontSize:12, color:"#a5d6a7" }}>✅ Notifications activées — Alertes max 1x/semaine</div>
           </div>
         )}
 

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useUser } from "@clerk/clerk-react";
 import { useProfile } from "../lib/useProfile";
 import { useHistory } from "../lib/useHistory";
 import { useWeather } from "../lib/useWeather";
@@ -161,7 +162,8 @@ export default function MyLawn() {
   const { history = [] }   = useHistory();
   const { weather }        = useWeather() || {};
   const { isPaid = false } = useSubscription() || {};
-  const { activeCount }    = useReminders();
+  const { user } = useUser();
+  const { reminders, toggle, setDays, activeCount, syncToServer } = useReminders();
   const [period, setPeriod] = useState("7j");
 
   // ── Débit arroseur (Premium) ────────────────────────────────────────────────
@@ -260,9 +262,8 @@ export default function MyLawn() {
               <div style={{ fontSize:12, color:"#66BB6A", opacity:0.9 }}>Centre de pilotage</div>
             </div>
           </div>
-          <button onClick={() => navigate("/rappels")} style={{ background:"rgba(102,187,106,0.12)", border:"1px solid rgba(102,187,106,0.3)", borderRadius:10, padding:"7px 12px", color:"#66BB6A", fontSize:12, cursor:"pointer", display:"flex", alignItems:"center", gap:6 }}>
-            🔔 Rappels
-            {activeCount > 0 && <span style={{ background:"#43a047", color:"#fff", borderRadius:10, padding:"1px 6px", fontSize:10, fontWeight:700 }}>{activeCount}</span>}
+          <button onClick={() => navigate("/parametres")} style={{ background:"rgba(102,187,106,0.12)", border:"1px solid rgba(102,187,106,0.3)", borderRadius:10, padding:"7px 12px", color:"#66BB6A", fontSize:12, cursor:"pointer", display:"flex", alignItems:"center", gap:6 }}>
+            ⚙️ Paramètres
           </button>
         </div>
       </div>
@@ -456,6 +457,66 @@ export default function MyLawn() {
             </div>
           );
         })()}
+
+        {/* ── RAPPELS D'ENTRETIEN ─────────────────────────────────────────── */}
+        {isPaid && (
+          <div style={card()}>
+            <div style={cardTitle}>
+              <span>🔔 Rappels d'entretien</span>
+              <span style={{ fontSize:11, color:"#66BB6A" }}>{activeCount} actif{activeCount > 1 ? "s" : ""}</span>
+            </div>
+            <div style={{ fontSize:12, color:"#81c784", marginBottom:12, lineHeight:1.5 }}>
+              Activez les rappels souhaités. Les alertes sont envoyées chaque matin à 8h si le délai est dépassé.
+            </div>
+            {[
+              { id:"tonte",      icon:"✂️", label:"Tonte",               defaultDays:7  },
+              { id:"arrosage",   icon:"💧", label:"Arrosage",             defaultDays:3  },
+              { id:"engrais",    icon:"🌱", label:"Engrais",              defaultDays:30 },
+              { id:"fongicide",  icon:"💊", label:"Traitement fongicide", defaultDays:14 },
+              { id:"aeration",   icon:"🌀", label:"Aération",             defaultDays:90 },
+              { id:"desherbage", icon:"🪴", label:"Désherbage",           defaultDays:14 },
+            ].map(type => {
+              const r = reminders[type.id] || {};
+              const isActive = !!r.enabled;
+              const syncReminders = () => {
+                if (!user?.id) return;
+                const consents = JSON.parse(localStorage.getItem("mg360_consents") || "{}");
+                syncToServer(user.id, user.primaryEmailAddress?.emailAddress, consents);
+              };
+              return (
+                <div key={type.id} style={{ borderBottom:"1px solid rgba(255,255,255,0.05)", paddingBottom:10, marginBottom:10 }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                    <span style={{ fontSize:22, minWidth:28 }}>{type.icon}</span>
+                    <div style={{ flex:1 }}>
+                      <div style={{ fontSize:13, fontWeight:700, color: isActive ? "#F1F8F2" : "#81c784" }}>{type.label}</div>
+                      {isActive && (
+                        <div style={{ fontSize:11, color:"#4a7c5c", marginTop:2 }}>Tous les {r.days} jours</div>
+                      )}
+                    </div>
+                    <div onClick={() => { toggle(type.id); syncReminders(); }} style={{ width:40, height:22, borderRadius:11, cursor:"pointer", background: isActive ? "#66BB6A" : "rgba(255,255,255,0.15)", position:"relative", transition:"background 0.3s", flexShrink:0 }}>
+                      <div style={{ width:16, height:16, borderRadius:"50%", background:"#fff", position:"absolute", top:3, left: isActive ? 21 : 3, transition:"left 0.3s" }} />
+                    </div>
+                  </div>
+                  {isActive && (
+                    <div style={{ marginTop:8, paddingLeft:38 }}>
+                      <input type="range" min={1} max={90} value={r.days || type.defaultDays} onChange={e => { setDays(type.id, e.target.value); syncReminders(); }} style={{ width:"100%", accentColor:"#66BB6A" }} />
+                      <div style={{ display:"flex", gap:4, marginTop:4 }}>
+                        {[{l:"3j",v:3},{l:"7j",v:7},{l:"14j",v:14},{l:"30j",v:30},{l:"90j",v:90}].map(({l,v}) => (
+                          <button key={v} onClick={() => { setDays(type.id, v); syncReminders(); }} style={{ flex:1, background: (r.days||type.defaultDays)===v ? "rgba(102,187,106,0.3)" : "rgba(255,255,255,0.05)", border:`1px solid ${(r.days||type.defaultDays)===v ? "#66BB6A" : "rgba(149,213,178,0.18)"}`, borderRadius:6, padding:"3px 2px", color:(r.days||type.defaultDays)===v ? "#66BB6A" : "#4a7c5c", fontSize:10, cursor:"pointer" }}>
+                            {l}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            <div style={{ fontSize:11, color:"#4a7c5c", marginTop:4 }}>
+              📧 Push et emails configurables dans <span onClick={() => navigate("/parametres")} style={{ color:"#66BB6A", cursor:"pointer", textDecoration:"underline" }}>Paramètres</span>
+            </div>
+          </div>
+        )}
 
         {/* ── 8. ÉVOLUTION DU SCORE ── */}
         <div style={card()}>

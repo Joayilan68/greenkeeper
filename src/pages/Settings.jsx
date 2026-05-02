@@ -307,40 +307,53 @@ export default function Settings() {
 
           {/* Consentements toggle */}
           {[
-            { key:"notifications", label:"🔔 Notifications push", desc:"Alertes téléphone — max 1x/semaine" },
+            { key:"notifications", label:"🔔 Notifications push", desc:"Alertes téléphone — rappels d'entretien et météo" },
             { key:"dataResale",    label:"📊 Données anonymisées", desc:"Partage avec partenaires jardinage — jamais nom/email" },
             { key:"marketing",     label:"📧 Emails MG360", desc:"Conseils saisonniers et nouveautés" },
             { key:"cookies",       label:"🍪 Cookies analytiques", desc:"Amélioration de l'expérience — données anonymes" },
-          ].map(({ key, label, desc }) => (
-            <div key={key} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
-              <div style={{ flex:1 }}>
-                <div style={{ fontSize:13, fontWeight:600 }}>{label}</div>
-                <div style={{ fontSize:11, color:"#81c784" }}>
-                  {desc}
-                  {key === "notifications" && !consents.notifications && permission === "granted" && (
-                    <span style={{ color:"#f9a825", marginLeft:4 }}>— Permission accordée, réactivez pour recevoir les alertes</span>
-                  )}
-                  {key === "notifications" && consents.notifications && (
-                    <span style={{ color:"#a5d6a7", marginLeft:4 }}>— {permission === "granted" ? "Actives ✅" : "En attente de permission navigateur"}</span>
-                  )}
+          ].map(({ key, label, desc }) => {
+            const isNotif = key === "notifications";
+            const notifGranted = isNotif && permission === "granted";
+            const isOn = isNotif ? (permission === "granted" && consents.notifications) : consents[key];
+            return (
+              <div key={key} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontSize:13, fontWeight:600 }}>{label}</div>
+                  <div style={{ fontSize:11, color:"#81c784", marginTop:2 }}>
+                    {isNotif && notifGranted
+                      ? "✅ Actives — pour désactiver : paramètres de votre navigateur"
+                      : isNotif && !notifGranted && consents.notifications
+                      ? "⚠️ Consentement donné mais permission navigateur requise"
+                      : desc}
+                  </div>
+                </div>
+                <div
+                  onClick={() => {
+                    if (isNotif) {
+                      if (!notifGranted) handleNotifToggle();
+                      // Si déjà accordé → ne rien faire, message explicatif suffit
+                    } else {
+                      updateConsent(key, !consents[key]);
+                    }
+                  }}
+                  style={{
+                    width:44, height:24, borderRadius:12,
+                    cursor: isNotif && notifGranted ? "default" : "pointer",
+                    flexShrink:0, marginLeft:8,
+                    background: isOn ? "#43a047" : "rgba(255,255,255,0.1)",
+                    position:"relative", transition:"background 0.2s",
+                    opacity: isNotif && notifGranted ? 0.7 : 1,
+                  }}
+                >
+                  <div style={{
+                    position:"absolute", top:3, left: isOn ? 22 : 3,
+                    width:18, height:18, borderRadius:"50%", background:"#fff",
+                    transition:"left 0.2s"
+                  }} />
                 </div>
               </div>
-              <div
-                onClick={key === "notifications" ? handleNotifToggle : () => updateConsent(key, !consents[key])}
-                style={{
-                  width:44, height:24, borderRadius:12, cursor:"pointer", flexShrink:0, marginLeft:8,
-                  background: consents[key] ? "#43a047" : "rgba(255,255,255,0.1)",
-                  position:"relative", transition:"background 0.2s"
-                }}
-              >
-                <div style={{
-                  position:"absolute", top:3, left: consents[key] ? 22 : 3,
-                  width:18, height:18, borderRadius:"50%", background:"#fff",
-                  transition:"left 0.2s"
-                }} />
-              </div>
-            </div>
-          ))}
+            );
+          })}
 
           {consents.lastUpdated && (
             <div style={{ fontSize:10, color:"#4a7c5c", marginTop:8 }}>
