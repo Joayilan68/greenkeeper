@@ -141,9 +141,18 @@ export default function Dashboard() {
             <span style={{ fontSize:24, flexShrink:0 }}>🔔</span>
             <div style={{ flex:1 }}>
               <div style={{ fontSize:13, fontWeight:800, color:"#F1F8F2", marginBottom:3 }}>Activez les alertes</div>
-              <div style={{ fontSize:12, color:"#81c784", lineHeight:1.5 }}>Recevez vos rappels d'entretien même app fermée.</div>
+              <div style={{ fontSize:12, color:"#81c784", lineHeight:1.5 }}>
+                {permission === "granted"
+                  ? "Activez au moins un rappel dans Mon Gazon pour recevoir des alertes."
+                  : "Recevez vos rappels d'entretien même app fermée."}
+              </div>
             </div>
-            <button onClick={handleActivatePush} style={{ flexShrink:0, padding:"8px 14px", borderRadius:10, background:"linear-gradient(135deg,#43a047,#2e7d32)", border:"none", color:"#fff", fontWeight:800, fontSize:12, cursor:"pointer" }}>Activer</button>
+            <button
+              onClick={permission === "granted" ? () => navigate("/my-lawn") : handleActivatePush}
+              style={{ flexShrink:0, padding:"8px 14px", borderRadius:10, background:"linear-gradient(135deg,#43a047,#2e7d32)", border:"none", color:"#fff", fontWeight:800, fontSize:12, cursor:"pointer" }}
+            >
+              {permission === "granted" ? "Rappels →" : "Activer"}
+            </button>
           </div>
         )}
 
@@ -160,10 +169,10 @@ export default function Dashboard() {
         )}
 
         {/* ── LIGNE 1 : SCORE + MÉTÉO ────────────────────────────────────── */}
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:4 }}>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:4, alignItems:"stretch" }}>
 
           {/* Score */}
-          <div style={{ ...card(), background:"linear-gradient(135deg,rgba(27,94,32,0.4),rgba(13,43,26,0.6))", border:`1px solid ${color}44`, padding:14 }}>
+          <div style={{ ...card(), background:"linear-gradient(135deg,rgba(27,94,32,0.4),rgba(13,43,26,0.6))", border:`1px solid ${color}44`, padding:14, display:"flex", flexDirection:"column" }}>
             <div style={{ fontSize:10, color:"#66BB6A", fontWeight:700, letterSpacing:1, textTransform:"uppercase", marginBottom:8, textAlign:"center" }}>🌿 Score Santé</div>
             <div style={{ textAlign:"center" }}>
               <svg width="110" height="65" viewBox="0 0 140 80">
@@ -216,47 +225,45 @@ export default function Dashboard() {
           </div>
 
           {/* Météo */}
-          <div>
-            {isPaid ? (
-              <div style={{ ...card(), background:"linear-gradient(135deg,rgba(46,125,50,0.3),rgba(27,94,32,0.2))", border:"1px solid rgba(165,214,167,0.2)", padding:12, height:"100%", boxSizing:"border-box" }}>
-                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
-                  <div>
-                    <div style={{ fontSize:10, color:"#81c784", fontWeight:700 }}>📍 {locationName || "Localisation"}</div>
-                    <div style={{ fontSize:10, color:"#81c784", opacity:0.7 }}>{MONTHS_FR[month]} — {plan.label}</div>
-                  </div>
-                  <button onClick={refreshLocation} style={{ background:"rgba(255,255,255,0.1)", border:"1px solid rgba(255,255,255,0.2)", borderRadius:8, padding:"4px 8px", color:"#e8f5e9", fontSize:11, cursor:"pointer" }}>
-                    {locLoading ? "⌛" : "🔄"}
-                  </button>
+          {isPaid ? (
+            <div style={{ ...card(), background:"linear-gradient(135deg,rgba(46,125,50,0.3),rgba(27,94,32,0.2))", border:"1px solid rgba(165,214,167,0.2)", padding:12, display:"flex", flexDirection:"column" }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
+                <div>
+                  <div style={{ fontSize:10, color:"#81c784", fontWeight:700 }}>📍 {locationName || "Localisation"}</div>
+                  <div style={{ fontSize:10, color:"#81c784", opacity:0.7 }}>{MONTHS_FR[month]} — {plan.label}</div>
                 </div>
-                {weather ? (
-                  <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
-                    {[
-                      { icon:getWMO(weather.code).icon, val:`${Math.round(weather.temp_max)}°C`, label:getWMO(weather.code).label },
-                      { icon:"💨", val:`${weather.wind}km/h`, label:"Vent" },
-                      { icon:"💧", val:`${weather.precip}mm`, label:"Pluie" },
-                    ].map(({ icon, val, label }) => (
-                      <div key={label} style={{ display:"flex", alignItems:"center", gap:8, background:"rgba(255,255,255,0.06)", borderRadius:10, padding:"6px 10px" }}>
-                        <span style={{ fontSize:18 }}>{icon}</span>
-                        <div>
-                          <div style={{ fontSize:15, fontWeight:800, lineHeight:1 }}>{val}</div>
-                          <div style={{ fontSize:9, color:"#81c784" }}>{label}</div>
-                        </div>
+                <button onClick={refreshLocation} style={{ background:"rgba(255,255,255,0.1)", border:"1px solid rgba(255,255,255,0.2)", borderRadius:8, padding:"4px 8px", color:"#e8f5e9", fontSize:11, cursor:"pointer" }}>
+                  {locLoading ? "⌛" : "🔄"}
+                </button>
+              </div>
+              {weather ? (
+                <div style={{ display:"flex", flexDirection:"column", gap:6, flex:1 }}>
+                  {[
+                    { icon:getWMO(weather.code).icon, val:`${Math.round(weather.temp_max)}°C`, label:getWMO(weather.code).label },
+                    { icon:"💨", val:`${weather.wind}km/h`, label:"Vent" },
+                    { icon:"💧", val:`${weather.precip}mm`, label:"Pluie" },
+                  ].map(({ icon, val, label }) => (
+                    <div key={label} style={{ display:"flex", alignItems:"center", gap:8, background:"rgba(255,255,255,0.06)", borderRadius:10, padding:"8px 10px", flex:1 }}>
+                      <span style={{ fontSize:20 }}>{icon}</span>
+                      <div>
+                        <div style={{ fontSize:15, fontWeight:800, lineHeight:1 }}>{val}</div>
+                        <div style={{ fontSize:9, color:"#81c784" }}>{label}</div>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div style={{ textAlign:"center", color:"#81c784", fontSize:12, padding:"12px 0" }}>
-                    {loading || locLoading ? "🌿 Détection..." : "🔄 Actualiser"}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div style={{ ...card(), textAlign:"center", padding:14, height:"100%", boxSizing:"border-box", display:"flex", flexDirection:"column", justifyContent:"center" }}>
-                <div style={{ fontSize:12, color:"#81c784", marginBottom:8 }}>🔒 Météo temps réel</div>
-                <button onClick={() => navigate("/subscribe")} style={{ background:"linear-gradient(135deg,#F59E0B,#D97706)", color:"#1a1a1a", fontWeight:800, border:"none", borderRadius:8, cursor:"pointer", padding:"6px 14px", fontSize:11 }}>Premium</button>
-              </div>
-            )}
-          </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", color:"#81c784", fontSize:12 }}>
+                  {loading || locLoading ? "🌿 Détection..." : "🔄 Actualiser"}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div style={{ ...card(), display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:14 }}>
+              <div style={{ fontSize:12, color:"#81c784", marginBottom:8 }}>🔒 Météo temps réel</div>
+              <button onClick={() => navigate("/subscribe")} style={{ background:"linear-gradient(135deg,#F59E0B,#D97706)", color:"#1a1a1a", fontWeight:800, border:"none", borderRadius:8, cursor:"pointer", padding:"6px 14px", fontSize:11 }}>Premium</button>
+            </div>
+          )}
         </div>
 
         {/* ── ALERTES MÉTÉO ─────────────────────────────────────────────────── */}
