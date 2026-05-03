@@ -42,11 +42,13 @@ export default function Settings() {
   // Handler spécifique pour le toggle notifications push
   const handleNotifToggle = async () => {
     if (!consents.notifications) {
+      // Activation — demander permission si pas encore accordée
       if (isSupported && permission !== "granted") {
         await subscribePush();
       }
       await updateConsent("notifications", true);
     } else {
+      // Désactivation — retirer le consentement
       await updateConsent("notifications", false);
     }
   };
@@ -296,35 +298,26 @@ export default function Settings() {
           ].map(({ key, label, desc }) => {
             const isNotif = key === "notifications";
             const notifGranted = isNotif && permission === "granted";
-            const isOn = isNotif ? (permission === "granted" && consents.notifications) : consents[key];
+            const isOn = consents[key] ?? false;
             return (
               <div key={key} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
                 <div style={{ flex:1 }}>
                   <div style={{ fontSize:13, fontWeight:600 }}>{label}</div>
                   <div style={{ fontSize:11, color:"#81c784", marginTop:2 }}>
-                    {isNotif && notifGranted
-                      ? "✅ Actives — pour désactiver : paramètres de votre navigateur"
+                    {isNotif && notifGranted && consents.notifications
+                      ? "✅ Actives — pour désactiver : désactivez ce toggle"
                       : isNotif && !notifGranted && consents.notifications
                       ? "⚠️ Consentement donné mais permission navigateur requise"
                       : desc}
                   </div>
                 </div>
                 <div
-                  onClick={() => {
-                    if (isNotif) {
-                      if (!notifGranted) handleNotifToggle();
-                      // Si déjà accordé → ne rien faire, message explicatif suffit
-                    } else {
-                      updateConsent(key, !consents[key]);
-                    }
-                  }}
+                  onClick={() => isNotif ? handleNotifToggle() : updateConsent(key, !consents[key])}
                   style={{
                     width:44, height:24, borderRadius:12,
-                    cursor: isNotif && notifGranted ? "default" : "pointer",
-                    flexShrink:0, marginLeft:8,
+                    cursor:"pointer", flexShrink:0, marginLeft:8,
                     background: isOn ? "#43a047" : "rgba(255,255,255,0.1)",
                     position:"relative", transition:"background 0.2s",
-                    opacity: isNotif && notifGranted ? 0.7 : 1,
                   }}
                 >
                   <div style={{
