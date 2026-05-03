@@ -6,10 +6,8 @@ import { useHistory } from "../lib/useHistory";
 import { useProfile } from "../lib/useProfile";
 import { useWeather } from "../lib/useWeather";
 import { usePushNotifications } from "../lib/usePushNotifications";
+import { useConsents } from "../lib/useConsents";
 import { card, cardTitle, btn, scroll } from "../lib/styles";
-
-// ── Clé unifiée — même clé que Register.jsx ──────────────────────────────────
-const CONSENTS_KEY = "mg360_consents";
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -21,8 +19,8 @@ export default function Settings() {
   const { profile } = useProfile();
   const { locationName } = useWeather() || {};
   const { permission, subscribe: subscribePush, isSupported } = usePushNotifications(user?.id);
+  const { consents, updateConsent, updateConsents } = useConsents();
 
-  const [consents, setConsents] = useState({});
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showAccountDeleteConfirm, setShowAccountDeleteConfirm] = useState(false);
   const [deleted, setDeleted] = useState(false);
@@ -30,42 +28,26 @@ export default function Settings() {
   const [exportLoading, setExportLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  // Charger les consentements (clé unifiée mg360_consents)
+  // Vérifier statut géolocalisation
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(CONSENTS_KEY);
-      if (saved) setConsents(JSON.parse(saved));
-
-      // Vérifier statut géolocalisation
-      if (navigator.permissions) {
-        navigator.permissions.query({ name: "geolocation" }).then(result => {
-          setGeoStatus(result.state); // "granted" | "denied" | "prompt"
-        }).catch(() => {});
-      }
-      const loc = localStorage.getItem("gk_location");
-      if (loc) setGeoStatus("granted");
-    } catch {}
+    if (navigator.permissions) {
+      navigator.permissions.query({ name: "geolocation" }).then(result => {
+        setGeoStatus(result.state);
+      }).catch(() => {});
+    }
+    const loc = localStorage.getItem("gk_location");
+    if (loc) setGeoStatus("granted");
   }, []);
-
-  const updateConsent = (key, value) => {
-    const updated = { ...consents, [key]: value, lastUpdated: new Date().toISOString() };
-    setConsents(updated);
-    localStorage.setItem(CONSENTS_KEY, JSON.stringify(updated));
-  };
 
   // Handler spécifique pour le toggle notifications push
   const handleNotifToggle = async () => {
     if (!consents.notifications) {
-      // Activation → déclencher la vraie permission push si pas encore accordée
       if (isSupported && permission !== "granted") {
         await subscribePush();
       }
-      updateConsent("notifications", true);
+      await updateConsent("notifications", true);
     } else {
-      // Désactivation → on retire le consentement (la permission navigateur
-      // ne peut pas être révoquée programmatiquement — l'utilisateur doit
-      // le faire depuis les paramètres de son navigateur/téléphone)
-      updateConsent("notifications", false);
+      await updateConsent("notifications", false);
     }
   };
 

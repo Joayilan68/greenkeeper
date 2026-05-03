@@ -7,6 +7,7 @@ import { useSubscription } from "../lib/useSubscription";
 import { MONTHLY_PLAN, MONTHS_FR, getWMO } from "../lib/lawn";
 import { calcLawnScore } from "../lib/lawnScore";
 import { usePushNotifications } from "../lib/usePushNotifications";
+import { useConsents } from "../lib/useConsents";
 import AlertBanner from "../components/AlertBanner";
 import OnboardingModal from "../components/OnboardingModal";
 import { card, cardTitle, btn, scroll } from "../lib/styles";
@@ -26,7 +27,8 @@ export default function Dashboard() {
   const [showIssues, setShowIssues]   = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
-  const { permission, subscribe, sendTestNotification, sendAlert, isSupported } = usePushNotifications(user?.id);
+  const { permission, subscribe, sendTestNotification, isSupported } = usePushNotifications(user?.id);
+  const { consents, updateConsents, showPushBanner } = useConsents();
 
   // ── Nouveaux hooks ──────────────────────────────────────────────────────────
   const { classementActif } = useSaison();
@@ -70,16 +72,8 @@ export default function Dashboard() {
     const success = await subscribe();
     if (success) {
       await sendTestNotification();
-      // Synchroniser le consentement avec Settings
-      try {
-        const saved = localStorage.getItem("mg360_consents");
-        const existing = saved ? JSON.parse(saved) : {};
-        localStorage.setItem("mg360_consents", JSON.stringify({
-          ...existing,
-          notifications: true,
-          lastUpdated: new Date().toISOString(),
-        }));
-      } catch {}
+      // Mettre à jour Supabase via useConsents
+      await updateConsents({ notifications: true });
     }
   };
 
@@ -142,7 +136,7 @@ export default function Dashboard() {
       <div style={scroll}>
 
         {/* ── NOTIF PUSH ────────────────────────────────────────────────────── */}
-        {isSupported && isPaid && permission !== "granted" && (
+        {isSupported && isPaid && showPushBanner && (
           <div style={{ background:"linear-gradient(135deg,rgba(27,94,32,0.6),rgba(13,43,26,0.8))", border:"1px solid rgba(102,187,106,0.35)", borderRadius:14, padding:"14px 16px", marginBottom:4, display:"flex", alignItems:"center", gap:12 }}>
             <span style={{ fontSize:24, flexShrink:0 }}>🔔</span>
             <div style={{ flex:1 }}>

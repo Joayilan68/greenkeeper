@@ -5,6 +5,7 @@ import { useProfile } from "../lib/useProfile";
 import { useHistory } from "../lib/useHistory";
 import { useWeather } from "../lib/useWeather";
 import { useSubscription } from "../lib/useSubscription";
+import { useConsents } from "../lib/useConsents";
 import { useReminders } from "../lib/useReminders";
 import { useRecommandations } from "../lib/useRecommandations";
 import { useSaison } from "../lib/useSaison";
@@ -163,7 +164,8 @@ export default function MyLawn() {
   const { weather }        = useWeather() || {};
   const { isPaid = false } = useSubscription() || {};
   const { user } = useUser();
-  const { reminders, toggle, setDays, activeCount, syncToServer } = useReminders();
+  const { syncFromReminders } = useConsents();
+  const { reminders, toggle, setDays, activeCount, syncToServer } = useReminders(syncFromReminders);
   const [period, setPeriod] = useState("7j");
 
   // ── Débit arroseur (Premium) ────────────────────────────────────────────────

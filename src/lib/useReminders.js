@@ -18,7 +18,7 @@ const defaultReminders = () =>
     [r.id]: { enabled: false, days: r.defaultDays, lastSent: null, email: false, push: false }
   }), {});
 
-export function useReminders() {
+export function useReminders(syncFromReminders) {
   const [reminders, setReminders] = useState(() => {
     try {
       const saved = localStorage.getItem(KEY);
@@ -31,6 +31,10 @@ export function useReminders() {
   const save = (updated) => {
     setReminders(updated);
     try { localStorage.setItem(KEY, JSON.stringify(updated)); } catch {}
+    // Sync push_active / email_active → user_consents Supabase
+    if (typeof syncFromReminders === "function") {
+      syncFromReminders(updated).catch(() => {});
+    }
   };
 
   const toggle = (id) => {
