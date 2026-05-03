@@ -6,13 +6,11 @@ import { useHistory } from "../lib/useHistory";
 import { useSubscription } from "../lib/useSubscription";
 import { MONTHLY_PLAN, MONTHS_FR, getWMO } from "../lib/lawn";
 import { calcLawnScore } from "../lib/lawnScore";
-import { generateNotifications } from "../lib/notifications";
 import { usePushNotifications } from "../lib/usePushNotifications";
 import AlertBanner from "../components/AlertBanner";
 import OnboardingModal from "../components/OnboardingModal";
-import { card, cardTitle, pill, btn, scroll, header } from "../lib/styles";
+import { card, cardTitle, btn, scroll } from "../lib/styles";
 import { useState, useEffect } from "react";
-// ── Nouveaux hooks ────────────────────────────────────────────────────────────
 import { useGreenPoints } from "../lib/useGreenPoints";
 import { useStreak } from "../lib/useStreak";
 import { useClassement } from "../lib/useClassement";
@@ -25,9 +23,8 @@ export default function Dashboard() {
   const { profile, saveProfile, synced } = useProfile();
   const { history = [] } = useHistory();
   const { isPaid = false, isAdmin = false } = useSubscription() || {};
-  const [showIssues, setShowIssues]           = useState(false);
-  const [dismissedNotifs, setDismissedNotifs] = useState([]);
-  const [showOnboarding, setShowOnboarding]   = useState(false);
+  const [showIssues, setShowIssues]   = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   const { permission, subscribe, sendTestNotification, sendAlert, isSupported } = usePushNotifications(user?.id);
 
@@ -69,19 +66,6 @@ export default function Dashboard() {
   const { score, potential, label, color, issues, strengths, diagScore, diagEmoji, diagAge, diagInfluence, hasDiag }
     = calcLawnScore({ weather, profile, history, month });
 
-  const notifications = generateNotifications({ weather, profile, history, month, score, location })
-    .filter(n => !dismissedNotifs.includes(n.id));
-
-  const dangers  = notifications.filter(n => n.type === "danger").length;
-  const warnings = notifications.filter(n => n.type === "warning").length;
-
-  useEffect(() => {
-    if (permission !== "granted") return;
-    notifications
-      .filter(n => n.type === "danger" || n.type === "warning")
-      .forEach(n => sendAlert(n));
-  }, [notifications.length, permission]);
-
   const handleActivatePush = async () => {
     const success = await subscribe();
     if (success) {
@@ -104,56 +88,35 @@ export default function Dashboard() {
     setShowOnboarding(false);
   };
 
-  const handleNotifAction = (actionRoute) => {
-    if (actionRoute === "/onboarding-location") {
-      setShowOnboarding(true);
-    } else {
-      navigate(actionRoute);
+  // ── Historique score ──────────────────────────────────────────────────────
+  const [period, setPeriod] = useState("7j");
+  const scoreHistory = (() => {
+    const days = period === "30j" ? 30 : 7;
+    const pts = [];
+    for (let i = days; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const h = history.filter(e => {
+        const [dd,mm,yy] = (e.date||"").split("/");
+        return new Date(yy,mm-1,dd) <= d;
+      });
+      pts.push({ day: i === 0 ? "Aujourd'hui" : `Il y a ${days}j`, score: calcLawnScore({ weather, profile, history: h, month }).score });
     }
-  };
-
-  const NOTIF_COLORS = {
-    danger:  { bg:"rgba(183,28,28,0.2)",  border:"rgba(229,57,53,0.4)",  badge:"#c62828" },
-    warning: { bg:"rgba(230,81,0,0.2)",   border:"rgba(239,108,0,0.4)",  badge:"#e65100" },
-    info:    { bg:"rgba(21,101,192,0.15)", border:"rgba(66,165,245,0.3)", badge:"#1565c0" },
-  };
-
-  // ── Variables tuile profil ────────────────────────────────────────────────
-  const profileCompletion   = profile?.profileCompletion || (profile ? 40 : 0);
-  const OBJECTIF_LABELS_MAP = { parfait:"Gazon parfait", fonctionnel:"Pelouse fonctionnelle", naturel:"Gazon naturel", renover:"Rénover ma pelouse", creer:"Créer une nouvelle pelouse" };
-  const SOL_LABELS_MAP      = { argileux:"Argileux", limoneux:"Limoneux", sableux:"Sableux", calcaire:"Calcaire", humifere:"Humifère", compacte:"Compacté", inconnu:"Non défini" };
-  const EXPO_LABELS_MAP     = { ensoleille:"Ensoleillé", "mi-ombre":"Mi-ombre", ombrage:"Ombragé" };
-  const ARROSAGE_LABELS_MAP = { automatique:"Arrosage auto", manuel:"Tuyau/manuel", aucun:"Pas d'arrosage", rarement:"Rarement" };
-  const BUDGET_LABELS_MAP   = { "0-50":"0–50€/an", "50-150":"50–150€/an", "150-300":"150–300€/an", "300-600":"300–600€/an", "600+":"+600€/an", inconnu:"Non défini" };
-  const profilePhase1 = !profile ? [] : [
-    profile.objectif  ? { icon:"🎯", label:"Objectif", val: OBJECTIF_LABELS_MAP[profile.objectif] || profile.objectif } : null,
-    gazonDisplay      ? { icon:"🌿", label:"Gazon",    val: gazonDisplay } : null,
-    profile.surface   ? { icon:"📐", label:"Surface",  val: `${profile.surface} m²` } : null,
-    profile.ville     ? { icon:"📍", label:"Ville",    val: profile.ville } : null,
-  ].filter(Boolean);
-  const profilePhase2 = !profile ? [] : [
-    profile.sol && profile.sol !== "N/A" ? { icon:"🏔️", label:"Sol",        val: SOL_LABELS_MAP[profile.sol] || profile.sol } : null,
-    profile.exposition ? { icon:"☀️",  label:"Exposition", val: EXPO_LABELS_MAP[profile.exposition] || profile.exposition } : null,
-    profile.arrosage && profile.arrosage !== "N/A" ? { icon:"💧",  label:"Arrosage",   val: ARROSAGE_LABELS_MAP[profile.arrosage] || profile.arrosage } : null,
-    profile.tondeuse?.length > 0 ? { icon:"✂️", label:"Tondeuse", val: `${profile.tondeuse.length} type${profile.tondeuse.length > 1 ? "s" : ""}` } : null,
-    profile.budget     ? { icon:"💰",  label:"Budget",     val: BUDGET_LABELS_MAP[profile.budget] || profile.budget } : null,
-  ].filter(Boolean);
-  const profileManquants = !profile ? [] : [
-    !profile.sol || profile.sol === "N/A" ? "Type de sol" : null,
-    !profile.exposition ? "Exposition" : null,
-    !profile.arrosage || profile.arrosage === "N/A" ? "Arrosage" : null,
-    !profile.tondeuse?.length ? "Tondeuse" : null,
-    !profile.budget     ? "Budget"     : null,
-  ].filter(Boolean);
+    return pts;
+  })();
+  const tontes    = history.filter(h => h.action?.toLowerCase().includes("tonte")).length;
+  const arrosages = history.filter(h => h.action?.toLowerCase().includes("arrosage")).length;
+  const engrais   = history.filter(h => h.action?.toLowerCase().includes("engrais")).length;
+  const minScore  = Math.min(...scoreHistory.map(p => p.score));
+  const maxScore  = Math.max(...scoreHistory.map(p => p.score));
+  const scoreRange = maxScore - minScore || 1;
 
   return (
     <div>
       {showOnboarding && <OnboardingModal onComplete={handleOnboardingComplete} />}
 
-      {/* ── Header premium ──────────────────────────────────────────────────── */}
+      {/* ── HEADER ────────────────────────────────────────────────────────── */}
       <div style={{ padding:"52px 20px 16px" }}>
-        {/* Ligne top : avatar + icônes */}
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
           <div style={{ display:"flex", alignItems:"center", gap:10 }}>
             <UserButton appearance={{ variables: { colorPrimary:"#43a047" } }} />
             <div>
@@ -167,170 +130,147 @@ export default function Dashboard() {
           </div>
           <div style={{ display:"flex", alignItems:"center", gap:8 }}>
             {isAdmin && (
-              <button onClick={() => navigate("/pilotage")} style={{ background:"rgba(249,168,37,0.2)", border:"1px solid rgba(249,168,37,0.3)", borderRadius:10, padding:"8px 10px", color:"#f9a825", fontSize:14, cursor:"pointer" }}>
-                📊
-              </button>
+              <button onClick={() => navigate("/pilotage")} style={{ background:"rgba(249,168,37,0.2)", border:"1px solid rgba(249,168,37,0.3)", borderRadius:10, padding:"8px 10px", color:"#f9a825", fontSize:14, cursor:"pointer" }}>📊</button>
             )}
-            <button onClick={() => navigate("/parametres")} style={{ background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:10, padding:"8px 10px", color:"#A5D6A7", fontSize:14, cursor:"pointer" }}>
-              ⚙️
-            </button>
+            <button onClick={() => navigate("/parametres")} style={{ background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:10, padding:"8px 10px", color:"#A5D6A7", fontSize:14, cursor:"pointer" }}>⚙️</button>
           </div>
         </div>
-        {/* Tagline */}
-        <div style={{ fontSize:11, color:"#81c784", fontStyle:"italic", opacity:0.8, marginTop:2 }}>
-          🌿 Prêt à prendre soin de ton gazon aujourd'hui ?
-        </div>
-        {isAdmin && <div style={{ fontSize:11, color:"#f9a825", marginTop:6, textAlign:"center" }}>👑 Mode Admin</div>}
+        <div style={{ fontSize:11, color:"#81c784", fontStyle:"italic", opacity:0.8 }}>🌿 Prêt à prendre soin de ton gazon aujourd'hui ?</div>
+        {isAdmin && <div style={{ fontSize:11, color:"#f9a825", marginTop:4, textAlign:"center" }}>👑 Mode Admin</div>}
       </div>
 
       <div style={scroll}>
 
-        {/* ── NOTIFICATIONS — tuile unique, visible uniquement si non accordé ── */}
+        {/* ── NOTIF PUSH ────────────────────────────────────────────────────── */}
         {isSupported && isPaid && permission !== "granted" && (
-          <div style={{
-            background: "linear-gradient(135deg, rgba(27,94,32,0.6), rgba(13,43,26,0.8))",
-            border: "1px solid rgba(102,187,106,0.35)",
-            borderRadius: 14, padding: "14px 16px", marginBottom: 4,
-            display: "flex", alignItems: "center", gap: 12,
-          }}>
-            <span style={{ fontSize: 24, flexShrink: 0 }}>🔔</span>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 800, color: "#F1F8F2", marginBottom: 3 }}>
-                Activez les alertes
-              </div>
-              <div style={{ fontSize: 12, color: "#81c784", lineHeight: 1.5 }}>
-                Recevez vos rappels d'entretien et alertes météo même app fermée.
-              </div>
+          <div style={{ background:"linear-gradient(135deg,rgba(27,94,32,0.6),rgba(13,43,26,0.8))", border:"1px solid rgba(102,187,106,0.35)", borderRadius:14, padding:"14px 16px", marginBottom:4, display:"flex", alignItems:"center", gap:12 }}>
+            <span style={{ fontSize:24, flexShrink:0 }}>🔔</span>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:13, fontWeight:800, color:"#F1F8F2", marginBottom:3 }}>Activez les alertes</div>
+              <div style={{ fontSize:12, color:"#81c784", lineHeight:1.5 }}>Recevez vos rappels d'entretien même app fermée.</div>
             </div>
-            <button
-              onClick={handleActivatePush}
-              style={{
-                flexShrink: 0, padding: "8px 14px", borderRadius: 10,
-                background: "linear-gradient(135deg,#43a047,#2e7d32)",
-                border: "none", color: "#fff", fontWeight: 800,
-                fontSize: 12, cursor: "pointer",
-              }}
-            >
-              Activer
-            </button>
+            <button onClick={handleActivatePush} style={{ flexShrink:0, padding:"8px 14px", borderRadius:10, background:"linear-gradient(135deg,#43a047,#2e7d32)", border:"none", color:"#fff", fontWeight:800, fontSize:12, cursor:"pointer" }}>Activer</button>
           </div>
         )}
 
-        {/* ── BANNIÈRE VILLE NON VÉRIFIÉE ───────────────────────────────────── */}
+        {/* ── BANNIÈRE VILLE NON VÉRIFIÉE ────────────────────────────────── */}
         {profile?.cityNotFound && (
-          <div style={{
-            background: "rgba(230,81,0,0.15)", border: "1px solid rgba(239,108,0,0.4)",
-            borderRadius: 14, padding: "12px 14px", marginBottom: 4,
-            display: "flex", alignItems: "center", gap: 10,
-          }}>
-            <span style={{ fontSize: 22 }}>📍</span>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#f9a825", marginBottom: 2 }}>
-                Ville introuvable — météo désactivée
-              </div>
-              <div style={{ fontSize: 12, color: "#81c784", lineHeight: 1.5 }}>
-                "{profile.ville}" n'a pas pu être localisée. Corrigez votre ville pour activer la météo et les conseils saisonniers.
-              </div>
+          <div style={{ background:"rgba(230,81,0,0.15)", border:"1px solid rgba(239,108,0,0.4)", borderRadius:14, padding:"12px 14px", marginBottom:4, display:"flex", alignItems:"center", gap:10 }}>
+            <span style={{ fontSize:22 }}>📍</span>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:13, fontWeight:700, color:"#f9a825", marginBottom:2 }}>Ville introuvable — météo désactivée</div>
+              <div style={{ fontSize:12, color:"#81c784", lineHeight:1.5 }}>"{profile.ville}" n'a pas pu être localisée. Corrigez votre ville.</div>
             </div>
-            <button
-              onClick={() => setShowOnboarding(true)}
-              style={{ background: "rgba(239,108,0,0.3)", border: "1px solid rgba(239,108,0,0.5)", borderRadius: 10, padding: "6px 12px", color: "#f9a825", fontSize: 11, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}
-            >
-              Corriger →
-            </button>
+            <button onClick={() => setShowOnboarding(true)} style={{ background:"rgba(239,108,0,0.3)", border:"1px solid rgba(239,108,0,0.5)", borderRadius:10, padding:"6px 12px", color:"#f9a825", fontSize:11, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap" }}>Corriger →</button>
           </div>
         )}
-        <div style={{ ...card(), background:"linear-gradient(135deg, rgba(27,94,32,0.4), rgba(13,43,26,0.6))", border:`1px solid ${color}44` }}>
-          <div style={{ fontSize:11, color:"#66BB6A", fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", marginBottom:12, textAlign:"center" }}>
-            🌿 Score Santé du Gazon
-          </div>
-          <div style={{ textAlign:"center", marginBottom:12 }}>
-            <svg width="140" height="80" viewBox="0 0 140 80">
-              <path d="M 10 75 A 60 60 0 0 1 130 75" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="10" strokeLinecap="round"/>
-              <path d="M 10 75 A 60 60 0 0 1 130 75" fill="none" stroke={color} strokeWidth="10" strokeLinecap="round"
-                strokeDasharray={`${(score/100)*188} 188`}/>
-              <text x="70" y="68" textAnchor="middle" fill="white" fontSize="28" fontWeight="bold" fontFamily="Arial">{score}</text>
-              <text x="70" y="78" textAnchor="middle" fill={color} fontSize="10" fontFamily="Arial">/100</text>
-            </svg>
-            <div style={{ fontSize:16, fontWeight:800, color, marginTop:4 }}>{label}</div>
-            {isPaid && (
-              <div style={{ fontSize:12, color:"#81c784", marginTop:4 }}>
-                Potentiel : <span style={{ color:"#a5d6a7", fontWeight:700 }}>{potential}/100</span>
-                <span style={{ color:"#f9a825", marginLeft:6 }}>+{potential - score} pts possibles</span>
+
+        {/* ── LIGNE 1 : SCORE + MÉTÉO ────────────────────────────────────── */}
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:4 }}>
+
+          {/* Score */}
+          <div style={{ ...card(), background:"linear-gradient(135deg,rgba(27,94,32,0.4),rgba(13,43,26,0.6))", border:`1px solid ${color}44`, padding:14 }}>
+            <div style={{ fontSize:10, color:"#66BB6A", fontWeight:700, letterSpacing:1, textTransform:"uppercase", marginBottom:8, textAlign:"center" }}>🌿 Score Santé</div>
+            <div style={{ textAlign:"center" }}>
+              <svg width="110" height="65" viewBox="0 0 140 80">
+                <path d="M 10 75 A 60 60 0 0 1 130 75" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="10" strokeLinecap="round"/>
+                <path d="M 10 75 A 60 60 0 0 1 130 75" fill="none" stroke={color} strokeWidth="10" strokeLinecap="round" strokeDasharray={`${(score/100)*188} 188`}/>
+                <text x="70" y="68" textAnchor="middle" fill="white" fontSize="28" fontWeight="bold" fontFamily="Arial">{score}</text>
+                <text x="70" y="78" textAnchor="middle" fill={color} fontSize="10" fontFamily="Arial">/100</text>
+              </svg>
+              <div style={{ fontSize:13, fontWeight:800, color, marginTop:2 }}>{label}</div>
+              {isPaid && <div style={{ fontSize:10, color:"#81c784", marginTop:3 }}>Potentiel : <span style={{ color:"#f9a825", fontWeight:700 }}>{potential}/100</span></div>}
+            </div>
+
+            {isPaid && hasDiag && diagScore !== null && (
+              <div style={{ background:"rgba(33,150,243,0.12)", border:"1px solid rgba(66,165,245,0.3)", borderRadius:8, padding:"6px 8px", marginTop:8, display:"flex", alignItems:"center", gap:6 }}>
+                <span style={{ fontSize:16 }}>{diagEmoji}</span>
+                <div>
+                  <div style={{ fontSize:10, fontWeight:700, color:"#90caf9" }}>📸 Diag pris en compte</div>
+                  <div style={{ fontSize:9, color:"#81c784" }}>Valide encore {7-diagAge}j · <span style={{ color: diagInfluence >= 0 ? "#a5d6a7" : "#ef9a9a" }}>{diagInfluence >= 0 ? "+" : ""}{diagInfluence} pts</span></div>
+                </div>
+              </div>
+            )}
+
+            {isPaid && !hasDiag && (
+              <div onClick={() => navigate("/diagnostic")} style={{ background:"rgba(33,150,243,0.08)", border:"1px dashed rgba(66,165,245,0.3)", borderRadius:8, padding:"6px 8px", marginTop:8, cursor:"pointer", textAlign:"center" }}>
+                <div style={{ fontSize:10, color:"#90caf9" }}>📸 Diagnostic photo</div>
+                <div style={{ fontSize:9, color:"#81c784" }}>Influence jusqu'à 30% du score</div>
+              </div>
+            )}
+
+            {isPaid && issues.length > 0 && (
+              <div style={{ marginTop:8 }}>
+                <button onClick={() => setShowIssues(!showIssues)} style={{ background:"none", border:"none", color:"#f9a825", cursor:"pointer", fontSize:11, fontWeight:700, padding:0 }}>
+                  ⚠️ {issues.length} problème{issues.length>1?"s":""} {showIssues?"▲":"▼"}
+                </button>
+                {showIssues && issues.map((issue,i) => (
+                  <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"4px 6px", background:"rgba(239,108,0,0.1)", borderRadius:6, marginTop:3, fontSize:10 }}>
+                    <span>{issue.icon} {issue.label}</span>
+                    <span style={{ color:"#ef9a9a" }}>{issue.impact} pts</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {!isPaid && (
+              <div style={{ textAlign:"center", marginTop:8 }}>
+                <div style={{ fontSize:10, color:"#81c784", marginBottom:6 }}>🔒 +{potential-score} pts possibles</div>
+                <button onClick={() => navigate("/subscribe")} style={{ background:"linear-gradient(135deg,#F59E0B,#D97706)", color:"#1a1a1a", fontWeight:800, border:"none", borderRadius:8, cursor:"pointer", padding:"6px 14px", fontSize:11 }}>⭐ Premium</button>
               </div>
             )}
           </div>
 
-          {isPaid && hasDiag && diagScore !== null && (
-            <div style={{ background:"rgba(33,150,243,0.12)", border:"1px solid rgba(66,165,245,0.3)", borderRadius:10, padding:"8px 12px", marginBottom:10, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-              <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                <span style={{ fontSize:20 }}>{diagEmoji}</span>
-                <div>
-                  <div style={{ fontSize:11, fontWeight:700, color:"#90caf9" }}>📸 Diagnostic photo pris en compte</div>
-                  <div style={{ fontSize:10, color:"#81c784" }}>
-                    Score visuel : {diagScore}/100 · Il y a {diagAge}j
-                    {diagAge < 7 && <span style={{ color:"#f9a825" }}> · Valide encore {7 - diagAge}j</span>}
+          {/* Météo */}
+          <div>
+            {isPaid ? (
+              <div style={{ ...card(), background:"linear-gradient(135deg,rgba(46,125,50,0.3),rgba(27,94,32,0.2))", border:"1px solid rgba(165,214,167,0.2)", padding:12, height:"100%", boxSizing:"border-box" }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
+                  <div>
+                    <div style={{ fontSize:10, color:"#81c784", fontWeight:700 }}>📍 {locationName || "Localisation"}</div>
+                    <div style={{ fontSize:10, color:"#81c784", opacity:0.7 }}>{MONTHS_FR[month]} — {plan.label}</div>
                   </div>
+                  <button onClick={refreshLocation} style={{ background:"rgba(255,255,255,0.1)", border:"1px solid rgba(255,255,255,0.2)", borderRadius:8, padding:"4px 8px", color:"#e8f5e9", fontSize:11, cursor:"pointer" }}>
+                    {locLoading ? "⌛" : "🔄"}
+                  </button>
                 </div>
+                {weather ? (
+                  <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                    {[
+                      { icon:getWMO(weather.code).icon, val:`${Math.round(weather.temp_max)}°C`, label:getWMO(weather.code).label },
+                      { icon:"💨", val:`${weather.wind}km/h`, label:"Vent" },
+                      { icon:"💧", val:`${weather.precip}mm`, label:"Pluie" },
+                    ].map(({ icon, val, label }) => (
+                      <div key={label} style={{ display:"flex", alignItems:"center", gap:8, background:"rgba(255,255,255,0.06)", borderRadius:10, padding:"6px 10px" }}>
+                        <span style={{ fontSize:18 }}>{icon}</span>
+                        <div>
+                          <div style={{ fontSize:15, fontWeight:800, lineHeight:1 }}>{val}</div>
+                          <div style={{ fontSize:9, color:"#81c784" }}>{label}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ textAlign:"center", color:"#81c784", fontSize:12, padding:"12px 0" }}>
+                    {loading || locLoading ? "🌿 Détection..." : "🔄 Actualiser"}
+                  </div>
+                )}
               </div>
-              <div style={{ textAlign:"right" }}>
-                <div style={{ fontSize:12, fontWeight:700, color: diagInfluence >= 0 ? "#a5d6a7" : "#ef9a9a" }}>
-                  {diagInfluence >= 0 ? "+" : ""}{diagInfluence} pts
-                </div>
-                <div style={{ fontSize:10, color:"#81c784" }}>influence</div>
+            ) : (
+              <div style={{ ...card(), textAlign:"center", padding:14, height:"100%", boxSizing:"border-box", display:"flex", flexDirection:"column", justifyContent:"center" }}>
+                <div style={{ fontSize:12, color:"#81c784", marginBottom:8 }}>🔒 Météo temps réel</div>
+                <button onClick={() => navigate("/subscribe")} style={{ background:"linear-gradient(135deg,#F59E0B,#D97706)", color:"#1a1a1a", fontWeight:800, border:"none", borderRadius:8, cursor:"pointer", padding:"6px 14px", fontSize:11 }}>Premium</button>
               </div>
-            </div>
-          )}
-
-          {isPaid && !hasDiag && (
-            <div onClick={() => navigate("/diagnostic")} style={{ background:"rgba(33,150,243,0.08)", border:"1px dashed rgba(66,165,245,0.3)", borderRadius:10, padding:"8px 12px", marginBottom:10, cursor:"pointer", textAlign:"center" }}>
-              <div style={{ fontSize:11, color:"#90caf9" }}>📸 Faire un diagnostic photo pour affiner le score</div>
-              <div style={{ fontSize:10, color:"#81c784", marginTop:2 }}>Influence jusqu'à 30% du score · Valide 7 jours</div>
-            </div>
-          )}
-
-          {strengths.length > 0 && (
-            <div style={{ marginBottom:8 }}>
-              {strengths.map((s,i) => (
-                <div key={i} style={{ fontSize:12, color:"#a5d6a7", padding:"3px 0" }}>{s.icon} {s.label}</div>
-              ))}
-            </div>
-          )}
-
-          {isPaid && issues.length > 0 && (
-            <div>
-              <button onClick={() => setShowIssues(!showIssues)} style={{ background:"none", border:"none", color:"#f9a825", cursor:"pointer", fontSize:12, fontWeight:700, padding:0 }}>
-                ⚠️ {issues.length} problème{issues.length>1?"s":""} détecté{issues.length>1?"s":""} {showIssues?"▲":"▼"}
-              </button>
-              {showIssues && issues.map((issue,i) => (
-                <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"5px 8px", background:"rgba(239,108,0,0.1)", borderRadius:8, marginBottom:4, fontSize:12, marginTop:4 }}>
-                  <span>{issue.icon} {issue.label}</span>
-                  <span style={{ color:"#ef9a9a" }}>{issue.impact} pts</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {!isPaid && (
-            <div style={{ textAlign:"center", marginTop:8 }}>
-              <div style={{ fontSize:12, color:"#81c784", marginBottom:8 }}>
-                🔒 Diagnostic complet — <span style={{ color:"#f9a825", fontWeight:700 }}>+{potential-score} pts possibles</span>
-              </div>
-              <button onClick={() => navigate("/subscribe")} style={{background:"linear-gradient(135deg,#F59E0B,#D97706)",color:"#1a1a1a",fontWeight:800,border:"none",borderRadius:10,cursor:"pointer",width:"auto",padding:"8px 20px",fontSize:12}}>
-                ⭐ Améliorer mon gazon
-              </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
-        {/* ── TUILE STREAK ─────────────────────────────────────────────────────── */}
+        {/* ── ALERTES MÉTÉO ─────────────────────────────────────────────────── */}
+        {isPaid && alerts.map((a, i) => <AlertBanner key={i} alert={a} />)}
+
+        {/* ── STREAK ────────────────────────────────────────────────────────── */}
         {streak > 0 && (
-          <div style={{
-            background: enDanger ? "rgba(230,81,0,0.15)" : modeHiver ? "rgba(21,101,192,0.12)" : "rgba(76,175,80,0.12)",
-            border:     `1px solid ${enDanger ? "rgba(239,108,0,0.4)" : modeHiver ? "rgba(66,165,245,0.3)" : "rgba(102,187,106,0.35)"}`,
-            borderRadius: 12, padding: "10px 14px",
-            display: "flex", alignItems: "center", gap: 10, marginBottom: 4,
-          }}>
+          <div style={{ background: enDanger ? "rgba(230,81,0,0.15)" : modeHiver ? "rgba(21,101,192,0.12)" : "rgba(76,175,80,0.12)", border:`1px solid ${enDanger ? "rgba(239,108,0,0.4)" : modeHiver ? "rgba(66,165,245,0.3)" : "rgba(102,187,106,0.35)"}`, borderRadius:12, padding:"10px 14px", display:"flex", alignItems:"center", gap:10, marginBottom:4 }}>
             <span style={{ fontSize:22 }}>{modeHiver ? "🛡️" : enDanger ? "⚠️" : "🔥"}</span>
             <div style={{ flex:1 }}>
               <div style={{ fontWeight:700, fontSize:14, color: enDanger ? "#ef9a9a" : modeHiver ? "#90caf9" : "#a5d6a7" }}>
@@ -343,96 +283,51 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* ── WIDGET GREENPOINTS + STREAK ───────────────────────────────────── */}
+        {/* ── GREENPOINTS ───────────────────────────────────────────────────── */}
         <div style={{ ...card(), padding:14 }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
             <span style={{ fontWeight:700, color:"#66BB6A", fontSize:14 }}>🌿 GreenPoints</span>
-            <span style={{
-              background:  palier?.couleur || "#2e7d32",
-              color:       "white",
-              borderRadius: 20,
-              padding:     "2px 10px",
-              fontSize:    11,
-              fontWeight:  600,
-            }}>
+            <span style={{ background: palier?.couleur || "#2e7d32", color:"white", borderRadius:20, padding:"2px 10px", fontSize:11, fontWeight:600 }}>
               {palier?.icone} {palier?.label}
             </span>
           </div>
-
           <div style={{ display:"flex", alignItems:"baseline", gap:6, marginBottom:8 }}>
-            <span style={{ fontSize:30, fontWeight:800, color:"#a5d6a7" }}>
-              {gpTotal.toLocaleString("fr-FR")}
-            </span>
+            <span style={{ fontSize:30, fontWeight:800, color:"#a5d6a7" }}>{gpTotal.toLocaleString("fr-FR")}</span>
             <span style={{ color:"#81c784", fontSize:12 }}>pts</span>
           </div>
-
           {prochainPalier && (
-            <div style={{ marginBottom:10 }}>
+            <div>
               <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:"#81c784", marginBottom:3 }}>
                 <span>{palier?.label}</span>
                 <span>{prochainPalier.icone} {prochainPalier.label} — {prochainPalier.min.toLocaleString("fr-FR")} pts</span>
               </div>
               <div style={{ background:"rgba(255,255,255,0.1)", borderRadius:8, height:6, overflow:"hidden" }}>
-                <div style={{
-                  width:      `${progressPalier}%`,
-                  height:     "100%",
-                  background: "linear-gradient(90deg, #43a047, #a5d6a7)",
-                  borderRadius: 8,
-                  transition: "width 0.8s ease",
-                }}/>
+                <div style={{ width:`${progressPalier}%`, height:"100%", background:"linear-gradient(90deg,#43a047,#a5d6a7)", borderRadius:8, transition:"width 0.8s" }}/>
               </div>
             </div>
           )}
-
         </div>
 
-        {/* ── WIDGET CLASSEMENT ─────────────────────────────────────────────── */}
+        {/* ── CLASSEMENT ────────────────────────────────────────────────────── */}
         <div style={{ ...card(), padding:14 }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
             <span style={{ fontWeight:700, color:"#66BB6A", fontSize:14 }}>🏆 Classement</span>
             {classementActif ? (
-              <span style={{
-                background:  ligueActuelle?.couleurBg || "rgba(76,175,80,0.2)",
-                color:       ligueActuelle?.couleur || "#43a047",
-                borderRadius: 20,
-                padding:     "2px 10px",
-                fontSize:    11,
-                fontWeight:  600,
-                border:      `1px solid ${ligueActuelle?.couleur || "#43a047"}44`,
-              }}>
+              <span style={{ background: ligueActuelle?.couleurBg || "rgba(76,175,80,0.2)", color: ligueActuelle?.couleur || "#43a047", borderRadius:20, padding:"2px 10px", fontSize:11, fontWeight:600, border:`1px solid ${ligueActuelle?.couleur || "#43a047"}44` }}>
                 {ligueActuelle?.icone} Ligue {ligueActuelle?.label}
               </span>
-            ) : (
-              <span style={{ fontSize:11, color:"#81c784" }}>😴 En pause</span>
-            )}
+            ) : <span style={{ fontSize:11, color:"#81c784" }}>😴 En pause</span>}
           </div>
-
           {classementActif ? (
             <>
               <div style={{ display:"flex", alignItems:"baseline", gap:6, marginBottom:8 }}>
-                <span style={{ fontSize:30, fontWeight:800, color:"#a5d6a7" }}>
-                  {position}<span style={{ fontSize:14, color:"#81c784" }}>e</span>
-                </span>
-                <span style={{ fontSize:12, color:"#81c784" }}>
-                  / {totalJoueurs} joueurs · {pointsSemaine} pts cette semaine
-                </span>
+                <span style={{ fontSize:30, fontWeight:800, color:"#a5d6a7" }}>{position}<span style={{ fontSize:14, color:"#81c784" }}>e</span></span>
+                <span style={{ fontSize:12, color:"#81c784" }}>/ {totalJoueurs} joueurs · {pointsSemaine} pts cette semaine</span>
               </div>
-              <div style={{
-                padding:      "8px 10px",
-                background:   enZonePromotion ? "rgba(76,175,80,0.15)" : enZoneRetrogradation ? "rgba(230,81,0,0.15)" : "rgba(255,255,255,0.05)",
-                borderRadius: 10,
-                color:        enZonePromotion ? "#a5d6a7" : enZoneRetrogradation ? "#ef9a9a" : "#81c784",
-                fontSize:     12,
-                fontWeight:   500,
-                marginBottom: 10,
-              }}>
-                {messageClassement}
-                {joursRestants <= 2 && <span style={{ fontWeight:700, color:"#f9a825" }}> — ⏰ Urgence !</span>}
+              <div style={{ padding:"8px 10px", background: enZonePromotion ? "rgba(76,175,80,0.15)" : enZoneRetrogradation ? "rgba(230,81,0,0.15)" : "rgba(255,255,255,0.05)", borderRadius:10, color: enZonePromotion ? "#a5d6a7" : enZoneRetrogradation ? "#ef9a9a" : "#81c784", fontSize:12, fontWeight:500, marginBottom:10 }}>
+                {messageClassement}{joursRestants <= 2 && <span style={{ fontWeight:700, color:"#f9a825" }}> — ⏰ Urgence !</span>}
               </div>
-              <button
-                onClick={() => navigate("/classement")}
-                style={{ width:"100%", background:"rgba(76,175,80,0.2)", color:"#a5d6a7", border:"1px solid rgba(76,175,80,0.3)", borderRadius:10, padding:"9px", fontSize:12, fontWeight:600, cursor:"pointer" }}
-              >
+              <button onClick={() => navigate("/classement")} style={{ width:"100%", background:"rgba(76,175,80,0.2)", color:"#a5d6a7", border:"1px solid rgba(76,175,80,0.3)", borderRadius:10, padding:"9px", fontSize:12, fontWeight:600, cursor:"pointer" }}>
                 Voir le classement complet →
               </button>
             </>
@@ -444,218 +339,71 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* ── NOTIFICATIONS INTELLIGENTES ───────────────────────────────────── */}
-        {notifications.length > 0 && (
-          <div style={{ marginBottom:4 }}>
-            <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8, padding:"0 2px" }}>
-              <span style={{ fontSize:13, fontWeight:700 }}>🔔 Alertes</span>
-              {dangers > 0 && <span style={{ background:"#c62828", color:"#fff", borderRadius:20, padding:"2px 8px", fontSize:11, fontWeight:700 }}>{dangers} urgent{dangers>1?"s":""}</span>}
-              {warnings > 0 && <span style={{ background:"#e65100", color:"#fff", borderRadius:20, padding:"2px 8px", fontSize:11, fontWeight:700 }}>{warnings} warning{warnings>1?"s":""}</span>}
+        {/* ── ÉVOLUTION DU SCORE ────────────────────────────────────────────── */}
+        <div style={{ ...card(), padding:14 }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+            <span style={{ fontWeight:700, color:"#66BB6A", fontSize:14 }}>📈 Évolution du score</span>
+            <div style={{ display:"flex", gap:4 }}>
+              {["7j","30j"].map(p => (
+                <button key={p} onClick={() => setPeriod(p)} style={{ background: period===p ? "rgba(76,175,80,0.3)" : "none", border:`1px solid ${period===p ? "#43a047" : "rgba(255,255,255,0.2)"}`, borderRadius:8, padding:"2px 8px", color: period===p ? "#a5d6a7" : "#81c784", fontSize:11, cursor:"pointer" }}>{p}</button>
+              ))}
             </div>
-            {(isPaid ? notifications : notifications.slice(0,1)).map(n => {
-              const c = NOTIF_COLORS[n.type] || NOTIF_COLORS.info;
-              return (
-                <div key={n.id} style={{ background:c.bg, border:`1px solid ${c.border}`, borderRadius:14, padding:"12px 14px", marginBottom:8, position:"relative" }}>
-                  <button onClick={() => setDismissedNotifs(p => [...p, n.id])} style={{ position:"absolute", top:8, right:10, background:"none", border:"none", color:"rgba(255,255,255,0.4)", cursor:"pointer", fontSize:16 }}>×</button>
-                  <div style={{ display:"flex", gap:10, alignItems:"flex-start", paddingRight:20 }}>
-                    <span style={{ fontSize:22, minWidth:28 }}>{n.icon}</span>
-                    <div style={{ flex:1 }}>
-                      <div style={{ fontWeight:700, fontSize:13, marginBottom:4 }}>
-                        {n.title}
-                        {n.impact < 0 && <span style={{ marginLeft:8, fontSize:11, color:"#ef9a9a", fontWeight:600 }}>{n.impact} pts</span>}
-                        {n.impact > 0 && <span style={{ marginLeft:8, fontSize:11, color:"#a5d6a7", fontWeight:600 }}>+{n.impact} pts</span>}
-                      </div>
-                      <div style={{ fontSize:12, color:"#81c784", lineHeight:1.5, marginBottom:8 }}>{n.message}</div>
-                      {n.action && (
-                        <button onClick={() => handleNotifAction(n.actionRoute)} style={{ background:c.badge, border:"none", borderRadius:8, padding:"6px 14px", color:"#fff", fontSize:12, fontWeight:700, cursor:"pointer" }}>
-                          {n.action} →
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-            {!isPaid && notifications.length > 1 && (
-              <div style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:14, padding:"10px 14px", textAlign:"center", fontSize:12, color:"#81c784" }}>
-                🔒 {notifications.length - 1} alerte{notifications.length-1>1?"s":""} supplémentaire{notifications.length-1>1?"s":""} —
-                <span style={{ color:"#F59E0B", cursor:"pointer", fontWeight:700, marginLeft:4 }} onClick={() => navigate("/subscribe")}>Passer Premium</span>
-              </div>
-            )}
           </div>
-        )}
 
-        {/* ── ALERTES MÉTÉO ─────────────────────────────────────────────────── */}
-        {isPaid && alerts.map((a, i) => <AlertBanner key={i} alert={a} />)}
-
-        {/* ── MÉTÉO ─────────────────────────────────────────────────────────── */}
-        {isPaid ? (
-          <div style={{ ...card(), background:"linear-gradient(135deg,rgba(46,125,50,0.3),rgba(27,94,32,0.2))", border:"1px solid rgba(165,214,167,0.2)" }}>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
-              <div>
-                <div style={{ fontSize:11, color:"#81c784", fontWeight:700, letterSpacing:1 }}>📍 {locationName || "Localisation"}</div>
-                <div style={{ fontSize:12, color:"#81c784", opacity:0.7 }}>{MONTHS_FR[month]} — {plan.label}</div>
-              </div>
-              <button onClick={refreshLocation} style={{ background:"rgba(255,255,255,0.1)", border:"1px solid rgba(255,255,255,0.2)", borderRadius:10, padding:"6px 12px", color:"#e8f5e9", fontSize:12, cursor:"pointer" }}>
-                {locLoading ? "⌛" : "🔄"}
-              </button>
-            </div>
-            {weather ? (
-              <div style={{ display:"flex", gap:8 }}>
-                {[
-                  { icon:getWMO(weather.code).icon, val:`${Math.round(weather.temp_max)}°C`, label:getWMO(weather.code).label },
-                  { icon:"💧", val:`${weather.precip}mm`, label:"Pluie" },
-                  { icon:"💨", val:`${weather.wind}km/h`, label:"Vent" },
-                ].map(({ icon, val, label }) => (
-                  <div key={label} style={{ flex:1, background:"rgba(255,255,255,0.06)", borderRadius:12, padding:"8px 6px", textAlign:"center" }}>
-                    <div style={{ fontSize:20 }}>{icon}</div>
-                    <div style={{ fontSize:15, fontWeight:800 }}>{val}</div>
-                    <div style={{ fontSize:10, color:"#81c784" }}>{label}</div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div style={{ textAlign:"center", color:"#81c784", fontSize:13, padding:"8px 0" }}>
-                {loading || locLoading ? "🌿 Détection..." : "🔄 Actualiser"}
-              </div>
-            )}
+          {/* Mini graphe SVG */}
+          <div style={{ position:"relative", height:60, marginBottom:8 }}>
+            <svg width="100%" height="60" style={{ overflow:"visible" }}>
+              {scoreHistory.length > 1 && (() => {
+                const w = 100 / (scoreHistory.length - 1);
+                const points = scoreHistory.map((p,i) => `${i*w}%,${60 - ((p.score - minScore) / scoreRange) * 50}`).join(" ");
+                return (
+                  <>
+                    <polyline points={points} fill="none" stroke="#43a047" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke"/>
+                    {scoreHistory.map((p,i) => (
+                      <circle key={i} cx={`${i*w}%`} cy={60 - ((p.score - minScore) / scoreRange) * 50} r="3" fill="#66BB6A"/>
+                    ))}
+                    <text x="100%" y={60 - ((scoreHistory[scoreHistory.length-1].score - minScore) / scoreRange) * 50 - 6} textAnchor="end" fill="#a5d6a7" fontSize="11" fontWeight="bold">{scoreHistory[scoreHistory.length-1].score}</text>
+                  </>
+                );
+              })()}
+            </svg>
           </div>
-        ) : (
-          <div style={{ ...card(), textAlign:"center", padding:14 }}>
-            <div style={{ fontSize:13, color:"#81c784", marginBottom:8 }}>🔒 Météo temps réel — Premium uniquement</div>
-            <button onClick={() => navigate("/subscribe")} style={{background:"linear-gradient(135deg,#F59E0B,#D97706)",color:"#1a1a1a",fontWeight:800,border:"none",borderRadius:10,cursor:"pointer",width:"auto",padding:"8px 20px",fontSize:13}}>Passer Premium</button>
+
+          <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:"#4a7c5c", marginBottom:12 }}>
+            <span>Il y a {period === "30j" ? "30j" : "7j"}</span>
+            <span>Aujourd'hui</span>
           </div>
-        )}
 
-        {/* ── PROFIL ────────────────────────────────────────────────────────── */}
-        {(()=>{
-          const completion = profileCompletion;
-          const phase1     = profilePhase1;
-          const phase2     = profilePhase2;
-          const manquants  = profileManquants;
-          return (
-            <div style={card()}>
-              <div style={cardTitle}>
-                <span>👤 Mon profil</span>
-                <button onClick={() => navigate("/setup")} style={{ background:"rgba(76,175,80,0.2)", border:"none", borderRadius:8, padding:"4px 10px", color:"#a5d6a7", fontSize:11, cursor:"pointer" }}>
-                  ✏️ Modifier
-                </button>
+          {/* Stats interventions */}
+          <div style={{ display:"flex", gap:8 }}>
+            {[
+              { icon:"✂️", val:tontes, label:"Tontes" },
+              { icon:"💧", val:arrosages, label:"Arrosages" },
+              { icon:"🌱", val:engrais, label:"Engrais" },
+            ].map(({ icon, val, label }) => (
+              <div key={label} style={{ flex:1, background:"rgba(255,255,255,0.05)", borderRadius:10, padding:"8px 6px", textAlign:"center" }}>
+                <div style={{ fontSize:18 }}>{icon}</div>
+                <div style={{ fontSize:18, fontWeight:800, color:"#a5d6a7" }}>{val}</div>
+                <div style={{ fontSize:10, color:"#81c784" }}>{label}</div>
               </div>
-
-              {profile ? (
-                <>
-                  {/* Barre de complétude */}
-                  <div style={{ marginBottom:14 }}>
-                    <div style={{ display:"flex", justifyContent:"space-between", fontSize:11, marginBottom:5 }}>
-                      <span style={{ color:"#81c784", fontWeight:700 }}>Complétude du profil</span>
-                      <span style={{ color: completion >= 90 ? "#a5d6a7" : "#f4a261", fontWeight:800 }}>{completion}%</span>
-                    </div>
-                    <div style={{ height:7, background:"rgba(255,255,255,0.08)", borderRadius:6, overflow:"hidden" }}>
-                      <div style={{ width:`${completion}%`, height:"100%", borderRadius:6, background:`linear-gradient(90deg,#2d6a4f,#52b788)`, transition:"width 0.6s" }} />
-                    </div>
-                    <div style={{ display:"flex", justifyContent:"space-between", fontSize:9, color:"#4a7c5c", marginTop:3 }}>
-                      <span>Onboarding ✅</span><span>Profil 90%</span><span>📸 Premium 100%</span>
-                    </div>
-                  </div>
-
-                  {/* Infos Phase 1 */}
-                  {phase1.length > 0 && (
-                    <div style={{ marginBottom:10 }}>
-                      <div style={{ fontSize:10, fontWeight:700, color:"#4a7c5c", letterSpacing:1, marginBottom:6 }}>PROFIL DE BASE</div>
-                      <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
-                        {phase1.map(({ icon, label, val }) => (
-                          <span key={label} style={{ background:"rgba(82,183,136,0.1)", border:"1px solid rgba(82,183,136,0.2)", borderRadius:20, padding:"4px 10px", fontSize:11, color:"#95d5b2" }}>
-                            {icon} {val}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Infos Phase 2 — Premium : tout affiché, Free : CTA */}
-                  {phase2.length > 0 && (
-                    <div style={{ marginBottom:10 }}>
-                      <div style={{ fontSize:10, fontWeight:700, color:"#4a7c5c", letterSpacing:1, marginBottom:6 }}>PROFIL DÉTAILLÉ</div>
-                      <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
-                        {phase2.map(({ icon, label, val }) => (
-                          <span key={label} style={{ background:"rgba(255,255,255,0.06)", border:"1px solid rgba(149,213,178,0.18)", borderRadius:20, padding:"4px 10px", fontSize:11, color:"#e8f5e9" }}>
-                            {icon} {val}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Champs manquants */}
-                  {manquants.length > 0 && (
-                    isPaid ? (
-                      <div style={{ background:"rgba(244,162,97,0.08)", border:"1px solid rgba(244,162,97,0.25)", borderRadius:10, padding:"10px 12px", marginBottom:8 }}>
-                        <div style={{ fontSize:11, fontWeight:700, color:"#f4a261", marginBottom:6 }}>
-                          📋 À compléter ({manquants.length} champ{manquants.length > 1 ? "s" : ""})
-                        </div>
-                        <div style={{ display:"flex", flexWrap:"wrap", gap:4 }}>
-                          {manquants.map(m => (
-                            <span key={m} style={{ fontSize:10, color:"#f4a261", background:"rgba(244,162,97,0.1)", borderRadius:20, padding:"2px 8px" }}>
-                              {m}
-                            </span>
-                          ))}
-                        </div>
-                        <button onClick={() => navigate("/setup")} style={{ marginTop:10, width:"100%", background:"rgba(244,162,97,0.2)", color:"#f4a261", border:"1px solid rgba(244,162,97,0.3)", borderRadius:10, padding:"8px", fontSize:12, fontWeight:700, cursor:"pointer" }}>
-                          Compléter → +{manquants.length * 8}% complétude
-                        </button>
-                      </div>
-                    ) : (
-                      <div style={{ background:"rgba(249,168,37,0.08)", border:"1px solid rgba(249,168,37,0.25)", borderRadius:10, padding:"10px 12px" }}>
-                        <div style={{ fontSize:11, color:"#f9a825", marginBottom:6 }}>
-                          🔒 {manquants.length} information{manquants.length > 1 ? "s" : ""} supplémentaire{manquants.length > 1 ? "s" : ""} disponible{manquants.length > 1 ? "s" : ""}
-                        </div>
-                        <div style={{ fontSize:11, color:"#81c784", marginBottom:8 }}>
-                          Complétez votre profil pour des conseils plus précis et un meilleur score au classement.
-                        </div>
-                        <button onClick={() => navigate("/setup")} style={{ width:"100%", background:"rgba(249,168,37,0.15)", color:"#f9a825", border:"1px solid rgba(249,168,37,0.3)", borderRadius:10, padding:"8px", fontSize:12, fontWeight:700, cursor:"pointer" }}>
-                          Compléter mon profil →
-                        </button>
-                      </div>
-                    )
-                  )}
-
-                  {/* Profil complet */}
-                  {manquants.length === 0 && completion < 100 && (
-                    <div style={{ fontSize:11, color:"#52b788", textAlign:"center", padding:"6px 0" }}>
-                      ✅ Profil complété à {completion}% — {isPaid ? "Faites un diagnostic photo pour atteindre 100%" : "Passez Premium pour le diagnostic photo"}
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div style={{ textAlign:"center", padding:"10px 0" }}>
-                  <div style={{ fontSize:13, color:"#81c784", marginBottom:6 }}>Configurez votre profil pour un score précis</div>
-                  <button onClick={() => setShowOnboarding(true)} style={{ ...btn.primary, width:"auto", padding:"8px 24px" }}>
-                    🚀 Configurer mon gazon
-                  </button>
-                </div>
-              )}
-            </div>
-          );
-        })()}
+            ))}
+          </div>
+        </div>
 
         {/* ── LIENS LÉGAUX ──────────────────────────────────────────────────── */}
-        <div style={{ display:"flex", justifyContent:"center", flexWrap:"wrap", gap:12, padding:"8px 0 8px" }}>
+        <div style={{ display:"flex", justifyContent:"center", flexWrap:"wrap", gap:12, padding:"8px 0" }}>
           {[
             { label:"Mentions légales", route:"/mentions-legales" },
             { label:"Confidentialité",  route:"/confidentialite" },
             { label:"CGU",              route:"/cgu" },
             { label:"CGV",              route:"/cgv" },
           ].map(({ label, route }) => (
-            <span key={route} onClick={() => navigate(route)} style={{ fontSize:10, color:"#4a7c5c", cursor:"pointer", textDecoration:"underline" }}>
-              {label}
-            </span>
+            <span key={route} onClick={() => navigate(route)} style={{ fontSize:10, color:"#4a7c5c", cursor:"pointer", textDecoration:"underline" }}>{label}</span>
           ))}
         </div>
 
         <div style={{ textAlign:"center", padding:"8px 0 24px" }}>
-          <div style={{ fontSize:10, color:"#2d4a35", fontStyle:"italic" }}>
-            🌿 Mon Gazon 360 — Tant qu'il y a gazon, il y a match
-          </div>
+          <div style={{ fontSize:10, color:"#2d4a35", fontStyle:"italic" }}>🌿 Mon Gazon 360 — Tant qu'il y a gazon, il y a match</div>
         </div>
 
       </div>

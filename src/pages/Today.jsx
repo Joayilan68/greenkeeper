@@ -396,52 +396,6 @@ export default function Today() {
           </div>
         )}
 
-        {/* Recommandations IA */}
-        <div style={card()}>
-          <div style={cardTitle}>
-            <span>🤖 Recommandations IA</span>
-            {isPaid && <button onClick={fetchAI} style={{background:"rgba(76,175,80,0.2)",border:"none",borderRadius:8,padding:"4px 10px",color:"#a5d6a7",fontSize:11,cursor:"pointer"}}>↻</button>}
-          </div>
-          {!isPaid ? (
-            <div style={{textAlign:"center",padding:"16px 0"}}>
-              <div style={{fontSize:28,marginBottom:8}}>🔒</div>
-              <div style={{fontSize:13,color:"#81c784",marginBottom:12}}>Fonctionnalité Premium uniquement</div>
-              <button onClick={()=>navigate("/subscribe")} style={{background:"linear-gradient(135deg,#F59E0B,#D97706)",color:"#1a1a1a",fontWeight:800,border:"none",borderRadius:10,padding:"10px 24px",fontSize:14,cursor:"pointer",width:"auto"}}>Passer Premium 🌿</button>
-            </div>
-          ) : !weather ? (
-            <div style={{textAlign:"center",padding:"16px 0"}}>
-              <div style={{fontSize:28,marginBottom:8}}>📍</div>
-              <div style={{fontSize:13,color:"#81c784",marginBottom:12}}>
-                Activez la géolocalisation pour des recommandations adaptées à votre météo locale.
-              </div>
-              <GeolocButton navigate={navigate} />
-              {aiReco && (
-                <div style={{marginTop:12,fontSize:13,lineHeight:1.8,whiteSpace:"pre-wrap",textAlign:"left"}}>
-                  {aiReco}
-                </div>
-              )}
-              {!aiReco && isPaid && (
-                <div style={{marginTop:8}}>
-                  <button onClick={fetchAI} style={{background:"rgba(76,175,80,0.15)",border:"1px solid rgba(76,175,80,0.3)",borderRadius:10,padding:"8px 18px",color:"#a5d6a7",fontSize:12,cursor:"pointer"}}>
-                    🤖 Recommandations sans météo
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : aiLoading ? (
-            <div style={{textAlign:"center",padding:"20px 0"}}>
-              <div style={{fontSize:28,display:"inline-block",animation:"spin 1.2s linear infinite"}}>🌿</div>
-              <div style={{fontSize:12,color:"#81c784",marginTop:8}}>Analyse en cours...</div>
-            </div>
-          ) : aiReco ? (
-            <div style={{fontSize:13,lineHeight:1.8,whiteSpace:"pre-wrap"}}>{aiReco}</div>
-          ) : (
-            <div style={{fontSize:13,color:"#81c784",textAlign:"center",padding:"12px 0"}}>
-              Appuyez sur ↻ pour obtenir vos recommandations
-            </div>
-          )}
-        </div>
-
         {/* ── JOURNALISER ─────────────────────────────────────────────────── */}
         <div style={{ ...card(), background:"rgba(15,47,31,0.95)", border:"1px solid rgba(102,187,106,0.25)" }}>
           <div style={cardTitle}>
@@ -543,6 +497,42 @@ export default function Today() {
                 ))}
               </div>
             </div>
+          )}
+        </div>
+
+        {/* ── RECOMMANDATIONS IA ───────────────────────────────────────────── */}
+        <div style={card()}>
+          <div style={cardTitle}>
+            <span>🤖 Recommandations IA</span>
+            {isPaid && <button onClick={fetchAI} style={{background:"rgba(76,175,80,0.2)",border:"none",borderRadius:8,padding:"4px 10px",color:"#a5d6a7",fontSize:11,cursor:"pointer"}}>↻</button>}
+          </div>
+          {!isPaid ? (
+            <div style={{textAlign:"center",padding:"16px 0"}}>
+              <div style={{fontSize:28,marginBottom:8}}>🔒</div>
+              <div style={{fontSize:13,color:"#81c784",marginBottom:12}}>Fonctionnalité Premium uniquement</div>
+              <button onClick={()=>navigate("/subscribe")} style={{background:"linear-gradient(135deg,#F59E0B,#D97706)",color:"#1a1a1a",fontWeight:800,border:"none",borderRadius:10,padding:"10px 24px",fontSize:14,cursor:"pointer",width:"auto"}}>Passer Premium 🌿</button>
+            </div>
+          ) : !weather ? (
+            <div style={{textAlign:"center",padding:"16px 0"}}>
+              <div style={{fontSize:28,marginBottom:8}}>📍</div>
+              <div style={{fontSize:13,color:"#81c784",marginBottom:12}}>Activez la géolocalisation pour des recommandations adaptées à votre météo locale.</div>
+              <GeolocButton navigate={navigate} />
+              {aiReco && <div style={{marginTop:12,fontSize:13,lineHeight:1.8,whiteSpace:"pre-wrap",textAlign:"left"}}>{aiReco}</div>}
+              {!aiReco && isPaid && (
+                <div style={{marginTop:8}}>
+                  <button onClick={fetchAI} style={{background:"rgba(76,175,80,0.15)",border:"1px solid rgba(76,175,80,0.3)",borderRadius:10,padding:"8px 18px",color:"#a5d6a7",fontSize:12,cursor:"pointer"}}>🤖 Recommandations sans météo</button>
+                </div>
+              )}
+            </div>
+          ) : aiLoading ? (
+            <div style={{textAlign:"center",padding:"20px 0"}}>
+              <div style={{fontSize:28,display:"inline-block",animation:"spin 1.2s linear infinite"}}>🌿</div>
+              <div style={{fontSize:12,color:"#81c784",marginTop:8}}>Analyse en cours...</div>
+            </div>
+          ) : aiReco ? (
+            <div style={{fontSize:13,lineHeight:1.8,whiteSpace:"pre-wrap"}}>{aiReco}</div>
+          ) : (
+            <div style={{fontSize:13,color:"#81c784",textAlign:"center",padding:"12px 0"}}>Appuyez sur ↻ pour obtenir vos recommandations</div>
           )}
         </div>
 

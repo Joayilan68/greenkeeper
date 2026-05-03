@@ -271,6 +271,100 @@ export default function MyLawn() {
 
       <div style={scroll}>
 
+        {/* ── MON PROFIL ────────────────────────────────────────────────── */}
+        {profile ? (
+          <div style={card()}>
+            <div style={cardTitle}>
+              <span>👤 Mon profil</span>
+              <button onClick={() => navigate("/setup")} style={{ background:"rgba(76,175,80,0.2)", border:"none", borderRadius:8, padding:"4px 10px", color:"#a5d6a7", fontSize:11, cursor:"pointer" }}>
+                ✏️ Modifier
+              </button>
+            </div>
+            {/* Barre complétude */}
+            <div style={{ marginBottom:12 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", fontSize:11, marginBottom:4 }}>
+                <span style={{ color:"#81c784", fontWeight:700 }}>Complétude du profil</span>
+                <span style={{ color: completion >= 90 ? "#a5d6a7" : "#f4a261", fontWeight:800 }}>{completion}%</span>
+              </div>
+              <div style={{ height:6, background:"rgba(255,255,255,0.08)", borderRadius:6, overflow:"hidden" }}>
+                <div style={{ width:`${completion}%`, height:"100%", borderRadius:6, background:"linear-gradient(90deg,#2d6a4f,#52b788)", transition:"width 0.6s" }} />
+              </div>
+              <div style={{ display:"flex", justifyContent:"space-between", fontSize:9, color:"#4a7c5c", marginTop:2 }}>
+                <span>Onboarding ✅</span><span>Profil 90%</span><span>📸 Premium 100%</span>
+              </div>
+            </div>
+            {/* Infos profil */}
+            {(() => {
+              const OBJECTIF_LABELS = { parfait:"Gazon parfait", fonctionnel:"Pelouse fonctionnelle", naturel:"Gazon naturel", renover:"Rénover ma pelouse", creer:"Créer une nouvelle pelouse" };
+              const SOL_LABELS      = { argileux:"Argileux", limoneux:"Limoneux", sableux:"Sableux", calcaire:"Calcaire", humifere:"Humifère", compacte:"Compacté", inconnu:"Non défini" };
+              const EXPO_LABELS     = { ensoleille:"Ensoleillé", "mi-ombre":"Mi-ombre", ombrage:"Ombragé" };
+              const ARROSAGE_LABELS = { automatique:"Arrosage auto", manuel:"Tuyau/manuel", aucun:"Pas d'arrosage", rarement:"Rarement" };
+              const GAZON_LABELS    = { sport:"Sport", ombre:"Ombre / mi-ombre", sec:"Sec / méditerranéen", ornemental:"Ornemental", universel:"Universel", chaud:"Gazon chaud", inconnu:"Non défini" };
+              const phase1 = [
+                profile.objectif  ? { icon:"🎯", val: OBJECTIF_LABELS[profile.objectif] || profile.objectif } : null,
+                profile.pelouse   ? { icon:"🌿", val: GAZON_LABELS[profile.pelouse] || profile.pelouse } : null,
+                profile.surface   ? { icon:"📐", val: `${profile.surface} m²` } : null,
+                profile.ville     ? { icon:"📍", val: profile.ville.split(",")[0] } : null,
+              ].filter(Boolean);
+              const phase2 = [
+                profile.sol && profile.sol !== "N/A" ? { icon:"🏔️", val: SOL_LABELS[profile.sol] || profile.sol } : null,
+                profile.exposition ? { icon:"☀️", val: EXPO_LABELS[profile.exposition] || profile.exposition } : null,
+                profile.arrosage && profile.arrosage !== "N/A" ? { icon:"💧", val: ARROSAGE_LABELS[profile.arrosage] || profile.arrosage } : null,
+                profile.budget     ? { icon:"💰", val: profile.budget } : null,
+              ].filter(Boolean);
+              const manquants = [
+                !profile.sol || profile.sol === "N/A" ? "Sol" : null,
+                !profile.exposition ? "Exposition" : null,
+                !profile.arrosage || profile.arrosage === "N/A" ? "Arrosage" : null,
+              ].filter(Boolean);
+              return (
+                <>
+                  {phase1.length > 0 && (
+                    <div style={{ marginBottom:8 }}>
+                      <div style={{ fontSize:10, fontWeight:700, color:"#4a7c5c", letterSpacing:1, marginBottom:5 }}>PROFIL DE BASE</div>
+                      <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
+                        {phase1.map(({ icon, val }) => (
+                          <span key={val} style={{ background:"rgba(82,183,136,0.1)", border:"1px solid rgba(82,183,136,0.2)", borderRadius:20, padding:"3px 9px", fontSize:11, color:"#95d5b2" }}>{icon} {val}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {phase2.length > 0 && (
+                    <div style={{ marginBottom:8 }}>
+                      <div style={{ fontSize:10, fontWeight:700, color:"#4a7c5c", letterSpacing:1, marginBottom:5 }}>PROFIL DÉTAILLÉ</div>
+                      <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
+                        {phase2.map(({ icon, val }) => (
+                          <span key={val} style={{ background:"rgba(255,255,255,0.06)", border:"1px solid rgba(149,213,178,0.18)", borderRadius:20, padding:"3px 9px", fontSize:11, color:"#e8f5e9" }}>{icon} {val}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {manquants.length > 0 && (
+                    isPaid ? (
+                      <div style={{ background:"rgba(244,162,97,0.08)", border:"1px solid rgba(244,162,97,0.25)", borderRadius:10, padding:"8px 12px" }}>
+                        <div style={{ fontSize:11, fontWeight:700, color:"#f4a261", marginBottom:4 }}>📋 À compléter : {manquants.join(", ")}</div>
+                        <button onClick={() => navigate("/setup")} style={{ width:"100%", background:"rgba(244,162,97,0.2)", color:"#f4a261", border:"1px solid rgba(244,162,97,0.3)", borderRadius:8, padding:"6px", fontSize:11, fontWeight:700, cursor:"pointer" }}>Compléter → +{manquants.length * 8}%</button>
+                      </div>
+                    ) : (
+                      <button onClick={() => navigate("/setup")} style={{ width:"100%", background:"rgba(249,168,37,0.1)", color:"#f9a825", border:"1px solid rgba(249,168,37,0.25)", borderRadius:8, padding:"6px", fontSize:11, fontWeight:700, cursor:"pointer" }}>Compléter mon profil →</button>
+                    )
+                  )}
+                  {manquants.length === 0 && completion < 100 && (
+                    <div style={{ fontSize:11, color:"#52b788", textAlign:"center", padding:"4px 0" }}>
+                      ✅ {isPaid ? "Faites un diagnostic photo pour atteindre 100%" : "Passez Premium pour le diagnostic photo"}
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+          </div>
+        ) : (
+          <div style={{ ...card(), textAlign:"center", padding:16 }}>
+            <div style={{ fontSize:13, color:"#81c784", marginBottom:8 }}>Configurez votre profil pour un score précis</div>
+            <button onClick={() => navigate("/setup")} style={{ background:"linear-gradient(135deg,#43a047,#2e7d32)", color:"#fff", border:"none", borderRadius:10, padding:"10px 24px", fontWeight:800, cursor:"pointer", fontSize:13 }}>🚀 Configurer mon gazon</button>
+          </div>
+        )}
+
         {/* ── BOUTON COMPLÉTER PROFIL ── */}
         <div style={{ marginBottom:12, display:"flex", alignItems:"center", justifyContent:"space-between", background:"rgba(255,255,255,0.05)", border:`1px solid ${completion < 90 ? "rgba(244,162,97,0.25)" : "rgba(82,183,136,0.25)"}`, borderRadius:14, padding:"10px 14px" }}>
           <div>
