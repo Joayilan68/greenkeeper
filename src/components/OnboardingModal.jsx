@@ -49,7 +49,7 @@ const GAZONS_STANDARD = [
   { id: "ornemental",  icon: "🏡", label: "Ornemental",                desc: "Fétuque fine, Ray-grass — pelouse décorative" },
   { id: "universel",   icon: "🔄", label: "Universel / mélange",       desc: "Mix standard — grande surface, sac générique" },
   { id: "chaud",       icon: "🌴", label: "Gazon chaud",               desc: "Kikuyu, Bermuda, Zoysia — climat méditerranéen" },
-  { id: "synthetique", icon: "🏟️", label: "Gazon synthétique",         desc: "Entretien spécifique — nettoyage, brossage" },
+  { id: "synthetique_removed", skip: true }, // supprimé
   { id: "inconnu",     icon: "🤷", label: "Je ne sais pas",            desc: "Recommandation automatique selon votre profil" },
 ];
 
@@ -193,7 +193,7 @@ export default function OnboardingModal({ onComplete }) {
   const geoDebounceRef = useRef(null);
   const geoRequestRef  = useRef(0); // anti race condition
 
-  const isSynthetique = gazon === "synthetique";
+  const isSynthetique = false; // option supprimée
   const isCreer       = objectif === "creer";
 
   // locOk : GPS validé, OU ville sélectionnée via autocomplete, OU saisie libre offline
@@ -317,11 +317,11 @@ export default function OnboardingModal({ onComplete }) {
     const profile = {
       objectif, pelouse: gazon, surface: parseInt(surface),
       ville: finalCity, lat: finalLat, lon: finalLon, usages,
-      isSynthetique, isCreer,
-      cityVerified: locStatus === "success" || geoSelected !== null, // flag qualité
-      sol:        isSynthetique ? "N/A" : null,
+      isCreer,
+      cityVerified: locStatus === "success" || geoSelected !== null,
+      sol:        null,
       exposition: null,
-      arrosage:   isSynthetique ? "N/A" : null,
+      arrosage:   null,
       tondeuse:   [],
       materiel:   [],
       budget:     null,
@@ -359,7 +359,7 @@ export default function OnboardingModal({ onComplete }) {
   const GAZON_LABEL_MAP = {
     sport: "Sport / résistant", ombre: "Ombre / mi-ombre", sec: "Sec / méditerranéen",
     ornemental: "Ornemental", universel: "Universel / mélange", chaud: "Gazon chaud",
-    synthetique: "Gazon synthétique", inconnu: "Recommandation automatique",
+    inconnu: "Recommandation automatique",
   };
 
   const [animKey, setAnimKey] = useState(0);
@@ -384,11 +384,9 @@ export default function OnboardingModal({ onComplete }) {
     setAnimKey(k => k + 1);
   };
 
-  const gazonLabel = isSynthetique
-    ? "Gazon synthétique"
-    : isCreer
-      ? `${GAZON_LABEL_MAP[gazon] || GAZONS_CREER.find(g => g.id === gazon)?.label || gazon} (à créer)`
-      : GAZON_LABEL_MAP[gazon] || GAZONS_STANDARD.find(g => g.id === gazon)?.label || gazon;
+  const gazonLabel = isCreer
+    ? `${GAZON_LABEL_MAP[gazon] || GAZONS_CREER.find(g => g.id === gazon)?.label || gazon} (à créer)`
+    : GAZON_LABEL_MAP[gazon] || GAZONS_STANDARD.find(g => g.id === gazon)?.label || gazon;
 
   return (
     <div style={{
@@ -455,16 +453,11 @@ export default function OnboardingModal({ onComplete }) {
             </SectionTitle>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
-              {(isCreer ? GAZONS_CREER : GAZONS_STANDARD).map(g => (
+              {(isCreer ? GAZONS_CREER : GAZONS_STANDARD).filter(g => !g.skip).map(g => (
                 <OptionCard key={g.id} selected={gazon === g.id} onClick={() => setGazon(g.id)} icon={g.icon} label={g.label} desc={g.desc} />
               ))}
             </div>
 
-            {isSynthetique && (
-              <InfoBanner color="orange">
-                🏟️ Pour le gazon synthétique, vos conseils porteront sur le nettoyage, le brossage, la désinfection et la gestion des odeurs. Les questions sur le sol, la tonte et l'arrosage ne s'appliqueront pas — votre profil Phase 2 sera adapté en conséquence.
-              </InfoBanner>
-            )}
             {isCreer && gazon && gazon !== "mixte" && (
               <InfoBanner color="green">
                 ✨ Excellent choix ! Nous adapterons votre planning de création : préparation du sol, semis, premier arrosage et premières tontes.
@@ -629,11 +622,6 @@ export default function OnboardingModal({ onComplete }) {
                 ✨ L'usage prévu nous aide à choisir la variété et le niveau de résistance adaptés dès la création.
               </InfoBanner>
             )}
-            {isSynthetique && (
-              <InfoBanner color="orange">
-                🏟️ L'usage détermine la fréquence de nettoyage, de désinfection et les produits recommandés pour votre gazon synthétique.
-              </InfoBanner>
-            )}
 
             <SectionTitle>
               {isCreer ? "Quel usage est prévu pour cette pelouse ?" : "Comment utilisez-vous votre pelouse ?"}
@@ -735,7 +723,7 @@ export default function OnboardingModal({ onComplete }) {
               <div style={{ fontSize: 12, fontWeight: 800, color: C.lightGreen, marginBottom: 12 }}>📋 Votre profil en cours</div>
               {[
                 ["🎯 Objectif",  OBJECTIFS.find(o => o.id === objectif)?.label || "—"],
-                [isSynthetique ? "🏟️ Gazon" : isCreer ? "🌱 À créer" : "🌱 Gazon", gazonLabel],
+                [isCreer ? "🌱 À créer" : "🌱 Gazon", gazonLabel],
                 ["📐 Surface",   surface ? `${surface} m²` : "—"],
                 ["📍 Ville",     locStatus === "success" ? locName : manualCity || "—"],
                 ["🏡 Usage",     usages.length > 0 ? usages.map(u => USAGES.find(x => x.id === u)?.label).join(", ") : "—"],
@@ -747,11 +735,6 @@ export default function OnboardingModal({ onComplete }) {
               ))}
             </div>
 
-            {isSynthetique && (
-              <InfoBanner color="orange">
-                🏟️ Dans votre profil, vous pourrez renseigner votre équipement de nettoyage (brosse, souffleur, nettoyeur HP) pour des conseils encore plus précis.
-              </InfoBanner>
-            )}
             {isCreer && (
               <InfoBanner color="green">
                 ✨ Votre profil de création inclura : type de sol, exposition, méthode de semis et planning d'implantation.

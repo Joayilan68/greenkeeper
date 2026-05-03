@@ -12,7 +12,6 @@ const STEPS = [
     { v:"sec",         label:"🏜️ Sec / méditerranéen",   desc:"Résistant à la sécheresse" },
     { v:"universel",   label:"🌿 Universel / mélange",    desc:"Polyvalent, standard" },
     { v:"chaud",       label:"☀️ Gazon chaud",           desc:"Climat chaud, espèces adaptées" },
-    { v:"synthetique", label:"🟩 Gazon synthétique",      desc:"Pas d'arrosage ni tonte" },
     { v:"inconnu",     label:"🤷 Je ne sais pas",         desc:"Recommandation automatique" },
   ]},
   { title:"Type de sol", field:"sol", options:[
@@ -30,13 +29,13 @@ const STEPS = [
     { v:"ombrage",    label:"🌥️ Ombragé",    desc:"Moins de 3h de soleil/jour" },
   ]},
   { title:"Surface de la pelouse", field:"surface", isInput:true, placeholder:"Ex : 200", unit:"m²" },
-  { title:"Mode d'arrosage", field:"arrosage", skipIfSynth:true, options:[
+  { title:"Mode d'arrosage", field:"arrosage", options:[
     { v:"automatique", label:"🤖 Arrosage automatique",       desc:"Programmateur ou goutte-à-goutte" },
     { v:"manuel",      label:"🪣 Tuyau / manuel",              desc:"Arrosage à la main" },
     { v:"aucun",       label:"❌ Pas d'arrosage",              desc:"" },
     { v:"rarement",    label:"🤷 Rarement / je ne sais pas",  desc:"" },
   ]},
-  { title:"Tondeuse disponible", field:"tondeuse", isMulti:true, skipIfSynth:true, options:[
+  { title:"Tondeuse disponible", field:"tondeuse", isMulti:true, options:[
     { v:"electrique_filaire",  label:"🔌 Électrique filaire" },
     { v:"electrique_batterie", label:"🔋 Électrique batterie" },
     { v:"thermique",           label:"⛽ Thermique" },
@@ -75,10 +74,7 @@ export default function Setup() {
     arrosage:"", tondeuse:[], materiel:[], budget:""
   });
 
-  const isSynth = tmp.pelouse === "synthetique";
-
-  // Filtrer les étapes selon type de gazon
-  const stepsActifs = STEPS.filter(s => !(isSynth && s.skipIfSynth));
+  const stepsActifs = STEPS;
   const totalSteps  = stepsActifs.length;
   const stepActuel  = stepsActifs[step];
   const canNext     = stepActuel?.isMulti || !!tmp[stepActuel?.field];
