@@ -33,7 +33,7 @@ async function sendBugAlert(type, message, details = {}, severity = "error") {
   if (!shouldSendAlert(type)) return; // cooldown actif
 
   try {
-    await fetch("/api/send-alert", {
+    await fetch("/api/send?type=alert", {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ type, message, details, severity })
