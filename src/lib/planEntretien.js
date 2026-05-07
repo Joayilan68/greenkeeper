@@ -113,6 +113,7 @@ export function detecterMaladie(weather, profile, month) {
 // ── Helpers historique ────────────────────────────────────────────────────────
 export function daysSince(history, keywords) {
   if (!history?.length) return 999;
+  if (!Array.isArray(keywords) || !keywords.length) return 999;
   const matches = history.filter(h =>
     keywords.some(kw => h.action?.toLowerCase().includes(kw.toLowerCase()))
   );
@@ -363,6 +364,7 @@ export const ACTIONS_PLAN = [
       return { blocked: false };
     },
     detail:         () => "Élimine le feutre — améliore densité et absorption",
+    keywords:       ["scarif", "scarification"],
     needsProduct:   false,
     exclusive:      ["aeration"],
     exclusiveDelai: 30,
