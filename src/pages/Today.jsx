@@ -113,7 +113,8 @@ function GeolocButton({ navigate }) {
 
 export default function Today() {
   const navigate = useNavigate();
-  const { weather, alerts } = useWeather();
+  const { weather, alerts: rawAlerts } = useWeather();
+  const alerts = Array.isArray(rawAlerts) ? rawAlerts : [];
   const { profile }         = useProfile();
   const { history, addEntry } = useHistory();
   const { getToken } = useAuth();
@@ -151,13 +152,13 @@ export default function Today() {
 
   // ── Calcul des statuts (source unique planEntretien.js) ───────────────────
   // Déclaré AVANT fetchAI pour éviter la TDZ (Temporal Dead Zone) en prod Vite
-  const actionStatuses = buildActions(profile, weather, history, score, month, arros);
-  const recommended = actionStatuses.filter(a => a.status === "recommended");
+  const actionStatuses = (buildActions(profile, weather, history, score, month, arros) || []);
+  const recommended = actionStatuses.filter(a => a?.status === "recommended");
   const prevoyez    = actionStatuses.filter(a =>
-    a.status === "done_today" || a.status === "too_soon" ||
-    a.status === "blocked"    || a.status === "exclusive"
+    a?.status === "done_today" || a?.status === "too_soon" ||
+    a?.status === "blocked"    || a?.status === "exclusive"
   );
-  const pasPrevu    = actionStatuses.filter(a => a.status === "off_season");
+  const pasPrevu    = actionStatuses.filter(a => a?.status === "off_season");
 
   // ── Clé localStorage IA du jour ─────────────────────────────────────────
   const AI_RECO_KEY = "mg360_ai_reco_today";

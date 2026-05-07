@@ -226,7 +226,8 @@ export default function MyLawn() {
   // ── Conseil du mois (nouveau) ──
   const { recommandationPrincipale } = useRecommandations(profile, score, weather, history);
 
-  const historyMinus7      = history.filter(h => {
+  const safeHistory = Array.isArray(history) ? history : [];
+  const historyMinus7      = safeHistory.filter(h => {
     const parts = h.date?.split('/');
     if (!parts || parts.length !== 3) return true; // garder si date invalide
     const d = new Date(parts[2], parts[1]-1, parts[0]);
@@ -234,7 +235,7 @@ export default function MyLawn() {
   });
   const { score: scoreLastWeek } = calcLawnScore({ weather, profile, history: historyMinus7, month });
   const scoreDiff          = score - scoreLastWeek;
-  const countAction        = (kw) => history.filter(h => h.action.toLowerCase().includes(kw)).length;
+  const countAction        = (kw) => safeHistory.filter(h => h?.action?.toLowerCase().includes(kw)).length;
   const actionsDisponibles = issues.reduce((acc, i) => acc + Math.abs(i.impact), 0);
   const projectionScore    = Math.min(100, score + Math.round(actionsDisponibles * 0.6));
   const projectionDays     = issues.length <= 2 ? 7 : 14;
@@ -242,7 +243,7 @@ export default function MyLawn() {
   const scoreHistory = Array.from({ length: 7 }, (_, i) => {
     const daysAgo = 6 - i;
     if (daysAgo === 0) return score;
-    const histFiltered = history.filter(h => {
+    const histFiltered = safeHistory.filter(h => {
       const parts = h.date?.split('/');
       if (!parts || parts.length !== 3) return false;
       const d = new Date(parts[2], parts[1]-1, parts[0]);

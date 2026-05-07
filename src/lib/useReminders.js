@@ -66,12 +66,14 @@ export function useReminders(syncFromReminders) {
     } catch {}
   };
 
-  const activeCount = Object.values(reminders).filter(r => r.enabled).length;
+  const activeCount = Object.values(reminders || {}).filter(r => r?.enabled).length;
 
   // Vérifie quels rappels sont dus aujourd'hui
   const getDueReminders = (history = []) => {
+    if (!reminders || typeof reminders !== "object") return [];
+    const safeHistory = Array.isArray(history) ? history : [];
     const daysSinceAction = (keyword) => {
-      const found = history.filter(h => h.action?.toLowerCase().includes(keyword));
+      const found = safeHistory.filter(h => h?.action?.toLowerCase().includes(keyword));
       if (!found.length) return 999;
       const latest = found[found.length - 1];
       try {

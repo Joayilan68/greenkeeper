@@ -124,8 +124,10 @@ export function useConsents() {
   // ── Sync push_active / email_active depuis les rappels ───────────────────
   // Appelé par useReminders après chaque changement de canal
   const syncFromReminders = useCallback(async (reminders) => {
-    const pushActive  = Object.values(reminders).some(r => r.enabled && r.push);
-    const emailActive = Object.values(reminders).some(r => r.enabled && r.email);
+    if (!reminders || typeof reminders !== "object") return;
+    const vals = Object.values(reminders);
+    const pushActive  = vals.some(r => r?.enabled && r?.push);
+    const emailActive = vals.some(r => r?.enabled && r?.email);
 
     const patch = {
       push_active:   pushActive,
