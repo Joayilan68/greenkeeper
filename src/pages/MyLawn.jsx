@@ -542,10 +542,19 @@ export default function MyLawn() {
               {/* Hors saison — compacts */}
               {horsS.length > 0 && (
                 <div style={{ marginTop:10, paddingTop:8, borderTop:"1px solid rgba(255,255,255,0.08)" }}>
-                  <div style={{ fontSize:10, color:"#81c784", fontWeight:800, letterSpacing:1, marginBottom:8 }}>PAS PRÉVU CE MOIS</div>
+                  <div style={{ fontSize:10, color:"#4a7c5c", fontWeight:800, letterSpacing:1, marginBottom:8 }}>HORS CALENDRIER CE MOIS</div>
                   <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
-                    {horsS.map(({ action }) => (
-                      <span key={action.id} style={{ fontSize:12, color:"#81c784", background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:8, padding:"4px 11px" }}>
+                    {horsS.filter(({ action }) => {
+                      // Afficher uniquement les actions dont les mois valides sont proches (±2 mois)
+                      const moisValides = action.getMois?.(zone, profile?.sol, false, profile) || [];
+                      if (!moisValides.length) return false;
+                      const distMin = Math.min(...moisValides.map(m => {
+                        const d = Math.abs(m - month);
+                        return Math.min(d, 12 - d);
+                      }));
+                      return distMin <= 2;
+                    }).map(({ action }) => (
+                      <span key={action.id} style={{ fontSize:12, color:"#4a7c5c", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:8, padding:"4px 11px" }}>
                         {action.label}
                       </span>
                     ))}
@@ -567,12 +576,12 @@ export default function MyLawn() {
               Activez les rappels souhaités. Les alertes sont envoyées chaque matin à 8h si le délai est dépassé.
             </div>
             {[
-              { id:"tonte",      icon:"✂️", label:"Tonte",               defaultDays:7  },
+              { id:"tonte",      icon:"✂️", label:"Tonte",               defaultDays:5  },
               { id:"arrosage",   icon:"💧", label:"Arrosage",             defaultDays:3  },
-              { id:"engrais",    icon:"🌱", label:"Engrais",              defaultDays:30 },
+              { id:"engrais",    icon:"🌱", label:"Engrais",              defaultDays:45 },
               { id:"fongicide",  icon:"💊", label:"Traitement fongicide", defaultDays:14 },
               { id:"aeration",   icon:"🌀", label:"Aération",             defaultDays:90 },
-              { id:"desherbage", icon:"🪴", label:"Désherbage",           defaultDays:14 },
+              { id:"desherbage", icon:"🪴", label:"Désherbage",           defaultDays:21 },
             ].map(type => {
               const r = reminders[type.id] || {};
               const isActive = !!r.enabled;
@@ -587,29 +596,11 @@ export default function MyLawn() {
                     <span style={{ fontSize:22, minWidth:28 }}>{type.icon}</span>
                     <div style={{ flex:1 }}>
                       <div style={{ fontSize:13, fontWeight:700, color: isActive ? "#F1F8F2" : "#81c784" }}>{type.label}</div>
-                      {isActive && (
-                        <div style={{ fontSize:11, color:"#4a7c5c", marginTop:2 }}>Tous les {r.days} jours</div>
-                      )}
                     </div>
                     <div onClick={() => { toggle(type.id); syncReminders(); }} style={{ width:40, height:22, borderRadius:11, cursor:"pointer", background: isActive ? "#66BB6A" : "rgba(255,255,255,0.15)", position:"relative", transition:"background 0.3s", flexShrink:0 }}>
                       <div style={{ width:16, height:16, borderRadius:"50%", background:"#fff", position:"absolute", top:3, left: isActive ? 21 : 3, transition:"left 0.3s" }} />
                     </div>
                   </div>
-                  {isActive && (
-                    <div style={{ marginTop:8, paddingLeft:38 }}>
-                      <div style={{ fontSize:12, color:"#a5d6a7", marginBottom:4, fontWeight:600 }}>
-                        Tous les <span style={{ fontSize:15, color:"#F1F8F2", fontWeight:800 }}>{r.days || type.defaultDays}</span> jours
-                      </div>
-                      <input type="range" min={1} max={90} value={r.days || type.defaultDays} onChange={e => { setDays(type.id, e.target.value); syncReminders(); }} style={{ width:"100%", accentColor:"#66BB6A" }} />
-                      <div style={{ display:"flex", gap:4, marginTop:6 }}>
-                        {[{l:"3j",v:3},{l:"7j",v:7},{l:"14j",v:14},{l:"30j",v:30},{l:"90j",v:90}].map(({l,v}) => (
-                          <button key={v} onClick={() => { setDays(type.id, v); syncReminders(); }} style={{ flex:1, background: (r.days||type.defaultDays)===v ? "rgba(102,187,106,0.35)" : "rgba(255,255,255,0.1)", border:`1px solid ${(r.days||type.defaultDays)===v ? "#66BB6A" : "rgba(255,255,255,0.2)"}`, borderRadius:6, padding:"5px 2px", color:(r.days||type.defaultDays)===v ? "#a5d6a7" : "#e8f5e9", fontSize:11, fontWeight:(r.days||type.defaultDays)===v ? 700 : 400, cursor:"pointer" }}>
-                            {l}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
               );
             })}
@@ -619,78 +610,6 @@ export default function MyLawn() {
             </div>
           </div>
         )}
-
-        {/* ── 8. ÉVOLUTION DU SCORE ── */}
-        <div style={card()}>
-          <div style={cardTitle}>
-            <span>📈 Évolution du score</span>
-            <div style={{ display:"flex", gap:6 }}>
-              {["7j","30j"].map(p => (
-                <button key={p} onClick={() => setPeriod(p)} style={{ background: period===p ? "rgba(76,175,80,0.3)" : "none", border:`1px solid ${period===p ? "#43a047" : "rgba(255,255,255,0.2)"}`, borderRadius:8, padding:"2px 8px", color: period===p ? "#a5d6a7" : "#81c784", fontSize:11, cursor:"pointer" }}>{p}</button>
-              ))}
-            </div>
-          </div>
-          <div style={{ position:"relative", height:80, marginTop:8 }}>
-            <svg width="100%" height="80" viewBox="0 0 300 80" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="scoreGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#66BB6A" stopOpacity="0.4"/>
-                  <stop offset="100%" stopColor="#66BB6A" stopOpacity="0"/>
-                </linearGradient>
-              </defs>
-              {(() => {
-                const pts    = scoreHistory;
-                const range  = maxScore - minScore || 1;
-                const coords = pts.map((v, i) => ({ x: (i / (pts.length-1)) * 300, y: 70 - ((v - minScore) / range) * 60 }));
-                const pathD  = coords.map((p,i) => `${i===0?"M":"L"} ${p.x} ${p.y}`).join(" ");
-                const areaD  = pathD + ` L 300 70 L 0 70 Z`;
-                return (<>
-                  <path d={areaD} fill="url(#scoreGrad)"/>
-                  <path d={pathD} fill="none" stroke="#66BB6A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  {coords.map((p,i) => <circle key={i} cx={p.x} cy={p.y} r="3" fill="#43a047"/>)}
-                  <text x={coords[coords.length-1].x - 15} y={coords[coords.length-1].y - 8} fill="#a5d6a7" fontSize="10" fontWeight="bold">{score}</text>
-                </>);
-              })()}
-            </svg>
-          </div>
-          <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:"#81c784", marginTop:4 }}><span>Il y a 7 jours</span><span>Aujourd'hui</span></div>
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, marginTop:12 }}>
-            {[{ icon:"✂️", label:"Tontes", val:countAction("tonte") },{ icon:"💧", label:"Arrosages", val:countAction("arrosage") },{ icon:"🌱", label:"Engrais", val:countAction("engrais") }].map(({ icon, label, val }) => (
-              <div key={label} style={{ background:"rgba(255,255,255,0.05)", borderRadius:10, padding:"8px", textAlign:"center" }}>
-                <div style={{ fontSize:18 }}>{icon}</div>
-                <div style={{ fontSize:16, fontWeight:800, color:"#a5d6a7" }}>{val}</div>
-                <div style={{ fontSize:10, color:"#81c784" }}>{label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ── 9. DERNIER DIAGNOSTIC ── */}
-        <div style={{ ...card(), background:"linear-gradient(135deg,rgba(25,118,210,0.12),rgba(13,43,26,0.6))", border:"1px solid rgba(33,150,243,0.3)" }}>
-          <div style={cardTitle}>
-            <span>🔬 Diagnostic IA</span>
-            {!isPaid && <span style={{ fontSize:10, color:"#f9a825", background:"rgba(249,168,37,0.15)", borderRadius:20, padding:"2px 8px" }}>🔒 Premium</span>}
-          </div>
-          {isPaid ? (
-            <div style={{ textAlign:"center", padding:"8px 0" }}>
-              <div style={{ fontSize:48, marginBottom:8 }}>📸</div>
-              <div style={{ fontSize:14, fontWeight:700, color:"#F1F8F2", marginBottom:6 }}>Analysez votre gazon en photo</div>
-              <div style={{ fontSize:12, color:"#81c784", lineHeight:1.6, marginBottom:16 }}>
-                Détection des maladies, carences et zones mortes en moins de 10 secondes.
-              </div>
-              <button onClick={() => navigate("/diagnostic")} style={{background:"linear-gradient(135deg,#43A047,#2E7D32)",color:"#fff",border:"none",borderRadius:10,cursor:"pointer",width:"auto",padding:"12px 28px",fontSize:14}}>🔬 Lancer un diagnostic →</button>
-            </div>
-          ) : (
-            <div style={{ padding:"8px 0" }}>
-              <div style={{ display:"flex", gap:8, flexDirection:"column", marginBottom:16 }}>
-                {["📈 +15 pts de score en moyenne après action","⚡ Résultat en moins de 10 secondes","🏆 +100 GreenPoints garantis"].map(f => (
-                  <div key={f} style={{ fontSize:12, color:"#81c784" }}>✓ {f}</div>
-                ))}
-              </div>
-              <button onClick={() => navigate("/subscribe")} style={{background:"linear-gradient(135deg,#F59E0B,#D97706)",color:"#1a1a1a",fontWeight:800,border:"none",borderRadius:10,cursor:"pointer",fontSize:13,padding:"12px",width:"100%"}}>⭐ Passer Premium — 4,99€/mois</button>
-            </div>
-          )}
-        </div>
 
 
         {/* ── 9b. CALIBRAGE ARROSEUR ── */}
@@ -855,20 +774,6 @@ export default function MyLawn() {
             <button onClick={() => navigate("/subscribe")} style={{background:"linear-gradient(135deg,#F59E0B,#D97706)",color:"#1a1a1a",fontWeight:800,border:"none",borderRadius:10,cursor:"pointer",marginTop:14,padding:"12px 28px",fontSize:14}}>⭐ Améliorer mon gazon — 4,99€/mois</button>
           </div>
         )}
-
-        {/* ── 12. PROJECTION PERSONNALISÉE (Premium) ── */}
-        {isPaid && (
-          <div style={{ ...card(), background:"linear-gradient(135deg, rgba(27,94,32,0.3), rgba(13,43,26,0.5))", border:"1px solid rgba(165,214,167,0.3)", textAlign:"center", padding:20 }}>
-            <div style={{ fontSize:11, color:"#81c784", fontWeight:700, letterSpacing:1, marginBottom:8 }}>📈 PROJECTION PERSONNALISÉE</div>
-            <div style={{ fontSize:14, color:"#e8f5e9", lineHeight:1.6 }}>Si tu suis le plan cette semaine</div>
-            <div style={{ fontSize:32, fontWeight:900, color:"#a5d6a7", margin:"8px 0" }}>{projectionScore}</div>
-            <div style={{ fontSize:13, color:"#81c784" }}>Score estimé dans <strong style={{ color:"#a5d6a7" }}>{projectionDays} jours</strong></div>
-            <div style={{ fontSize:12, color:"#f9a825", marginTop:8 }}>+{projectionScore - score} pts en suivant le plan ↗</div>
-          </div>
-        )}
-
-        <div style={{ paddingBottom:32 }} />
-      </div>
     </div>
   );
 }

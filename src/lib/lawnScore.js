@@ -91,174 +91,154 @@ export function calcLawnScore({ weather, profile, history = [], month }) {
     };
   }
 
-  // ── 1. TONTE — catégorie la plus fréquente (max -25 pts) ─────────────────
-  // Intervalles : été 4-5j, printemps/automne 7j, hiver 14j
-  const tonteFreq = month >= 5 && month <= 8 ? 5 : month >= 3 && month <= 10 ? 7 : 14;
+  // ── 1. TONTE — 40% du score Entretien ───────────────────────────────────
+  // KB v4 : printemps=5j, été=4j, automne=7j, hiver=14j
+  const tonteFreq     = month >= 5 && month <= 8 ? 4 : month >= 3 && month <= 10 ? 5 : 14;
   const derniereTonte = lastAction(history, "tonte");
 
   if (derniereTonte > tonteFreq * 3) {
-    score -= 25; deductEntretien += 25;
+    deductEntretien += 25;
     issues.push({ icon:"✂️", label:`Tonte abandonnée depuis ${derniereTonte}j`, impact:-25 });
   } else if (derniereTonte > tonteFreq * 2) {
-    score -= 18; deductEntretien += 18;
+    deductEntretien += 18;
     issues.push({ icon:"✂️", label:`Tonte très en retard (${derniereTonte}j)`, impact:-18 });
   } else if (derniereTonte > tonteFreq + 2) {
-    score -= 10; deductEntretien += 10;
+    deductEntretien += 10;
     issues.push({ icon:"✂️", label:"Tonte en retard", impact:-10 });
   } else if (derniereTonte <= tonteFreq) {
     strengths.push({ icon:"✂️", label:"Tonte régulière ✓" });
   }
 
-  // ── 2. ENGRAIS (max -15 pts) ──────────────────────────────────────────────
-  // Pénalité si le mois en cours recommande un engrais ET qu'il n'a pas été appliqué
+  // ── 2. ENGRAIS — KB v4 : délai min 45j, bloqué si >90j ─────────────────
+  // L'engrais est évalué uniquement si le plan mensuel en prévoit un
   if (plan?.engrais) {
     const dernierEngrais = lastAction(history, "engrais");
-    if (dernierEngrais > 60) {
-      score -= 15; deductNutriments += 15;
-      issues.push({ icon:"🌱", label:"Engrais du mois non appliqué depuis 60j+", impact:-15 });
+    if (dernierEngrais > 90) {
+      deductNutriments += 15;
+      issues.push({ icon:"🌱", label:`Aucun engrais depuis ${dernierEngrais}j`, impact:-15 });
     } else if (dernierEngrais > 45) {
-      score -= 8; deductNutriments += 8;
-      issues.push({ icon:"🌱", label:"Engrais en retard", impact:-8 });
+      deductNutriments += 8;
+      issues.push({ icon:"🌱", label:"Engrais en retard (délai 45j min)", impact:-8 });
     } else {
       strengths.push({ icon:"🌱", label:"Fertilisation à jour ✓" });
     }
-  } else {
-    // Hors saison engrais — vérifier quand même le dernier (>90j = carence)
-    const dernierEngrais = lastAction(history, "engrais");
-    if (dernierEngrais > 90 && month >= 3 && month <= 10) {
-      score -= 6; deductNutriments += 6;
-      issues.push({ icon:"🌱", label:`Aucun engrais depuis ${dernierEngrais}j`, impact:-6 });
-    }
   }
 
-  // ── 3. AÉRATION (max -10 pts) ─────────────────────────────────────────────
+  // ── 3. AÉRATION — KB v4 : délai min 90j ─────────────────────────────────
   if (plan?.aeration) {
     const derniereAeration = lastAction(history, "aération");
     if (derniereAeration > 90) {
-      score -= 10; deductEntretien += 10;
+      deductEntretien += 10;
       issues.push({ icon:"🌀", label:"Aération recommandée — sol compacté", impact:-10 });
     } else if (derniereAeration > 60) {
-      score -= 5; deductEntretien += 5;
+      deductEntretien += 5;
       issues.push({ icon:"🌀", label:"Aération à prévoir", impact:-5 });
     } else {
       strengths.push({ icon:"🌀", label:"Aération effectuée ✓" });
     }
   }
 
-  // ── 4. VERTICUT / SCARIFICATION (max -7 pts) ──────────────────────────────
+  // ── 4. VERTICUT — KB v4 : délai min 90j ─────────────────────────────────
   if (plan?.verticut) {
     const dernierVerticut = lastAction(history, "verticut");
     if (dernierVerticut > 120) {
-      score -= 7; deductEntretien += 7;
+      deductEntretien += 7;
       issues.push({ icon:"🔧", label:"Verticut recommandé ce mois", impact:-7 });
     } else if (dernierVerticut > 90) {
-      score -= 3; deductEntretien += 3;
+      deductEntretien += 3;
       issues.push({ icon:"🔧", label:"Verticut à prévoir", impact:-3 });
     } else {
       strengths.push({ icon:"🔧", label:"Verticut effectué ✓" });
     }
   }
 
-  // ── 5. ARROSAGE (max -12 pts) ─────────────────────────────────────────────
+  // ── 5. ARROSAGE — KB v4 : selon météo et sol ────────────────────────────
   if (plan?.arrosage_base > 0) {
     const dernierArrosage = lastAction(history, "arrosage");
     if (dernierArrosage > 10 && (!weather || weather.precip < 5)) {
-      score -= 12; deductEntretien += 12;
+      deductEntretien += 12;
       issues.push({ icon:"💧", label:"Arrosage insuffisant", impact:-12 });
     } else if (dernierArrosage > 5 && (!weather || weather.precip < 3)) {
-      score -= 5; deductEntretien += 5;
+      deductEntretien += 5;
       issues.push({ icon:"💧", label:"Arrosage en retard", impact:-5 });
     } else if (dernierArrosage <= 3) {
       strengths.push({ icon:"💧", label:"Arrosage régulier ✓" });
     }
   }
 
-  // ── 6. MÉTÉO (max -35 pts) ────────────────────────────────────────────────
+  // ── 6. MÉTÉO ─────────────────────────────────────────────────────────────
   if (weather) {
-    // Canicule
     if (weather.temp_max >= 35) {
-      score -= 15; deductMeteo += 15;
+      deductMeteo += 15;
       issues.push({ icon:"🔥", label:`Canicule ${weather.temp_max}°C — stress hydrique sévère`, impact:-15 });
     } else if (weather.temp_max >= 30) {
-      score -= 8; deductMeteo += 8;
+      deductMeteo += 8;
       issues.push({ icon:"☀️", label:`Forte chaleur ${weather.temp_max}°C`, impact:-8 });
     } else if (weather.temp_max >= 26) {
-      score -= 3; deductMeteo += 3;
+      deductMeteo += 3;
       issues.push({ icon:"☀️", label:"Chaleur modérée", impact:-3 });
     }
-
-    // Gel
     if (weather.temp_min <= -2) {
-      score -= 12; deductMeteo += 12;
+      deductMeteo += 12;
       issues.push({ icon:"❄️", label:"Gel — stress racinaire sévère", impact:-12 });
     } else if (weather.temp_min <= 2) {
-      score -= 6; deductMeteo += 6;
+      deductMeteo += 6;
       issues.push({ icon:"🌡️", label:"Risque de gel", impact:-6 });
     }
-
-    // Sécheresse sans arrosage
     if (weather.precip < 1 && weather.temp_max > 20 && lastAction(history, "arrosage") > 4) {
-      score -= 10; deductMeteo += 10;
+      deductMeteo += 10;
       issues.push({ icon:"🌵", label:"Sécheresse sans arrosage", impact:-10 });
     }
-
-    // Risque fongique (conditions humides + chaleur)
     if (weather.humidity > 80 && weather.temp_max > 18) {
-      score -= 10; deductMeteo += 10;
+      deductMeteo += 10;
       issues.push({ icon:"🦠", label:"Conditions fongiques critiques", impact:-10 });
     } else if (weather.humidity > 70 && weather.temp_max > 15) {
-      score -= 5; deductMeteo += 5;
+      deductMeteo += 5;
       issues.push({ icon:"🦠", label:"Risque fongique modéré", impact:-5 });
     }
-
-    // Traitement fongicide récent = atténuation
     if (lastAction(history, "fongicide") <= 14) {
-      score += 3;
       strengths.push({ icon:"💊", label:"Traitement fongicide récent ✓" });
     }
   }
 
-  // ── 7. PROFIL SOL (max -12 pts) ───────────────────────────────────────────
+  // ── 7. SOL ───────────────────────────────────────────────────────────────
   if (profile?.sol) {
     if (profile.sol === "argileux") {
-      // Déduction permanente sauf si aération récente
-      const aerRecente = lastAction(history, "aération") <= 60;
-      if (!aerRecente) {
-        score -= 8; deductSol += 8;
+      if (lastAction(history, "aération") > 60) {
+        deductSol += 8;
         issues.push({ icon:"🏔️", label:"Sol argileux — compaction sans aération récente", impact:-8 });
       } else {
         strengths.push({ icon:"🌀", label:"Aération récente — compaction compensée ✓" });
       }
     }
     if (profile.sol === "compacte") {
-      const aerRecente = lastAction(history, "aération") <= 45;
-      if (!aerRecente) {
-        score -= 10; deductSol += 10;
+      if (lastAction(history, "aération") > 45) {
+        deductSol += 10;
         issues.push({ icon:"🧱", label:"Sol compacté — aération urgente", impact:-10 });
       } else {
         strengths.push({ icon:"🌀", label:"Aération récente sur sol compacté ✓" });
       }
     }
     if (profile.sol === "sableux" && weather?.temp_max > 22) {
-      score -= 5; deductSol += 5;
+      deductSol += 5;
       issues.push({ icon:"🏖️", label:"Sol sableux — sèche rapidement par chaleur", impact:-5 });
     }
     if (profile.sol === "calcaire") {
-      score -= 4; deductSol += 4;
+      deductSol += 4;
       issues.push({ icon:"🪨", label:"Sol calcaire — surveiller pH et carence Fe", impact:-4 });
     }
   }
 
-  // ── 8. ACTIVITÉ GÉNÉRALE (max -12 pts) ────────────────────────────────────
-  const actions7j  = history.filter(h => daysSince(h.date) <= 7).length;
-  const actions14j = history.filter(h => daysSince(h.date) <= 14).length;
+  // ── 8. ACTIVITÉ GÉNÉRALE ─────────────────────────────────────────────────
   const actions30j = history.filter(h => daysSince(h.date) <= 30).length;
+  const actions14j = history.filter(h => daysSince(h.date) <= 14).length;
+  const actions7j  = history.filter(h => daysSince(h.date) <= 7).length;
 
   if (actions30j === 0) {
-    score -= 12; deductEntretien += 12;
+    deductEntretien += 12;
     issues.push({ icon:"📋", label:"Aucune intervention ce mois", impact:-12 });
   } else if (actions14j === 0) {
-    score -= 6; deductEntretien += 6;
+    deductEntretien += 6;
     issues.push({ icon:"📋", label:"Aucune intervention ces 14 derniers jours", impact:-6 });
   } else if (actions7j >= 3) {
     strengths.push({ icon:"✅", label:"Entretien très régulier cette semaine ✓" });
@@ -266,76 +246,73 @@ export function calcLawnScore({ weather, profile, history = [], month }) {
     strengths.push({ icon:"✅", label:"Entretien régulier ✓" });
   }
 
-  // ── 9. PLAFOND PROFIL INCOMPLET ───────────────────────────────────────────
-  // Un profil incomplet limite le score à 80 (impossible de savoir si le gazon va bien)
+  // ── SOUS-SCORES normalisés (0-100) ───────────────────────────────────────
+  // Chaque sous-score est calculé sur son maximum théorique
+  const MAX_ENTRETIEN  = 54; // tonte+aération+verticut+arrosage+activité
+  const MAX_NUTRIMENTS = 15;
+  const MAX_METEO      = 50;
+  const MAX_SOL        = 12;
+
+  const composantes = {
+    entretien:   Math.max(0, Math.round(100 - (deductEntretien  / MAX_ENTRETIEN)  * 100)),
+    nutriments:  Math.max(0, Math.round(100 - (deductNutriments / MAX_NUTRIMENTS) * 100)),
+    hydratation: Math.max(0, Math.round(100 - (deductMeteo      / MAX_METEO)      * 100)),
+    sol:         Math.max(0, Math.round(100 - (deductSol        / MAX_SOL)        * 100)),
+  };
+
+  // ── SCORE GLOBAL = MOYENNE PONDÉRÉE des sous-scores ──────────────────────
+  // Entretien 40% | Météo/Hydratation 30% | Nutriments 20% | Sol 10%
+  // Garantit la cohérence mathématique entre sous-scores et score global
+  let score = Math.round(
+    composantes.entretien   * 0.40 +
+    composantes.hydratation * 0.30 +
+    composantes.nutriments  * 0.20 +
+    composantes.sol         * 0.10
+  );
+
+  // ── PLAFOND PROFIL INCOMPLET ─────────────────────────────────────────────
   const profilComplet = profile?.pelouse && profile?.sol && profile?.surface && profile?.ville;
-  if (!profilComplet) {
-    const plafond = 80;
-    if (score > plafond) {
-      const diff = score - plafond;
-      score = plafond;
-      issues.push({ icon:"📝", label:"Profil incomplet — score plafonné", impact:-diff });
-    }
+  if (!profilComplet && score > 80) {
+    score = 80;
+    issues.push({ icon:"📝", label:"Profil incomplet — score plafonné à 80", impact:0 });
   }
 
-  // ── 10. DIAGNOSTIC PHOTO — PONDÉRATION 70/30 + PLAFOND 88 SANS PHOTO ─────
+  // ── DIAGNOSTIC PHOTO — pondération +/-10 pts max ──────────────────────────
   const lastDiag    = getLastDiagnostic();
   let diagScore     = null;
   let diagEmoji     = null;
   let diagAge       = null;
   let diagInfluence = 0;
 
-  // Sans diagnostic récent, plafonner à 88
   const SCORE_MAX_SANS_DIAG = 88;
-  let scoreAvantDiag = Math.max(0, Math.min(100, Math.round(score)));
+  let scoreAvantDiag = Math.max(0, Math.min(100, score));
 
   if (lastDiag?.analysis?.score_visuel !== undefined) {
     const scoreVisuel  = lastDiag.analysis.score_visuel;
     diagAge            = daysSinceISO(lastDiag.date);
     diagEmoji          = lastDiag.analysis.emoji;
-
-    const poids            = Math.max(0, 1 - diagAge / DIAG_MAX_AGE);
-    const scoreCombineBrut = Math.round(
-      scoreAvantDiag * (1 - 0.3 * poids) + scoreVisuel * 0.3 * poids
-    );
-
-    // ── Garde-fous : la photo ne peut pas tout effacer ni tout sauver ────────
-    // Une belle photo ne compense pas un mauvais entretien : +10 pts max
-    // Une mauvaise photo ne détruit pas un bon entretien : -20 pts max
-    const MAX_HAUSSE   = 10;
-    const MAX_BAISSE   = 20;
-    const delta        = scoreCombineBrut - scoreAvantDiag;
-    const deltaClamped = Math.max(-MAX_BAISSE, Math.min(MAX_HAUSSE, delta));
-    const scoreCombine = scoreAvantDiag + deltaClamped;
-
+    const poids        = Math.max(0, 1 - diagAge / DIAG_MAX_AGE);
+    const scoreCombine = Math.round(scoreAvantDiag * (1 - 0.3 * poids) + scoreVisuel * 0.3 * poids);
+    const delta        = scoreCombine - scoreAvantDiag;
+    const deltaClamped = Math.max(-20, Math.min(10, delta));
     diagScore     = scoreVisuel;
     diagInfluence = deltaClamped;
-    score         = scoreCombine;
-
+    score         = scoreAvantDiag + deltaClamped;
     lastDiag.analysis.problemes
       ?.filter(p => p.severite === "elevee" || p.severite === "critique")
       .slice(0, 2)
-      .forEach(p => {
-        issues.push({ icon:"🔬", label:`[Photo] ${p.nom}`, impact: p.impact_score || -5 });
-      });
-
-    if (scoreVisuel >= 70) {
-      strengths.push({ icon:"📸", label:`Diagnostic photo : ${lastDiag.analysis.etat_general} ✓` });
-    }
+      .forEach(p => issues.push({ icon:"🔬", label:`[Photo] ${p.nom}`, impact: p.impact_score || -5 }));
+    if (scoreVisuel >= 70) strengths.push({ icon:"📸", label:`Diagnostic photo : ${lastDiag.analysis.etat_general} ✓` });
   } else {
-    // Aucun diagnostic récent → plafonner à 88
-    if (score > SCORE_MAX_SANS_DIAG) {
-      score = SCORE_MAX_SANS_DIAG;
-    }
+    if (score > SCORE_MAX_SANS_DIAG) score = SCORE_MAX_SANS_DIAG;
     issues.push({ icon:"📸", label:"Diagnostic photo recommandé (+12 pts possibles)", impact:0 });
   }
 
   // ── SCORE FINAL ───────────────────────────────────────────────────────────
   const finalScore = Math.max(0, Math.min(100, Math.round(score)));
-  const potential  = Math.min(
-    100,
-    finalScore + 10 + Math.min(20, issues.filter(i => i.impact < 0).reduce((a, i) => a + Math.abs(i.impact), 0) / 2)
-  );
+  const potential  = Math.min(100, finalScore + 10 + Math.min(20,
+    issues.filter(i => i.impact < 0).reduce((a, i) => a + Math.abs(i.impact), 0) / 2
+  ));
 
   let labelText, color;
   if (finalScore >= 85)      { labelText = "Excellent 🏆"; color = "#43a047"; }
@@ -343,14 +320,6 @@ export function calcLawnScore({ weather, profile, history = [], month }) {
   else if (finalScore >= 55) { labelText = "Moyen";        color = "#f9a825"; }
   else if (finalScore >= 40) { labelText = "Faible";       color = "#ef6c00"; }
   else                       { labelText = "Critique";     color = "#c62828"; }
-
-  // ── SOUS-SCORES (0-100) ────────────────────────────────────────────────────
-  const composantes = {
-    entretien:   Math.max(0, Math.round(100 - (deductEntretien  / 54) * 100)),
-    nutriments:  Math.max(0, Math.round(100 - (deductNutriments / 15) * 100)),
-    hydratation: Math.max(0, Math.round(100 - (deductMeteo      / 50) * 100)),
-    sol:         Math.max(0, Math.round(100 - (deductSol        / 12) * 100)),
-  };
 
   return {
     score:    finalScore,
