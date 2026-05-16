@@ -774,6 +774,7 @@ export default function MyLawn() {
             <button onClick={() => navigate("/subscribe")} style={{background:"linear-gradient(135deg,#F59E0B,#D97706)",color:"#1a1a1a",fontWeight:800,border:"none",borderRadius:10,cursor:"pointer",marginTop:14,padding:"12px 28px",fontSize:14}}>⭐ Améliorer mon gazon — 4,99€/mois</button>
           </div>
         )}
+      </div>
     </div>
   );
 }
