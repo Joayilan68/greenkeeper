@@ -436,83 +436,38 @@ export default function MyLawn() {
         )}
 
         {/* ── 3. DÉTAIL DU SCORE ── */}
-        {(() => {
-          // ── Interprétation contextuelle de chaque composante ─────────────
-          // L'utilisateur voit du sens, pas des chiffres internes
-          const e = composantes?.entretien  ?? 70;
-          const h = composantes?.hydratation ?? 70;
-          const n = composantes?.nutriments  ?? 70;
-          const s = composantes?.sol         ?? 75;
-
-          const getStatut = (val) => {
-            if (val >= 80) return { label:"✅ Bon",        color:"#66BB6A", bg:"rgba(102,187,106,0.12)", border:"rgba(102,187,106,0.25)" };
-            if (val >= 50) return { label:"⚠️ À surveiller", color:"#f9a825", bg:"rgba(249,168,37,0.12)", border:"rgba(249,168,37,0.25)" };
-            return              { label:"🔴 À corriger",  color:"#ef9a9a", bg:"rgba(239,83,80,0.12)",  border:"rgba(239,83,80,0.25)"  };
-          };
-
-          const entretienCtx = () => {
-            if (e >= 80) return "Entretien régulier — continuez comme ça";
-            if (e >= 50) return "Quelques actions d'entretien à rattraper";
-            const noHistory = safeHistory.length === 0;
-            return noHistory
-              ? "Commencez à journaliser vos actions pour améliorer ce score"
-              : "Tonte ou arrosage en retard — consultez le plan du mois";
-          };
-
-          const hydratationCtx = () => {
-            if (h >= 90) return "Conditions météo favorables à votre position";
-            if (h >= 70) return "Légères contraintes météo détectées aujourd'hui";
-            if (h >= 50) return "Chaleur ou sécheresse — pensez à arroser";
-            return "Conditions difficiles — arrosage urgent si possible";
-          };
-
-          const nutrientsCtx = () => {
-            if (n >= 70) return "Fertilisation à jour selon l'historique";
-            if (n >= 30) return "Engrais recommandé — délai depuis la dernière application";
-            return safeHistory.length === 0
-              ? "Aucune fertilisation enregistrée — normal au démarrage"
-              : "Aucun engrais journalisé depuis plus de 90 jours";
-          };
-
-          const solCtx = () => {
-            if (s >= 80) return "Aucun facteur de risque détecté sur votre sol";
-            if (s >= 50) return "Type de sol nécessite une attention particulière";
-            return "Sol compacté ou argileux — aération recommandée";
-          };
-
-          const items = [
-            { icon:"🌱", label:"Entretien",   val:e, ctx:entretienCtx()  },
-            { icon:"💧", label:"Météo du jour", val:h, ctx:hydratationCtx() },
-            { icon:"🧪", label:"Nutriments",   val:n, ctx:nutrientsCtx()  },
-            { icon:"🌿", label:"Sol",           val:s, ctx:solCtx()        },
-          ];
-
-          return (
-            <div style={card()}>
-              <div style={cardTitle}><span>📊 Détail du score</span></div>
-              <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-                {items.map((item) => {
-                  const statut = getStatut(item.val);
-                  return (
-                    <div key={item.label} style={{ background:statut.bg, border:`1px solid ${statut.border}`, borderRadius:12, padding:"10px 14px" }}>
-                      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
-                        <span style={{ fontSize:13, fontWeight:700, color:"#e8f5e9" }}>
-                          {item.icon} {item.label}
-                        </span>
-                        <span style={{ fontSize:11, fontWeight:800, color:statut.color, background:`${statut.bg}`, border:`1px solid ${statut.border}`, borderRadius:20, padding:"2px 10px" }}>
-                          {statut.label}
-                        </span>
-                      </div>
-                      <div style={{ fontSize:11, color:"#81c784", lineHeight:1.5 }}>
-                        {item.ctx}
-                      </div>
-                    </div>
-                  );
-                })}
+        <div style={card()}>
+          <div style={cardTitle}>
+            <span>📊 Détail du score</span>
+            {!isPaid && <span style={{ fontSize:10, color:"#f9a825" }}>🔒 Premium</span>}
+          </div>
+          {[
+            { icon:"🌱", label:"Entretien régulier", val: composantes?.entretien  ?? 70 },
+            { icon:"💧", label:"Hydratation",         val: composantes?.hydratation ?? 70 },
+            { icon:"🧪", label:"Nutriments",          val: composantes?.nutriments  ?? 70 },
+            { icon:"🌿", label:"Sol & aération",      val: composantes?.sol         ?? 75 },
+          ].map((item, i) => (
+            <div key={i} style={{ marginBottom:10 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, marginBottom:4 }}>
+                <span>{item.icon} {item.label}</span>
+                {isPaid || i < 2
+                  ? <span style={{ fontWeight:700, color: item.val >= 70 ? "#a5d6a7" : item.val >= 50 ? "#f9a825" : "#ef9a9a" }}>{item.val}/100</span>
+                  : <span style={{ color:"#f9a825", fontSize:11 }}>🔒 Premium</span>
+                }
               </div>
+              {(isPaid || i < 2) && (
+                <div style={{ height:6, background:"rgba(255,255,255,0.1)", borderRadius:6, overflow:"hidden" }}>
+                  <div style={{ width:`${item.val}%`, height:"100%", background: item.val >= 70 ? "#43a047" : item.val >= 50 ? "#f9a825" : "#c62828", borderRadius:6 }} />
+                </div>
+              )}
             </div>
-          );
-        })()}
+          ))}
+          {!isPaid && (
+            <button onClick={() => navigate("/subscribe")} style={{ background:"linear-gradient(135deg,#F59E0B,#D97706)", color:"#1a1a1a", fontWeight:800, border:"none", borderRadius:10, cursor:"pointer", fontSize:12, padding:"8px 16px", marginTop:4 }}>
+              ⭐ Voir le détail complet
+            </button>
+          )}
+        </div>
 
         {/* ── 4. PROBLÈMES PRIORITAIRES ── */}
         {issues.length > 0 && (
@@ -533,8 +488,9 @@ export default function MyLawn() {
         )}
 
         {/* ── 5. PLAN DU MOIS ──────────────────────────────────────────────────
-            Logique : affiche ce qui est agronomiquement prévu ce mois,
-            SANS tenir compte de ce que l'utilisateur a déjà fait.
+            Logique : affiche ce qui est agronomiquement prévu ce mois.
+            horsS = calculé mais non affiché (usage interne dev uniquement).
+            Optimisé smartphone : lignes haute densité, touch targets ≥44px.
         ── */}
         {(() => {
           const arrosPlan = profile && weather
@@ -543,79 +499,153 @@ export default function MyLawn() {
           const zone    = zoneClimatique(profile);
           const statuts = buildActions(profile, weather, history, score, month, arrosPlan);
 
-          const actives = statuts.filter(a => a.status !== "off_season");
-          const horsS   = statuts.filter(a => a.status === "off_season");
+          // horsS conservé côté code pour usage interne — non affiché à l'utilisateur
+          const recommandes = statuts.filter(a => a.status === "recommended" || a.status === "done_today" || a.status === "too_soon");
+          const bloques     = statuts.filter(a => a.status === "blocked" || a.status === "exclusive");
 
-          const badgeFor = ({ status, daysLeft, blockedReason }) => {
-            if (status === "done_today")  return { label:"✓ Fait",           color:"#4ade80", bg:"rgba(74,222,128,0.15)",  border:"rgba(74,222,128,0.35)" };
-            if (status === "too_soon")    return { label:`Dans ${daysLeft}j`, color:"#fbbf24", bg:"rgba(251,191,36,0.15)", border:"rgba(251,191,36,0.35)" };
-            if (status === "blocked")     return { label:"⛔ Bloqué météo",   color:"#f87171", bg:"rgba(248,113,113,0.15)",border:"rgba(248,113,113,0.35)"};
-            if (status === "exclusive")   return { label:`⚠️ Excl.`,          color:"#f87171", bg:"rgba(248,113,113,0.12)",border:"rgba(248,113,113,0.3)"};
-            if (status === "recommended") return { label:"Prévu ce mois →",   color:"#fbbf24", bg:"rgba(251,191,36,0.15)", border:"rgba(251,191,36,0.35)" };
-            return { label:"Pas prévu", color:"#6b7280", bg:"rgba(255,255,255,0.05)", border:"rgba(255,255,255,0.1)" };
+          const countAFaire = recommandes.filter(a => a.status === "recommended").length;
+
+          // Icône par action id — adapté aux Tabler icons (emoji fallback si inconnu)
+          const iconFor = (id) => {
+            const map = {
+              tonte:          "✂️",
+              arrosage:       "💧",
+              engrais_starter:"🌱",
+              engrais_ete:    "☀️",
+              engrais_automne:"🍂",
+              engrais_hiver:  "❄️",
+              verticut:       "🔧",
+              aeration:       "🌀",
+              scarification:  "🔩",
+              desherbage:     "🪴",
+              antimousse:     "💊",
+              biostimulant:   "🌿",
+              regarnissage:   "🌾",
+            };
+            return map[id] || "📋";
+          };
+
+          // Raison blocage lisible
+          const raisonCourte = (status, blockedReason, exclusiveWith, daysLeft) => {
+            if (status === "too_soon")  return `Disponible dans ${daysLeft}j`;
+            if (status === "exclusive") return `Attendre après ${exclusiveWith}`;
+            if (blockedReason)          return blockedReason;
+            return "Conditions non réunies";
           };
 
           return (
             <div style={card()}>
-              <div style={cardTitle}>
-                <span>📅 Plan {MONTHS_FR[month]}</span>
-                <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                  <span style={{ fontSize:12, color:"#f9a825", fontWeight:700 }}>{plan?.label}</span>
-                  <span style={{ fontSize:10, color:"#4a7c5c", background:"rgba(255,255,255,0.05)", borderRadius:20, padding:"1px 7px" }}>
-                    📍 {ZONE_LABELS[zone] || zone}
-                  </span>
-                </div>
-              </div>
-              <div style={{ fontSize:11, color:"#4a7c5c", marginBottom:10, fontStyle:"italic" }}>
-                Interventions agronomiques prévues ce mois selon votre profil et la météo.
-              </div>
 
-              {actives.map(({ action, status, daysLeft, blockedReason, exclusiveWith }) => {
-                const badge  = badgeFor({ status, daysLeft, blockedReason });
-                const detail = action.detail?.(plan, arrosPlan, profile, month, zone);
-                const isBlocked = status === "blocked" || status === "exclusive";
-                return (
-                  <div key={action.id} style={{ display:"flex", alignItems:"flex-start", gap:10, padding:"10px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
-                    <div style={{ flex:1 }}>
-                      <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:2 }}>
-                        <span style={{ fontSize:13, fontWeight:700, color:"#e8f5e9" }}>{action.label}</span>
-                        <span style={{ fontSize:10, color:badge.color, background:badge.bg, border:`1px solid ${badge.border}`, borderRadius:20, padding:"2px 9px", fontWeight:700 }}>
-                          {badge.label}
-                        </span>
-                      </div>
-                      {detail && <div style={{ fontSize:11, color:"#81c784" }}>{detail}</div>}
-                      {isBlocked && blockedReason && <div style={{ fontSize:10, color:"#f9a825", marginTop:2 }}>⛔ {blockedReason}</div>}
-                      {status === "exclusive" && exclusiveWith && <div style={{ fontSize:10, color:"#f9a825", marginTop:2 }}>⚠️ Attendre après {exclusiveWith}</div>}
-                    </div>
-                    {action.needsProduct && status === "recommended" && ACTION_TO_AMAZON[action.id] && profile && (
-                      <div style={{ marginTop:6, width:"100%" }}>
-                        <ProductCard actionKey={ACTION_TO_AMAZON[action.id]} profile={profile} compact />
-                      </div>
-                    )}
+              {/* ── Header ── */}
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:14 }}>
+                <div>
+                  <div style={{ fontSize:16, fontWeight:800, color:"#F1F8F2" }}>
+                    📅 Plan {MONTHS_FR[month]}
                   </div>
-                );
-              })}
+                  <div style={{ fontSize:11, color:"#66BB6A", marginTop:2 }}>
+                    {plan?.label} · {ZONE_LABELS[zone] || zone}
+                  </div>
+                </div>
+                {countAFaire > 0 && (
+                  <span style={{
+                    fontSize:11, fontWeight:800,
+                    background:"rgba(102,187,106,0.2)",
+                    color:"#66BB6A",
+                    border:"1px solid rgba(102,187,106,0.35)",
+                    borderRadius:20, padding:"3px 10px",
+                    whiteSpace:"nowrap",
+                  }}>
+                    {countAFaire} à faire
+                  </span>
+                )}
+              </div>
 
-              {horsS.length > 0 && (
-                <div style={{ marginTop:10, paddingTop:8, borderTop:"1px solid rgba(255,255,255,0.08)" }}>
-                  <div style={{ fontSize:10, color:"#4a7c5c", fontWeight:800, letterSpacing:1, marginBottom:8 }}>HORS CALENDRIER CE MOIS</div>
-                  <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
-                    {horsS.filter(({ action }) => {
-                      const moisValides = action.getMois?.(zone, profile?.sol, false, profile) || [];
-                      if (!moisValides.length) return false;
-                      const distMin = Math.min(...moisValides.map(m => {
-                        const d = Math.abs(m - month);
-                        return Math.min(d, 12 - d);
-                      }));
-                      return distMin <= 2;
-                    }).map(({ action }) => (
-                      <span key={action.id} style={{ fontSize:12, color:"#4a7c5c", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:8, padding:"4px 11px" }}>
-                        {action.label}
-                      </span>
+              {/* ── À faire / Fait / Bientôt ── */}
+              {recommandes.length > 0 && (
+                <div style={{ marginBottom:14 }}>
+                  <div style={{ fontSize:10, fontWeight:800, color:"#4a7c5c", letterSpacing:1, marginBottom:8 }}>
+                    À FAIRE CE MOIS
+                  </div>
+                  <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                    {recommandes.map(({ action, status, daysLeft }) => {
+                      const detail = action.detail?.(plan, arrosPlan, profile, month, zone);
+                      const isDone   = status === "done_today";
+                      const isSoon   = status === "too_soon";
+                      const borderColor = isDone ? "#4ade80" : isSoon ? "#fbbf24" : "#66BB6A";
+                      return (
+                        <div key={action.id} style={{
+                          display:"flex", alignItems:"center", gap:12,
+                          padding:"11px 12px",
+                          background:"rgba(255,255,255,0.04)",
+                          borderRadius:12,
+                          borderLeft:`3px solid ${borderColor}`,
+                          minHeight:44, // touch target
+                        }}>
+                          <span style={{ fontSize:20, flexShrink:0, lineHeight:1 }}>{iconFor(action.id)}</span>
+                          <div style={{ flex:1, minWidth:0 }}>
+                            <div style={{ fontSize:13, fontWeight:700, color: isDone ? "#4ade80" : "#e8f5e9", lineHeight:1.3 }}>
+                              {action.label.replace(/[✂️💧🌱☀️🍂❄️🔧🌀🔩🪴💊🌿🌾]/gu, "").trim()}
+                              {isDone && <span style={{ fontSize:11, color:"#4ade80", marginLeft:6 }}>✓ Fait aujourd'hui</span>}
+                              {isSoon  && <span style={{ fontSize:11, color:"#fbbf24", marginLeft:6 }}>Dans {daysLeft}j</span>}
+                            </div>
+                            {detail && (
+                              <div style={{ fontSize:11, color:"#81c784", marginTop:2, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+                                {detail}
+                              </div>
+                            )}
+                          </div>
+                          {/* Panier si produit associé */}
+                          {action.needsProduct && status === "recommended" && ACTION_TO_AMAZON[action.id] && (
+                            <div style={{ flexShrink:0 }}>
+                              <ProductCard actionKey={ACTION_TO_AMAZON[action.id]} profile={profile} compact iconOnly />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* ── Bloqués ── */}
+              {bloques.length > 0 && (
+                <div>
+                  <div style={{ fontSize:10, fontWeight:800, color:"#4a7c5c", letterSpacing:1, marginBottom:8 }}>
+                    BLOQUÉS AUJOURD'HUI
+                  </div>
+                  <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
+                    {bloques.map(({ action, status, blockedReason, exclusiveWith, daysLeft }) => (
+                      <div key={action.id} style={{
+                        display:"flex", alignItems:"center", gap:12,
+                        padding:"9px 12px",
+                        background:"rgba(255,255,255,0.02)",
+                        borderRadius:10,
+                        border:"1px solid rgba(255,255,255,0.06)",
+                        opacity:0.75,
+                        minHeight:44,
+                      }}>
+                        <span style={{ fontSize:18, flexShrink:0, lineHeight:1 }}>{iconFor(action.id)}</span>
+                        <div style={{ flex:1, minWidth:0 }}>
+                          <div style={{ fontSize:13, color:"#81c784", fontWeight:600 }}>
+                            {action.label.replace(/[✂️💧🌱☀️🍂❄️🔧🌀🔩🪴💊🌿🌾]/gu, "").trim()}
+                          </div>
+                          <div style={{ fontSize:11, color:"#ef9a9a", marginTop:2, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+                            {raisonCourte(status, blockedReason, exclusiveWith, daysLeft)}
+                          </div>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>
               )}
+
+              {/* Aucune action ce mois */}
+              {recommandes.length === 0 && bloques.length === 0 && (
+                <div style={{ textAlign:"center", padding:"16px 0", color:"#4a7c5c", fontSize:13 }}>
+                  ✅ Aucune intervention prévue ce mois
+                </div>
+              )}
+
             </div>
           );
         })()}
