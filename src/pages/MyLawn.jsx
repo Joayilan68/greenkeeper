@@ -435,39 +435,84 @@ export default function MyLawn() {
           </div>
         )}
 
-        {/* ── 3. DÉTAIL DU SCORE ── */}
-        <div style={card()}>
-          <div style={cardTitle}>
-            <span>📊 Détail du score</span>
-            {!isPaid && <span style={{ fontSize:10, color:"#f9a825" }}>🔒 Premium</span>}
-          </div>
-          {[
-            { icon:"🌱", label:"Entretien régulier", val: composantes?.entretien  ?? 70 },
-            { icon:"💧", label:"Hydratation",         val: composantes?.hydratation ?? 70 },
-            { icon:"🧪", label:"Nutriments",          val: composantes?.nutriments  ?? 70 },
-            { icon:"🌿", label:"Sol & aération",      val: composantes?.sol         ?? 75 },
-          ].map((item, i) => (
-            <div key={i} style={{ marginBottom:10 }}>
-              <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, marginBottom:4 }}>
-                <span>{item.icon} {item.label}</span>
-                {isPaid || i < 2
-                  ? <span style={{ fontWeight:700, color: item.val >= 70 ? "#a5d6a7" : item.val >= 50 ? "#f9a825" : "#ef9a9a" }}>{item.val}/100</span>
-                  : <span style={{ color:"#f9a825", fontSize:11 }}>🔒 Premium</span>
-                }
+        {/* ── 3. DÉTAIL DU SCORE — version contextuelle texte ──
+            Pas de chiffres internes exposés à l'utilisateur.
+            Pas de distinction Free/Premium — c'est de la lisibilité, pas de la valeur ajoutée.
+        ── */}
+        {(() => {
+          const e = composantes?.entretien   ?? 70;
+          const h = composantes?.hydratation ?? 70;
+          const n = composantes?.nutriments  ?? 70;
+          const s = composantes?.sol         ?? 75;
+
+          const getStatut = (val) => {
+            if (val >= 80) return { label:"✅ Bon",           color:"#66BB6A", bg:"rgba(102,187,106,0.12)", border:"rgba(102,187,106,0.25)" };
+            if (val >= 50) return { label:"⚠️ À surveiller", color:"#f9a825", bg:"rgba(249,168,37,0.12)",  border:"rgba(249,168,37,0.25)"  };
+            return              { label:"🔴 À corriger",     color:"#ef9a9a", bg:"rgba(239,83,80,0.12)",   border:"rgba(239,83,80,0.25)"   };
+          };
+
+          const entretienCtx = () => {
+            if (e >= 80) return "Entretien régulier — continuez comme ça";
+            if (e >= 50) return "Quelques actions d'entretien à rattraper";
+            return safeHistory.length === 0
+              ? "Commencez à journaliser vos actions pour améliorer ce score"
+              : "Tonte ou arrosage en retard — consultez le plan du mois";
+          };
+
+          const hydratationCtx = () => {
+            if (h >= 90) return "Conditions météo favorables à votre position";
+            if (h >= 70) return "Légères contraintes météo détectées aujourd'hui";
+            if (h >= 50) return "Chaleur ou sécheresse — pensez à arroser";
+            return "Conditions difficiles — arrosage urgent si possible";
+          };
+
+          const nutrientsCtx = () => {
+            if (n >= 70) return "Fertilisation à jour selon l'historique";
+            if (n >= 30) return "Engrais recommandé — délai depuis la dernière application";
+            return safeHistory.length === 0
+              ? "Aucune fertilisation enregistrée — normal au démarrage"
+              : "Aucun engrais journalisé depuis plus de 90 jours";
+          };
+
+          const solCtx = () => {
+            if (s >= 80) return "Aucun facteur de risque détecté sur votre sol";
+            if (s >= 50) return "Type de sol nécessite une attention particulière";
+            return "Sol compacté ou argileux — aération recommandée";
+          };
+
+          const items = [
+            { icon:"🌱", label:"Entretien",    val:e, ctx:entretienCtx()   },
+            { icon:"💧", label:"Météo du jour", val:h, ctx:hydratationCtx() },
+            { icon:"🧪", label:"Nutriments",   val:n, ctx:nutrientsCtx()   },
+            { icon:"🌿", label:"Sol",           val:s, ctx:solCtx()         },
+          ];
+
+          return (
+            <div style={card()}>
+              <div style={cardTitle}><span>📊 Détail du score</span></div>
+              <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                {items.map((item) => {
+                  const statut = getStatut(item.val);
+                  return (
+                    <div key={item.label} style={{ background:statut.bg, border:`1px solid ${statut.border}`, borderRadius:12, padding:"10px 14px" }}>
+                      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
+                        <span style={{ fontSize:13, fontWeight:700, color:"#e8f5e9" }}>
+                          {item.icon} {item.label}
+                        </span>
+                        <span style={{ fontSize:11, fontWeight:800, color:statut.color, background:statut.bg, border:`1px solid ${statut.border}`, borderRadius:20, padding:"2px 10px" }}>
+                          {statut.label}
+                        </span>
+                      </div>
+                      <div style={{ fontSize:11, color:"#81c784", lineHeight:1.5 }}>
+                        {item.ctx}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-              {(isPaid || i < 2) && (
-                <div style={{ height:6, background:"rgba(255,255,255,0.1)", borderRadius:6, overflow:"hidden" }}>
-                  <div style={{ width:`${item.val}%`, height:"100%", background: item.val >= 70 ? "#43a047" : item.val >= 50 ? "#f9a825" : "#c62828", borderRadius:6 }} />
-                </div>
-              )}
             </div>
-          ))}
-          {!isPaid && (
-            <button onClick={() => navigate("/subscribe")} style={{ background:"linear-gradient(135deg,#F59E0B,#D97706)", color:"#1a1a1a", fontWeight:800, border:"none", borderRadius:10, cursor:"pointer", fontSize:12, padding:"8px 16px", marginTop:4 }}>
-              ⭐ Voir le détail complet
-            </button>
-          )}
-        </div>
+          );
+        })()}
 
         {/* ── 4. PROBLÈMES PRIORITAIRES ── */}
         {issues.length > 0 && (
