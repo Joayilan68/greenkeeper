@@ -8,7 +8,6 @@ import { useSubscription } from "../lib/useSubscription";
 import { useConsents } from "../lib/useConsents";
 import { useReminders } from "../lib/useReminders";
 import { useRecommandations } from "../lib/useRecommandations";
-import { useSaison } from "../lib/useSaison";
 import { calcLawnScore } from "../lib/lawnScore";
 import { MONTHLY_PLAN, MONTHS_FR, calcArrosage, DEBIT_DEFAULT_MMH, getDebitMmH } from "../lib/lawn";
 import { buildActions, zoneClimatique, ZONE_LABELS } from "../lib/planEntretien";
@@ -28,6 +27,52 @@ const ACTION_TO_AMAZON = {
   regarnissage:    "regarnissage",
   biostimulant:    "biostimulant",
 };
+
+// ── Fréquences agronomiques fixes (Knowledge Base v4) ─────────────────────────
+// Ces valeurs sont définitives — l'utilisateur ne les choisit pas.
+const REMINDER_TYPES = [
+  {
+    id: "tonte",
+    icon: "✂️",
+    label: "Tonte",
+    // Fréquence dynamique selon saison (calculée à l'affichage)
+    getFrequence: (month) => {
+      if (month >= 5 && month <= 8) return "tous les 4-5 jours (été)";
+      if (month >= 3 && month <= 10) return "tous les 5-7 jours (printemps/automne)";
+      return "pause hivernale";
+    },
+  },
+  {
+    id: "arrosage",
+    icon: "💧",
+    label: "Arrosage",
+    getFrequence: () => "selon météo et sol",
+  },
+  {
+    id: "engrais",
+    icon: "🌱",
+    label: "Engrais",
+    getFrequence: () => "délai min. 45 jours entre applications",
+  },
+  {
+    id: "fongicide",
+    icon: "💊",
+    label: "Traitement fongicide",
+    getFrequence: () => "si conditions à risque détectées",
+  },
+  {
+    id: "aeration",
+    icon: "🌀",
+    label: "Aération",
+    getFrequence: () => "1-2 fois/an (délai min. 90 jours)",
+  },
+  {
+    id: "desherbage",
+    icon: "🪴",
+    label: "Désherbage",
+    getFrequence: () => "délai min. 21 jours entre traitements",
+  },
+];
 
 // ── Data Phase 2 ─────────────────────────────────────────────────────────────
 const SOLS = [
@@ -81,15 +126,6 @@ const BUDGETS = [
   { id:"inconnu", label:"Je ne sais pas",  icon:"🤷" },
 ];
 
-// Matériel spécifique gazon synthétique
-const MATERIELS_SYNTH = [
-  { id:"brosse",    label:"Brosse",              icon:"🧹" },
-  { id:"souffleur", label:"Souffleur",           icon:"💨" },
-  { id:"hp",        label:"Nettoyeur haute pression", icon:"🚿" },
-  { id:"aspirateur",label:"Aspirateur",          icon:"🌀" },
-  { id:"aucun",     label:"Aucun",               icon:"❌" },
-];
-
 // ── Calcul complétude profil ──────────────────────────────────────────────────
 function calcCompletion(profile, isPaid) {
   if (!profile) return 0;
@@ -102,29 +138,23 @@ function calcCompletion(profile, isPaid) {
     profile.budget,
   ];
   const p2Done = p2Fields.filter(Boolean).length;
-  const p2Pct  = Math.round((p2Done / 6) * 50); // 0→50%
-  const base   = 40; // Phase 1
-  const total  = Math.min(90, base + p2Pct); // max 90% sans diag photo
+  const p2Pct  = Math.round((p2Done / 6) * 50);
+  const base   = 40;
+  const total  = Math.min(90, base + p2Pct);
   return total;
 }
 
-const PRODUCTS = [
-  { name:"Anti-mousse liquide",    score:"+15", price:"18,50€", icon:"🌿", reason:"Mousse détectée" },
-  { name:"Engrais azoté NPK",      score:"+10", price:"24,90€", icon:"🌱", reason:"Carence nutriments" },
-  { name:"Biostimulant racinaire", score:"+8",  price:"29,90€", icon:"💧", reason:"Stress hydrique" },
-];
-
 function ShareScore({ score, label, profile }) {
-  const [copied, setCopied]     = useState(false);
+  const [copied, setCopied]       = useState(false);
   const [showPanel, setShowPanel] = useState(false);
-  const appUrl        = "https://mongazon360.fr";
-  const emoji         = score >= 85 ? "🏆" : score >= 70 ? "😊" : score >= 55 ? "😐" : score >= 40 ? "😟" : "😰";
-  const gazon         = profile?.pelouse ? ` Mon ${profile.pelouse}` : " Mon gazon";
-  const surface       = profile?.surface ? ` (${profile.surface}m²)` : "";
-  const message       = `${emoji}${gazon}${surface} a un score de santé de ${score}/100 sur Mon Gazon 360 !\n🌿 "${label}"\n\nSuivez votre gazon en temps réel :\n${appUrl}`;
+  const appUrl         = "https://mongazon360.fr";
+  const emoji          = score >= 85 ? "🏆" : score >= 70 ? "😊" : score >= 55 ? "😐" : score >= 40 ? "😟" : "😰";
+  const gazon          = profile?.pelouse ? ` Mon ${profile.pelouse}` : " Mon gazon";
+  const surface        = profile?.surface ? ` (${profile.surface}m²)` : "";
+  const message        = `${emoji}${gazon}${surface} a un score de santé de ${score}/100 sur Mon Gazon 360 !\n🌿 "${label}"\n\nSuivez votre gazon en temps réel :\n${appUrl}`;
   const messageEncoded = encodeURIComponent(message);
-  const urlEncoded    = encodeURIComponent(appUrl);
-  const SHARE_OPTIONS = [
+  const urlEncoded     = encodeURIComponent(appUrl);
+  const SHARE_OPTIONS  = [
     { id:"whatsapp", icon:"💬", label:"WhatsApp",    color:"#25D366", bg:"rgba(37,211,102,0.15)",  border:"rgba(37,211,102,0.35)",  action: () => window.open(`https://wa.me/?text=${messageEncoded}`, "_blank") },
     { id:"facebook", icon:"📘", label:"Facebook",    color:"#1877F2", bg:"rgba(24,119,242,0.15)",  border:"rgba(24,119,242,0.35)",  action: () => window.open(`https://www.facebook.com/sharer/sharer.php?u=${urlEncoded}&quote=${messageEncoded}`, "_blank") },
     { id:"twitter",  icon:"🐦", label:"Twitter / X", color:"#1DA1F2", bg:"rgba(29,161,242,0.15)",  border:"rgba(29,161,242,0.35)",  action: () => window.open(`https://twitter.com/intent/tweet?text=${messageEncoded}`, "_blank") },
@@ -158,15 +188,14 @@ function ShareScore({ score, label, profile }) {
 }
 
 export default function MyLawn() {
-  const navigate           = useNavigate();
-  const { profile, saveProfile } = useProfile();
-  const { history = [] }   = useHistory();
-  const { weather }        = useWeather() || {};
-  const { isPaid = false } = useSubscription() || {};
-  const { user } = useUser();
-  const { syncFromReminders } = useConsents();
-  const { reminders, toggle, setDays, activeCount, syncToServer } = useReminders(syncFromReminders);
-  const [period, setPeriod] = useState("7j");
+  const navigate                  = useNavigate();
+  const { profile, saveProfile }  = useProfile();
+  const { history = [] }          = useHistory();
+  const { weather }               = useWeather() || {};
+  const { isPaid = false }        = useSubscription() || {};
+  const { user }                  = useUser();
+  const { syncFromReminders }     = useConsents();
+  const { reminders, toggle, activeCount, syncToServer } = useReminders(syncFromReminders);
 
   // ── Débit arroseur (Premium) ────────────────────────────────────────────────
   const [debitMmH, setDebitMmH] = useState(() => {
@@ -214,46 +243,26 @@ export default function MyLawn() {
     const updated = { ...profile, ...p2 };
     updated.profileCompletion = calcCompletion(updated, isPaid);
     saveProfile(updated);
-    setP2Saved(true);
-    setTimeout(() => setP2Saved(false), 2500);
   };
 
   const month = new Date().getMonth() + 1;
   const plan  = MONTHLY_PLAN[month];
-  const arros = profile && weather ? calcArrosage(month, profile, weather) : null;
   const { score, potential, label, color, issues, strengths, composantes } = calcLawnScore({ weather, profile, history, month });
 
-  // ── Conseil du mois (nouveau) ──
+  // ── Conseil du mois ──
   const { recommandationPrincipale } = useRecommandations(profile, score, weather, history);
 
   const safeHistory = Array.isArray(history) ? history : [];
-  const historyMinus7      = safeHistory.filter(h => {
+
+  // ── Score diff vs 7j ──
+  const historyMinus7 = safeHistory.filter(h => {
     const parts = h.date?.split('/');
-    if (!parts || parts.length !== 3) return true; // garder si date invalide
+    if (!parts || parts.length !== 3) return true;
     const d = new Date(parts[2], parts[1]-1, parts[0]);
     return Math.floor((Date.now() - d.getTime()) / 86400000) >= 7;
   });
   const { score: scoreLastWeek } = calcLawnScore({ weather, profile, history: historyMinus7, month });
-  const scoreDiff          = score - scoreLastWeek;
-  const countAction        = (kw) => safeHistory.filter(h => h?.action?.toLowerCase().includes(kw)).length;
-  const actionsDisponibles = issues.reduce((acc, i) => acc + Math.abs(i.impact), 0);
-  const projectionScore    = Math.min(100, score + Math.round(actionsDisponibles * 0.6));
-  const projectionDays     = issues.length <= 2 ? 7 : 14;
-
-  const scoreHistory = Array.from({ length: 7 }, (_, i) => {
-    const daysAgo = 6 - i;
-    if (daysAgo === 0) return score;
-    const histFiltered = safeHistory.filter(h => {
-      const parts = h.date?.split('/');
-      if (!parts || parts.length !== 3) return false;
-      const d = new Date(parts[2], parts[1]-1, parts[0]);
-      return Math.floor((Date.now() - d.getTime()) / 86400000) >= daysAgo;
-    });
-    const { score: s } = calcLawnScore({ weather, profile, history: histFiltered, month });
-    return s;
-  });
-  const maxScore = Math.max(...scoreHistory);
-  const minScore = Math.min(...scoreHistory);
+  const scoreDiff = score - scoreLastWeek;
 
   return (
     <div>
@@ -385,7 +394,6 @@ export default function MyLawn() {
         <div style={{ ...card(), background:`linear-gradient(135deg, rgba(27,94,32,0.5), rgba(13,43,26,0.7))`, border:`2px solid ${color}55`, padding:20 }}>
           <div style={{ fontSize:11, color:"#66BB6A", fontWeight:700, letterSpacing:1.5, marginBottom:12, textAlign:"center" }}>🌿 SCORE SANTÉ</div>
           <div style={{ display:"flex", justifyContent:"center", alignItems:"center", gap:24, marginBottom:12 }}>
-            {/* Cercle score — même style que Dashboard */}
             <div style={{ position:"relative" }}>
               <svg width="160" height="100" viewBox="0 0 160 100">
                 <path d="M 15 90 A 65 65 0 0 1 145 90" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="12" strokeLinecap="round"/>
@@ -395,7 +403,6 @@ export default function MyLawn() {
                 <text x="80" y="95" textAnchor="middle" fill={color} fontSize="11" fontFamily="Nunito,Arial">/100 — {label}</text>
               </svg>
             </div>
-            {/* Stats droite */}
             <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
               <div style={{ textAlign:"center" }}>
                 <div style={{ fontSize:20, marginBottom:2 }}>{scoreDiff >= 0 ? "📈" : "📉"}</div>
@@ -408,19 +415,6 @@ export default function MyLawn() {
                 <div style={{ fontSize:9, color:"#81c784" }}>/100</div>
               </div>
             </div>
-          </div>
-          <div style={{ marginTop:14, background:"rgba(249,168,37,0.15)", borderRadius:12, padding:"10px 14px", border:"1px solid rgba(249,168,37,0.3)" }}>
-            {isPaid ? (
-              <>
-                <div style={{ fontSize:12, fontWeight:700, color:"#f9a825" }}>🎯 Projection personnalisée</div>
-                <div style={{ fontSize:13, color:"#e8f5e9", marginTop:4 }}>En suivant le plan → <span style={{ fontWeight:800, color:"#a5d6a7" }}>{projectionScore}/100</span> dans <span style={{ fontWeight:800 }}>{projectionDays} jours</span></div>
-              </>
-            ) : (
-              <>
-                <div style={{ fontSize:12, fontWeight:700, color:"#f9a825" }}>🎯 Projection personnalisée</div>
-                <div style={{ fontSize:13, color:"#81c784", marginTop:4 }}>🔒 Score projeté disponible en <span style={{ cursor:"pointer", textDecoration:"underline", color:"#f9a825" }} onClick={() => navigate("/subscribe")}>Premium</span></div>
-              </>
-            )}
           </div>
           <ShareScore score={score} label={label} profile={profile} />
         </div>
@@ -444,9 +438,11 @@ export default function MyLawn() {
         )}
 
         {/* ── 3. DÉTAIL DU SCORE ── */}
-
         <div style={card()}>
-          <div style={cardTitle}><span>📊 Détail du score</span>{!isPaid && <span style={{ fontSize:10, color:"#f9a825" }}>🔒 Premium</span>}</div>
+          <div style={cardTitle}>
+            <span>📊 Détail du score</span>
+            {!isPaid && <span style={{ fontSize:10, color:"#f9a825" }}>🔒 Premium</span>}
+          </div>
           {[
             { icon:"🌱", label:"Entretien régulier", val: composantes?.entretien  ?? 70 },
             { icon:"💧", label:"Hydratation",         val: composantes?.hydratation ?? 70 },
@@ -456,15 +452,26 @@ export default function MyLawn() {
             <div key={i} style={{ marginBottom:10 }}>
               <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, marginBottom:4 }}>
                 <span>{item.icon} {item.label}</span>
-                {isPaid || i < 2 ? <span style={{ fontWeight:700, color: item.val >= 70 ? "#a5d6a7" : item.val >= 50 ? "#f9a825" : "#ef9a9a" }}>{item.val}/100</span> : <span style={{ color:"#f9a825", fontSize:11 }}>🔒 Premium</span>}
+                {isPaid || i < 2
+                  ? <span style={{ fontWeight:700, color: item.val >= 70 ? "#a5d6a7" : item.val >= 50 ? "#f9a825" : "#ef9a9a" }}>{item.val}/100</span>
+                  : <span style={{ color:"#f9a825", fontSize:11 }}>🔒 Premium</span>
+                }
               </div>
-              {(isPaid || i < 2) && <div style={{ height:6, background:"rgba(255,255,255,0.1)", borderRadius:6, overflow:"hidden" }}><div style={{ width:`${item.val}%`, height:"100%", background: item.val >= 70 ? "#43a047" : item.val >= 50 ? "#f9a825" : "#c62828", borderRadius:6 }} /></div>}
+              {(isPaid || i < 2) && (
+                <div style={{ height:6, background:"rgba(255,255,255,0.1)", borderRadius:6, overflow:"hidden" }}>
+                  <div style={{ width:`${item.val}%`, height:"100%", background: item.val >= 70 ? "#43a047" : item.val >= 50 ? "#f9a825" : "#c62828", borderRadius:6 }} />
+                </div>
+              )}
             </div>
           ))}
-          {!isPaid && <button onClick={() => navigate("/subscribe")} style={{background:"linear-gradient(135deg,#F59E0B,#D97706)",color:"#1a1a1a",fontWeight:800,border:"none",borderRadius:10,cursor:"pointer",fontSize:12,padding:"8px 16px",width:"auto",marginTop:4}}>⭐ Voir le détail complet</button>}
+          {!isPaid && (
+            <button onClick={() => navigate("/subscribe")} style={{ background:"linear-gradient(135deg,#F59E0B,#D97706)", color:"#1a1a1a", fontWeight:800, border:"none", borderRadius:10, cursor:"pointer", fontSize:12, padding:"8px 16px", marginTop:4 }}>
+              ⭐ Voir le détail complet
+            </button>
+          )}
         </div>
 
-        {/* ── 6. PROBLÈMES PRIORITAIRES ── */}
+        {/* ── 4. PROBLÈMES PRIORITAIRES ── */}
         {issues.length > 0 && (
           <div style={card()}>
             <div style={cardTitle}><span>⚠️ Problèmes prioritaires</span></div>
@@ -474,29 +481,35 @@ export default function MyLawn() {
                 <span style={{ fontSize:12, fontWeight:700, color:"#ef9a9a" }}>{issue.impact} pts</span>
               </div>
             ))}
-            {!isPaid && issues.length > 2 && <div style={{ fontSize:12, color:"#f9a825", textAlign:"center", marginTop:6 }}>🔒 +{issues.length - 2} problème{issues.length-2>1?"s":""} masqué{issues.length-2>1?"s":""} — <span style={{ cursor:"pointer", textDecoration:"underline" }} onClick={() => navigate("/subscribe")}>Premium</span></div>}
+            {!isPaid && issues.length > 2 && (
+              <div style={{ fontSize:12, color:"#f9a825", textAlign:"center", marginTop:6 }}>
+                🔒 +{issues.length - 2} problème{issues.length-2>1?"s":""} masqué{issues.length-2>1?"s":""} — <span style={{ cursor:"pointer", textDecoration:"underline" }} onClick={() => navigate("/subscribe")}>Premium</span>
+              </div>
+            )}
           </div>
         )}
 
-        {/* ── 7. PLAN DU MOIS — source unique planEntretien.js ── */}
+        {/* ── 5. PLAN DU MOIS ──────────────────────────────────────────────────
+            Logique : affiche ce qui est agronomiquement prévu ce mois,
+            SANS tenir compte de ce que l'utilisateur a déjà fait.
+        ── */}
         {(() => {
           const arrosPlan = profile && weather
-            ? calcArrosage(month, profile, weather, history, getDebitMmH())
+            ? calcArrosage(month, profile, weather, [], getDebitMmH()) // [] = historique vide volontaire
             : null;
-          const zone     = zoneClimatique(profile);
-          const statuts  = buildActions(profile, weather, history, score, month, arrosPlan);
+          const zone    = zoneClimatique(profile);
+          // On passe un historique vide pour afficher le plan prévu pur, pas l'état actuel
+          const statuts = buildActions(profile, weather, [], score, month, arrosPlan);
 
-          // Actions actives ce mois (pas off_season)
-          const actives  = statuts.filter(a => a.status !== "off_season");
-          // Actions hors saison
-          const horsS    = statuts.filter(a => a.status === "off_season");
+          const actives = statuts.filter(a => a.status !== "off_season");
+          const horsS   = statuts.filter(a => a.status === "off_season");
 
-          const badgeFor = ({ status, daysLeft, blockedReason, exclusiveWith }) => {
-            if (status === "done_today")  return { label:"✓ Fait",            color:"#4ade80", bg:"rgba(74,222,128,0.15)",  border:"rgba(74,222,128,0.35)" };
-            if (status === "too_soon")    return { label:`Dans ${daysLeft}j`,  color:"#fbbf24", bg:"rgba(251,191,36,0.15)", border:"rgba(251,191,36,0.35)" };
-            if (status === "blocked")     return { label:"⛔ Bloqué météo",    color:"#f87171", bg:"rgba(248,113,113,0.15)",border:"rgba(248,113,113,0.35)"};
-            if (status === "exclusive")   return { label:`⚠️ Excl. ${daysLeft}j`,color:"#f87171",bg:"rgba(248,113,113,0.12)",border:"rgba(248,113,113,0.3)"};
-            if (status === "recommended") return { label:"À faire →",          color:"#fbbf24", bg:"rgba(251,191,36,0.15)", border:"rgba(251,191,36,0.35)" };
+          const badgeFor = ({ status, daysLeft, blockedReason }) => {
+            if (status === "done_today")  return { label:"✓ Fait",           color:"#4ade80", bg:"rgba(74,222,128,0.15)",  border:"rgba(74,222,128,0.35)" };
+            if (status === "too_soon")    return { label:`Dans ${daysLeft}j`, color:"#fbbf24", bg:"rgba(251,191,36,0.15)", border:"rgba(251,191,36,0.35)" };
+            if (status === "blocked")     return { label:"⛔ Bloqué météo",   color:"#f87171", bg:"rgba(248,113,113,0.15)",border:"rgba(248,113,113,0.35)"};
+            if (status === "exclusive")   return { label:`⚠️ Excl.`,          color:"#f87171", bg:"rgba(248,113,113,0.12)",border:"rgba(248,113,113,0.3)"};
+            if (status === "recommended") return { label:"Prévu ce mois →",   color:"#fbbf24", bg:"rgba(251,191,36,0.15)", border:"rgba(251,191,36,0.35)" };
             return { label:"Pas prévu", color:"#6b7280", bg:"rgba(255,255,255,0.05)", border:"rgba(255,255,255,0.1)" };
           };
 
@@ -511,14 +524,16 @@ export default function MyLawn() {
                   </span>
                 </div>
               </div>
+              <div style={{ fontSize:11, color:"#4a7c5c", marginBottom:10, fontStyle:"italic" }}>
+                Interventions agronomiques prévues ce mois selon votre profil et la météo.
+              </div>
 
-              {/* Actions actives ce mois */}
               {actives.map(({ action, status, daysLeft, blockedReason, exclusiveWith }) => {
-                const badge  = badgeFor({ status, daysLeft, blockedReason, exclusiveWith });
+                const badge  = badgeFor({ status, daysLeft, blockedReason });
                 const detail = action.detail?.(plan, arrosPlan, profile, month, zone);
                 const isBlocked = status === "blocked" || status === "exclusive";
                 return (
-                  <div key={action.id} style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
+                  <div key={action.id} style={{ display:"flex", alignItems:"flex-start", gap:10, padding:"10px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
                     <div style={{ flex:1 }}>
                       <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:2 }}>
                         <span style={{ fontSize:13, fontWeight:700, color:"#e8f5e9" }}>{action.label}</span>
@@ -539,13 +554,11 @@ export default function MyLawn() {
                 );
               })}
 
-              {/* Hors saison — compacts */}
               {horsS.length > 0 && (
                 <div style={{ marginTop:10, paddingTop:8, borderTop:"1px solid rgba(255,255,255,0.08)" }}>
                   <div style={{ fontSize:10, color:"#4a7c5c", fontWeight:800, letterSpacing:1, marginBottom:8 }}>HORS CALENDRIER CE MOIS</div>
                   <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
                     {horsS.filter(({ action }) => {
-                      // Afficher uniquement les actions dont les mois valides sont proches (±2 mois)
                       const moisValides = action.getMois?.(zone, profile?.sol, false, profile) || [];
                       if (!moisValides.length) return false;
                       const distMin = Math.min(...moisValides.map(m => {
@@ -565,7 +578,10 @@ export default function MyLawn() {
           );
         })()}
 
-        {/* ── RAPPELS D'ENTRETIEN ─────────────────────────────────────────── */}
+        {/* ── 6. RAPPELS D'ENTRETIEN ──────────────────────────────────────────
+            Fréquences fixes calquées sur la Knowledge Base v4.
+            L'utilisateur active/désactive — il ne choisit pas la fréquence.
+        ── */}
         {isPaid && (
           <div style={card()}>
             <div style={cardTitle}>
@@ -573,17 +589,11 @@ export default function MyLawn() {
               <span style={{ fontSize:11, color:"#66BB6A" }}>{activeCount} actif{activeCount > 1 ? "s" : ""}</span>
             </div>
             <div style={{ fontSize:12, color:"#81c784", marginBottom:12, lineHeight:1.5 }}>
-              Activez les rappels souhaités. Les alertes sont envoyées chaque matin à 8h si le délai est dépassé.
+              Activez les rappels souhaités. Les alertes sont envoyées chaque matin à 8h selon le calendrier agronomique de votre gazon.
             </div>
-            {[
-              { id:"tonte",      icon:"✂️", label:"Tonte",               defaultDays:5  },
-              { id:"arrosage",   icon:"💧", label:"Arrosage",             defaultDays:3  },
-              { id:"engrais",    icon:"🌱", label:"Engrais",              defaultDays:45 },
-              { id:"fongicide",  icon:"💊", label:"Traitement fongicide", defaultDays:14 },
-              { id:"aeration",   icon:"🌀", label:"Aération",             defaultDays:90 },
-              { id:"desherbage", icon:"🪴", label:"Désherbage",           defaultDays:21 },
-            ].map(type => {
-              const r = reminders[type.id] || {};
+
+            {REMINDER_TYPES.map(type => {
+              const r        = reminders[type.id] || {};
               const isActive = !!r.enabled;
               const syncReminders = () => {
                 if (!user?.id) return;
@@ -591,28 +601,36 @@ export default function MyLawn() {
                 syncToServer(user.id, user.primaryEmailAddress?.emailAddress, consents);
               };
               return (
-                <div key={type.id} style={{ borderBottom:"1px solid rgba(255,255,255,0.05)", paddingBottom:10, marginBottom:10 }}>
+                <div key={type.id} style={{ borderBottom:"1px solid rgba(255,255,255,0.05)", paddingBottom:12, marginBottom:12 }}>
                   <div style={{ display:"flex", alignItems:"center", gap:10 }}>
                     <span style={{ fontSize:22, minWidth:28 }}>{type.icon}</span>
                     <div style={{ flex:1 }}>
-                      <div style={{ fontSize:13, fontWeight:700, color: isActive ? "#F1F8F2" : "#81c784" }}>{type.label}</div>
+                      <div style={{ fontSize:13, fontWeight:700, color: isActive ? "#F1F8F2" : "#81c784" }}>
+                        {type.label}
+                      </div>
+                      <div style={{ fontSize:11, color:"#4a7c5c", marginTop:2 }}>
+                        {type.getFrequence(month)}
+                      </div>
                     </div>
-                    <div onClick={() => { toggle(type.id); syncReminders(); }} style={{ width:40, height:22, borderRadius:11, cursor:"pointer", background: isActive ? "#66BB6A" : "rgba(255,255,255,0.15)", position:"relative", transition:"background 0.3s", flexShrink:0 }}>
+                    <div
+                      onClick={() => { toggle(type.id); syncReminders(); }}
+                      style={{ width:40, height:22, borderRadius:11, cursor:"pointer", background: isActive ? "#66BB6A" : "rgba(255,255,255,0.15)", position:"relative", transition:"background 0.3s", flexShrink:0 }}
+                    >
                       <div style={{ width:16, height:16, borderRadius:"50%", background:"#fff", position:"absolute", top:3, left: isActive ? 21 : 3, transition:"left 0.3s" }} />
                     </div>
                   </div>
                 </div>
               );
             })}
-            <div style={{ fontSize:11, color:"#f9a825", marginTop:8, padding:"8px 10px", background:"rgba(249,168,37,0.1)", border:"1px solid rgba(249,168,37,0.3)", borderRadius:8, lineHeight:1.5 }}>
-              ⚠️ Pour recevoir les notifications et rappels, vous devez activer Push et Emails dans{" "}
+
+            <div style={{ fontSize:11, color:"#f9a825", marginTop:4, padding:"8px 10px", background:"rgba(249,168,37,0.1)", border:"1px solid rgba(249,168,37,0.3)", borderRadius:8, lineHeight:1.5 }}>
+              ⚠️ Pour recevoir les notifications et rappels, activez Push et Emails dans{" "}
               <span onClick={() => navigate("/parametres")} style={{ color:"#66BB6A", cursor:"pointer", textDecoration:"underline", fontWeight:700 }}>Paramètres</span>
             </div>
           </div>
         )}
 
-
-        {/* ── 9b. CALIBRAGE ARROSEUR ── */}
+        {/* ── 7. CALIBRAGE ARROSEUR ── */}
         <div style={{ ...card(), background:"linear-gradient(135deg,rgba(25,118,210,0.1),rgba(13,43,26,0.6))", border:"1px solid rgba(100,181,246,0.3)" }}>
           <div style={cardTitle}>
             <span>💧 Calibrage arroseur</span>
@@ -670,30 +688,24 @@ export default function MyLawn() {
                   <div key={f} style={{ fontSize:12, color:"#81c784" }}>✓ {f}</div>
                 ))}
               </div>
-              <button onClick={() => navigate("/subscribe")} style={{background:"linear-gradient(135deg,#F59E0B,#D97706)",color:"#1a1a1a",fontWeight:800,border:"none",borderRadius:10,cursor:"pointer",fontSize:13,padding:"12px",width:"100%"}}>
+              <button onClick={() => navigate("/subscribe")} style={{ background:"linear-gradient(135deg,#F59E0B,#D97706)", color:"#1a1a1a", fontWeight:800, border:"none", borderRadius:10, cursor:"pointer", fontSize:13, padding:"12px", width:"100%" }}>
                 ⭐ Passer Premium — 4,99€/mois
               </button>
             </div>
           )}
         </div>
 
-        {/* ── 10. PRODUITS RECOMMANDÉS ── */}
+        {/* ── 8. PRODUITS RECOMMANDÉS ── */}
         {(() => {
-          // ── Source unique : buildActions() ───────────────────────────────
-          // On recalcule les actions recommandées pour cette section.
-          // Garantit cohérence avec le Plan du Mois et Today.jsx.
-          const arrosProd   = profile && weather ? calcArrosage(month, profile, weather, history, getDebitMmH()) : null;
-          const allStatuts  = buildActions(profile, weather, history, score, month, arrosProd);
-          const isSynth     = profile?.isSynthetique || profile?.pelouse === "synthetique" ||
+          const arrosProd  = profile && weather ? calcArrosage(month, profile, weather, history, getDebitMmH()) : null;
+          const allStatuts = buildActions(profile, weather, history, score, month, arrosProd);
+          const isSynth    = profile?.isSynthetique || profile?.pelouse === "synthetique" ||
             (Array.isArray(profile?.gazons) && profile.gazons.includes("synthetique"));
 
-          // Produits liés aux actions recommandées avec needsProduct=true
           const actionKeys = allStatuts
             .filter(a => a.status === "recommended" && a.action.needsProduct && ACTION_TO_AMAZON[a.action.id])
             .map(a => ACTION_TO_AMAZON[a.action.id]);
 
-          // Fallback si aucune action recommandée avec produit :
-          // utiliser les issues du score comme signal secondaire
           const ISSUE_TO_AMAZON = {
             mousse:           "antiMousse",
             fertilite:        month <= 4 || month === 12 ? "engraisStarter" : month <= 8 ? "engraisEte" : "engraisAutomne",
@@ -703,19 +715,8 @@ export default function MyLawn() {
             thatch:           "verticut",
             stress_hydrique:  "biostimulant",
           };
-          const issueKeys = issues
-            .map(i => ISSUE_TO_AMAZON[i.id] || null)
-            .filter(Boolean);
-
-          // Gazon synthétique : produits d'entretien uniquement (brosse, souffleur)
-          // Les produits d'engrais/traitement sont exclus
-          const syntheticKeys = [];
-
-          const allKeys = isSynth
-            ? syntheticKeys
-            : [...new Set([...actionKeys, ...issueKeys])];
-
-          // Limiter l'affichage selon le tier
+          const issueKeys = issues.map(i => ISSUE_TO_AMAZON[i.id] || null).filter(Boolean);
+          const allKeys   = isSynth ? [] : [...new Set([...actionKeys, ...issueKeys])];
           const keysToShow = isPaid ? allKeys.slice(0, 3) : allKeys.slice(0, 1);
 
           if (isSynth) {
@@ -734,11 +735,7 @@ export default function MyLawn() {
             <div style={card()}>
               <div style={cardTitle}><span>🛒 Produits recommandés</span></div>
               <div style={{ fontSize:11, color:"#81c784", marginBottom:12, fontStyle:"italic", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-                <span>
-                  {actionKeys.length > 0
-                    ? "Liés aux actions prioritaires du jour"
-                    : "Sélectionnés selon votre score"}
-                </span>
+                <span>{actionKeys.length > 0 ? "Liés aux actions prioritaires du mois" : "Sélectionnés selon votre score"}</span>
                 {isPaid && <span style={{ fontSize:10, color:"#66BB6A", background:"rgba(102,187,106,0.1)", border:"1px solid rgba(102,187,106,0.2)", borderRadius:20, padding:"2px 8px", fontStyle:"normal", fontWeight:700 }}>⭐ Personnalisés Premium</span>}
               </div>
               {keysToShow.length > 0 ? (
@@ -763,21 +760,21 @@ export default function MyLawn() {
           );
         })()}
 
-        {/* ── 11. BLOC PREMIUM ── */}
+        {/* ── 9. BLOC PREMIUM ── */}
         {!isPaid && (
           <div style={{ ...card(), background:"linear-gradient(135deg, rgba(249,168,37,0.15), rgba(230,81,0,0.1))", border:"1px solid rgba(249,168,37,0.4)", textAlign:"center" }}>
             <div style={{ fontSize:28, marginBottom:8 }}>⭐</div>
             <div style={{ fontSize:15, fontWeight:800, color:"#f9a825", marginBottom:8 }}>Passez Premium</div>
-            {["Détail complet du score","Diagnostic illimité","Arrosage précis calculé","Produits personnalisés","Rappels push + email"].map(f => (
+            {["Détail complet du score","Arrosage précis calculé","Produits personnalisés","Rappels push + email"].map(f => (
               <div key={f} style={{ fontSize:12, color:"#e8f5e9", padding:"3px 0" }}>✔ {f}</div>
             ))}
-            <button onClick={() => navigate("/subscribe")} style={{background:"linear-gradient(135deg,#F59E0B,#D97706)",color:"#1a1a1a",fontWeight:800,border:"none",borderRadius:10,cursor:"pointer",marginTop:14,padding:"12px 28px",fontSize:14}}>⭐ Améliorer mon gazon — 4,99€/mois</button>
+            <button onClick={() => navigate("/subscribe")} style={{ background:"linear-gradient(135deg,#F59E0B,#D97706)", color:"#1a1a1a", fontWeight:800, border:"none", borderRadius:10, cursor:"pointer", marginTop:14, padding:"12px 28px", fontSize:14 }}>
+              ⭐ Améliorer mon gazon — 4,99€/mois
+            </button>
           </div>
         )}
+
       </div>
     </div>
-  </div>
-  </div>
-  </div>
   );
 }
