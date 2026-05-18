@@ -594,11 +594,25 @@ export default function MyLawn() {
                               </div>
                             )}
                           </div>
-                          {/* Panier si produit associé */}
+                          {/* Lien produit — bouton discret, pas de ProductCard inline */}
                           {action.needsProduct && status === "recommended" && ACTION_TO_AMAZON[action.id] && (
-                            <div style={{ flexShrink:0 }}>
-                              <ProductCard actionKey={ACTION_TO_AMAZON[action.id]} profile={profile} compact iconOnly />
-                            </div>
+                            <button
+                              onClick={() => navigate("/products")}
+                              style={{
+                                flexShrink:0,
+                                background:"rgba(249,168,37,0.15)",
+                                border:"1px solid rgba(249,168,37,0.35)",
+                                borderRadius:20,
+                                padding:"5px 10px",
+                                color:"#f9a825",
+                                fontSize:11,
+                                fontWeight:700,
+                                cursor:"pointer",
+                                whiteSpace:"nowrap",
+                              }}
+                            >
+                              🛒 Voir
+                            </button>
                           )}
                         </div>
                       );
