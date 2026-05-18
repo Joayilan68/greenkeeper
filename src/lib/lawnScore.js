@@ -49,20 +49,41 @@ export function calcLawnScore({ weather, profile, history = [], month }) {
   // ── GAZON SYNTHÉTIQUE ────────────────────────────────────────────────────
   if (isSynth) {
     const actionsRecentes = history.filter(h => daysSince(h.date) <= 30).length;
-    const scoreBase = actionsRecentes >= 3 ? 78 : actionsRecentes >= 1 ? 68 : 55;
-    if (weather?.temp_max >= 35) issues.push({ icon:"🔥", label:"Chaleur extrême — protéger les fibres", impact:-5 });
-    if (actionsRecentes === 0)   issues.push({ icon:"🧹", label:"Aucun entretien ces 30 derniers jours", impact:-13 });
+    let deductSynth = 0;
+    if (weather?.temp_max >= 35) { deductSynth += 5;  issues.push({ icon:"🔥", label:"Chaleur extrême — protéger les fibres", impact:-5 }); }
+    if (actionsRecentes === 0)   { deductSynth += 13; issues.push({ icon:"🧹", label:"Aucun entretien ces 30 derniers jours", impact:-13 }); }
     else if (actionsRecentes >= 2) strengths.push({ icon:"✅", label:"Entretien régulier ✓" });
-    const finalScore = Math.max(0, Math.min(100, scoreBase));
+
+    // Score de base selon activité
+    const scoreBase = actionsRecentes >= 3 ? 78 : actionsRecentes >= 1 ? 68 : 55;
+    const finalScore = Math.max(0, Math.min(100, scoreBase - deductSynth));
+
+    // Composantes cohérentes avec le score réel (pas de 100 factices)
+    const entretienSynth = Math.max(0, Math.min(100, Math.round((finalScore / 88) * 100)));
+    const composantesSynth = {
+      entretien:   entretienSynth,
+      nutriments:  100, // synthétique = pas de fertilisation à suivre
+      hydratation: 100, // synthétique = pas d'arrosage
+      sol:         100, // synthétique = pas de sol naturel
+    };
+    // Score global pondéré cohérent : on recalcule depuis les composantes
+    const scorePondere = Math.round(
+      composantesSynth.entretien   * 0.40 +
+      composantesSynth.hydratation * 0.30 +
+      composantesSynth.nutriments  * 0.20 +
+      composantesSynth.sol         * 0.10
+    );
+
     let labelText, color;
-    if (finalScore >= 80)      { labelText = "Bon état";              color = "#7cb342"; }
-    else if (finalScore >= 65) { labelText = "Entretien conseillé";   color = "#f9a825"; }
-    else                       { labelText = "Nettoyage nécessaire";  color = "#ef6c00"; }
+    if (scorePondere >= 80)      { labelText = "Bon état";              color = "#7cb342"; }
+    else if (scorePondere >= 65) { labelText = "Entretien conseillé";   color = "#f9a825"; }
+    else                         { labelText = "Nettoyage nécessaire";  color = "#ef6c00"; }
+
     return {
-      score: finalScore, potential: Math.min(88, finalScore + 10),
+      score: scorePondere, potential: Math.min(88, scorePondere + 10),
       label: labelText, color,
       issues: issues.slice(0, 4), strengths: strengths.slice(0, 3),
-      composantes: { entretien: scoreBase, nutriments: 100, hydratation: 100, sol: 100 },
+      composantes: composantesSynth,
       diagScore: null, diagEmoji: null, diagAge: null, diagInfluence: 0, hasDiag: false,
     };
   }
@@ -100,11 +121,15 @@ export function calcLawnScore({ weather, profile, history = [], month }) {
   }
 
   // ── 5. ARROSAGE ──────────────────────────────────────────────────────────
+  // Ne pas pénaliser si l'utilisateur a déclaré ne pas arroser (choix assumé)
   if (plan?.arrosage_base > 0) {
-    const dernierArrosage = lastAction(history, "arrosage");
-    if (dernierArrosage > 10 && (!weather || weather.precip < 5))      { deductEntretien += 12; issues.push({ icon:"💧", label:"Arrosage insuffisant", impact:-12 }); }
-    else if (dernierArrosage > 5 && (!weather || weather.precip < 3))  { deductEntretien += 5;  issues.push({ icon:"💧", label:"Arrosage en retard", impact:-5 }); }
-    else if (dernierArrosage <= 3)                                      { strengths.push({ icon:"💧", label:"Arrosage régulier ✓" }); }
+    const skipArrosage = profile?.arrosage === "aucun" || profile?.arrosage === "rarement";
+    if (!skipArrosage) {
+      const dernierArrosage = lastAction(history, "arrosage");
+      if (dernierArrosage > 10 && (!weather || weather.precip < 5))      { deductEntretien += 12; issues.push({ icon:"💧", label:"Arrosage insuffisant", impact:-12 }); }
+      else if (dernierArrosage > 5 && (!weather || weather.precip < 3))  { deductEntretien += 5;  issues.push({ icon:"💧", label:"Arrosage en retard", impact:-5 }); }
+      else if (dernierArrosage <= 3)                                      { strengths.push({ icon:"💧", label:"Arrosage régulier ✓" }); }
+    }
   }
 
   // ── 6. MÉTÉO ─────────────────────────────────────────────────────────────
@@ -160,7 +185,9 @@ export function calcLawnScore({ weather, profile, history = [], month }) {
   );
 
   // ── PLAFOND PROFIL INCOMPLET ──────────────────────────────────────────────
-  const profilComplet = profile?.pelouse && profile?.sol && profile?.surface && profile?.ville;
+  // Supporte les deux formats : profile.pelouse (string) et profile.gazons[] (multi-select)
+  const hasPelouse = profile?.pelouse || (Array.isArray(profile?.gazons) && profile.gazons.length > 0);
+  const profilComplet = hasPelouse && profile?.sol && profile?.surface && profile?.ville;
   if (!profilComplet && score > 80) score = 80;
 
   // ── DIAGNOSTIC PHOTO ─────────────────────────────────────────────────────
