@@ -36,7 +36,6 @@ export const LAWN_COEFF = {
   sec:        0.7,  // résistant à la sécheresse — besoin faible
   universel:  1.0,  // standard
   chaud:      0.8,  // climat chaud, espèces adaptées
-  synthetique:0,    // pas d'arrosage pour gazon synthétique
   inconnu:    1.0,
   // Rétrocompat anciens IDs
   ornement:   1.2,
@@ -57,9 +56,6 @@ export function getDebitMmH() {
 }
 
 export function calcArrosage(month, profile, weather, history = [], debitMmH = DEBIT_DEFAULT_MMH) {
-  // Gazon synthétique → jamais d'arrosage
-  if (profile?.isSynthetique || profile?.pelouse === "synthetique") return null;
-
   const plan = MONTHLY_PLAN[month];
   const baseHebdo = plan?.arrosage_base ?? 0;
   const freq      = plan?.arrosage_freq ?? 0;

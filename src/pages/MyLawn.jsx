@@ -223,9 +223,7 @@ export default function MyLawn() {
     budget:     profile?.budget     || null,
   });
 
-  const isSynthetique = profile?.isSynthetique || profile?.pelouse === "synthetique" ||
-    (Array.isArray(profile?.gazons) && profile.gazons.includes("synthetique"));
-  const completion    = calcCompletion(profile, isPaid);
+  const completion = calcCompletion(profile, isPaid);
 
   const toggleMulti = (field, id) => {
     setP2(prev => {
@@ -495,11 +493,10 @@ export default function MyLawn() {
         ── */}
         {(() => {
           const arrosPlan = profile && weather
-            ? calcArrosage(month, profile, weather, [], getDebitMmH()) // [] = historique vide volontaire
+            ? calcArrosage(month, profile, weather, history, getDebitMmH())
             : null;
           const zone    = zoneClimatique(profile);
-          // On passe un historique vide pour afficher le plan prévu pur, pas l'état actuel
-          const statuts = buildActions(profile, weather, [], score, month, arrosPlan);
+          const statuts = buildActions(profile, weather, history, score, month, arrosPlan);
 
           const actives = statuts.filter(a => a.status !== "off_season");
           const horsS   = statuts.filter(a => a.status === "off_season");
@@ -699,8 +696,7 @@ export default function MyLawn() {
         {(() => {
           const arrosProd  = profile && weather ? calcArrosage(month, profile, weather, history, getDebitMmH()) : null;
           const allStatuts = buildActions(profile, weather, history, score, month, arrosProd);
-          const isSynth    = profile?.isSynthetique || profile?.pelouse === "synthetique" ||
-            (Array.isArray(profile?.gazons) && profile.gazons.includes("synthetique"));
+
 
           const actionKeys = allStatuts
             .filter(a => a.status === "recommended" && a.action.needsProduct && ACTION_TO_AMAZON[a.action.id])
@@ -716,20 +712,8 @@ export default function MyLawn() {
             stress_hydrique:  "biostimulant",
           };
           const issueKeys = issues.map(i => ISSUE_TO_AMAZON[i.id] || null).filter(Boolean);
-          const allKeys   = isSynth ? [] : [...new Set([...actionKeys, ...issueKeys])];
+          const allKeys = [...new Set([...actionKeys, ...issueKeys])];
           const keysToShow = isPaid ? allKeys.slice(0, 3) : allKeys.slice(0, 1);
-
-          if (isSynth) {
-            return (
-              <div style={card()}>
-                <div style={cardTitle}><span>🛒 Produits recommandés</span></div>
-                <div style={{ fontSize:12, color:"#81c784", lineHeight:1.6 }}>
-                  🌿 Gazon synthétique : pas de produits chimiques nécessaires.<br/>
-                  Consultez la page <span style={{ color:"#a5d6a7", cursor:"pointer", textDecoration:"underline" }} onClick={() => navigate("/products")}>Produits</span> pour les accessoires d'entretien.
-                </div>
-              </div>
-            );
-          }
 
           return (
             <div style={card()}>

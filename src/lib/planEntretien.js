@@ -59,14 +59,10 @@ const ventFort    = (w) => w?.wind   !== undefined && w.wind >= 40;
 
 // ── Helpers type de gazon ─────────────────────────────────────────────────────
 // Compatible multi-select (gazons[]) ET single-select (pelouse)
-const isGazonSynth    = (p) => p?.isSynthetique || p?.pelouse === "synthetique" ||
-  (Array.isArray(p?.gazons) && p.gazons.includes("synthetique"));
 const isGazonOmbre    = (p) => p?.pelouse === "ombre" ||
   (Array.isArray(p?.gazons) && p.gazons.includes("ombre"));
 const isGazonSport    = (p) => p?.pelouse === "sport" ||
   (Array.isArray(p?.gazons) && p.gazons.includes("sport"));
-const isGazonBermuda  = (p) => p?.pelouse === "bermuda" ||
-  (Array.isArray(p?.gazons) && p.gazons.includes("bermuda"));
 const isGazonRustique = (p) => p?.pelouse === "rustique" ||
   (Array.isArray(p?.gazons) && p.gazons.includes("rustique"));
 
@@ -142,9 +138,6 @@ export const ACTIONS_PLAN = [
     gp:    "tonte",
     // Mars → Novembre. Fév inclus en zone Sud/SO/Corse si repousse.
     getMois: (zone, sol, isSynth, profile) => {
-      if (isSynth || isGazonSynth(profile)) return [];
-      // Bermuda : dormance nov-mars → pas de tonte
-      if (isGazonBermuda(profile)) return [4,5,6,7,8,9,10];
       const base = [3,4,5,6,7,8,9,10,11];
       return (zone === "sud" || zone === "sud_ouest" || zone === "corse")
         ? [2, ...base] : base;
@@ -170,9 +163,6 @@ export const ACTIONS_PLAN = [
     gp:    "arrosage",
     // Zone Sud/SO/Corse : dès février (~65x/an). Autres : mars-octobre (~50x/an)
     getMois: (zone, sol, isSynth, profile) => {
-      if (isSynth || isGazonSynth(profile)) return [];
-      // Bermuda : dormance → pas d'arrosage nov-mars
-      if (isGazonBermuda(profile)) return [4,5,6,7,8,9,10];
       const base = [3,4,5,6,7,8,9,10];
       return (zone === "sud" || zone === "sud_ouest" || zone === "corse")
         ? [2, ...base] : base;
@@ -202,8 +192,6 @@ export const ACTIONS_PLAN = [
     label: "Engrais Starter 🌱",
     gp:    "engrais",
     getMois: (zone, sol, isSynth, profile) => {
-      if (isSynth || isGazonSynth(profile)) return [];
-      if (isGazonBermuda(profile)) return []; // dormance
       return (zone === "nord_est" || zone === "nord") ? [3] : [2, 3];
     },
     getInterval: () => 45,
@@ -229,7 +217,6 @@ export const ACTIONS_PLAN = [
     label: "Engrais Été ☀️",
     gp:    "engrais",
     getMois: (zone, sol, isSynth, profile) => {
-      if (isSynth || isGazonSynth(profile) || isGazonBermuda(profile)) return [];
       return [5, 6];
     },
     getInterval: () => 45,
@@ -252,7 +239,6 @@ export const ACTIONS_PLAN = [
     label: "Engrais Automne 🍂",
     gp:    "engrais",
     getMois: (zone, sol, isSynth, profile) => {
-      if (isSynth || isGazonSynth(profile) || isGazonBermuda(profile)) return [];
       return [9, 10];
     },
     getInterval: () => 45,
@@ -276,7 +262,6 @@ export const ACTIONS_PLAN = [
     label: "Engrais Hiver ❄️",
     gp:    "engrais",
     getMois: (zone, sol, isSynth, profile) => {
-      if (isSynth || isGazonSynth(profile) || isGazonBermuda(profile)) return [];
       return [11];
     },
     getInterval: () => 45,
@@ -296,7 +281,6 @@ export const ACTIONS_PLAN = [
     label: "Verticut 🔧",
     gp:    "scarification",
     getMois: (zone, sol, isSynth, profile) => {
-      if (isSynth || isGazonSynth(profile) || isGazonBermuda(profile)) return [];
       return Object.entries(MONTHLY_PLAN).filter(([,p]) => p.verticut).map(([m]) => +m);
     },
     getInterval: () => 180,
@@ -322,7 +306,6 @@ export const ACTIONS_PLAN = [
     label: "Aération 🌀",
     gp:    "aeration",
     getMois: (zone, sol, isSynth, profile) => {
-      if (isSynth || isGazonSynth(profile) || isGazonBermuda(profile)) return [];
       const base = [3, 9];
       return (sol === "argileux" || sol === "compacte")
         ? [3, 4, 9, 10] : base;
@@ -353,7 +336,6 @@ export const ACTIONS_PLAN = [
     label: "Scarification 🔩",
     gp:    "scarification",
     getMois: (zone, sol, isSynth, profile) => {
-      if (isSynth || isGazonSynth(profile) || isGazonBermuda(profile)) return [];
       if (isGazonOmbre(profile)) return []; // Ombre : scarification déconseillée
       return [3, 4, 9];
     },
@@ -379,7 +361,6 @@ export const ACTIONS_PLAN = [
     label: "Désherbage 🪴",
     gp:    "desherbage",
     getMois: (zone, sol, isSynth, profile) => {
-      if (isSynth || isGazonSynth(profile) || isGazonBermuda(profile)) return [];
       if (isObjectifNaturel(profile)) return []; // Naturel : pas de désherbant chimique
       if (isObjectifCreer(profile)) return [];   // Création : pas de désherbant avant J45
       if (isGazonRustique(profile)) return [];   // Rustique : trèfle protégé
@@ -409,7 +390,6 @@ export const ACTIONS_PLAN = [
     label: "Anti-mousse 💊",
     gp:    "anti_mousse",
     getMois: (zone, sol, isSynth, profile) => {
-      if (isSynth || isGazonSynth(profile) || isGazonBermuda(profile)) return [];
       return [3, 4, 9];
     },
     getInterval: () => 30,
@@ -441,7 +421,6 @@ export const ACTIONS_PLAN = [
     label: "Biostimulant 🌿",
     gp:    "anti_mousse",
     getMois: (zone, sol, isSynth, profile) => {
-      if (isSynth || isGazonSynth(profile) || isGazonBermuda(profile)) return [];
       return [3,4,5,6,7,8,9,10];
     },
     getInterval: () => 42,
@@ -469,7 +448,6 @@ export const ACTIONS_PLAN = [
     label: "Regarnissage 🌾",
     gp:    "semences",
     getMois: (zone, sol, isSynth, profile) => {
-      if (isSynth || isGazonSynth(profile) || isGazonBermuda(profile)) return [];
       // Objectif Créer : semences disponibles toute la bonne saison
       if (isObjectifCreer(profile)) return [3,4,5,8,9];
       return [3, 4, 5, 8, 9];
@@ -503,14 +481,14 @@ export const ACTIONS_PLAN = [
 //           | "blocked" | "exclusive"
 // ══════════════════════════════════════════════════════════════════════════════
 export function buildActions(profile, weather, history, score, month, arros) {
-  const isSynth = isGazonSynth(profile);
+  // Gazon synthétique supprimé de l'app — isSynth = false partout
   const sol     = profile?.sol;
   const zone    = zoneClimatique(profile);
   const plan    = MONTHLY_PLAN[month];
   const sc      = score ?? 70;
 
   return ACTIONS_PLAN.map(action => {
-    const mois     = action.getMois(zone, sol, isSynth, profile);
+    const mois     = action.getMois(zone, sol, false, profile); // isSynth toujours false — gazon synthétique supprimé
     const since    = daysSince(history, action.keywords);
     const interval = action.getInterval(month, zone, plan);
 

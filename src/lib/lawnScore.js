@@ -38,55 +38,12 @@ export function calcLawnScore({ weather, profile, history = [], month }) {
   const plan      = MONTHLY_PLAN[month];
   const issues    = [];
   const strengths = [];
-  const isSynth   = profile?.isSynthetique || profile?.pelouse === "synthetique" ||
-    (Array.isArray(profile?.gazons) && profile.gazons.includes("synthetique"));
+  // Gazon synthétique supprimé de l'app — aucune branche spéciale nécessaire
 
   let deductEntretien  = 0;
   let deductNutriments = 0;
   let deductMeteo      = 0;
   let deductSol        = 0;
-
-  // ── GAZON SYNTHÉTIQUE ────────────────────────────────────────────────────
-  if (isSynth) {
-    const actionsRecentes = history.filter(h => daysSince(h.date) <= 30).length;
-    let deductSynth = 0;
-    if (weather?.temp_max >= 35) { deductSynth += 5;  issues.push({ icon:"🔥", label:"Chaleur extrême — protéger les fibres", impact:-5 }); }
-    if (actionsRecentes === 0)   { deductSynth += 13; issues.push({ icon:"🧹", label:"Aucun entretien ces 30 derniers jours", impact:-13 }); }
-    else if (actionsRecentes >= 2) strengths.push({ icon:"✅", label:"Entretien régulier ✓" });
-
-    // Score de base selon activité
-    const scoreBase = actionsRecentes >= 3 ? 78 : actionsRecentes >= 1 ? 68 : 55;
-    const finalScore = Math.max(0, Math.min(100, scoreBase - deductSynth));
-
-    // Composantes cohérentes avec le score réel (pas de 100 factices)
-    const entretienSynth = Math.max(0, Math.min(100, Math.round((finalScore / 88) * 100)));
-    const composantesSynth = {
-      entretien:   entretienSynth,
-      nutriments:  100, // synthétique = pas de fertilisation à suivre
-      hydratation: 100, // synthétique = pas d'arrosage
-      sol:         100, // synthétique = pas de sol naturel
-    };
-    // Score global pondéré cohérent : on recalcule depuis les composantes
-    const scorePondere = Math.round(
-      composantesSynth.entretien   * 0.40 +
-      composantesSynth.hydratation * 0.30 +
-      composantesSynth.nutriments  * 0.20 +
-      composantesSynth.sol         * 0.10
-    );
-
-    let labelText, color;
-    if (scorePondere >= 80)      { labelText = "Bon état";              color = "#7cb342"; }
-    else if (scorePondere >= 65) { labelText = "Entretien conseillé";   color = "#f9a825"; }
-    else                         { labelText = "Nettoyage nécessaire";  color = "#ef6c00"; }
-
-    return {
-      score: scorePondere, potential: Math.min(88, scorePondere + 10),
-      label: labelText, color,
-      issues: issues.slice(0, 4), strengths: strengths.slice(0, 3),
-      composantes: composantesSynth,
-      diagScore: null, diagEmoji: null, diagAge: null, diagInfluence: 0, hasDiag: false,
-    };
-  }
 
   // ── 1. TONTE — KB v4 : été=4j, printemps=5j, hiver=14j ─────────────────
   const tonteFreq     = month >= 5 && month <= 8 ? 4 : month >= 3 && month <= 10 ? 5 : 14;

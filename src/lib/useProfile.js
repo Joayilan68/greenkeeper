@@ -1,7 +1,8 @@
 // src/lib/useProfile.js
 // ─────────────────────────────────────────────────────────────────────────────
-// Cache-first : localStorage pour la réactivité immédiate
-//               Supabase comme source de vérité persistante
+// Supabase = source de vérité
+// localStorage = cache lecture instantanée uniquement
+// Au merge : Supabase est prioritaire, les résidus synthétiques sont purgés
 // ─────────────────────────────────────────────────────────────────────────────
 import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/clerk-react";
@@ -10,23 +11,41 @@ import { supabase } from "./supabase";
 const KEY_NEW = "mg360_profile_v1";
 const KEY_OLD = "gk_profile_v1";
 
-// ── Chargement local (cache instantané) ──────────────────────────────────────
+// ── Champs résiduels à purger — gazon synthétique supprimé de l'app ──────────
+const CHAMPS_RESIDUELS = ["isSynthetique", "diagnosticPhoto", "lastDiagnosticDate"];
+
+function purgerResidus(p) {
+  if (!p) return p;
+  const clean = { ...p };
+  // Purger les flags synthétiques
+  CHAMPS_RESIDUELS.forEach(k => delete clean[k]);
+  // Si pelouse = "synthetique" → réinitialiser (gazon non supporté)
+  if (clean.pelouse === "synthetique") delete clean.pelouse;
+  // Si gazons[] contient "synthetique" → le retirer
+  if (Array.isArray(clean.gazons)) {
+    clean.gazons = clean.gazons.filter(g => g !== "synthetique");
+    if (clean.gazons.length === 0) delete clean.gazons;
+  }
+  return clean;
+}
+
 function loadLocal() {
   try {
     const fresh = localStorage.getItem(KEY_NEW);
-    if (fresh) return JSON.parse(fresh);
+    if (fresh) return purgerResidus(JSON.parse(fresh));
     const legacy = localStorage.getItem(KEY_OLD);
     if (legacy) {
-      localStorage.setItem(KEY_NEW, legacy);
+      const parsed = purgerResidus(JSON.parse(legacy));
+      localStorage.setItem(KEY_NEW, JSON.stringify(parsed));
       localStorage.removeItem(KEY_OLD);
-      return JSON.parse(legacy);
+      return parsed;
     }
     return null;
   } catch { return null; }
 }
 
 function saveLocal(p) {
-  try { localStorage.setItem(KEY_NEW, JSON.stringify(p)); } catch {}
+  try { localStorage.setItem(KEY_NEW, JSON.stringify(purgerResidus(p))); } catch {}
 }
 
 // ── Géocodage silencieux ──────────────────────────────────────────────────────
@@ -75,16 +94,36 @@ export function useProfile() {
           .single();
 
         const local = loadLocal();
+
         if (!error && data?.data && Object.keys(data.data).length > 0) {
-          // Supabase a des données → merger avec préférence pour cityVerified local
-          const remote = data.data;
-          const merged = { ...remote, ...(local?.cityVerified ? { lat: local.lat, lon: local.lon, ville: local.ville, cityVerified: true } : {}) };
-          setProfile(merged);
-          saveLocal(merged);
+          // ✅ Supabase prioritaire — purger les résidus des deux côtés
+          const remote = purgerResidus(data.data);
+          // Seules les coordonnées GPS vérifiées localement sont conservées
+          // car elles peuvent être plus fraîches que Supabase
+          const merged = {
+            ...remote,
+            ...(local?.cityVerified && local?.lat && local?.lon
+              ? { lat: local.lat, lon: local.lon, ville: local.ville, cityVerified: true }
+              : {}
+            ),
+          };
+          const clean = purgerResidus(merged);
+          setProfile(clean);
+          saveLocal(clean);
+          // Remonter le profil purgé vers Supabase si des résidus existaient
+          if (JSON.stringify(remote) !== JSON.stringify(data.data)) {
+            supabase.from("profiles").upsert(
+              { user_id: userId, data: clean, updated_at: new Date().toISOString() },
+              { onConflict: "user_id" }
+            ).catch(() => {});
+          }
         } else if (local && Object.keys(local).length > 0) {
-          // Supabase vide mais localStorage a un profil → migration initiale
+          // Supabase vide → migration initiale depuis localStorage (purgé)
+          const clean = purgerResidus(local);
+          setProfile(clean);
+          saveLocal(clean);
           supabase.from("profiles").upsert(
-            { user_id: userId, data: local, updated_at: new Date().toISOString() },
+            { user_id: userId, data: clean, updated_at: new Date().toISOString() },
             { onConflict: "user_id" }
           ).catch(() => {});
         }
@@ -97,12 +136,13 @@ export function useProfile() {
 
   // ── saveProfile : local immédiat + Supabase async ─────────────────────────
   const saveProfile = (p) => {
-    setProfile(p);
-    saveLocal(p);
+    const clean = purgerResidus(p);
+    setProfile(clean);
+    saveLocal(clean);
 
     if (isSignedIn && userId) {
       supabase.from("profiles").upsert(
-        { user_id: userId, data: p, updated_at: new Date().toISOString() },
+        { user_id: userId, data: clean, updated_at: new Date().toISOString() },
         { onConflict: "user_id" }
       ).then(({ error }) => {
         if (error) console.warn("[MG360] profiles upsert:", error.message);
