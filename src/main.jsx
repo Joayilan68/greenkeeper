@@ -30,13 +30,32 @@ function detectInAppBrowser() {
 }
 
 function InAppBrowserBanner() {
+  const [copied, setCopied] = React.useState(false);
+  const url = "https://mongazon360.fr";
+  const isAndroid = /Android/i.test(navigator.userAgent || "");
+  const isIOS     = /iPhone|iPad|iPod/i.test(navigator.userAgent || "");
+
   const handleOpen = () => {
-    // Tenter d'ouvrir dans le navigateur par défaut
-    const url = window.location.href;
-    // iOS : ouvre Safari
-    // Android : ouvre le navigateur par défaut
-    window.location.href = `googlechrome://navigate?url=${encodeURIComponent(url)}`;
-    setTimeout(() => { window.location.href = url; }, 500);
+    if (isAndroid) {
+      // Intent Android — ouvre dans Chrome directement
+      window.location.href =
+        `intent://mongazon360.fr#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(url)};end`;
+    } else if (isIOS) {
+      // iOS — copier le lien (Safari ne peut pas être forcé depuis un WebView)
+      try {
+        navigator.clipboard.writeText(url).then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 3000);
+        });
+      } catch {
+        // Fallback si clipboard API indisponible
+        setCopied(true);
+        setTimeout(() => setCopied(false), 3000);
+      }
+    } else {
+      // Fallback universel
+      window.open(url, "_blank");
+    }
   };
 
   return (
@@ -48,13 +67,20 @@ function InAppBrowserBanner() {
       padding: "32px 24px", textAlign: "center",
       fontFamily: "'Nunito', sans-serif",
     }}>
-      <div style={{ fontSize: 56, marginBottom: 20 }}>🌿</div>
-      <div style={{ fontSize: 20, fontWeight: 800, color: "#F1F8F2", marginBottom: 12 }}>
+      {/* Logo app — chemin public */}
+      <img
+        src="/icon-192x192.png"
+        alt="Mongazon360"
+        style={{ width: 100, height: 100, objectFit: "contain", marginBottom: 20 }}
+        onError={(e) => { e.target.style.display = "none"; }}
+      />
+      <div style={{ fontSize: 22, fontWeight: 800, color: "#F1F8F2", marginBottom: 12 }}>
         Mongazon360
       </div>
       <div style={{ fontSize: 14, color: "#81c784", marginBottom: 24, lineHeight: 1.6, maxWidth: 300 }}>
         Pour une expérience optimale, ouvrez l'application dans votre navigateur habituel.
       </div>
+
       <button
         onClick={handleOpen}
         style={{
@@ -63,13 +89,23 @@ function InAppBrowserBanner() {
           padding: "14px 28px", fontSize: 15, fontWeight: 800,
           cursor: "pointer", marginBottom: 16,
           boxShadow: "0 4px 16px rgba(46,125,50,0.4)",
+          width: "100%", maxWidth: 320,
         }}
       >
-        Ouvrir dans le navigateur →
+        {copied
+          ? "✅ Lien copié — collez-le dans Safari"
+          : isIOS
+            ? "📋 Copier le lien"
+            : "Ouvrir dans Chrome →"
+        }
       </button>
-      <div style={{ fontSize: 11, color: "#4a7c5c", lineHeight: 1.6 }}>
-        Copiez ce lien si le bouton ne fonctionne pas :<br />
-        <span style={{ color: "#66BB6A", fontWeight: 700 }}>mongazon360.fr</span>
+
+      <div style={{ fontSize: 11, color: "#4a7c5c", lineHeight: 1.8 }}>
+        {isIOS
+          ? "Collez ensuite le lien dans la barre d'adresse de Safari"
+          : "Ou copiez l'adresse manuellement :"
+        }<br />
+        <span style={{ color: "#66BB6A", fontWeight: 700, fontSize: 13 }}>mongazon360.fr</span>
       </div>
     </div>
   );
