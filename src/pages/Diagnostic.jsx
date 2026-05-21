@@ -22,6 +22,41 @@ const ETAT_COLORS = {
   mauvais:   "#ef5350", critique: "#c62828",
 };
 
+// ── Compression image avant envoi ──────────────────────────────────────────
+// Redimensionne la photo à max 1280px côté long et la compresse en JPEG 0.82.
+// Indispensable car Vercel limite le body des serverless functions à 4.5 MB
+// (une photo smartphone brute en base64 fait facilement 5-10 MB → bloquée).
+// Retourne { base64, mimeType, sizeKB } prêts à envoyer.
+const compressImage = (file, maxSize = 1280, quality = 0.82) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Impossible de lire le fichier"));
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("Impossible de charger l'image"));
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxSize || height > maxSize) {
+          if (width >= height) { height = Math.round(height * (maxSize / width)); width = maxSize; }
+          else                 { width  = Math.round(width  * (maxSize / height)); height = maxSize; }
+        }
+        const canvas  = document.createElement("canvas");
+        canvas.width  = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#fff"; // évite fond noir si transparence
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL("image/jpeg", quality);
+        const base64  = dataUrl.split(",")[1];
+        const sizeKB  = Math.round((base64.length * 3) / 4 / 1024);
+        resolve({ base64, dataUrl, mimeType: "image/jpeg", sizeKB });
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
 export default function Diagnostic() {
   const navigate   = useNavigate();
   const { user }   = useUser();
@@ -59,17 +94,30 @@ export default function Diagnostic() {
   const { score } = calcLawnScore({ weather, profile, history, month: new Date().getMonth()+1 });
   const canUse = isPaid || isAdmin;
 
-  const handleFile = (file) => {
+  const handleFile = async (file) => {
     if (!file) return;
-    setMimeType(file.type || "image/jpeg");
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const full = e.target.result;
-      setPreview(full);
-      setImageB64(full.split(",")[1]);
+    setError("");
+    try {
+      // Compression systématique : redimensionne + JPEG qualité 0.82
+      // Une photo smartphone (3-6 MB) devient ~200-500 KB → passe la limite Vercel.
+      const { base64, dataUrl, mimeType: mt, sizeKB } = await compressImage(file);
+      if (sizeKB > 3500) {
+        // Garde-fou : si malgré la compression on dépasse 3.5 MB (image extrême),
+        // on recompresse plus agressivement.
+        const { base64: b2, dataUrl: d2, mimeType: m2 } =
+          await compressImage(file, 1024, 0.7);
+        setMimeType(m2);
+        setImageB64(b2);
+        setPreview(d2);
+      } else {
+        setMimeType(mt);
+        setImageB64(base64);
+        setPreview(dataUrl);
+      }
       setView("camera");
-    };
-    reader.readAsDataURL(file);
+    } catch (e) {
+      setError(e.message || "Erreur lors du traitement de la photo");
+    }
   };
 
   const handleInputChange = (e) => { handleFile(e.target.files[0]); e.target.value = ""; };
@@ -84,7 +132,24 @@ export default function Diagnostic() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ imageBase64: imageB64, mimeType, profile: profile || {}, weather: weather || {}, score, userId: user?.id })
       });
-      const data = await res.json();
+
+      // Parsing défensif : Vercel peut renvoyer du texte brut (413 Request Entity
+      // Too Large, 504 Gateway Timeout, page HTML d'erreur...) qui plante res.json().
+      const raw = await res.text();
+      let data;
+      try {
+        data = JSON.parse(raw);
+      } catch {
+        if (res.status === 413) {
+          throw new Error("Photo trop volumineuse même après compression. Réessaie avec une image plus simple.");
+        }
+        if (res.status === 504 || res.status === 408) {
+          throw new Error("Le serveur a mis trop de temps à répondre. Réessaie dans quelques secondes.");
+        }
+        console.error("Réponse non-JSON de /api/analyze-lawn:", res.status, raw.slice(0, 200));
+        throw new Error(`Erreur serveur (${res.status}). Réessaie ou contacte le support si le problème persiste.`);
+      }
+
       if (!res.ok || data.error) throw new Error(data.error || "Erreur serveur");
       const diag = { id: Date.now().toString(), date: data.date, imageUrl: data.imageUrl, analysis: data.analysis, scoreAvant: score };
       save(diag);
