@@ -14,7 +14,7 @@ module.exports = async function handler(req, res) {
 
     const MOIS = ["","Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
 
-    const systemPrompt = `Tu es GreenBot, l'assistant expert en gazon et pelouses de l'application Mon Gazon 360.
+    const systemPrompt = `Tu es Bob, l'assistant expert en gazon et pelouses de l'application Mon Gazon 360.
 Tu es passionné, bienveillant et très compétent en agronomie du gazon.
 
 CONTEXTE UTILISATEUR :
