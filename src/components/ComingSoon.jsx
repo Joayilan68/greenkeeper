@@ -19,23 +19,69 @@ const C = {
 
 const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
 
+// ✅ FIX 26/05/2026 — helper localStorage défensif
+// Détecte les navigateurs qui bloquent silencieusement le storage
+// (Safari iOS navigation privée, Brave strict, cookies tiers bloqués...)
+function safeSetItem(key, value) {
+  try {
+    localStorage.setItem(key, value);
+    // Vérifier que l'écriture a réellement été persistée
+    if (localStorage.getItem(key) !== value) {
+      console.warn(`[MG360] localStorage non persisté pour la clé "${key}"`);
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.warn(`[MG360] localStorage bloqué pour "${key}":`, e.message);
+    return false;
+  }
+}
+
+function safeRemoveItem(key) {
+  try { localStorage.removeItem(key); return true; }
+  catch { return false; }
+}
+
+// ✅ Test global de persistance localStorage
+function isLocalStorageAvailable() {
+  try {
+    const testKey = "__mg360_test__";
+    localStorage.setItem(testKey, "1");
+    const ok = localStorage.getItem(testKey) === "1";
+    localStorage.removeItem(testKey);
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
 export default function ComingSoon() {
   const navigate    = useNavigate();
   const { user }    = useUser();
   const { signOut } = useClerk();
+
+  // ✅ FIX 26/05/2026 — détection navigateur restrictif au montage
+  const [storageBlocked, setStorageBlocked] = useState(false);
+  useEffect(() => {
+    if (!isLocalStorageAvailable()) {
+      setStorageBlocked(true);
+      console.warn("[MG360] localStorage non disponible — navigateur restrictif ou mode privé");
+    }
+  }, []);
 
   // Auto-redirect admin — ne jamais bloquer un admin sur ComingSoon
   useEffect(() => {
     if (!user) return;
     const email = user.primaryEmailAddress?.emailAddress || "";
     if (ADMIN_EMAILS.includes(email) || user.publicMetadata?.role === "admin") {
-      localStorage.setItem("mg360_approved",       "true");
-      localStorage.setItem("gk_admin_code",         "GREENKEEPER2024");
-      localStorage.setItem("mg360_onboarding_done", "true");
-      localStorage.removeItem("mg360_waitlist");
-      navigate("/", { replace: true });
+      safeSetItem("mg360_approved",       "true");
+      safeSetItem("gk_admin_code",         "GREENKEEPER2024");
+      safeSetItem("mg360_onboarding_done", "true");
+      safeRemoveItem("mg360_waitlist");
+      // ✅ FIX : reload propre pour garantir que useAccessCheck reprend l'état frais
+      window.location.href = "/";
     }
-  }, [user, navigate]);
+  }, [user]);
 
   const [tapCount, setTapCount]           = useState(0);
   const [profile, setProfile]             = useState(null);
@@ -130,6 +176,13 @@ export default function ComingSoon() {
     setAdminLoading(true);
     setAdminError('');
 
+    // ✅ FIX : check storage avant tout
+    if (storageBlocked) {
+      setAdminError("Votre navigateur bloque le stockage local. Désactivez le mode privé ou autorisez les cookies pour ce site.");
+      setAdminLoading(false);
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from('admin_codes')
@@ -144,11 +197,20 @@ export default function ComingSoon() {
         return;
       }
 
-      localStorage.setItem('mg360_approved', 'true');
-      localStorage.setItem('gk_admin_code', 'GREENKEEPER2024');
-      localStorage.removeItem('mg360_waitlist');
+      // ✅ FIX : vérifier que les flags sont bien persistés
+      const ok1 = safeSetItem('mg360_approved', 'true');
+      const ok2 = safeSetItem('gk_admin_code', 'GREENKEEPER2024');
+      safeRemoveItem('mg360_waitlist');
+
+      if (!ok1 || !ok2) {
+        setAdminError("Impossible d'enregistrer l'accès. Vérifiez les paramètres de votre navigateur.");
+        setAdminLoading(false);
+        return;
+      }
+
       setAdminUnlocked(true);
-      setTimeout(() => navigate('/'), 1200);
+      // ✅ FIX : reload complet pour relancer useAccessCheck depuis zéro
+      setTimeout(() => { window.location.href = "/"; }, 1200);
     } catch {
       setAdminError('Erreur de connexion. Réessaie.');
     }
@@ -160,6 +222,14 @@ export default function ComingSoon() {
     if (!guestCode.trim()) return;
     setGuestLoading(true);
     setGuestError("");
+
+    // ✅ FIX 26/05/2026 — check storage AVANT toute requête Supabase
+    // Évite d'incrémenter uses_count si on ne peut pas persister l'accès
+    if (storageBlocked) {
+      setGuestError("Votre navigateur bloque le stockage local. Désactivez le mode privé/incognito ou autorisez les cookies pour ce site, puis réessayez.");
+      setGuestLoading(false);
+      return;
+    }
 
     try {
       const { data, error } = await supabase
@@ -184,26 +254,36 @@ export default function ComingSoon() {
 
       // Vérifier limite d'utilisations
       if (data.max_uses !== null && data.uses_count >= data.max_uses) {
-        setGuestError("Ce code a atteint sa limite d’utilisations.");
+        setGuestError("Ce code a atteint sa limite d'utilisations.");
         setGuestLoading(false);
         return;
       }
 
-      // Incrémenter le compteur d'utilisations
+      // ✅ FIX 26/05/2026 — poser les flags AVANT d'incrémenter uses_count
+      // Si le storage échoue, on n'aura pas gonflé le compteur pour rien
+      const ok1 = safeSetItem("mg360_guest_validated", "true");
+      const ok2 = safeSetItem("mg360_guest_code", guestCode.trim().toUpperCase());
+      const ok3 = safeSetItem("mg360_approved", "true");
+      const ok4 = safeSetItem("mg360_onboarding_done", "true");
+      safeRemoveItem("mg360_waitlist");
+
+      if (!ok1 || !ok2 || !ok3 || !ok4) {
+        setGuestError("Impossible d'enregistrer l'accès. Vérifiez les paramètres de votre navigateur (mode privé, cookies bloqués...).");
+        setGuestLoading(false);
+        return;
+      }
+
+      // ✅ Incrément uses_count APRÈS confirmation que le storage marche
       await supabase
         .from("guest_codes")
         .update({ uses_count: (data.uses_count || 0) + 1 })
         .eq("id", data.id);
 
-      // Activer l'accès Premium invité
-      localStorage.setItem("mg360_guest_validated", "true");
-      localStorage.setItem("mg360_guest_code", guestCode.trim().toUpperCase());
-      localStorage.setItem("mg360_approved", "true");
-      localStorage.setItem("mg360_onboarding_done", "true");
-      localStorage.removeItem("mg360_waitlist");
-
       setGuestUnlocked(true);
-      setTimeout(() => navigate("/"), 1500);
+      // ✅ FIX : reload propre — garantit que useAccessCheck repart à zéro
+      // navigate("/") seul ne suffit pas si le state React de AppRoutes
+      // est désynchronisé avec le localStorage qu'on vient de modifier
+      setTimeout(() => { window.location.href = "/"; }, 1500);
     } catch {
       setGuestError("Erreur de connexion. Réessaie.");
     }
@@ -212,8 +292,8 @@ export default function ComingSoon() {
 
   const handleSignOut = async () => {
     await signOut();
-    localStorage.removeItem('mg360_waitlist');
-    localStorage.removeItem('mg360_approved');
+    safeRemoveItem('mg360_waitlist');
+    safeRemoveItem('mg360_approved');
     navigate('/login');
   };
 
@@ -242,6 +322,23 @@ export default function ComingSoon() {
       padding: "24px 20px", fontFamily: "Nunito, sans-serif",
     }}>
       <div style={{ width: "100%", maxWidth: 420 }}>
+
+        {/* ✅ FIX 26/05/2026 — bannière d'alerte si navigateur restrictif */}
+        {storageBlocked && (
+          <div style={{
+            background: "rgba(244,162,97,0.15)",
+            border: "1px solid rgba(244,162,97,0.4)",
+            borderRadius: 12,
+            padding: "12px 14px",
+            marginBottom: 16,
+            fontSize: 12,
+            color: C.orange,
+            lineHeight: 1.5,
+          }}>
+            ⚠️ <strong>Stockage local bloqué.</strong> Votre navigateur empêche Mongazon360 de mémoriser votre accès.
+            Désactivez le mode privé/incognito ou autorisez les cookies pour <strong>mongazon360.fr</strong>, puis rechargez la page.
+          </div>
+        )}
 
         {/* Logo — tap ×5 pour révéler l'input code admin */}
         <div style={{ textAlign: "center", marginBottom: 28 }}>
@@ -424,7 +521,7 @@ export default function ComingSoon() {
                   </button>
                 </div>
                 {guestError && (
-                  <div style={{ fontSize: 11, color: "#ef9a9a", marginTop: 8 }}>{guestError}</div>
+                  <div style={{ fontSize: 11, color: "#ef9a9a", marginTop: 8, lineHeight: 1.5 }}>{guestError}</div>
                 )}
               </div>
             )}
@@ -477,7 +574,7 @@ export default function ComingSoon() {
               </button>
             </div>
             {adminError && (
-              <div style={{ fontSize: 11, color: "#ef9a9a", marginTop: 8 }}>{adminError}</div>
+              <div style={{ fontSize: 11, color: "#ef9a9a", marginTop: 8, lineHeight: 1.5 }}>{adminError}</div>
             )}
           </div>
         )}
