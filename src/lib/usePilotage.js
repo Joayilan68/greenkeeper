@@ -67,11 +67,15 @@ export function usePilotage() {
     const handleError = (event) => {
       const message = event.message || "Erreur JavaScript inconnue";
       const details = {
-        "Fichier":  event.filename || "inconnu",
-        "Ligne":    event.lineno || "?",
-        "Colonne":  event.colno || "?",
-        "URL":      window.location.pathname,
-        "Navigateur": navigator.userAgent.split(" ").pop(),
+        "Fichier":     event.filename || "inconnu",
+        "Ligne":       event.lineno || "?",
+        "Colonne":     event.colno || "?",
+        "URL":         window.location.pathname,
+        // ✅ FIX 26/05/2026 : user-agent complet + plateforme pour identifier iOS/Android/Desktop
+        // Avant : split(" ").pop() renvoyait juste "Safari/605" → inutilisable
+        "User-Agent":  navigator.userAgent,
+        "Plateforme":  navigator.platform || "inconnue",
+        "Langue":      navigator.language || "inconnue",
       };
       sendBugAlert("Erreur JavaScript", message, details, "error");
     };
@@ -79,10 +83,15 @@ export function usePilotage() {
     // 2. Intercepte les promesses rejetées non gérées
     const handleUnhandledRejection = (event) => {
       const message = event.reason?.message || String(event.reason) || "Promesse rejetée";
+      // ✅ FIX 26/05/2026 : capturer aussi la stack trace si disponible
+      const stack   = event.reason?.stack || "non disponible";
       const details = {
-        "Type":   "Promise rejection",
-        "URL":    window.location.pathname,
-        "Raison": message.substring(0, 200),
+        "Type":        "Promise rejection",
+        "URL":         window.location.pathname,
+        "Raison":      message.substring(0, 200),
+        "Stack":       stack.substring(0, 500),
+        "User-Agent":  navigator.userAgent,
+        "Plateforme":  navigator.platform || "inconnue",
       };
       sendBugAlert("Promesse rejetée", message, details, "error");
     };

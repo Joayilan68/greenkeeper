@@ -35,7 +35,10 @@ function loadLocal() {
     // On supprime le champ "days" s'il existe — la fréquence est désormais fixe
     const merged = { ...defaultReminders() };
     Object.keys(merged).forEach(id => {
-      if (parsed[id]) {
+      // ✅ FIX 26/05/2026 : vérifier que parsed[id] est bien un objet avant destructuration
+      // Avant : if (parsed[id]) { ... } → si parsed[id] était un booléen ou une string,
+      // la destructuration produisait un objet mais propageait le problème en aval
+      if (parsed[id] && typeof parsed[id] === "object") {
         const { days: _removed, ...rest } = parsed[id]; // supprimer days résiduel
         merged[id] = { ...merged[id], ...rest };
       }
@@ -69,7 +72,9 @@ export function useReminders(syncFromReminders) {
           // Supabase prioritaire — nettoyer le champ "days" résiduel
           const remote = { ...defaultReminders() };
           Object.keys(remote).forEach(id => {
-            if (data.preferences[id]) {
+            // ✅ FIX 26/05/2026 : même guard défensif côté Supabase
+            // Protège contre les anciennes lignes au format obsolète
+            if (data.preferences[id] && typeof data.preferences[id] === "object") {
               const { days: _removed, ...rest } = data.preferences[id];
               remote[id] = { ...remote[id], ...rest };
             }
@@ -113,15 +118,27 @@ export function useReminders(syncFromReminders) {
   };
 
   const toggle = (id) => {
-    save({ ...reminders, [id]: { ...reminders[id], enabled: !reminders[id].enabled } });
+    // ✅ FIX 26/05/2026 : garantir que reminders[id] est un objet avant spread
+    const current = (reminders[id] && typeof reminders[id] === "object")
+      ? reminders[id]
+      : { enabled: false, lastSent: null, email: false, push: false };
+    save({ ...reminders, [id]: { ...current, enabled: !current.enabled } });
   };
 
   const toggleChannel = (id, channel) => {
-    save({ ...reminders, [id]: { ...reminders[id], [channel]: !reminders[id][channel] } });
+    // ✅ FIX 26/05/2026 : idem
+    const current = (reminders[id] && typeof reminders[id] === "object")
+      ? reminders[id]
+      : { enabled: false, lastSent: null, email: false, push: false };
+    save({ ...reminders, [id]: { ...current, [channel]: !current[channel] } });
   };
 
   const markSent = (id) => {
-    save({ ...reminders, [id]: { ...reminders[id], lastSent: new Date().toISOString() } });
+    // ✅ FIX 26/05/2026 : idem
+    const current = (reminders[id] && typeof reminders[id] === "object")
+      ? reminders[id]
+      : { enabled: false, lastSent: null, email: false, push: false };
+    save({ ...reminders, [id]: { ...current, lastSent: new Date().toISOString() } });
   };
 
   // ── syncToServer — endpoint push/email (comportement existant conservé) ───
@@ -137,7 +154,10 @@ export function useReminders(syncFromReminders) {
     } catch {}
   };
 
-  const activeCount = Object.values(reminders || {}).filter(r => r?.enabled).length;
+  // ✅ FIX 26/05/2026 : filter défensif — accepte uniquement les objets
+  const activeCount = Object.values(reminders || {}).filter(
+    r => r !== null && typeof r === "object" && r.enabled === true
+  ).length;
 
   // Vérifie quels rappels sont dus (basé sur historique réel, pas sur "days" config)
   const getDueReminders = (history = []) => {
@@ -162,7 +182,11 @@ export function useReminders(syncFromReminders) {
       } catch { return 999; }
     };
     return REMINDER_TYPES
-      .filter(type => reminders[type.id]?.enabled)
+      .filter(type => {
+        // ✅ FIX 26/05/2026 : vérifier que c'est un objet avant d'accéder à .enabled
+        const r = reminders[type.id];
+        return r && typeof r === "object" && r.enabled === true;
+      })
       .filter(type => {
         const daysSince = daysSinceAction(type.id === "desherbage" ? "désherbage" : type.id);
         return daysSince >= (INTERVALLES[type.id] || 7);

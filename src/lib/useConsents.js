@@ -125,17 +125,25 @@ export function useConsents() {
   // Appelé par useReminders après chaque changement de canal
   const syncFromReminders = useCallback(async (reminders) => {
     if (!reminders || typeof reminders !== "object") return;
-    const vals = Object.values(reminders);
-    const pushActive  = vals.some(r => r?.enabled && r?.push);
-    const emailActive = vals.some(r => r?.enabled && r?.email);
+
+    // ✅ FIX 26/05/2026 : filtrer pour ne garder QUE les objets réels
+    // Avant : Object.values(reminders).some(r => r?.enabled && r?.push)
+    //   → plantait si r était une string/bool/nombre (ancien format localStorage)
+    //   → message exact sur Safari iOS : "undefined is not an object (evaluating 'e.enabled')"
+    const vals = Object.values(reminders).filter(
+      r => r !== null && typeof r === "object"
+    );
+
+    const pushActive  = vals.some(r => r.enabled === true && r.push  === true);
+    const emailActive = vals.some(r => r.enabled === true && r.email === true);
 
     const patch = {
       push_active:   pushActive,
       email_active:  emailActive,
       // Si aucun rappel push actif → désactiver notifications
-      notifications: pushActive ? consents.notifications : false,
+      notifications: pushActive  ? consents.notifications : false,
       // Si aucun rappel email actif → désactiver marketing
-      marketing:     emailActive ? consents.marketing : false,
+      marketing:     emailActive ? consents.marketing     : false,
     };
 
     await updateConsents(patch);
