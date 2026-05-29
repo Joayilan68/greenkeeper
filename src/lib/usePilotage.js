@@ -6,6 +6,10 @@ import { useEffect, useRef } from "react";
 const ALERT_KEY    = "gk_pilotage_alerts";
 const COOLDOWN_MS  = 5 * 60 * 1000; // 5 min entre 2 alertes du même type
 
+// ✅ FIX 29/05/2026 — clé pour tracker les tentatives de reload (éviter boucle infinie)
+const RELOAD_KEY      = "gk_chunk_reload_attempt";
+const RELOAD_MAX_AGE  = 30 * 1000; // 30s : au-delà, on considère que le précédent reload a réussi
+
 function safeGet(key, fallback = []) {
   try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch { return fallback; }
 }
@@ -26,6 +30,46 @@ function markAlertSent(type) {
   const alerts   = safeGet(ALERT_KEY, {});
   alerts[type]   = Date.now();
   safeSet(ALERT_KEY, alerts);
+}
+
+// ✅ FIX 29/05/2026 — détecte les erreurs de chunk loading (réseau / cache désynchronisé)
+// Ces erreurs ne sont PAS des bugs de notre code : elles viennent de coupures réseau,
+// déploiements en cours, bloqueurs de pub, ou caches navigateurs périmés.
+// La bonne pratique côté front est de NE PAS alerter et de tenter un reload automatique.
+function isChunkLoadError(message, stack) {
+  const haystack = `${message || ""} ${stack || ""}`.toLowerCase();
+  return (
+    haystack.includes("loading chunk") ||
+    haystack.includes("loading css chunk") ||
+    haystack.includes("failed to fetch dynamically imported module") ||
+    haystack.includes("importing a module script failed") ||
+    haystack.includes("dynamically imported module") ||
+    /chunk\s+\d+\s+failed/i.test(haystack)
+  );
+}
+
+// ✅ FIX 29/05/2026 — auto-recovery : recharge la page une fois pour récupérer le chunk
+// Protection anti-boucle : si un reload a déjà été tenté il y a moins de 30s,
+// on n'en relance pas un autre (sinon l'utilisateur serait coincé dans une boucle).
+function attemptChunkReload() {
+  try {
+    const last = parseInt(localStorage.getItem(RELOAD_KEY) || "0", 10);
+    const now  = Date.now();
+
+    if (last && (now - last) < RELOAD_MAX_AGE) {
+      // Un reload a déjà eu lieu récemment → ne pas en refaire un
+      // L'utilisateur verra l'erreur, mais au moins l'app ne tourne pas en rond
+      console.warn("[MG360] Chunk reload déjà tenté récemment, abandon");
+      return false;
+    }
+
+    localStorage.setItem(RELOAD_KEY, String(now));
+    console.warn("[MG360] Chunk failed → reload automatique dans 1s");
+    setTimeout(() => { window.location.reload(); }, 1000);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 // Envoi de l'alerte email + push
@@ -63,16 +107,32 @@ export function usePilotage() {
     if (initialized.current) return;
     initialized.current = true;
 
+    // ✅ FIX 29/05/2026 — au montage réussi, on nettoie le compteur reload si expiré
+    // Si l'app a réussi à monter, c'est que le précédent reload a fonctionné
+    try {
+      const last = parseInt(localStorage.getItem(RELOAD_KEY) || "0", 10);
+      if (last && (Date.now() - last) > RELOAD_MAX_AGE) {
+        localStorage.removeItem(RELOAD_KEY);
+      }
+    } catch {}
+
     // 1. Intercepte les erreurs JavaScript globales
     const handleError = (event) => {
       const message = event.message || "Erreur JavaScript inconnue";
+      const stack   = event.error?.stack || "";
+
+      // ✅ FIX 29/05/2026 — chunk errors : ne PAS alerter, juste reload
+      if (isChunkLoadError(message, stack)) {
+        attemptChunkReload();
+        return;
+      }
+
       const details = {
         "Fichier":     event.filename || "inconnu",
         "Ligne":       event.lineno || "?",
         "Colonne":     event.colno || "?",
         "URL":         window.location.pathname,
-        // ✅ FIX 26/05/2026 : user-agent complet + plateforme pour identifier iOS/Android/Desktop
-        // Avant : split(" ").pop() renvoyait juste "Safari/605" → inutilisable
+        // user-agent complet + plateforme pour identifier iOS/Android/Desktop
         "User-Agent":  navigator.userAgent,
         "Plateforme":  navigator.platform || "inconnue",
         "Langue":      navigator.language || "inconnue",
@@ -83,8 +143,15 @@ export function usePilotage() {
     // 2. Intercepte les promesses rejetées non gérées
     const handleUnhandledRejection = (event) => {
       const message = event.reason?.message || String(event.reason) || "Promesse rejetée";
-      // ✅ FIX 26/05/2026 : capturer aussi la stack trace si disponible
       const stack   = event.reason?.stack || "non disponible";
+
+      // ✅ FIX 29/05/2026 — chunk errors : ne PAS alerter, juste reload
+      // C'est ici que tomberait l'erreur "Loading chunk 344 failed" du 29/05
+      if (isChunkLoadError(message, stack)) {
+        attemptChunkReload();
+        return;
+      }
+
       const details = {
         "Type":        "Promise rejection",
         "URL":         window.location.pathname,
