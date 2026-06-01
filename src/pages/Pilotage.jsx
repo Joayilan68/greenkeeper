@@ -59,6 +59,65 @@ function KPI({ icon, label, value, sub, color = "#a5d6a7" }) {
   );
 }
 
+// ✅ FIX 01/06/2026 — Composant pour afficher les sources UTM
+// Affiche les sources avec icône, label et compteur, masque celles à 0
+const SOURCE_META = {
+  direct:    { icon: "🔗", label: "Direct",    color: "#a5d6a7" },
+  instagram: { icon: "📸", label: "Instagram", color: "#f48fb1" },
+  tiktok:    { icon: "🎵", label: "TikTok",    color: "#80deea" },
+  facebook:  { icon: "📘", label: "Facebook",  color: "#90caf9" },
+  twitter:   { icon: "🐦", label: "Twitter/X", color: "#81d4fa" },
+  youtube:   { icon: "📺", label: "YouTube",   color: "#ef9a9a" },
+  google:    { icon: "🔍", label: "Google",    color: "#ffcc80" },
+  email:     { icon: "✉️", label: "Email",     color: "#ce93d8" },
+  linkedin:  { icon: "💼", label: "LinkedIn",  color: "#9fa8da" },
+  autre:     { icon: "🌐", label: "Autre",     color: "#bcaaa4" },
+};
+
+function SourceBreakdown({ sources, title }) {
+  if (!sources) return null;
+  const entries = Object.entries(sources)
+    .filter(([_, count]) => count > 0)
+    .sort(([,a], [,b]) => b - a);
+
+  if (entries.length === 0) {
+    return (
+      <div style={card()}>
+        <div style={cardTitle}><span>{title}</span></div>
+        <div style={{ fontSize:11, color:"#4a7c5c", textAlign:"center", padding:"12px 0" }}>
+          Aucune donnée pour l'instant
+        </div>
+      </div>
+    );
+  }
+
+  const total = entries.reduce((s, [,c]) => s + c, 0);
+
+  return (
+    <div style={card()}>
+      <div style={cardTitle}><span>{title}</span><span style={{ fontSize:11, color:"#81c784" }}>{total} total</span></div>
+      {entries.map(([src, count]) => {
+        const m   = SOURCE_META[src] || SOURCE_META.autre;
+        const pct = Math.round((count / total) * 100);
+        return (
+          <div key={src} style={{ padding:"6px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:2 }}>
+              <span style={{ fontSize:12, display:"flex", alignItems:"center", gap:6 }}>
+                <span>{m.icon}</span>
+                <span style={{ color:"#e8f5e9", fontWeight:600 }}>{m.label}</span>
+              </span>
+              <span style={{ fontSize:11, fontWeight:700, color:m.color }}>
+                {count} <span style={{ fontSize:9, color:"#81c784" }}>({pct}%)</span>
+              </span>
+            </div>
+            <Bar value={pct} color={m.color} />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 const SEV_STYLE = {
   error:   { bg:"rgba(198,40,40,0.2)",  border:"rgba(229,57,53,0.4)",  color:"#ef9a9a" },
   warning: { bg:"rgba(230,81,0,0.2)",   border:"rgba(239,108,0,0.4)",  color:"#ffcc80" },
@@ -87,11 +146,11 @@ export default function Pilotage() {
   const [expandedPhases, setExpandedPhases] = useState({});
 
   // ── Roadmap Google Sheets ──────────────────────────────────────────────────
-  const SHEETS_EDIT_URL = "https://docs.google.com/spreadsheets/d/1RzCsdKNeBtYjWkAUXPm7X7Xg1nA1dufq6ka2jzhMJBM/edit"; // TODO: coller ici l'URL de ton navigateur quand le sheet est ouvert
+  const SHEETS_EDIT_URL = "https://docs.google.com/spreadsheets/d/1RzCsdKNeBtYjWkAUXPm7X7Xg1nA1dufq6ka2jzhMJBM/edit";
   const [roadmap, setRoadmap]           = useState([]);
   const [roadmapLoading, setRoadmapLoading] = useState(false);
   const [roadmapError, setRoadmapError]     = useState(null);
-  const [roadmapMeta, setRoadmapMeta]       = useState(null); // { date, pctGlobal }
+  const [roadmapMeta, setRoadmapMeta]       = useState(null);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -109,12 +168,10 @@ export default function Pilotage() {
     setLastUpdate(new Date().toLocaleTimeString("fr-FR"));
   }
 
-  // ── Parser CSV Google Sheets ───────────────────────────────────────────────
   async function fetchRoadmap() {
     setRoadmapLoading(true);
     setRoadmapError(null);
     try {
-      // ── Google Sheets API v4 — temps réel, pas de cache CSV ───────────────
       const SHEET_ID  = "1RzCsdKNeBtYjWkAUXPm7X7Xg1nA1dufq6ka2jzhMJBM";
       const API_KEY   = import.meta.env.VITE_GOOGLE_SHEETS_API_KEY;
       const RANGE     = encodeURIComponent("📊 Tableau de bord!A1:H200");
@@ -127,12 +184,10 @@ export default function Pilotage() {
 
       if (!rows.length) throw new Error("Feuille vide");
 
-      // Extraire la date de mise à jour (ligne 2, index 1)
       const dateLine  = (rows[1]?.[0] || "");
       const dateMatch = dateLine.match(/Mis à jour le (\d{2}\/\d{2}\/\d{4})/);
       const majDate   = dateMatch ? dateMatch[1] : null;
 
-      // Trouver la ligne d'entêtes (contient "Phase")
       const headerIdx = rows.findIndex(r => r[0] === "Phase");
       if (headerIdx < 0) throw new Error("Format inattendu — colonne Phase introuvable");
 
@@ -144,7 +199,6 @@ export default function Pilotage() {
         const [phase="", etape="", desc="", statut="", priorite="", dateCible="", notes="", pctRaw=""] = cols;
         if (!phase.trim()) continue;
 
-        // Ligne TOTAL
         if (phase.includes("TOTAL")) {
           const pctStr = (pctRaw || "").replace(/[^0-9,.]/g, "").replace(",", ".");
           pctGlobal = parseFloat(pctStr) || null;
@@ -298,17 +352,20 @@ export default function Pilotage() {
     { id:"preinscriptions", label:"📬 Pré-inscrits" },
   ];
 
-  // ── Calcul stats roadmap par phase ────────────────────────────────────────
-  const PHASE_ORDER = ["Phase 1","Juridique","Phase 2","Phase 3","Sécurité","Branding","Phase 4"];
+  const PHASE_ORDER = ["Phase 1","Juridique","Phase 2","Phase 3","Tech","Stores","Growth J1-J30","Growth J30-J90","Marketing","Sprint IA","Phase 4","Sécurité","Branding"];
   const PHASE_COLORS = {
-    "Phase 1":   "#43a047", "Phase 2":   "#1565c0",
-    "Phase 3":   "#00897b", "Phase 4":   "#6a1b9a",
-    "Juridique": "#e65100", "Sécurité":  "#558b2f",
-    "Branding":  "#ad1457",
+    "Phase 1":         "#43a047", "Phase 2":   "#1565c0",
+    "Phase 3":         "#00897b", "Phase 4":   "#6a1b9a",
+    "Juridique":       "#e65100", "Sécurité":  "#558b2f",
+    "Branding":        "#ad1457", "Tech":      "#c62828",
+    "Stores":          "#00838f", "Marketing": "#ec407a",
+    "Sprint IA":       "#0288d1", "Growth J1-J30": "#fbc02d",
+    "Growth J30-J90":  "#f9a825",
   };
   const STATUT_STYLE = {
     "✅ Terminé":   { bg:"rgba(67,160,71,0.15)",  border:"rgba(67,160,71,0.4)",   color:"#a5d6a7" },
     "⚠️ En cours": { bg:"rgba(230,81,0,0.15)",   border:"rgba(230,81,0,0.4)",    color:"#ffcc80" },
+    "🟡 En cours": { bg:"rgba(230,81,0,0.15)",   border:"rgba(230,81,0,0.4)",    color:"#ffcc80" },
     "🔵 Partiel":   { bg:"rgba(21,101,192,0.15)", border:"rgba(66,165,245,0.35)", color:"#90caf9" },
     "❌ À faire":   { bg:"rgba(198,40,40,0.12)",  border:"rgba(229,57,53,0.3)",   color:"#ef9a9a" },
   };
@@ -326,7 +383,8 @@ export default function Pilotage() {
       <div style={header}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", width:"100%" }}>
           <div>
-            <div style={{ fontSize:18, fontWeight:800, color:"#f9a825" }}>📊 Pilotage</div>
+            {/* ✅ Titre avec ™ — marque Mongazon360 déposée EUIPO 30/05/2026 */}
+            <div style={{ fontSize:18, fontWeight:800, color:"#f9a825" }}>📊 Pilotage<sup style={{ fontSize:9, marginLeft:2 }}>™</sup></div>
             <div style={{ fontSize:10, color:"#81c784", marginTop:2 }}>Mis à jour : {lastUpdate}</div>
           </div>
           <div style={{ display:"flex", gap:8 }}>
@@ -355,6 +413,13 @@ export default function Pilotage() {
               <KPI icon="✅" label="Actifs 30j" value={loadingUsers ? "..." : (users?.activeL30 ?? "—")} sub="Connectés ce mois" color="#a5d6a7" />
               <KPI icon="📸" label="Diagnostics" value={local?.diagnostics.total ?? "—"} sub={`+${local?.diagnostics.ce7j ?? 0} cette semaine`} color="#ce93d8" />
             </div>
+
+            {/* ✅ FIX 01/06/2026 — Sources des inscrits Clerk (UTM first-touch) */}
+            <SourceBreakdown
+              sources={users?.clerkSources}
+              title="🎯 Sources d'inscription (comptes créés)"
+            />
+
             {users?.weeks && (
               <div style={card()}>
                 <div style={cardTitle}><span>📈 Inscriptions — 8 semaines</span></div>
@@ -451,7 +516,6 @@ export default function Pilotage() {
         {/* ════════════════ TAB ROADMAP ════════════════ */}
         {tab === "roadmap" && (
           <>
-            {/* Header */}
             <div style={{ ...card(), background:"rgba(249,168,37,0.06)", border:"1px solid rgba(249,168,37,0.2)" }}>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                 <div>
@@ -481,7 +545,6 @@ export default function Pilotage() {
               )}
             </div>
 
-            {/* Avancement par phase */}
             {phaseStats.length > 0 && (
               <div style={card()}>
                 <div style={cardTitle}><span>🗺️ Avancement par phase</span></div>
@@ -497,7 +560,6 @@ export default function Pilotage() {
               </div>
             )}
 
-            {/* Liste des tâches par phase */}
             {phaseStats.map(({ phase, tasks }) => {
               const urgent    = tasks.filter(t => t.statut !== "✅ Terminé");
               const isExpanded = expandedPhases[phase] || false;
@@ -579,8 +641,9 @@ export default function Pilotage() {
               {[
                 { phase:"Phase 1 — Fondations",      pct:100, color:"#43a047" },
                 { phase:"Phase 2 — Diagnostic IA",   pct:100, color:"#43a047" },
-                { phase:"Juridique RGPD",             pct:64,  color:"#ec407a" },
-                { phase:"Phase 3 — Officialisation",  pct:45,  color:"#e65100" },
+                { phase:"Juridique RGPD + Marque",    pct:85,  color:"#ec407a" },
+                { phase:"Phase 3 — Officialisation",  pct:95,  color:"#e65100" },
+                { phase:"Tech & Migration serveur",   pct:30,  color:"#c62828" },
                 { phase:"Phase 4 — Monétisation",     pct:10,  color:"#6a1b9a" },
               ].map(r => (
                 <div key={r.phase} style={{ marginBottom:10 }}>
@@ -593,7 +656,6 @@ export default function Pilotage() {
               ))}
             </div>
 
-            {/* ── Purge Cloudinary ── */}
             <div style={card()}>
               <div style={cardTitle}><span>🗑️ Purge Cloudinary</span></div>
               <div style={{ fontSize:12, color:"#81c784", marginBottom:12, lineHeight:1.6 }}>
@@ -690,16 +752,14 @@ export default function Pilotage() {
         {/* ════════════════ TAB PRÉ-INSCRITS ════════════════ */}
         {tab === "preinscriptions" && (
           <>
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, marginBottom:8 }}>
-              <KPI icon="📬" label="Total pré-inscrits" value={preinscTotal} color="#64b5f6" />
-              <KPI icon="📸" label="Instagram" value={preinscriptions.filter(p=>p.source==='instagram').length} color="#f48fb1" />
-              <KPI icon="🎵" label="TikTok" value={preinscriptions.filter(p=>p.source==='tiktok').length} color="#80deea" />
-            </div>
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, marginBottom:8 }}>
-              <KPI icon="📘" label="Facebook" value={preinscriptions.filter(p=>p.source==='facebook').length} color="#90caf9" />
-              <KPI icon="🐦" label="Twitter/X" value={preinscriptions.filter(p=>p.source==='twitter').length} color="#81d4fa" />
-              <KPI icon="🔗" label="Direct" value={preinscriptions.filter(p=>p.source==='direct').length} color="#a5d6a7" />
-            </div>
+            {/* ✅ FIX 01/06/2026 — Utilisation du composant SourceBreakdown harmonisé */}
+            <KPI icon="📬" label="Total pré-inscrits" value={preinscTotal} sub="Via formulaire ComingSoon" color="#64b5f6" />
+
+            <SourceBreakdown
+              sources={users?.waitlistSources}
+              title="📊 Sources des pré-inscriptions"
+            />
+
             <div style={{ display:"flex", gap:8, marginBottom:8 }}>
               <button onClick={fetchPreinscriptions} style={{ flex:1, background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:10, padding:"8px", color:"#81c784", fontSize:12, cursor:"pointer" }}>
                 ↻ Actualiser

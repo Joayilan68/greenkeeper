@@ -10,7 +10,10 @@ export default function Login() {
           alt="Mongazon360"
           style={{ width: 80, height: 80, objectFit: "contain", display: "block", margin: "0 auto 8px" }}
         />
-        <div style={{ fontSize: 26, fontWeight: 800, color: "#a5d6a7" }}>Mongazon360</div>
+        {/* ✅ Marque déposée EUIPO 30/05/2026 — afficher ™ jusqu'à enregistrement définitif (nov 2026) */}
+        <div style={{ fontSize: 26, fontWeight: 800, color: "#a5d6a7" }}>
+          Mongazon360<sup style={{ fontSize: 12, fontWeight: 600, marginLeft: 2, color: "#81c784" }}>™</sup>
+        </div>
         <div style={{ fontSize: 13, color: "#81c784", marginTop: 4 }}>Tant qu'il y a gazon, il y a match</div>
       </div>
       <SignIn
@@ -28,6 +31,10 @@ export default function Login() {
           }
         }}
       />
+      {/* ✅ Mention légale discrète marque déposée */}
+      <div style={{ marginTop: 24, fontSize: 10, color: "#4a7c5c", textAlign: "center", maxWidth: 360, lineHeight: 1.6 }}>
+        Mongazon360™ est une marque déposée à l'EUIPO — protégée dans les 27 pays de l'Union européenne.
+      </div>
     </div>
   );
 }

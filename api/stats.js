@@ -2,8 +2,8 @@
 // Fusion de stats-revenue.js et stats-users.js
 //
 // Usage :
-//   GET /api/stats?type=revenue  → stats Stripe (ancien stats-revenue.js)
-//   GET /api/stats?type=users    → stats Clerk  (ancien stats-users.js)
+//   GET /api/stats?type=revenue  → stats Stripe
+//   GET /api/stats?type=users    → stats Clerk + sources UTM (Clerk + Supabase waitlist)
 
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -21,7 +21,6 @@ module.exports = async function handler(req, res) {
 };
 
 // ── Stats financières (Stripe) ────────────────────────────────────────────────
-// Code identique à l'ancien stats-revenue.js — aucune modification
 async function handleRevenue(req, res) {
   try {
     const stripeKey = process.env.STRIPE_SECRET_KEY;
@@ -129,35 +128,27 @@ async function handleRevenue(req, res) {
   }
 }
 
-// ── Stats utilisateurs (Clerk) ────────────────────────────────────────────────
-// Code identique à l'ancien stats-users.js — aucune modification
+// ── Stats utilisateurs (Clerk + sources UTM Supabase) ─────────────────────────
 async function handleUsers(req, res) {
   try {
-    const clerkRes = await fetch("https://api.clerk.com/v1/users?limit=500&order_by=-created_at", {
-      headers: {
-        "Authorization": `Bearer ${process.env.CLERK_SECRET_KEY}`,
-        "Content-Type":  "application/json"
-      }
-    });
-
-    if (!clerkRes.ok) throw new Error("Clerk API error: " + clerkRes.status);
-    const users = await clerkRes.json();
+    // ✅ Pagination explicite + parsing format multi-version Clerk
+    const allUsers = await fetchAllClerkUsers();
 
     const now    = Date.now();
     const day7   = now - 7  * 24 * 60 * 60 * 1000;
     const day30  = now - 30 * 24 * 60 * 60 * 1000;
 
-    const total     = users.length;
-    const newLast7  = users.filter(u => u.created_at > day7).length;
-    const newLast30 = users.filter(u => u.created_at > day30).length;
-    const activeL30 = users.filter(u => u.last_active_at && u.last_active_at > day30).length;
+    const total     = allUsers.length;
+    const newLast7  = allUsers.filter(u => u.created_at > day7).length;
+    const newLast30 = allUsers.filter(u => u.created_at > day30).length;
+    const activeL30 = allUsers.filter(u => u.last_active_at && u.last_active_at > day30).length;
 
     // Grouper par semaine (8 dernières semaines)
     const weeks = [];
     for (let i = 7; i >= 0; i--) {
       const start = now - (i + 1) * 7 * 24 * 60 * 60 * 1000;
       const end   = now - i       * 7 * 24 * 60 * 60 * 1000;
-      const count = users.filter(u => u.created_at >= start && u.created_at < end).length;
+      const count = allUsers.filter(u => u.created_at >= start && u.created_at < end).length;
       weeks.push({ label: `S-${i === 0 ? "cette sem." : i}`, count });
     }
 
@@ -168,7 +159,7 @@ async function handleUsers(req, res) {
       d.setMonth(d.getMonth() - i);
       const year  = d.getFullYear();
       const month = d.getMonth();
-      const count = users.filter(u => {
+      const count = allUsers.filter(u => {
         const ud = new Date(u.created_at);
         return ud.getFullYear() === year && ud.getMonth() === month;
       }).length;
@@ -178,10 +169,118 @@ async function handleUsers(req, res) {
       });
     }
 
-    res.json({ success: true, total, newLast7, newLast30, activeL30, weeks, months });
+    // ✅ Sources UTM séparées : Clerk (inscrits convertis) vs Waitlist (prospects pré-inscrits)
+    const clerkSources    = aggregateClerkSources(allUsers);
+    const waitlistSources = await aggregateWaitlistSources();
+
+    res.json({
+      success: true,
+      total,
+      newLast7,
+      newLast30,
+      activeL30,
+      weeks,
+      months,
+      // Backward compat avec l'ancien champ "sources"
+      sources: clerkSources,
+      // Nouveaux champs explicites pour Pilotage
+      clerkSources,
+      waitlistSources,
+    });
 
   } catch (e) {
     console.error("stats-users:", e.message);
     res.status(500).json({ error: e.message });
   }
+}
+
+// ── Helper : pagination Clerk complète ─────────────────────────────────────
+async function fetchAllClerkUsers() {
+  const clerkKey = process.env.CLERK_SECRET_KEY;
+  const limit    = 100;
+  let   offset   = 0;
+  const all      = [];
+
+  for (let page = 0; page < 50; page++) {
+    const res = await fetch(
+      `https://api.clerk.com/v1/users?limit=${limit}&offset=${offset}&order_by=-created_at`,
+      { headers: { "Authorization": `Bearer ${clerkKey}`, "Content-Type": "application/json" } }
+    );
+
+    if (!res.ok) throw new Error(`Clerk API error: ${res.status}`);
+    const json = await res.json();
+
+    // ✅ Gère les 2 formats possibles de l'API Clerk
+    const batch = Array.isArray(json) ? json : (json.data || []);
+
+    if (batch.length === 0) break;
+    all.push(...batch);
+
+    if (batch.length < limit) break;
+    offset += limit;
+  }
+
+  return all;
+}
+
+// ── Helper : agrégation sources inscrits Clerk (unsafe_metadata) ───────────
+// Lit user.unsafe_metadata.source qui est posé par useUTMInjection au signup
+function aggregateClerkSources(clerkUsers) {
+  const counts = {
+    direct: 0, instagram: 0, tiktok: 0, facebook: 0,
+    twitter: 0, youtube: 0, google: 0, email: 0,
+    linkedin: 0, autre: 0,
+  };
+
+  clerkUsers.forEach(u => {
+    const src = (u.unsafe_metadata?.source || u.public_metadata?.source || "direct").toLowerCase();
+    if (counts[src] !== undefined) counts[src]++;
+    else counts.autre++;
+  });
+
+  return counts;
+}
+
+// ── Helper : agrégation sources pré-inscrits (table preinscriptions Supabase) ──
+// Lit la vue preinscriptions_by_source créée dans migration_bloc1.sql
+async function aggregateWaitlistSources() {
+  const counts = {
+    direct: 0, instagram: 0, tiktok: 0, facebook: 0,
+    twitter: 0, youtube: 0, google: 0, email: 0,
+    linkedin: 0, autre: 0,
+  };
+
+  try {
+    const supaUrl = process.env.SUPABASE_URL;
+    const supaKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supaUrl || !supaKey) {
+      console.warn("stats-users: Supabase env vars manquantes pour waitlistSources");
+      return counts;
+    }
+
+    const r = await fetch(`${supaUrl}/rest/v1/preinscriptions_by_source`, {
+      headers: {
+        "apikey":        supaKey,
+        "Authorization": `Bearer ${supaKey}`,
+      }
+    });
+
+    if (!r.ok) {
+      console.warn("stats-users waitlistSources HTTP:", r.status);
+      return counts;
+    }
+
+    const rows = await r.json();
+    rows.forEach(row => {
+      const src = (row.source || "direct").toLowerCase();
+      const cnt = parseInt(row.count) || 0;
+      if (counts[src] !== undefined) counts[src] += cnt;
+      else counts.autre += cnt;
+    });
+  } catch (e) {
+    console.warn("stats-users waitlistSources:", e.message);
+  }
+
+  return counts;
 }
