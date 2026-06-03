@@ -1,10 +1,19 @@
 {
-  "name": "Mongazon360",
-"short_name": "Mongazon360",
-  "description": "Gestion intelligente de votre gazon",
+  "name": "Mongazon360™ - Votre Expert Gazon Intelligent",
+  "short_name": "Mongazon360",
+  "description": "Mongazon360™ : l'application intelligente d'entretien du gazon. Météo temps réel, IA agronomique, planning personnalisé, diagnostic photo.",
+  "lang": "fr",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1a4731",
+  "theme_color": "#1a4731",
+  "categories": ["lifestyle", "utilities", "productivity"],
   "icons": [
-    { "src": "/icon-192x192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icon-512x512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "/icon-maskable-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
     { "src": "/icon-maskable-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
