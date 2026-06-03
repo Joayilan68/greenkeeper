@@ -22,7 +22,9 @@ import { MentionsLegales, Confidentialite, CGU, CGV, Cookies } from "./pages/Leg
 import Layout from "./components/Layout";
 import ComingSoon from "./components/ComingSoon";
 import { WeatherProvider } from "./lib/WeatherContext";
-import { usePilotage } from "./lib/usePilotage";
+import { usePilotage }     from "./lib/usePilotage";
+import { useUTMCapture }   from "./lib/useUTMCapture";   // ✅ Bloc 1 — capture UTM dès l'arrivée
+import { useUTMInjection } from "./lib/useUTMInjection"; // ✅ Bloc 1 — injection Clerk metadata first-touch
 
 // ── Emails admin — accès permanent garanti ────────────────────────────────────
 const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
@@ -42,6 +44,8 @@ function setUserFlags() {
 
 function AppWithWeather({ children }) {
   usePilotage();
+  useUTMCapture();   // capte les UTM dès l'arrivée sur le site
+  useUTMInjection(); // ✅ FIX 01/06/2026 — injecte les UTM dans Clerk unsafeMetadata (first-touch)
   return <WeatherProvider>{children}</WeatherProvider>;
 }
 
@@ -66,17 +70,13 @@ function LoadingScreen() {
 }
 
 // ── Hook qui vérifie l'accès et retourne l'état de chargement ────────────────
-// Bloque le rendu des routes jusqu'à ce que la vérification Supabase soit terminée.
-// Sans ça, isOnWaitlist() retourne false avant que le flag soit posé → Dashboard visible.
 function useAccessCheck() {
   const { user, isLoaded } = useUser();
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    // Clerk pas encore chargé → on attend
     if (!isLoaded) return;
 
-    // Pas d'utilisateur connecté → pas de vérification nécessaire
     if (!user) {
       setChecking(false);
       return;
@@ -85,26 +85,22 @@ function useAccessCheck() {
     const email   = user.primaryEmailAddress?.emailAddress || "";
     const isAdmin = ADMIN_EMAILS.includes(email) || user.publicMetadata?.role === "admin";
 
-    // Admin → flags immédiats, pas besoin de Supabase
     if (isAdmin) {
       setAdminFlags();
       setChecking(false);
       return;
     }
 
-    // Déjà approuvé en localStorage → pas besoin de vérifier Supabase
     if (localStorage.getItem("mg360_approved") === "true") {
       setChecking(false);
       return;
     }
 
-    // Déjà en waitlist → pas besoin de vérifier Supabase
     if (localStorage.getItem("mg360_waitlist") === "true") {
       setChecking(false);
       return;
     }
 
-    // Nouvel utilisateur inconnu → vérifier Supabase avant d'afficher quoi que ce soit
     (async () => {
       try {
         const { supabase } = await import("./lib/supabase");
@@ -120,7 +116,6 @@ function useAccessCheck() {
           localStorage.setItem("mg360_waitlist", "true");
         }
       } catch {
-        // Erreur réseau → waitlist par sécurité
         localStorage.setItem("mg360_waitlist", "true");
       } finally {
         setChecking(false);
@@ -131,7 +126,6 @@ function useAccessCheck() {
   return { checking };
 }
 
-// ── Vérification waitlist synchrone ──────────────────────────────────────────
 function isOnWaitlist() {
   try {
     return localStorage.getItem("mg360_waitlist") === "true" &&
@@ -139,7 +133,6 @@ function isOnWaitlist() {
   } catch { return false; }
 }
 
-// ── Wrapper pour protéger les routes privées ──────────────────────────────────
 function PrivateRoute({ children }) {
   return (
     <>
@@ -149,50 +142,40 @@ function PrivateRoute({ children }) {
   );
 }
 
-// ── Routes principales ────────────────────────────────────────────────────────
 function AppRoutes() {
   const { checking } = useAccessCheck();
 
-  // Bloque tout rendu jusqu'à ce que la vérification d'accès soit terminée
   if (checking) return <LoadingScreen />;
 
   const onWaitlist = isOnWaitlist();
 
   return (
     <Routes>
-      {/* ── Auth ── */}
       <Route path="/login"             element={<Login />} />
       <Route path="/admin"             element={<Admin />} />
 
-      {/* ── Onboarding ── */}
       <Route path="/register"          element={
         <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Register />}</PrivateRoute>
       } />
 
-      {/* ── Liste d'attente ── */}
       <Route path="/coming-soon"       element={<PrivateRoute><ComingSoon /></PrivateRoute>} />
 
-      {/* ── Abonnement ── */}
       <Route path="/free"              element={<PrivateRoute><Layout><Free /></Layout></PrivateRoute>} />
       <Route path="/subscribe"         element={<PrivateRoute><Subscribe /></PrivateRoute>} />
       <Route path="/subscribe/success" element={<PrivateRoute><SubscribeSuccess /></PrivateRoute>} />
 
-      {/* ── Pages légales ── */}
       <Route path="/mentions-legales"  element={<MentionsLegales />} />
       <Route path="/confidentialite"   element={<Confidentialite />} />
       <Route path="/cgu"               element={<CGU />} />
       <Route path="/cgv"               element={<CGV />} />
       <Route path="/cookies"           element={<Cookies />} />
 
-      {/* ── Paramètres ── */}
       <Route path="/parametres"        element={
         <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Settings /></Layout>}</PrivateRoute>
       } />
 
-      {/* ── Pilotage Admin ── */}
       <Route path="/pilotage"          element={<Layout><Pilotage /></Layout>} />
 
-      {/* ── App principale ── */}
       <Route path="/"                  element={
         <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Dashboard /></Layout>}</PrivateRoute>
       } />
