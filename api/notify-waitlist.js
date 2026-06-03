@@ -56,7 +56,7 @@ export default async function handler(req, res) {
         await resend.emails.send({
           from: 'Mongazon360 <bonjour@mongazon360.fr>',
           to: inscrit.email,
-          subject: '🌿 Mongazon360 est maintenant ouvert !',
+          subject: '🌿 Mongazon360™ est maintenant ouvert !',
           html: `
             <!DOCTYPE html>
             <html lang="fr">
@@ -71,7 +71,7 @@ export default async function handler(req, res) {
                     C'est ouvert ! 🎉
                   </h1>
                   <p style="color:#52b788;font-size:14px;margin:0;">
-                    Mongazon360 est maintenant disponible
+                    Mongazon360<sup style="font-size:9px;">™</sup> est maintenant disponible
                   </p>
                 </div>
 
@@ -80,7 +80,7 @@ export default async function handler(req, res) {
                   <p style="color:#e8f5e9;font-size:14px;line-height:1.7;margin:0 0 16px;">
                     Bonjour,<br><br>
                     Vous faisiez partie de notre liste d'attente — <strong style="color:#95d5b2;">
-                    Mongazon360 est maintenant ouvert !</strong><br><br>
+                    Mongazon360<sup style="font-size:9px;">™</sup> est maintenant ouvert !</strong><br><br>
                     Créez votre compte et commencez à entretenir votre gazon comme un pro.
                   </p>
                   <p style="color:#95d5b2;font-size:13px;line-height:1.7;margin:0;">
@@ -100,11 +100,21 @@ export default async function handler(req, res) {
                   </a>
                 </div>
 
+                <div style="text-align:center;padding:16px 0 8px;border-top:1px solid rgba(82,183,136,0.15);margin-bottom:8px;">
+                  <p style="color:#52b788;font-size:12px;font-weight:600;margin:0 0 4px;">
+                    L'équipe Mongazon360<sup style="font-size:8px;">™</sup>
+                  </p>
+                  <p style="color:#4a7c5c;font-size:10px;font-style:italic;margin:0;">
+                    Tant qu'il y a gazon, il y a match
+                  </p>
+                </div>
+
                 <p style="color:#4a7c5c;font-size:11px;text-align:center;margin:0;line-height:1.6;">
                   Vous recevez cet email car vous vous êtes pré-inscrit sur mongazon360.fr.<br>
                   Pour vous désinscrire, répondez à cet email avec "STOP".<br>
-                  Mongazon360 — <a href="https://mongazon360.fr/confidentialite"
-                    style="color:#52b788;">Politique de confidentialité</a>
+                  © ${new Date().getFullYear()} Mongazon360<sup style="font-size:8px;">™</sup> — Marque déposée à l'EUIPO<br>
+                  <a href="https://mongazon360.fr/mentions-legales" style="color:#52b788;">Mentions légales</a> ·
+                  <a href="https://mongazon360.fr/confidentialite" style="color:#52b788;">Confidentialité</a>
                 </p>
 
               </div>

@@ -15,6 +15,7 @@ module.exports = async function handler(req, res) {
     const now  = new Date();
     const week = `Semaine du ${now.toLocaleDateString("fr-FR", { day:"numeric", month:"long", year:"numeric" })}`;
     const date = now.toLocaleString("fr-FR", { timeZone:"Europe/Paris" });
+    const year = now.getFullYear();
 
     // ── 1. DONNÉES CLERK ─────────────────────────────────────────────────────
     let users = { total:0, newLast7:0, newLast30:0, activeL30:0 };
@@ -118,7 +119,7 @@ module.exports = async function handler(req, res) {
     <div style="display:flex;align-items:center;gap:16px;margin-bottom:8px;">
       <span style="font-size:36px;">🌿</span>
       <div>
-        <div style="color:#a5d6a7;font-size:22px;font-weight:800;">Mongazon360</div>
+        <div style="color:#a5d6a7;font-size:22px;font-weight:800;">Mongazon360<sup style="font-size:11px;">™</sup></div>
         <div style="color:#81c784;font-size:13px;">Rapport Hebdomadaire Complet</div>
       </div>
     </div>
@@ -207,10 +208,10 @@ module.exports = async function handler(req, res) {
       ${[
         ["Phase 1 — Fondations",      "✅ 100%", "#e8f5e9"],
         ["Phase 2 — Diagnostic IA",   "✅ 100%", "#e8f5e9"],
-        ["Juridique RGPD",            "⚠️ 75%",  "#fce4ec"],
-        ["Phase 3 — Officialisation", "✅ 92%",  "#e8f5e9"],
-        ["Sécurité & Branding",       "✅ 95%",  "#e8f5e9"],
-        ["Phase 4 — Monétisation",    "⚠️ 25%",  "#fff9e6"],
+        ["Juridique RGPD + Marque",   "⚠️ 85%",  "#fce4ec"],
+        ["Phase 3 — Officialisation", "✅ 95%",  "#e8f5e9"],
+        ["Tech & Migration serveur",  "⚠️ 30%",  "#fff9e6"],
+        ["Phase 4 — Monétisation",    "⚠️ 10%",  "#fff9e6"],
       ].map(([phase, statut, bg]) => `
       <tr style="background:${bg}">
         <td style="padding:8px 12px;border-bottom:1px solid rgba(0,0,0,0.05);font-weight:600;">${phase}</td>
@@ -228,8 +229,11 @@ module.exports = async function handler(req, res) {
 
   <!-- FOOTER -->
   <div style="background:#f9fbe7;padding:16px 32px;border-top:1px solid #e8f5e9;text-align:center;">
-    <div style="color:#4a7c5c;font-size:11px;">Mongazon360 — Rapport automatique hebdomadaire — Lundi 8h00</div>
+    <div style="color:#4a7c5c;font-size:11px;">Mongazon360<sup style="font-size:8px;">™</sup> — Rapport automatique hebdomadaire — Lundi 8h00</div>
     <div style="color:#81c784;font-size:11px;margin-top:4px;">mongazon360@gmail.com</div>
+    <div style="color:#4a7c5c;font-size:10px;margin-top:6px;">
+      © ${year} Mongazon360<sup style="font-size:7px;">™</sup> — Marque déposée à l'EUIPO — Tous droits réservés
+    </div>
   </div>
 </div>
 </body></html>`;
@@ -240,7 +244,7 @@ module.exports = async function handler(req, res) {
       body: JSON.stringify({
         from:    "Mongazon360 Pilotage <bonjour@mongazon360.fr>",
         to:      ["mongazon360@gmail.com"],
-        subject: `📊 [MG360] Rapport hebdomadaire — ${week}`,
+        subject: `📊 [MG360™] Rapport hebdomadaire — ${week}`,
         html
       })
     });

@@ -12,6 +12,7 @@ const REMINDER_LABELS = {
 };
 
 function buildReminderHtml(reminders, userName, profile, score) {
+  const year = new Date().getFullYear();
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"/></head>
 <body style="font-family:Arial,sans-serif;background:#f5f5f5;margin:0;padding:20px;">
@@ -20,7 +21,7 @@ function buildReminderHtml(reminders, userName, profile, score) {
     <div style="display:flex;align-items:center;gap:12px;">
       <span style="font-size:32px;">🌿</span>
       <div>
-        <div style="color:#a5d6a7;font-size:18px;font-weight:800;">Mongazon360</div>
+        <div style="color:#a5d6a7;font-size:18px;font-weight:800;">Mongazon360<sup style="font-size:10px;">™</sup></div>
         <div style="color:#4a7c5c;font-size:11px;font-style:italic;">Tant qu'il y a gazon, il y a match</div>
       </div>
     </div>
@@ -47,9 +48,18 @@ function buildReminderHtml(reminders, userName, profile, score) {
         🌿 Ouvrir Mongazon360 →
       </a>
     </div>
+    <div style="text-align:center;padding:16px 0 8px;border-top:1px solid #e8f5e9;margin-top:8px;">
+      <p style="color:#52b788;font-size:12px;font-weight:600;margin:0 0 4px;">
+        L'équipe Mongazon360<sup style="font-size:8px;">™</sup>
+      </p>
+    </div>
   </div>
   <div style="background:#f9fbe7;padding:14px 28px;border-top:1px solid #e8f5e9;text-align:center;">
-    <div style="color:#4a7c5c;font-size:10px;">Mongazon360 — Rappels personnalisés</div>
+    <div style="color:#4a7c5c;font-size:10px;">Mongazon360<sup style="font-size:7px;">™</sup> — Rappels personnalisés</div>
+    <div style="color:#81c784;font-size:9px;margin-top:4px;">
+      © ${year} Mongazon360<sup style="font-size:7px;">™</sup> — Marque déposée à l'EUIPO ·
+      <a href="https://mongazon360.fr/mentions-legales" style="color:#52b788;">Mentions légales</a>
+    </div>
   </div>
 </div>
 </body></html>`;
@@ -139,7 +149,7 @@ module.exports = async function handler(req, res) {
                 body: JSON.stringify({
                   from:    "Mongazon360 <bonjour@mongazon360.fr>",
                   to:      [email],
-                  subject: `🌿 [MG360] Rappel : ${emailDue.map(r => r.label).join(", ")}`,
+                  subject: `🌿 [Mongazon360™] Rappel : ${emailDue.map(r => r.label).join(", ")}`,
                   html:    buildReminderHtml(emailDue, "Jardinier", {}, 0),
                 }),
               });
@@ -215,6 +225,7 @@ module.exports = async function handler(req, res) {
 
       const severityEmoji = { error: "🔴", warning: "🟠", info: "🔵" }[severity] || "🔴";
       const severityLabel = { error: "ERREUR CRITIQUE", warning: "AVERTISSEMENT", info: "INFO" }[severity] || "ERREUR";
+      const year = new Date().getFullYear();
 
       const html = `<!DOCTYPE html>
 <html><head><meta charset="utf-8"/></head>
@@ -224,7 +235,7 @@ module.exports = async function handler(req, res) {
     <div style="display:flex;align-items:center;gap:12px;">
       <span style="font-size:32px;">🌿</span>
       <div>
-        <div style="color:#a5d6a7;font-size:18px;font-weight:800;">Mongazon360</div>
+        <div style="color:#a5d6a7;font-size:18px;font-weight:800;">Mongazon360<sup style="font-size:10px;">™</sup></div>
         <div style="color:#81c784;font-size:12px;">Alerte automatique — Système de pilotage</div>
       </div>
     </div>
@@ -257,7 +268,10 @@ module.exports = async function handler(req, res) {
     </div>
   </div>
   <div style="background:#0d2b1a;padding:16px 24px;text-align:center;border-top:1px solid #2d7d52;">
-    <div style="color:#4a7c5c;font-size:11px;">Mongazon360 — Système d'alerte automatique</div>
+    <div style="color:#4a7c5c;font-size:11px;">Mongazon360<sup style="font-size:8px;">™</sup> — Système d'alerte automatique</div>
+    <div style="color:#4a7c5c;font-size:9px;margin-top:4px;">
+      © ${year} Mongazon360<sup style="font-size:7px;">™</sup> — Marque déposée à l'EUIPO
+    </div>
   </div>
 </div>
 </body></html>`;
@@ -268,7 +282,7 @@ module.exports = async function handler(req, res) {
         body: JSON.stringify({
           from:    "Mongazon360 Pilotage <bonjour@mongazon360.fr>",
           to:      ["mongazon360@gmail.com"],
-          subject: `${severityEmoji} [MG360] ${severityLabel} — ${alertType}`,
+          subject: `${severityEmoji} [MG360™] ${severityLabel} — ${alertType}`,
           html,
         }),
       });
@@ -328,7 +342,7 @@ module.exports = async function handler(req, res) {
         body: JSON.stringify({
           from:    "Mongazon360 <bonjour@mongazon360.fr>",
           to:      [userEmail],
-          subject: `🌿 [MG360] Rappel : ${reminders.map(r => r.label).join(", ")}`,
+          subject: `🌿 [Mongazon360™] Rappel : ${reminders.map(r => r.label).join(", ")}`,
           html:    buildReminderHtml(reminders, userName, profile, score),
         }),
       });
