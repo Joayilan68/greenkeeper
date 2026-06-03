@@ -24,11 +24,10 @@ export default function Settings() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showAccountDeleteConfirm, setShowAccountDeleteConfirm] = useState(false);
   const [deleted, setDeleted] = useState(false);
-  const [geoStatus, setGeoStatus]   = useState("unknown"); // "granted" | "denied" | "unknown"
+  const [geoStatus, setGeoStatus]   = useState("unknown");
   const [exportLoading, setExportLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  // Vérifier statut géolocalisation
   useEffect(() => {
     if (navigator.permissions) {
       navigator.permissions.query({ name: "geolocation" }).then(result => {
@@ -39,16 +38,13 @@ export default function Settings() {
     if (loc) setGeoStatus("granted");
   }, []);
 
-  // Handler spécifique pour le toggle notifications push
   const handleNotifToggle = async () => {
     if (!consents.notifications) {
-      // Activation — demander permission si pas encore accordée
       if (isSupported && permission !== "granted") {
         await subscribePush();
       }
       await updateConsent("notifications", true);
     } else {
-      // Désactivation — retirer le consentement
       await updateConsent("notifications", false);
     }
   };
@@ -75,14 +71,12 @@ export default function Settings() {
     );
   };
 
-  // ── Export RGPD — données locales + Supabase ──────────────────────────────
   const exportData = async () => {
     setExportLoading(true);
     try {
       const token = await getToken();
       let serverData = null;
 
-      // Tentative récupération données Supabase via API
       if (token) {
         try {
           const res = await fetch("/api/user-data", {
@@ -92,11 +86,11 @@ export default function Settings() {
         } catch {}
       }
 
-      // Fusion données serveur + locales
       const data = {
         export_date:  new Date().toISOString(),
         droits_rgpd:  "Données exportées conformément au RGPD — Article 20 (droit à la portabilité)",
-        responsable:  "Mongazon360 — contact@mongazon360.fr",
+        responsable:  "Mongazon360™ — contact@mongazon360.fr",
+        marque_deposee: "Mongazon360™ — Marque déposée à l'EUIPO (30/05/2026) — Classes 9, 42, 44 — 27 pays UE",
         user: {
           email:      user?.emailAddresses[0]?.emailAddress,
           nom:        user?.fullName,
@@ -106,7 +100,6 @@ export default function Settings() {
         abonnement:   isPaid ? "Premium" : "Gratuit",
         consentements: consents,
         localisation: locationName,
-        // Données serveur (Supabase) si disponibles, sinon localStorage
         profil:       serverData?.profil    || profile,
         historique:   serverData?.historique || history,
         greenpoints:  serverData?.greenpoints || null,
@@ -126,13 +119,11 @@ export default function Settings() {
     setExportLoading(false);
   };
 
-  // ── Suppression RGPD — localStorage + Supabase ───────────────────────────
   const deleteLocalData = async () => {
     setDeleteLoading(true);
-    // 1. Supprimer données locales
     [
       "gk_location", "gk_location_name", "gk_profile", "mg360_profile_v1",
-      "gk_history", "gk_history_v1", CONSENTS_KEY, "gk_consents", "gk_push_sub",
+      "gk_history", "gk_history_v1", "CONSENTS_KEY", "gk_consents", "gk_push_sub",
       "gk_diagnostics", "gk_admin_code", "mg360_guest_validated",
       "mg360_guest_code", "mg360_approved", "mg360_onboarding_done",
       "mg360_waitlist", "mg360_ai_reco_today", "mg360_debit_mmh",
@@ -140,7 +131,6 @@ export default function Settings() {
       "mg360_notif_banner_seen", "gk_streak",
     ].forEach(k => localStorage.removeItem(k));
 
-    // 2. Supprimer données Supabase via API
     try {
       const token = await getToken();
       if (token) {
@@ -158,15 +148,11 @@ export default function Settings() {
   };
 
   const deleteAccount = async () => {
-    // 1. Supprimer données locales
     deleteLocalData();
-    // 2. Déconnecter
     try { await signOut(); } catch {}
-    // 3. Rediriger vers login avec message
     navigate("/login");
   };
 
-  // ── Données consentements initiaux (depuis Register.jsx) ──────────────────
   const dateAcceptation = consents.date
     ? new Date(consents.date).toLocaleDateString("fr-FR", { day:"numeric", month:"long", year:"numeric" })
     : null;
@@ -188,12 +174,17 @@ export default function Settings() {
 
   return (
     <div>
+      {/* ✅ Header avec mention Mongazon360™ */}
       <div style={{ padding:"48px 20px 16px" }}>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-          <img src="/mg360-mascot-transparent.png" alt="MG360" style={{ width:40, height:40, objectFit:"contain" }} />
+          <img src="/mg360-mascot-transparent.png" alt="Mongazon360" style={{ width:40, height:40, objectFit:"contain" }} />
           <div>
-            <div style={{ fontSize:20, fontWeight:800, color:"#F1F8F2" }}>Mes données & Paramètres</div>
-            <div style={{ fontSize:12, color:"#66BB6A", marginTop:2 }}>RGPD — Gestion de vos consentements</div>
+            <div style={{ fontSize:20, fontWeight:800, color:"#F1F8F2" }}>
+              Mes données &amp; Paramètres
+            </div>
+            <div style={{ fontSize:12, color:"#66BB6A", marginTop:2 }}>
+              Mongazon360<sup style={{ fontSize:7 }}>™</sup> — RGPD — Gestion de vos consentements
+            </div>
           </div>
         </div>
       </div>
@@ -232,7 +223,6 @@ export default function Settings() {
             )}
           </div>
 
-          {/* ── Consentements OBLIGATOIRES (lecture seule) ── */}
           <div style={{ fontSize:10, fontWeight:800, color:"#66BB6A", letterSpacing:1, marginBottom:8, marginTop:4 }}>
             CONSENTEMENTS OBLIGATOIRES
           </div>
@@ -263,12 +253,10 @@ export default function Settings() {
             </div>
           ))}
 
-          {/* ── Consentements OPTIONNELS ── */}
           <div style={{ fontSize:10, fontWeight:800, color:"#66BB6A", letterSpacing:1, marginBottom:8, marginTop:16 }}>
             CONSENTEMENTS OPTIONNELS
           </div>
 
-          {/* Géolocalisation — cas spécial */}
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
             <div style={{ flex:1 }}>
               <div style={{ fontSize:13, fontWeight:600 }}>📍 Géolocalisation</div>
@@ -289,11 +277,10 @@ export default function Settings() {
             )}
           </div>
 
-          {/* Consentements toggle */}
           {[
             { key:"notifications", label:"🔔 Notifications push", desc:"Alertes téléphone — rappels d'entretien et météo" },
             { key:"dataResale",    label:"📊 Données anonymisées", desc:"Partage avec partenaires jardinage — jamais nom/email" },
-            { key:"marketing",     label:"📧 Emails MG360", desc:"Conseils saisonniers et nouveautés" },
+            { key:"marketing",     label:"📧 Emails Mongazon360", desc:"Conseils saisonniers et nouveautés" },
             { key:"cookies",       label:"🍪 Cookies analytiques", desc:"Amélioration de l'expérience — données anonymes" },
           ].map(({ key, label, desc }) => {
             const isNotif = key === "notifications";
@@ -430,6 +417,25 @@ export default function Settings() {
               </div>
             </div>
           )}
+        </div>
+
+        {/* ✅ Section À PROPOS — Marque déposée Mongazon360™ */}
+        <div style={{ ...card(), background:"rgba(76,175,80,0.04)", border:"1px solid rgba(76,175,80,0.15)" }}>
+          <div style={cardTitle}><span>ℹ️ À propos de Mongazon360<sup style={{ fontSize:8 }}>™</sup></span></div>
+          <div style={{ fontSize:12, color:"#e8f5e9", lineHeight:1.8 }}>
+            <div style={{ marginBottom:8 }}>
+              <strong style={{ color:"#a5d6a7" }}>Mongazon360<sup style={{ fontSize:8 }}>™</sup></strong> est une marque déposée à l'EUIPO (European Union Intellectual Property Office) le 30 mai 2026.
+            </div>
+            <div style={{ fontSize:11, color:"#81c784", lineHeight:1.7, marginBottom:8 }}>
+              <strong>Protection :</strong> 27 pays de l'Union européenne — 10 ans renouvelables<br/>
+              <strong>Classes :</strong> 9 (logiciels), 42 (SaaS / services informatiques), 44 (jardinage / horticulture)<br/>
+              <strong>Slogan :</strong> "Tant qu'il y a gazon, il y a match"
+            </div>
+            <div style={{ marginTop:12, padding:"8px 10px", background:"rgba(76,175,80,0.08)", borderRadius:8, fontSize:11, color:"#a5d6a7" }}>
+              © {new Date().getFullYear()} Mongazon360<sup style={{ fontSize:7 }}>™</sup> — Tous droits réservés<br/>
+              Édité par un auto-entrepreneur immatriculé en France (SIRET disponible dans les Mentions légales)
+            </div>
+          </div>
         </div>
 
         <div style={{ paddingBottom:32 }} />

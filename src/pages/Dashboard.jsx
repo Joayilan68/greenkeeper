@@ -40,11 +40,9 @@ export default function Dashboard() {
   } = useClassement(gpHistorique, profile, isPaid);
 
   useEffect(() => {
-    // Attendre la sync Supabase avant de décider — évite faux positif après vidage cache
     if (!synced) return;
     const done = localStorage.getItem("mg360_onboarding_done") || localStorage.getItem("gk_onboarding_done");
     if (!done && !profile) setTimeout(() => setShowOnboarding(true), 800);
-    // Si profil existant → marquer onboarding comme fait
     if (profile && !done) {
       localStorage.setItem("mg360_onboarding_done", "true");
     }
@@ -54,7 +52,6 @@ export default function Dashboard() {
     sport: "Sport / résistant", ombre: "Ombre / mi-ombre", sec: "Sec / méditerranéen",
     ornemental: "Ornemental", universel: "Universel / mélange", chaud: "Gazon chaud",
     synthetique: "Gazon synthétique", inconnu: "Non défini",
-    // Rétrocompat anciens ids
     "ray-grass": "Ray-grass", fetuque: "Fétuque", kikuyu: "Kikuyu",
     bermuda: "Bermuda", paturin: "Pâturin", zoysia: "Zoysia", mixte: "Mélange",
   };
@@ -72,7 +69,6 @@ export default function Dashboard() {
     const success = await subscribe();
     if (success) {
       await sendTestNotification();
-      // Mettre à jour Supabase via useConsents
       await updateConsents({ notifications: true });
     }
   };
@@ -82,7 +78,6 @@ export default function Dashboard() {
     setShowOnboarding(false);
   };
 
-  // ── Historique score ──────────────────────────────────────────────────────
   const [period, setPeriod] = useState("7j");
   const scoreHistory = (() => {
     const days = period === "30j" ? 30 : 7;
@@ -129,7 +124,10 @@ export default function Dashboard() {
             <button onClick={() => navigate("/parametres")} style={{ background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:10, padding:"8px 10px", color:"#A5D6A7", fontSize:14, cursor:"pointer" }}>⚙️</button>
           </div>
         </div>
-        <div style={{ fontSize:11, color:"#81c784", fontStyle:"italic", opacity:0.8 }}>🌿 Prêt à prendre soin de ton gazon aujourd'hui ?</div>
+        {/* ✅ Branding Mongazon360™ — visible discret sous le bonjour */}
+        <div style={{ fontSize:11, color:"#81c784", fontStyle:"italic", opacity:0.8 }}>
+          🌿 Prêt à prendre soin de ton gazon avec Mongazon360<sup style={{ fontSize:7 }}>™</sup> aujourd'hui ?
+        </div>
         {isAdmin && <div style={{ fontSize:11, color:"#f9a825", marginTop:4, textAlign:"center" }}>👑 Mode Admin</div>}
       </div>
 
@@ -361,7 +359,6 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Mini graphe SVG */}
           <div style={{ position:"relative", height:60, marginBottom:8 }}>
             <svg width="100%" height="60" style={{ overflow:"visible" }}>
               {scoreHistory.length > 1 && (() => {
@@ -385,7 +382,6 @@ export default function Dashboard() {
             <span>Aujourd'hui</span>
           </div>
 
-          {/* Stats interventions */}
           <div style={{ display:"flex", gap:8 }}>
             {[
               { icon:"✂️", val:tontes, label:"Tontes" },
@@ -413,8 +409,14 @@ export default function Dashboard() {
           ))}
         </div>
 
+        {/* ✅ Signature finale avec ™ + slogan + mention déposée (préparation ® nov 2026) */}
         <div style={{ textAlign:"center", padding:"8px 0 24px" }}>
-          <div style={{ fontSize:10, color:"#2d4a35", fontStyle:"italic" }}>🌿 Mon Gazon 360 — Tant qu'il y a gazon, il y a match</div>
+          <div style={{ fontSize:10, color:"#2d4a35", fontStyle:"italic" }}>
+            🌿 Mongazon360<sup style={{ fontSize:7 }}>™</sup> — Tant qu'il y a gazon, il y a match
+          </div>
+          <div style={{ fontSize:9, color:"#1f3326", marginTop:2 }}>
+            Marque déposée à l'EUIPO
+          </div>
         </div>
 
       </div>
