@@ -90,7 +90,7 @@ export default function Subscribe() {
   return (
     <div style={{ ...appShell, fontFamily:"'Nunito','Segoe UI',sans-serif", padding:"48px 20px 40px", overflowY:"auto" }}>
       <div style={{ textAlign:"center", marginBottom:24 }}>
-        <div style={{ fontSize:48 }}>🌿</div>
+        <img src="/mg360-mascot-transparent.png" alt="Mongazon360" style={{ width:72, height:72, objectFit:"contain", marginBottom:4 }} />
         <div style={{ fontSize:22, fontWeight:800, color:"#a5d6a7", marginTop:8 }}>
           Choisissez votre accès
         </div>

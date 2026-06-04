@@ -110,7 +110,7 @@ export default function Register() {
 
   return (
     <div style={{ minHeight:"100vh", background:"linear-gradient(160deg, #0d2b1a, #1a4731)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:20 }}>
-      <div style={{ fontSize:48, marginBottom:16 }}>🌿</div>
+      <img src="/mg360-mascot-transparent.png" alt="Mongazon360" style={{ width:72, height:72, objectFit:"contain", marginBottom:16 }} />
       <div style={{ fontSize:22, fontWeight:800, color:"#a5d6a7", marginBottom:4 }}>
         Mongazon360<sup style={{ fontSize:11 }}>™</sup>
       </div>
