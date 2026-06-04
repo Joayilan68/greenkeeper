@@ -17,7 +17,6 @@ export function useSubscription() {
   const { isSignedIn }     = useAuth();
   const { user, isLoaded } = useUser();
   const [tier, setTier]    = useState(() => {
-    // Init synchrone : si gk_admin_code déjà en localStorage → admin direct
     if (typeof window !== "undefined" &&
         localStorage.getItem("gk_admin_code") === ADMIN_CODE) return "admin";
     return "free";
@@ -26,6 +25,30 @@ export function useSubscription() {
 
   useEffect(() => {
     if (!isLoaded) return;
+
+    // ════════════════════════════════════════════════════════════════════════
+    // 🧪 TEST MODE — Force Free (uniquement si admin a activé le flag)
+    // ════════════════════════════════════════════════════════════════════════
+    // Pour activer : window.Clerk.user.update({ unsafeMetadata: { force_free_for_test: true } })
+    // Pour désactiver : ...force_free_for_test: false
+    // Ce flag fonctionne UNIQUEMENT pour les emails admin (sécurité).
+    if (user) {
+      const email = user.primaryEmailAddress?.emailAddress || "";
+      const isAdminEmail = ADMIN_EMAILS.includes(email);
+      const forceFreeTest = user.unsafeMetadata?.force_free_for_test === true;
+
+      if (isAdminEmail && forceFreeTest) {
+        // En mode test, on simule un compte Free vierge
+        localStorage.removeItem("gk_admin_code");
+        localStorage.removeItem("mg360_guest_validated");
+        localStorage.setItem("mg360_approved", "true");      // bypass ComingSoon
+        localStorage.setItem("mg360_onboarding_done", "true"); // bypass onboarding
+        setTier("free");
+        setLoading(false);
+        return;
+      }
+    }
+    // ════════════════════════════════════════════════════════════════════════
 
     // 1. Email admin hardcodé → tier admin garanti
     if (user) {
