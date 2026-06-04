@@ -24,9 +24,12 @@ export default function Settings() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showAccountDeleteConfirm, setShowAccountDeleteConfirm] = useState(false);
   const [deleted, setDeleted] = useState(false);
+  const [accountDeleted, setAccountDeleted] = useState(false);
   const [geoStatus, setGeoStatus]   = useState("unknown");
   const [exportLoading, setExportLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [accountDeleteLoading, setAccountDeleteLoading] = useState(false);
+  const [deleteReport, setDeleteReport] = useState(null);
 
   useEffect(() => {
     if (navigator.permissions) {
@@ -71,54 +74,57 @@ export default function Settings() {
     );
   };
 
+  // ══════════════════════════════════════════════════════════════════════════
+  // EXPORT RGPD — Article 20 (Portabilité)
+  // Appelle /api/rgpd-data qui renvoie un export complet de toutes les tables
+  // ══════════════════════════════════════════════════════════════════════════
   const exportData = async () => {
     setExportLoading(true);
     try {
       const token = await getToken();
-      let serverData = null;
+      if (!token) throw new Error("Token Clerk manquant");
 
-      if (token) {
-        try {
-          const res = await fetch("/api/user-data", {
-            headers: { "Authorization": `Bearer ${token}` },
-          });
-          if (res.ok) serverData = await res.json();
-        } catch {}
+      const res = await fetch("/api/rgpd-data", {
+        headers: { "Authorization": `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `HTTP ${res.status}`);
       }
 
+      const serverData = await res.json();
+
+      // Le serveur renvoie déjà toutes les métadonnées RGPD. On ajoute juste
+      // les données client (consentements, profil local cache) en complément.
       const data = {
-        export_date:  new Date().toISOString(),
-        droits_rgpd:  "Données exportées conformément au RGPD — Article 20 (droit à la portabilité)",
-        responsable:  "Mongazon360™ — contact@mongazon360.fr",
-        marque_deposee: "Mongazon360™ — Marque déposée à l'EUIPO (30/05/2026) — Classes 9, 42, 44 — 27 pays UE",
-        user: {
-          email:      user?.emailAddresses[0]?.emailAddress,
-          nom:        user?.fullName,
-          clerk_id:   user?.id,
-          created_at: user?.createdAt,
+        ...serverData,
+        client_side_supplement: {
+          consentements_local_cache: consents,
+          historique_local_cache:    history,
+          profil_local_cache:        profile,
+          localisation_active:       locationName,
         },
-        abonnement:   isPaid ? "Premium" : "Gratuit",
-        consentements: consents,
-        localisation: locationName,
-        profil:       serverData?.profil    || profile,
-        historique:   serverData?.historique || history,
-        greenpoints:  serverData?.greenpoints || null,
-        streak:       serverData?.streak     || null,
       };
 
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
       const url  = URL.createObjectURL(blob);
       const a    = document.createElement("a");
       a.href = url;
-      a.download = `mg360-mes-donnees-${new Date().toISOString().slice(0,10)}.json`;
+      a.download = `mongazon360-mes-donnees-${new Date().toISOString().slice(0,10)}.json`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (e) {
-      console.error("export:", e);
+      console.error("[RGPD] export error:", e);
+      alert(`Erreur d'export : ${e.message}\n\nContactez contact@mongazon360.fr si le problème persiste.`);
     }
     setExportLoading(false);
   };
 
+  // ══════════════════════════════════════════════════════════════════════════
+  // SUPPRESSION DONNÉES LOCALES uniquement (vide le cache navigateur)
+  // Le compte Clerk reste actif — c'est juste pour repartir d'une page blanche
+  // ══════════════════════════════════════════════════════════════════════════
   const deleteLocalData = async () => {
     setDeleteLoading(true);
     [
@@ -131,26 +137,58 @@ export default function Settings() {
       "mg360_notif_banner_seen", "gk_streak",
     ].forEach(k => localStorage.removeItem(k));
 
-    try {
-      const token = await getToken();
-      if (token) {
-        await fetch("/api/user-data", {
-          method:  "DELETE",
-          headers: { "Authorization": `Bearer ${token}` },
-        });
-      }
-    } catch (e) {
-      console.warn("Supabase delete error:", e);
-    }
-
     setDeleteLoading(false);
     setDeleted(true);
   };
 
+  // ══════════════════════════════════════════════════════════════════════════
+  // SUPPRESSION COMPTE COMPLET — Article 17 (Effacement / Droit à l'oubli)
+  // Cascade serveur : Cloudinary + Supabase (toutes tables) + Clerk
+  // Puis : vidage localStorage + déconnexion automatique
+  // ══════════════════════════════════════════════════════════════════════════
   const deleteAccount = async () => {
-    deleteLocalData();
-    try { await signOut(); } catch {}
-    navigate("/login");
+    setAccountDeleteLoading(true);
+    setDeleteReport(null);
+
+    try {
+      const token = await getToken();
+      if (!token) throw new Error("Token Clerk manquant");
+
+      // 1. Appeler l'API serveur — cascade complète Cloudinary + Supabase + Clerk
+      const res = await fetch("/api/rgpd-data", {
+        method:  "DELETE",
+        headers: { "Authorization": `Bearer ${token}` },
+      });
+
+      const report = await res.json();
+      setDeleteReport(report);
+
+      // 2. Vider le localStorage côté client
+      [
+        "gk_location", "gk_location_name", "gk_profile", "mg360_profile_v1",
+        "gk_history", "gk_history_v1", "CONSENTS_KEY", "gk_consents", "gk_push_sub",
+        "gk_diagnostics", "gk_admin_code", "mg360_guest_validated",
+        "mg360_guest_code", "mg360_approved", "mg360_onboarding_done",
+        "mg360_waitlist", "mg360_ai_reco_today", "mg360_debit_mmh",
+        "mg360_amazon_clicks", "mg360_budget_spent", "mg360_greenpoints",
+        "mg360_notif_banner_seen", "gk_streak",
+      ].forEach(k => localStorage.removeItem(k));
+
+      // 3. Déconnexion immédiate (le compte Clerk a été supprimé côté serveur)
+      setTimeout(async () => {
+        try { await signOut(); } catch {}
+        setAccountDeleted(true);
+      }, 2500);
+
+    } catch (e) {
+      console.error("[RGPD] delete error:", e);
+      setDeleteReport({
+        success: false,
+        errors: [`Erreur : ${e.message}`],
+        message: "La suppression a échoué. Contactez contact@mongazon360.fr",
+      });
+    }
+    setAccountDeleteLoading(false);
   };
 
   const dateAcceptation = consents.date
@@ -158,23 +196,39 @@ export default function Settings() {
     : null;
   const versionCGU = consents.version || "1.0";
 
-  if (deleted) return (
+  // ── Écran post-suppression données locales ──────────────────────────────
+  if (deleted && !accountDeleted) return (
     <div style={{ minHeight:"100vh", background:"#0d2b1a", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:20, color:"#a5d6a7" }}>
       <div style={{ fontSize:48 }}>✅</div>
-      <div style={{ fontSize:18, fontWeight:800, marginTop:12 }}>Données supprimées</div>
-      <div style={{ fontSize:13, color:"#81c784", marginTop:8, textAlign:"center" }}>
-        Toutes vos données locales ont été effacées.<br/>
-        Pour la suppression complète du compte, contactez contact@mongazon360.fr
+      <div style={{ fontSize:18, fontWeight:800, marginTop:12 }}>Données locales supprimées</div>
+      <div style={{ fontSize:13, color:"#81c784", marginTop:8, textAlign:"center", maxWidth:400, lineHeight:1.6 }}>
+        Le cache navigateur a été vidé.<br/>
+        Votre compte reste actif et vos données serveur sont intactes.
       </div>
-      <button onClick={() => navigate("/")} style={{ ...btn.primary, marginTop:20, width:"auto", padding:"10px 24px" }}>
-        Retour
+      <button onClick={() => navigate("/")} style={{ ...btn.primary, marginTop:24, width:"auto", padding:"10px 24px" }}>
+        Retour à l'accueil
+      </button>
+    </div>
+  );
+
+  // ── Écran post-suppression compte complet ───────────────────────────────
+  if (accountDeleted) return (
+    <div style={{ minHeight:"100vh", background:"#0d2b1a", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:20, color:"#a5d6a7" }}>
+      <div style={{ fontSize:48 }}>✅</div>
+      <div style={{ fontSize:18, fontWeight:800, marginTop:12 }}>Compte supprimé</div>
+      <div style={{ fontSize:13, color:"#81c784", marginTop:8, textAlign:"center", maxWidth:400, lineHeight:1.6 }}>
+        Vos données ont été effacées conformément au RGPD Article 17.<br/><br/>
+        Si vous avez des questions, écrivez à <strong>contact@mongazon360.fr</strong>
+      </div>
+      <button onClick={() => navigate("/")} style={{ ...btn.primary, marginTop:24, width:"auto", padding:"10px 24px" }}>
+        Retour à l'accueil
       </button>
     </div>
   );
 
   return (
     <div>
-      {/* ✅ Header avec mention Mongazon360™ */}
+      {/* Header avec mention Mongazon360™ */}
       <div style={{ padding:"48px 20px 16px" }}>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
           <img src="/mg360-mascot-transparent.png" alt="Mongazon360" style={{ width:40, height:40, objectFit:"contain" }} />
@@ -201,7 +255,7 @@ export default function Settings() {
             { label:"Interventions",val: `${history?.length || 0} entrées` },
             { label:"Profil gazon", val: profile ? `${profile.pelouse || "?"} — ${profile.surface || "?"}m²` : "Non configuré" },
             { label:"Localisation", val: locationName || "Non définie" },
-            { label:"Conservation", val: "Données locales — supprimées à votre demande" },
+            { label:"Conservation", val: "Supabase (chiffré) + cache navigateur" },
           ].map(({ label, val }) => (
             <div key={label} style={{ display:"flex", justifyContent:"space-between", padding:"8px 0", borderBottom:"1px solid rgba(255,255,255,0.05)", fontSize:13 }}>
               <span style={{ color:"#81c784" }}>{label}</span>
@@ -331,7 +385,7 @@ export default function Settings() {
             {[
               "✅ Droit d'accès — téléchargez vos données ci-dessus",
               "✅ Droit de rectification — modifiez votre profil dans l'app",
-              "✅ Droit à l'effacement — supprimez vos données ci-dessous",
+              "✅ Droit à l'effacement — supprimez votre compte ci-dessous",
               "✅ Droit à la portabilité — export JSON disponible",
               "✅ Droit d'opposition — désactivez les consentements ci-dessus",
             ].map(d => <div key={d}>{d}</div>)}
@@ -360,21 +414,21 @@ export default function Settings() {
           ))}
         </div>
 
-        {/* ── SUPPRESSION DONNÉES LOCALES ── */}
+        {/* ── SUPPRESSION DONNÉES LOCALES (cache navigateur uniquement) ── */}
         <div style={{ ...card(), background:"rgba(198,40,40,0.06)", border:"1px solid rgba(198,40,40,0.2)" }}>
           <div style={cardTitle}><span>🗑️ Supprimer mes données locales</span></div>
           <div style={{ fontSize:12, color:"#81c784", marginBottom:12, lineHeight:1.6 }}>
-            Supprime l'historique, le profil, les diagnostics et les préférences stockés sur cet appareil.
-            Votre compte Clerk reste actif.
+            Vide le cache navigateur (historique, profil, diagnostics, préférences stockés sur cet appareil).
+            <strong style={{ color:"#a5d6a7" }}> Votre compte et vos données serveur restent intacts.</strong>
           </div>
           {!showDeleteConfirm ? (
             <button onClick={() => setShowDeleteConfirm(true)} style={{ background:"rgba(198,40,40,0.15)", border:"1px solid #c62828", borderRadius:10, padding:"10px", color:"#ef9a9a", fontSize:13, cursor:"pointer", width:"100%", fontWeight:700 }}>
-              🗑️ Supprimer mes données locales
+              🗑️ Vider le cache local
             </button>
           ) : (
             <div>
               <div style={{ fontSize:13, color:"#ef9a9a", marginBottom:12, fontWeight:700 }}>
-                ⚠️ Action irréversible — historique, profil et diagnostics supprimés.
+                ⚠️ Cache navigateur réinitialisé — vous devrez resaisir vos préférences locales.
               </div>
               <div style={{ display:"flex", gap:8 }}>
                 <button onClick={deleteLocalData} disabled={deleteLoading} style={{ background:"#c62828", border:"none", borderRadius:10, padding:"10px", color:"#fff", fontSize:13, cursor:"pointer", flex:1, fontWeight:700, opacity: deleteLoading ? 0.6 : 1 }}>
@@ -388,38 +442,61 @@ export default function Settings() {
           )}
         </div>
 
-        {/* ── SUPPRESSION COMPTE COMPLET ── */}
-        <div style={{ ...card(), background:"rgba(198,40,40,0.04)", border:"1px solid rgba(198,40,40,0.15)" }}>
-          <div style={cardTitle}><span>❌ Supprimer mon compte</span></div>
+        {/* ── SUPPRESSION COMPTE COMPLET (cascade RGPD Art. 17) ── */}
+        <div style={{ ...card(), background:"rgba(198,40,40,0.06)", border:"1px solid rgba(198,40,40,0.25)" }}>
+          <div style={cardTitle}><span>❌ Supprimer mon compte (RGPD Art. 17)</span></div>
           <div style={{ fontSize:12, color:"#81c784", marginBottom:12, lineHeight:1.6 }}>
-            Supprime vos données locales et vous déconnecte. Pour la suppression définitive du compte
-            (données Clerk, historique serveur), envoyez un email à{" "}
-            <strong style={{ color:"#a5d6a7" }}>contact@mongazon360.fr</strong> avec l'objet
-            "Suppression compte RGPD".
+            Suppression <strong style={{ color:"#ef9a9a" }}>définitive et irréversible</strong> de l'ensemble de vos données :
           </div>
-          {!showAccountDeleteConfirm ? (
-            <button onClick={() => setShowAccountDeleteConfirm(true)} style={{ background:"rgba(198,40,40,0.1)", border:"1px solid rgba(198,40,40,0.3)", borderRadius:10, padding:"10px", color:"#ef9a9a", fontSize:12, cursor:"pointer", width:"100%", fontWeight:700 }}>
-              ❌ Supprimer mon compte et mes données
+          <div style={{ fontSize:11, color:"#e8f5e9", marginBottom:14, lineHeight:1.8, paddingLeft:8 }}>
+            • Profil, historique, diagnostics photo<br/>
+            • GreenPoints, streak, classements<br/>
+            • Photos stockées (Cloudinary)<br/>
+            • Compte d'authentification (Clerk)<br/>
+            • Liste d'attente, préférences, consentements
+          </div>
+
+          {!showAccountDeleteConfirm && !deleteReport ? (
+            <button onClick={() => setShowAccountDeleteConfirm(true)} style={{ background:"rgba(198,40,40,0.15)", border:"1px solid #c62828", borderRadius:10, padding:"12px", color:"#ef9a9a", fontSize:13, cursor:"pointer", width:"100%", fontWeight:700 }}>
+              ❌ Supprimer définitivement mon compte
             </button>
-          ) : (
+          ) : showAccountDeleteConfirm && !deleteReport ? (
             <div>
-              <div style={{ fontSize:12, color:"#ef9a9a", marginBottom:12 }}>
-                ⚠️ Vous serez déconnecté et vos données locales supprimées.<br/>
-                Pour la suppression définitive : contact@mongazon360.fr
+              <div style={{ fontSize:13, color:"#ef9a9a", marginBottom:12, fontWeight:700, padding:"10px 12px", background:"rgba(198,40,40,0.1)", borderRadius:10 }}>
+                ⚠️ Cette action est <strong>définitive</strong>.<br/>
+                Aucune récupération possible après confirmation.
               </div>
               <div style={{ display:"flex", gap:8 }}>
-                <button onClick={deleteAccount} style={{ background:"#c62828", border:"none", borderRadius:10, padding:"10px", color:"#fff", fontSize:12, cursor:"pointer", flex:1, fontWeight:700 }}>
-                  Confirmer
+                <button onClick={deleteAccount} disabled={accountDeleteLoading} style={{ background:"#c62828", border:"none", borderRadius:10, padding:"12px", color:"#fff", fontSize:13, cursor:"pointer", flex:1, fontWeight:700, opacity: accountDeleteLoading ? 0.6 : 1 }}>
+                  {accountDeleteLoading ? "⏳ Suppression en cours..." : "Confirmer la suppression"}
                 </button>
-                <button onClick={() => setShowAccountDeleteConfirm(false)} style={{ ...btn.ghost, flex:1, fontSize:12 }}>
+                <button onClick={() => setShowAccountDeleteConfirm(false)} disabled={accountDeleteLoading} style={{ ...btn.ghost, flex:1, fontSize:13 }}>
                   Annuler
                 </button>
+              </div>
+            </div>
+          ) : (
+            // Rapport de suppression affiché après l'appel API
+            <div style={{ fontSize:11, color:"#e8f5e9", lineHeight:1.6 }}>
+              <div style={{ fontWeight:800, marginBottom:8, color: deleteReport.success ? "#a5d6a7" : "#f9a825" }}>
+                {deleteReport.message}
+              </div>
+              {deleteReport.errors?.length > 0 && (
+                <details style={{ marginTop:8 }}>
+                  <summary style={{ cursor:"pointer", color:"#ef9a9a", fontSize:11 }}>Détail des erreurs ({deleteReport.errors.length})</summary>
+                  <div style={{ fontSize:10, color:"#ef9a9a", marginTop:6, paddingLeft:10 }}>
+                    {deleteReport.errors.map((err, i) => <div key={i}>• {err}</div>)}
+                  </div>
+                </details>
+              )}
+              <div style={{ marginTop:10, fontSize:10, color:"#81c784", fontStyle:"italic" }}>
+                Déconnexion automatique dans quelques secondes...
               </div>
             </div>
           )}
         </div>
 
-        {/* ✅ Section À PROPOS — Marque déposée Mongazon360™ */}
+        {/* ── Section À PROPOS — Marque déposée Mongazon360™ ── */}
         <div style={{ ...card(), background:"rgba(76,175,80,0.04)", border:"1px solid rgba(76,175,80,0.15)" }}>
           <div style={cardTitle}><span>ℹ️ À propos de Mongazon360<sup style={{ fontSize:8 }}>™</sup></span></div>
           <div style={{ fontSize:12, color:"#e8f5e9", lineHeight:1.8 }}>
