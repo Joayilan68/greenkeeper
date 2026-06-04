@@ -6,11 +6,19 @@ import { trackAmazonClick } from "../lib/useAmazonProducts";
 import AMAZON_PRODUCTS from "../lib/amazonProducts";
 import { card, btn, scroll } from "../lib/styles";
 
+// ════════════════════════════════════════════════════════════════════════════
+// PRODUCTS — Catalogue de produits Amazon partenaire
+// ════════════════════════════════════════════════════════════════════════════
+// Conforme aux exigences avocat (Cabinet Victoris) :
+//   Mention 4 — Mention affiliation Amazon visible et explicite
+//   Mention 5 — Avertissement phytosanitaire EAJ pour catégorie "Traitements"
+// ════════════════════════════════════════════════════════════════════════════
+
 const CATEGORIES = [
-  { id:"entretien", label:"Entretien courant", icon:"🌱", keys:["engraisStarter","engraisEte","engraisAutomne","engraisHiver"] },
-  { id:"traitement", label:"Traitements",      icon:"💊", keys:["antiMousse","desherbage","biostimulant"] },
-  { id:"renovation", label:"Rénovation",       icon:"🌾", keys:["regarnissage","aeration","verticut"] },
-  { id:"materiel",   label:"Matériel",         icon:"🛠️", keys:["tonte"] },
+  { id:"entretien",  label:"Entretien courant", icon:"🌱", keys:["engraisStarter","engraisEte","engraisAutomne","engraisHiver"] },
+  { id:"traitement", label:"Traitements",       icon:"💊", keys:["antiMousse","desherbage","biostimulant"], isPhyto: true },
+  { id:"renovation", label:"Rénovation",        icon:"🌾", keys:["regarnissage","aeration","verticut"] },
+  { id:"materiel",   label:"Matériel",          icon:"🛠️", keys:["tonte"] },
 ];
 
 const getBudgetTier = (budget) => {
@@ -90,22 +98,43 @@ export default function Products() {
   const { profile } = useProfile();
   const [activeTab, setActiveTab] = useState("entretien");
 
-  const tier = isPaid ? getBudgetTier(profile?.budget) : "standard";
-  const cat  = CATEGORIES.find(c => c.id === activeTab) || CATEGORIES[0];
+  const tier        = isPaid ? getBudgetTier(profile?.budget) : "standard";
+  const cat         = CATEGORIES.find(c => c.id === activeTab) || CATEGORIES[0];
+  const isPhytoCat  = cat.isPhyto === true;
 
   return (
     <div>
       <div style={{ padding:"48px 20px 16px" }}>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-          <img src="/mg360-mascot-transparent.png" alt="MG360" style={{ width:40, height:40, objectFit:"contain" }} />
+          <img src="/mg360-mascot-transparent.png" alt="Mongazon360" style={{ width:40, height:40, objectFit:"contain" }} />
           <div>
             <div style={{ fontSize:20, fontWeight:800, color:"#F1F8F2" }}>Produits</div>
-            <div style={{ fontSize:12, color:"#66BB6A", marginTop:2 }}>Sélection adaptée · Recherche Amazon en direct</div>
+            <div style={{ fontSize:12, color:"#66BB6A", marginTop:2 }}>
+              Mongazon360<sup style={{ fontSize:7 }}>™</sup> · Sélection adaptée · Recherche Amazon en direct
+            </div>
           </div>
         </div>
       </div>
 
       <div style={scroll}>
+
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* MENTION 4 AVOCAT — BANDEAU AFFILIATION AMAZON (en haut, visible) */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        <div style={{
+          ...card(),
+          background:"rgba(255,153,0,0.06)",
+          border:"1px solid rgba(255,153,0,0.25)",
+          padding:"12px 14px",
+        }}>
+          <div style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
+            <span style={{ fontSize:18, flexShrink:0 }}>ℹ️</span>
+            <div style={{ fontSize:11, color:"#fde68a", lineHeight:1.6 }}>
+              <strong style={{ color:"#fbbf24" }}>Liens partenaires Amazon.</strong>{" "}
+              En tant que Partenaire Amazon, Mongazon360<sup style={{ fontSize:7 }}>™</sup> perçoit une commission sur les achats éligibles, sans surcoût pour vous. Prix et disponibilités gérés par Amazon.
+            </div>
+          </div>
+        </div>
 
         {isPaid && profile?.budget && (
           <div style={{ ...card(), background:"rgba(76,175,80,0.08)", border:"1px solid rgba(76,175,80,0.2)", padding:"10px 14px" }}>
@@ -130,6 +159,7 @@ export default function Products() {
           </div>
         )}
 
+        {/* ── Tabs catégories ── */}
         <div style={{ display:"flex", gap:6, overflowX:"auto", padding:"0 0 4px", marginBottom:8 }}>
           {CATEGORIES.map(c => (
             <button key={c.id} onClick={() => setActiveTab(c.id)} style={{
@@ -145,6 +175,48 @@ export default function Products() {
           ))}
         </div>
 
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* MENTION 5 AVOCAT — AVERTISSEMENT PHYTOSANITAIRE EAJ              */}
+        {/* Affiché uniquement sur la catégorie "Traitements"                */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {isPhytoCat && (
+          <div style={{
+            ...card(),
+            background:"rgba(198,40,40,0.06)",
+            border:"1px solid rgba(198,40,40,0.3)",
+            padding:"14px 16px",
+            marginBottom:8,
+          }}>
+            <div style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
+              <span style={{ fontSize:22, flexShrink:0 }}>⚠️</span>
+              <div>
+                <div style={{ fontSize:12, fontWeight:800, color:"#ef9a9a", marginBottom:6 }}>
+                  Produits phytosanitaires — Utilisation responsable obligatoire
+                </div>
+                <div style={{ fontSize:11, color:"#fecaca", lineHeight:1.6 }}>
+                  Les produits de cette catégorie peuvent contenir des substances actives soumises à autorisation (gamme EAJ — Emploi Autorisé dans les Jardins).
+                  <br/><br/>
+                  <strong style={{ color:"#fee2e2" }}>Avant utilisation :</strong>
+                  <ul style={{ margin:"4px 0 0 0", paddingLeft:18, lineHeight:1.7 }}>
+                    <li>Lisez attentivement l'étiquette et la notice d'emploi</li>
+                    <li>Respectez les doses, le matériel d'application et les délais de rentrée</li>
+                    <li>Portez les équipements de protection individuelle (EPI) recommandés</li>
+                    <li>Tenez hors de portée des enfants et des animaux domestiques</li>
+                    <li>Respectez les délais avant récolte si proche d'un potager</li>
+                  </ul>
+                  <div style={{ marginTop:8, fontSize:10, fontStyle:"italic", color:"#fca5a5" }}>
+                    Mongazon360<sup style={{ fontSize:7 }}>™</sup> n'est pas responsable d'une mauvaise utilisation. En cas de doute, consultez un professionnel ou les fiches{" "}
+                    <a href="https://ephy.anses.fr/" target="_blank" rel="noopener noreferrer" style={{ color:"#fbbf24" }}>
+                      e-Phy de l'ANSES
+                    </a>.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Liste produits ── */}
         <div style={card()}>
           <div style={{ fontSize:14, fontWeight:800, color:"#F1F8F2", marginBottom:4 }}>{cat.icon} {cat.label}</div>
           <div style={{ fontSize:11, color:"#81c784", marginBottom:12 }}>
@@ -155,10 +227,14 @@ export default function Products() {
           ))}
         </div>
 
+        {/* ── Footer affiliation rappel + marque déposée ── */}
         <div style={{ ...card(), textAlign:"center", padding:16, background:"rgba(255,255,255,0.03)" }}>
           <div style={{ fontSize:12, color:"#81c784", marginBottom:4 }}>💡 Produits sélectionnés selon votre profil</div>
-          <div style={{ fontSize:11, color:"#81c784", opacity:0.6 }}>
-            Lien partenaire Amazon · Mongazon360 perçoit une commission sur les achats · Prix et disponibilités gérés par Amazon
+          <div style={{ fontSize:11, color:"#81c784", opacity:0.7, lineHeight:1.5 }}>
+            En tant que Partenaire Amazon, Mongazon360<sup style={{ fontSize:7 }}>™</sup> perçoit une commission sur les achats éligibles · Prix et disponibilités gérés par Amazon
+          </div>
+          <div style={{ fontSize:9, color:"#3a5c44", marginTop:10, lineHeight:1.6 }}>
+            © {new Date().getFullYear()} Mongazon360<sup style={{ fontSize:7 }}>™</sup> — Marque déposée à l'EUIPO
           </div>
         </div>
 

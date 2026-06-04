@@ -1,5 +1,10 @@
 // src/components/AIAssistant.jsx
 // Bouton flottant + modal chat IA — Premium & Admin uniquement
+// ════════════════════════════════════════════════════════════════════════════
+// Conforme à l'exigence avocat (Cabinet Victoris) :
+//   Mention 3 — Bandeau permanent indiquant que Bob est une IA, peut contenir
+//   des inexactitudes et ne remplace pas l'avis d'un professionnel.
+// ════════════════════════════════════════════════════════════════════════════
 
 import { useState, useRef, useEffect } from "react";
 import { useProfile } from "../lib/useProfile";
@@ -17,6 +22,12 @@ const SUGGESTIONS = [
   "Fréquence d'arrosage idéale ?",
 ];
 
+// ── Message d'accueil avec mention IA obligatoire ──────────────────────────
+const WELCOME_MESSAGE = {
+  role: "assistant",
+  content: "Bonjour ! 🌿 Je suis Bob, votre assistant gazon intelligent.\n\n⚠️ Je suis une IA et mes réponses peuvent contenir des inexactitudes. Elles ne remplacent pas l'avis d'un professionnel du jardinage.\n\nPosez-moi vos questions sur l'entretien de votre pelouse !",
+};
+
 function TypingIndicator() {
   return (
     <div style={{ display:"flex", alignItems:"center", gap:4, padding:"10px 14px", background:"rgba(255,255,255,0.06)", borderRadius:"18px 18px 18px 4px", width:"fit-content", maxWidth:80 }}>
@@ -29,19 +40,15 @@ function TypingIndicator() {
 }
 
 export default function AIAssistant() {
-  // ── TOUS LES HOOKS EN PREMIER — règle absolue React ──────────────────────
   const { profile }        = useProfile();
   const { weather }        = useWeather() || {};
   const { history = [] }   = useHistory();
   const { isPaid = false, isAdmin = false } = useSubscription() || {};
 
-  const [open, setOpen]       = useState(false);
-  const [input, setInput]     = useState("");
-  const [loading, setLoading] = useState(false);
-  const [messages, setMessages] = useState([{
-    role:"assistant",
-    content:"Bonjour ! 🌿 Je suis Bob, votre assistant gazon. Posez-moi toutes vos questions sur l'entretien de votre pelouse !",
-  }]);
+  const [open, setOpen]         = useState(false);
+  const [input, setInput]       = useState("");
+  const [loading, setLoading]   = useState(false);
+  const [messages, setMessages] = useState([WELCOME_MESSAGE]);
 
   const bottomRef = useRef();
   const inputRef  = useRef();
@@ -61,7 +68,6 @@ export default function AIAssistant() {
     bottomRef.current?.scrollIntoView({ behavior:"smooth" });
   }, [messages, loading]);
 
-  // ── RETURN CONDITIONNEL APRÈS TOUS LES HOOKS ─────────────────────────────
   if (!isPaid && !isAdmin) return null;
 
   const sendMessage = async (text) => {
@@ -100,10 +106,7 @@ export default function AIAssistant() {
   };
 
   const clearChat = () => {
-    setMessages([{
-      role:"assistant",
-      content:"Bonjour ! 🌿 Je suis Bob, votre assistant gazon. Posez-moi toutes vos questions sur l'entretien de votre pelouse !"
-    }]);
+    setMessages([WELCOME_MESSAGE]);
   };
 
   return (
@@ -155,6 +158,27 @@ export default function AIAssistant() {
             <button onClick={clearChat} style={{ background:"none", border:"none", color:"#4a7c5c", fontSize:11, cursor:"pointer" }}>
               🗑️ Effacer
             </button>
+          </div>
+
+          {/* ═══════════════════════════════════════════════════════════════ */}
+          {/* MENTION 3 AVOCAT — BANDEAU PERMANENT INFO IA                    */}
+          {/* ═══════════════════════════════════════════════════════════════ */}
+          <div style={{
+            padding: "8px 14px",
+            background: "rgba(245,158,11,0.08)",
+            borderBottom: "1px solid rgba(245,158,11,0.2)",
+            fontSize: 10,
+            color: "#fde68a",
+            lineHeight: 1.4,
+            flexShrink: 0,
+            display: "flex",
+            alignItems: "flex-start",
+            gap: 6,
+          }}>
+            <span style={{ fontSize: 12, flexShrink: 0 }}>⚠️</span>
+            <span>
+              <strong>Bob est une IA.</strong> Ses réponses peuvent contenir des inexactitudes et <strong>ne remplacent pas l'avis d'un professionnel</strong> du jardinage.
+            </span>
           </div>
 
           {/* Messages */}
