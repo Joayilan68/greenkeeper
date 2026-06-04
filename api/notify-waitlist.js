@@ -37,7 +37,7 @@ function buildLaunchHtml() {
 
   <!-- Preheader (texte invisible dans aperçu boîte mail) -->
   <div style="display:none;max-height:0;overflow:hidden;font-size:1px;line-height:1px;color:#0f2419;">
-    Le jour J est arrivé ! Votre coach gazon IA est prêt à transformer votre pelouse.
+    Le jour J est arrivé ! Votre expert gazon intelligent est prêt à transformer votre pelouse.
   </div>
 
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#0f2419;">
@@ -65,7 +65,7 @@ function buildLaunchHtml() {
               </h1>
 
               <p style="color:#a5d6a7;font-size:15px;line-height:1.5;margin:0 0 4px;">
-                Votre coach gazon intelligent est prêt
+                Votre expert gazon intelligent est prêt
               </p>
               <p style="color:#52b788;font-size:13px;font-style:italic;margin:0;">
                 Tant qu'il y a gazon, il y a match
@@ -291,7 +291,7 @@ export default async function handler(req, res) {
           from:    'Mongazon360 <bonjour@mongazon360.fr>',
           replyTo: 'contact@mongazon360.fr',
           to:      inscrit.email,
-          subject: '🚀 Mongazon360™ est ouvert — Votre coach gazon IA est prêt',
+          subject: '🚀 Mongazon360™ est ouvert — Votre expert gazon intelligent est prêt',
           html:    launchHtml,
         });
 
