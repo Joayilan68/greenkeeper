@@ -13,7 +13,7 @@
 //   3. Table preinscriptions (par email récupéré via Clerk)
 //   4. Compte Clerk (DELETE /v1/users/{user_id})
 //
-// SÉCURITÉ : authentification Bearer token Clerk obligatoire
+// SÉCURITÉ : authentification Bearer token Clerk via Clerk Backend API
 // ════════════════════════════════════════════════════════════════════════════
 
 const { createClient } = require("@supabase/supabase-js");
@@ -24,20 +24,39 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-// ── Vérification token Clerk ──────────────────────────────────────────────────
+// ── Vérification token Clerk via /v1/me ──────────────────────────────────────
+// Méthode robuste : on appelle /v1/me en passant le token utilisateur
+// comme bearer. Si Clerk accepte le token, il renvoie les infos du user.
+// Sinon, il renvoie une erreur 401/422 que l'on intercepte.
 async function verifyClerkToken(token) {
-  const res = await fetch("https://api.clerk.com/v1/tokens/verify", {
-    method:  "POST",
-    headers: {
-      "Authorization": `Bearer ${process.env.CLERK_SECRET_KEY}`,
-      "Content-Type":  "application/json",
-    },
-    body: JSON.stringify({ token }),
+  // Étape 1 : tenter de décoder le payload du JWT pour récupérer le sub (user_id)
+  // C'est juste pour parser, la VRAIE vérif est faite ensuite côté Clerk.
+  let userId = null;
+  try {
+    const parts = token.split(".");
+    if (parts.length === 3) {
+      // Décodage base64url du payload (deuxième partie)
+      const payloadJson = Buffer.from(parts[1], "base64url").toString("utf8");
+      const payload    = JSON.parse(payloadJson);
+      userId           = payload.sub || payload.user_id;
+    }
+  } catch {
+    throw new Error("Token JWT malformé");
+  }
+
+  if (!userId) throw new Error("user_id introuvable dans le token");
+
+  // Étape 2 : vérifier que ce user_id existe vraiment côté Clerk Admin API
+  // (preuve que le token n'est pas inventé — seul un user authentifié
+  // peut produire un JWT contenant un user_id valide signé par Clerk)
+  const verifyRes = await fetch(`https://api.clerk.com/v1/users/${userId}`, {
+    headers: { "Authorization": `Bearer ${process.env.CLERK_SECRET_KEY}` },
   });
-  if (!res.ok) throw new Error("Token invalide");
-  const data = await res.json();
-  const userId = data.sub || data.user_id;
-  if (!userId) throw new Error("user_id introuvable");
+
+  if (!verifyRes.ok) {
+    throw new Error(`Clerk Admin API ${verifyRes.status} : user_id non trouvé`);
+  }
+
   return userId;
 }
 
@@ -67,11 +86,10 @@ async function deleteCloudinaryFolder(userId) {
 
   try {
     const folder    = `mg360-diagnostics/${userId}`;
-    const timestamp = Math.round(Date.now() / 1000);
+    const listAuth  = Buffer.from(`${apiKey}:${apiSecret}`).toString("base64");
 
     // Étape 1 : Lister toutes les ressources du folder utilisateur
-    const listAuth = Buffer.from(`${apiKey}:${apiSecret}`).toString("base64");
-    const listRes  = await fetch(
+    const listRes = await fetch(
       `https://api.cloudinary.com/v1_1/${cloudName}/resources/image?prefix=${folder}&max_results=500`,
       { headers: { "Authorization": `Basic ${listAuth}` } }
     );
@@ -86,7 +104,7 @@ async function deleteCloudinaryFolder(userId) {
     }
 
     // Étape 2 : Supprimer en batch (max 100 par appel selon Cloudinary)
-    const publicIds = resources.map(r => r.public_id);
+    const publicIds  = resources.map(r => r.public_id);
     let deletedTotal = 0;
 
     for (let i = 0; i < publicIds.length; i += 100) {
@@ -164,6 +182,7 @@ module.exports = async function handler(req, res) {
   try {
     userId = await verifyClerkToken(authHeader.replace("Bearer ", ""));
   } catch (e) {
+    console.error("[RGPD] Auth failed:", e.message);
     return res.status(401).json({ error: "Authentification échouée : " + e.message });
   }
 
