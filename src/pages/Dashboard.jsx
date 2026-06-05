@@ -10,6 +10,7 @@ import { usePushNotifications } from "../lib/usePushNotifications";
 import { useConsents } from "../lib/useConsents";
 import AlertBanner from "../components/AlertBanner";
 import OnboardingModal from "../components/OnboardingModal";
+import GreenScoreModal from "../components/GreenScoreModal";
 import { card, cardTitle, btn, scroll } from "../lib/styles";
 import { useState, useEffect } from "react";
 import { useGreenPoints } from "../lib/useGreenPoints";
@@ -26,6 +27,7 @@ export default function Dashboard() {
   const { isPaid = false, isAdmin = false } = useSubscription() || {};
   const [showIssues, setShowIssues]   = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showScoreInfo, setShowScoreInfo] = useState(false);
 
   const { permission, subscribe, sendTestNotification, isSupported } = usePushNotifications(user?.id);
   const { consents, updateConsents, showPushBanner } = useConsents();
@@ -181,7 +183,16 @@ export default function Dashboard() {
 
           {/* Score */}
           <div style={{ ...card(), background:"linear-gradient(135deg,rgba(27,94,32,0.4),rgba(13,43,26,0.6))", border:`1px solid ${color}44`, padding:14, display:"flex", flexDirection:"column" }}>
-            <div style={{ fontSize:10, color:"#66BB6A", fontWeight:700, letterSpacing:1, textTransform:"uppercase", marginBottom:8, textAlign:"center" }}>🌿 Score Santé</div>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
+              <div style={{ fontSize:10, color:"#66BB6A", fontWeight:700, letterSpacing:1, textTransform:"uppercase" }}>🌿 Score Santé</div>
+              <button
+                onClick={() => setShowScoreInfo(true)}
+                style={{ background:"rgba(255,255,255,0.08)", border:"1px solid rgba(165,214,167,0.2)", borderRadius:"50%", width:22, height:22, color:"#a5d6a7", fontSize:11, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", padding:0 }}
+                title="Comment fonctionne le GreenScore ?"
+              >
+                ℹ️
+              </button>
+            </div>
             <div style={{ textAlign:"center" }}>
               <svg width="110" height="65" viewBox="0 0 140 80">
                 <path d="M 10 75 A 60 60 0 0 1 130 75" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="10" strokeLinecap="round"/>
@@ -420,6 +431,9 @@ export default function Dashboard() {
         </div>
 
       </div>
+
+      {/* ── Modal GreenScore (mention 6 avocat) ──────────────────────────── */}
+      {showScoreInfo && <GreenScoreModal onClose={() => setShowScoreInfo(false)} />}
     </div>
   );
 }

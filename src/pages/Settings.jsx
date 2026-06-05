@@ -30,6 +30,8 @@ export default function Settings() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [accountDeleteLoading, setAccountDeleteLoading] = useState(false);
   const [deleteReport, setDeleteReport] = useState(null);
+  const [portalLoading, setPortalLoading] = useState(false);
+  const [portalError, setPortalError] = useState("");
 
   useEffect(() => {
     if (navigator.permissions) {
@@ -72,6 +74,37 @@ export default function Settings() {
       },
       () => setGeoStatus("denied")
     );
+  };
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // GÉRER MON ABONNEMENT — Stripe Customer Portal (mention 10 avocat)
+  // Appelle /api/send?type=customer-portal qui génère un lien Stripe Portal
+  // ══════════════════════════════════════════════════════════════════════════
+  const openCustomerPortal = async () => {
+    setPortalLoading(true);
+    setPortalError("");
+    try {
+      const token = await getToken();
+      if (!token) throw new Error("Token Clerk manquant");
+
+      const res = await fetch("/api/send?type=customer-portal", {
+        method:  "POST",
+        headers: { "Authorization": `Bearer ${token}` },
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.url) {
+        throw new Error(data.error || "Lien portail indisponible");
+      }
+
+      // Redirection vers le portail Stripe
+      window.location.href = data.url;
+    } catch (e) {
+      console.error("[Portal]", e);
+      setPortalError(e.message || "Erreur lors de l'ouverture du portail.");
+      setPortalLoading(false);
+    }
   };
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -413,6 +446,52 @@ export default function Settings() {
             </div>
           ))}
         </div>
+
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* MENTION 10 AVOCAT — Gérer mon abonnement Stripe Customer Portal */}
+        {/* Visible uniquement si l'utilisateur a un abonnement Premium     */}
+        {/* (les admins n'ont pas de Stripe customer attaché → caché)       */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {isPaid && !isAdmin && (
+          <div style={{ ...card(), background:"rgba(33,150,243,0.04)", border:"1px solid rgba(33,150,243,0.2)" }}>
+            <div style={cardTitle}><span>💳 Mon abonnement Premium</span></div>
+            <div style={{ fontSize:12, color:"#81c784", marginBottom:12, lineHeight:1.6 }}>
+              Gérez votre abonnement Mongazon360<sup style={{ fontSize:7 }}>™</sup> Premium en toute autonomie via le portail sécurisé Stripe :
+            </div>
+            <div style={{ fontSize:11, color:"#e8f5e9", marginBottom:14, lineHeight:1.8, paddingLeft:8 }}>
+              • Voir et télécharger vos factures<br/>
+              • Mettre à jour votre moyen de paiement<br/>
+              • Modifier votre adresse de facturation<br/>
+              • <strong style={{ color:"#90caf9" }}>Résilier votre abonnement en 1 clic</strong>
+            </div>
+
+            {portalError && (
+              <div style={{ background:"rgba(198,40,40,0.15)", border:"1px solid rgba(198,40,40,0.3)", borderRadius:10, padding:"10px 12px", fontSize:11, color:"#ef9a9a", marginBottom:10 }}>
+                ⚠️ {portalError}
+              </div>
+            )}
+
+            <button
+              onClick={openCustomerPortal}
+              disabled={portalLoading}
+              style={{
+                background:"rgba(33,150,243,0.15)",
+                border:"1px solid #2196f3",
+                borderRadius:10, padding:"12px",
+                color:"#90caf9", fontSize:13, fontWeight:700,
+                cursor: portalLoading ? "not-allowed" : "pointer",
+                width:"100%",
+                opacity: portalLoading ? 0.6 : 1,
+              }}
+            >
+              {portalLoading ? "⏳ Ouverture..." : "🔑 Gérer mon abonnement"}
+            </button>
+
+            <div style={{ fontSize:10, color:"#4a7c5c", marginTop:8, textAlign:"center", lineHeight:1.5 }}>
+              🔒 Portail sécurisé hébergé par Stripe — Vous serez redirigé puis ramené ici
+            </div>
+          </div>
+        )}
 
         {/* ── SUPPRESSION DONNÉES LOCALES (cache navigateur uniquement) ── */}
         <div style={{ ...card(), background:"rgba(198,40,40,0.06)", border:"1px solid rgba(198,40,40,0.2)" }}>

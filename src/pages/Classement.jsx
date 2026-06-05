@@ -1,5 +1,5 @@
 // src/pages/Classement.jsx
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useClassement, LIGUES, getCoeffProfil } from "../lib/useClassement";
 import { useGreenPoints } from "../lib/useGreenPoints";
@@ -8,6 +8,7 @@ import { useProfile } from "../lib/useProfile";
 import { useSubscription } from "../lib/useSubscription";
 import { useSaison } from "../lib/useSaison";
 import { card, cardTitle, scroll } from "../lib/styles";
+import LiguesModal from "../components/LiguesModal";
 
 export default function Classement() {
   const navigate = useNavigate();
@@ -26,6 +27,9 @@ export default function Classement() {
 
   // Enregistrer la connexion du jour au chargement
   useEffect(() => { enregistrerConnexionJour(); }, []);
+
+  // ── État modal Règles des Ligues (mention 7 avocat) ──────────────────────
+  const [showRulesModal, setShowRulesModal] = useState(false);
 
   const zoneBg  = enZonePromotion ? "rgba(76,175,80,0.2)" : enZoneRetrogradation ? "rgba(230,81,0,0.2)" : "rgba(255,255,255,0.05)";
   const zoneTxt = enZonePromotion ? "#a5d6a7" : enZoneRetrogradation ? "#ef9a9a" : "#81c784";
@@ -80,14 +84,35 @@ export default function Classement() {
               </div>
             </div>
           </div>
-          <div style={{ textAlign:"right" }}>
-            <div style={{ fontSize:11, color:"#66BB6A", fontWeight:700 }}>{joursRestants}j restants</div>
-            <div style={{ fontSize:10, color:"#4a7c5c" }}>Fin du mois</div>
+          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+            <button
+              onClick={() => setShowRulesModal(true)}
+              style={{ background:"rgba(255,255,255,0.08)", border:"1px solid rgba(165,214,167,0.25)", borderRadius:"50%", width:32, height:32, color:"#a5d6a7", fontSize:14, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:700 }}
+              title="Comment fonctionnent les ligues ?"
+            >
+              ℹ️
+            </button>
+            <div style={{ textAlign:"right" }}>
+              <div style={{ fontSize:11, color:"#66BB6A", fontWeight:700 }}>{joursRestants}j restants</div>
+              <div style={{ fontSize:10, color:"#4a7c5c" }}>Fin du mois</div>
+            </div>
           </div>
         </div>
       </div>
 
       <div style={scroll}>
+
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* MENTION 8 AVOCAT — Bannière joueurs simulés                     */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        <div style={{ ...card(), background:"rgba(33,150,243,0.06)", border:"1px solid rgba(33,150,243,0.2)", padding:"10px 14px" }}>
+          <div style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
+            <span style={{ fontSize:18, flexShrink:0 }}>🤖</span>
+            <div style={{ fontSize:11, color:"#90caf9", lineHeight:1.5 }}>
+              <strong>Joueurs simulés actifs.</strong> Tant que Mongazon360<sup style={{ fontSize:7 }}>™</sup> compte moins de 100 utilisateurs actifs, les ligues sont complétées par des joueurs simulés pour rendre le classement vivant. Ces joueurs sont signalés par l'icône <strong>🤖</strong> à côté de leur nom.
+            </div>
+          </div>
+        </div>
 
         {/* Ma position */}
         <div style={{ ...card(), background:"linear-gradient(135deg,rgba(27,94,32,0.4),rgba(13,43,26,0.6))" }}>
@@ -292,6 +317,9 @@ export default function Classement() {
           </div>
         </div>
       </div>
+
+      {/* ── Modal Règles des Ligues (mention 7 avocat) ─────────────────── */}
+      {showRulesModal && <LiguesModal onClose={() => setShowRulesModal(false)} />}
     </div>
   );
 }

@@ -68,7 +68,7 @@ function buildReminderHtml(reminders, userName, profile, score) {
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   if (req.method === "OPTIONS") return res.status(200).end();
 
   // ── GET = CRON QUOTIDIEN (8h00 via Vercel) ────────────────────────────────
@@ -180,6 +180,62 @@ module.exports = async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
   const { type } = req.query;
+
+  // ════════════════════════════════════════════════════════════════════════
+  // CUSTOMER-PORTAL — Lien Stripe Customer Portal (mention 10 avocat)
+  // POST /api/send?type=customer-portal — Bearer Clerk obligatoire
+  // ════════════════════════════════════════════════════════════════════════
+  if (type === "customer-portal") {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader?.startsWith("Bearer ")) {
+        return res.status(401).json({ error: "Token manquant" });
+      }
+
+      // ── Décodage JWT Clerk pour user_id ────────────────────────────────
+      const token = authHeader.replace("Bearer ", "");
+      let userId = null;
+      try {
+        const parts = token.split(".");
+        if (parts.length === 3) {
+          const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8"));
+          userId = payload.sub || payload.user_id;
+        }
+      } catch {}
+
+      if (!userId) return res.status(401).json({ error: "Token JWT invalide" });
+
+      // ── Vérification user existe côté Clerk Admin API ─────────────────
+      const verifyRes = await fetch(`https://api.clerk.com/v1/users/${userId}`, {
+        headers: { "Authorization": `Bearer ${process.env.CLERK_SECRET_KEY}` },
+      });
+      if (!verifyRes.ok) return res.status(401).json({ error: "User Clerk introuvable" });
+      const clerkUser = await verifyRes.json();
+      const email = clerkUser.email_addresses?.[0]?.email_address;
+      if (!email) return res.status(400).json({ error: "Email Clerk introuvable" });
+
+      // ── Trouver le customer Stripe par email ───────────────────────────
+      const Stripe = require("stripe");
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+      const customers = await stripe.customers.list({ email, limit: 1 });
+      if (!customers.data.length) {
+        return res.status(404).json({ error: "Aucun abonnement Stripe trouvé pour cet email" });
+      }
+      const customerId = customers.data[0].id;
+
+      // ── Créer une session du Customer Portal ───────────────────────────
+      const portalSession = await stripe.billingPortal.sessions.create({
+        customer: customerId,
+        return_url: `${process.env.VITE_APP_URL || "https://mongazon360.fr"}/parametres`,
+      });
+
+      return res.json({ url: portalSession.url });
+    } catch (e) {
+      console.error("[customer-portal]", e.message);
+      return res.status(500).json({ error: e.message });
+    }
+  }
 
   // ── SAVE-SUB (souscription push → Supabase) ───────────────────────────────
   if (type === "save-sub") {
