@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser, useClerk } from "@clerk/clerk-react";
 import { supabase } from "../lib/supabase";
+import { getCapturedUTM } from "../lib/useUTMCapture";
 
 const C = {
   deepGreen:  "#2d6a4f",
@@ -82,6 +83,60 @@ export default function ComingSoon() {
       window.location.href = "/";
     }
   }, [user]);
+
+  // ════════════════════════════════════════════════════════════════════════
+  // ✅ AUTO-INSERT PREINSCRIPTIONS (fix audit Clerk vs Supabase — juin 2026)
+  // ════════════════════════════════════════════════════════════════════════
+  // Tout user Clerk qui arrive sur ComingSoon (= non admin, non guest, non Premium)
+  // est automatiquement ajouté à la table `preinscriptions` Supabase s'il n'y est
+  // pas déjà. Cela garantit qu'au moment du lancement public, TOUS les comptes
+  // Clerk seront dans la liste de notification.
+  //
+  // Source : récupérée via useUTMCapture (sessionStorage first-touch) qui détecte
+  // Instagram, TikTok, Facebook, Google, etc. depuis utm_source OU referer.
+  //
+  // Idempotent : ON CONFLICT (email) DO NOTHING via try/catch sur code 23505.
+  // ════════════════════════════════════════════════════════════════════════
+  useEffect(() => {
+    if (!user) return;
+    const email = user.primaryEmailAddress?.emailAddress?.toLowerCase().trim();
+    if (!email) return;
+
+    // Skip admin (ils sont gérés par le useEffect précédent)
+    if (ADMIN_EMAILS.includes(email)) return;
+
+    // Récupère la source first-touch capturée par useUTMCapture
+    const utm = getCapturedUTM();
+    const source = utm?.source || 'direct';
+
+    // Insert "best-effort" — si déjà présent (code 23505), on ignore silencieusement
+    (async () => {
+      try {
+        const insertData = {
+          email,
+          source,
+          utm_medium:   utm?.medium   || null,
+          utm_campaign: utm?.campaign || null,
+          referer:      utm?.referer  || null,
+        };
+
+        const { error } = await supabase
+          .from('preinscriptions')
+          .insert(insertData);
+
+        if (error && error.code !== '23505') {
+          // Erreur autre que "déjà présent" → on log mais on ne bloque pas l'UX
+          console.warn('[MG360] Auto-insert preinscriptions échec:', error.message);
+        } else if (!error) {
+          console.log('[MG360] User Clerk auto-ajouté à preinscriptions:', email, '— source:', source);
+        }
+      } catch (e) {
+        // Pas bloquant — l'utilisateur peut continuer à voir ComingSoon normalement
+        console.warn('[MG360] Auto-insert preinscriptions exception:', e?.message);
+      }
+    })();
+  }, [user]);
+  // ════════════════════════════════════════════════════════════════════════
 
   const [tapCount, setTapCount]           = useState(0);
   const [profile, setProfile]             = useState(null);
