@@ -185,14 +185,39 @@ module.exports = async function handler(req, res) {
   // AUDIT-USERS — Diff Clerk ↔ Supabase preinscriptions (admin uniquement)
   // POST /api/send?type=audit-users               → liste comparaison
   // POST /api/send?type=audit-users&action=sync   → insère les manquants
-  // Sécurité : NOTIFY_SECRET dans header X-Admin-Secret
+  // Sécurité : Bearer token Clerk + vérification email dans ADMIN_EMAILS
   // ════════════════════════════════════════════════════════════════════════
   if (type === "audit-users") {
     try {
-      // Auth admin via secret partagé (déjà utilisé dans notify-waitlist)
-      const adminSecret = req.headers["x-admin-secret"];
-      if (!adminSecret || adminSecret !== process.env.NOTIFY_SECRET) {
-        return res.status(401).json({ error: "Admin secret invalide" });
+      // ── Auth Clerk Bearer obligatoire ──────────────────────────────────
+      const authHeader = req.headers.authorization;
+      if (!authHeader?.startsWith("Bearer ")) {
+        return res.status(401).json({ error: "Token manquant" });
+      }
+
+      // ── Décodage JWT pour user_id ──────────────────────────────────────
+      const token = authHeader.replace("Bearer ", "");
+      let userId = null;
+      try {
+        const parts = token.split(".");
+        if (parts.length === 3) {
+          const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8"));
+          userId = payload.sub || payload.user_id;
+        }
+      } catch {}
+      if (!userId) return res.status(401).json({ error: "Token JWT invalide" });
+
+      // ── Vérification que c'est bien un admin ───────────────────────────
+      const verifyRes = await fetch(`https://api.clerk.com/v1/users/${userId}`, {
+        headers: { "Authorization": `Bearer ${process.env.CLERK_SECRET_KEY}` },
+      });
+      if (!verifyRes.ok) return res.status(401).json({ error: "User Clerk introuvable" });
+      const clerkUser = await verifyRes.json();
+      const userEmail = clerkUser.email_addresses?.[0]?.email_address?.toLowerCase();
+      const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
+
+      if (!userEmail || !ADMIN_EMAILS.includes(userEmail)) {
+        return res.status(403).json({ error: "Accès admin uniquement" });
       }
 
       // 1. Récupérer tous les users Clerk (paginé, max 500 utilisateurs)
