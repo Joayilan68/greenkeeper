@@ -68,7 +68,7 @@ function buildReminderHtml(reminders, userName, profile, score) {
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Admin-Secret");
   if (req.method === "OPTIONS") return res.status(200).end();
 
   // ── GET = CRON QUOTIDIEN (8h00 via Vercel) ────────────────────────────────
@@ -180,6 +180,91 @@ module.exports = async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
   const { type } = req.query;
+
+  // ════════════════════════════════════════════════════════════════════════
+  // AUDIT-USERS — Diff Clerk ↔ Supabase preinscriptions (admin uniquement)
+  // POST /api/send?type=audit-users               → liste comparaison
+  // POST /api/send?type=audit-users&action=sync   → insère les manquants
+  // Sécurité : NOTIFY_SECRET dans header X-Admin-Secret
+  // ════════════════════════════════════════════════════════════════════════
+  if (type === "audit-users") {
+    try {
+      // Auth admin via secret partagé (déjà utilisé dans notify-waitlist)
+      const adminSecret = req.headers["x-admin-secret"];
+      if (!adminSecret || adminSecret !== process.env.NOTIFY_SECRET) {
+        return res.status(401).json({ error: "Admin secret invalide" });
+      }
+
+      // 1. Récupérer tous les users Clerk (paginé, max 500 utilisateurs)
+      const clerkUsers = [];
+      let offset = 0;
+      const limit = 100;
+      while (offset < 500) {
+        const clerkRes = await fetch(
+          `https://api.clerk.com/v1/users?limit=${limit}&offset=${offset}`,
+          { headers: { "Authorization": `Bearer ${process.env.CLERK_SECRET_KEY}` } }
+        );
+        if (!clerkRes.ok) throw new Error(`Clerk API ${clerkRes.status}`);
+        const batch = await clerkRes.json();
+        if (!batch.length) break;
+        clerkUsers.push(...batch);
+        offset += limit;
+        if (batch.length < limit) break;
+      }
+
+      const clerkEmails = clerkUsers
+        .map(u => u.email_addresses?.[0]?.email_address?.toLowerCase().trim())
+        .filter(Boolean);
+
+      // 2. Récupérer toutes les preinscriptions Supabase
+      const { createClient } = require("@supabase/supabase-js");
+      const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+      const { data: preinscriptions, error: preErr } = await supabase
+        .from("preinscriptions")
+        .select("email");
+      if (preErr) throw new Error("Supabase: " + preErr.message);
+
+      const supaEmails = (preinscriptions || []).map(p => p.email.toLowerCase().trim());
+      const supaSet = new Set(supaEmails);
+      const clerkSet = new Set(clerkEmails);
+
+      // 3. Calculer les diffs
+      const onlyInClerk = clerkEmails.filter(e => !supaSet.has(e));
+      const onlyInSupa  = supaEmails.filter(e => !clerkSet.has(e));
+      const common      = clerkEmails.filter(e => supaSet.has(e));
+
+      // 4. Action sync : insère les manquants Clerk dans preinscriptions
+      let syncResult = null;
+      if (req.query.action === "sync" && onlyInClerk.length > 0) {
+        const toInsert = onlyInClerk.map(email => ({
+          email,
+          source: "clerk_signup_rattrapage",
+        }));
+        const { data, error } = await supabase
+          .from("preinscriptions")
+          .insert(toInsert)
+          .select();
+        if (error) {
+          syncResult = { success: false, error: error.message };
+        } else {
+          syncResult = { success: true, inserted: data?.length || 0 };
+        }
+      }
+
+      return res.json({
+        timestamp:   new Date().toISOString(),
+        clerk_total: clerkEmails.length,
+        supa_total:  supaEmails.length,
+        common:      common.length,
+        onlyInClerk: { count: onlyInClerk.length, emails: onlyInClerk },
+        onlyInSupa:  { count: onlyInSupa.length,  emails: onlyInSupa  },
+        sync:        syncResult,
+      });
+    } catch (e) {
+      console.error("[audit-users]", e.message);
+      return res.status(500).json({ error: e.message });
+    }
+  }
 
   // ════════════════════════════════════════════════════════════════════════
   // CUSTOMER-PORTAL — Lien Stripe Customer Portal (mention 10 avocat)
