@@ -182,6 +182,136 @@ module.exports = async function handler(req, res) {
   const { type } = req.query;
 
   // ════════════════════════════════════════════════════════════════════════
+  // ACQUISITION-STATS — Stats consolidées pour Pilotage (admin uniquement)
+  // POST /api/send?type=acquisition-stats
+  // Renvoie : total, par source, évolution hebdomadaire, comparaison sem-1
+  // ════════════════════════════════════════════════════════════════════════
+  if (type === "acquisition-stats") {
+    try {
+      // ── Auth Clerk admin ───────────────────────────────────────────────
+      const authHeader = req.headers.authorization;
+      if (!authHeader?.startsWith("Bearer ")) {
+        return res.status(401).json({ error: "Token manquant" });
+      }
+      const token = authHeader.replace("Bearer ", "");
+      let userId = null;
+      try {
+        const parts = token.split(".");
+        if (parts.length === 3) {
+          const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8"));
+          userId = payload.sub || payload.user_id;
+        }
+      } catch {}
+      if (!userId) return res.status(401).json({ error: "Token JWT invalide" });
+
+      const verifyRes = await fetch(`https://api.clerk.com/v1/users/${userId}`, {
+        headers: { "Authorization": `Bearer ${process.env.CLERK_SECRET_KEY}` },
+      });
+      if (!verifyRes.ok) return res.status(401).json({ error: "User Clerk introuvable" });
+      const clerkUser = await verifyRes.json();
+      const userEmail = clerkUser.email_addresses?.[0]?.email_address?.toLowerCase();
+      const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
+      if (!userEmail || !ADMIN_EMAILS.includes(userEmail)) {
+        return res.status(403).json({ error: "Accès admin uniquement" });
+      }
+
+      // ── Récupérer toutes les preinscriptions Supabase ─────────────────
+      const { createClient } = require("@supabase/supabase-js");
+      const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+      const { data: rows, error } = await supabase
+        .from("preinscriptions")
+        .select("email, source, created_at")
+        .order("created_at", { ascending: true });
+      if (error) throw new Error("Supabase: " + error.message);
+
+      // ── Exclure admins ─────────────────────────────────────────────────
+      const filtered = (rows || []).filter(r => {
+        const e = (r.email || "").toLowerCase().trim();
+        return !ADMIN_EMAILS.includes(e);
+      });
+
+      const total = filtered.length;
+
+      // ── Aggregation par source ─────────────────────────────────────────
+      const bySource = {};
+      filtered.forEach(r => {
+        const s = (r.source || "direct").toLowerCase();
+        bySource[s] = (bySource[s] || 0) + 1;
+      });
+
+      // ── Évolution hebdomadaire (8 dernières semaines) ──────────────────
+      // On utilise ISO week (lundi → dimanche)
+      const now = new Date();
+      const weeks = [];
+      for (let i = 7; i >= 0; i--) {
+        const start = new Date(now);
+        start.setDate(now.getDate() - now.getDay() - i * 7 + 1); // lundi semaine -i
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(start);
+        end.setDate(start.getDate() + 7);
+        weeks.push({ start, end, count: 0, label: "" });
+      }
+      weeks.forEach((w, idx) => {
+        w.label = idx === 7 ? "Cette semaine"
+                 : idx === 6 ? "S-1"
+                 : `S-${7 - idx}`;
+      });
+      filtered.forEach(r => {
+        const d = new Date(r.created_at);
+        weeks.forEach(w => {
+          if (d >= w.start && d < w.end) w.count++;
+        });
+      });
+
+      // ── Évolution vs semaine dernière ─────────────────────────────────
+      const lastWeek    = weeks[7].count;
+      const prevWeek    = weeks[6].count;
+      let evolutionPct  = null;
+      let evolutionDir  = "stable";
+      if (prevWeek === 0 && lastWeek > 0) {
+        evolutionDir = "up";
+        evolutionPct = null; // démarrage
+      } else if (prevWeek > 0) {
+        evolutionPct = Math.round(((lastWeek - prevWeek) / prevWeek) * 100);
+        if (evolutionPct > 5) evolutionDir = "up";
+        else if (evolutionPct < -5) evolutionDir = "down";
+        else evolutionDir = "stable";
+      }
+
+      // ── Today / Yesterday count ───────────────────────────────────────
+      const startToday = new Date(now);
+      startToday.setHours(0, 0, 0, 0);
+      const startYesterday = new Date(startToday);
+      startYesterday.setDate(startYesterday.getDate() - 1);
+
+      let todayCount = 0, yesterdayCount = 0;
+      filtered.forEach(r => {
+        const d = new Date(r.created_at);
+        if (d >= startToday) todayCount++;
+        else if (d >= startYesterday) yesterdayCount++;
+      });
+
+      return res.json({
+        timestamp:    new Date().toISOString(),
+        total,
+        bySource,
+        weeks: weeks.map(w => ({ label: w.label, count: w.count, start: w.start.toISOString() })),
+        evolution: {
+          thisWeek: lastWeek,
+          prevWeek,
+          pct:      evolutionPct,
+          dir:      evolutionDir,
+        },
+        todayCount,
+        yesterdayCount,
+      });
+    } catch (e) {
+      console.error("[acquisition-stats]", e.message);
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
+  // ════════════════════════════════════════════════════════════════════════
   // AUDIT-USERS — Diff Clerk ↔ Supabase preinscriptions (admin uniquement)
   // POST /api/send?type=audit-users               → liste comparaison
   // POST /api/send?type=audit-users&action=sync   → insère les manquants
@@ -237,9 +367,12 @@ module.exports = async function handler(req, res) {
         if (batch.length < limit) break;
       }
 
-      const clerkEmails = clerkUsers
+      const clerkEmailsRaw = clerkUsers
         .map(u => u.email_addresses?.[0]?.email_address?.toLowerCase().trim())
         .filter(Boolean);
+
+      // ── Exclure les emails admin du comptage et du sync ──────────────────
+      const clerkEmails = clerkEmailsRaw.filter(e => !ADMIN_EMAILS.includes(e));
 
       // 2. Récupérer toutes les preinscriptions Supabase
       const { createClient } = require("@supabase/supabase-js");
@@ -249,7 +382,9 @@ module.exports = async function handler(req, res) {
         .select("email");
       if (preErr) throw new Error("Supabase: " + preErr.message);
 
-      const supaEmails = (preinscriptions || []).map(p => p.email.toLowerCase().trim());
+      const supaEmailsRaw = (preinscriptions || []).map(p => p.email.toLowerCase().trim());
+      // Exclure aussi les admins côté Supabase (au cas où ils s'y seraient glissés)
+      const supaEmails = supaEmailsRaw.filter(e => !ADMIN_EMAILS.includes(e));
       const supaSet = new Set(supaEmails);
       const clerkSet = new Set(clerkEmails);
 

@@ -229,14 +229,20 @@ export default function Pilotage() {
   async function fetchPreinscriptions() {
     setPreinscLoading(true);
     try {
-      const { data, count, error } = await supabase
+      const { data, error } = await supabase
         .from('preinscriptions')
-        .select('*', { count: 'exact' })
+        .select('*')
         .order('created_at', { ascending: false })
-        .limit(200);
+        .limit(500);
       if (!error) {
-        setPreinscriptions(data || []);
-        setPreinscTotal(count || 0);
+        // ✅ Exclure les emails admin du comptage et de l'affichage
+        const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
+        const filtered = (data || []).filter(p => {
+          const e = (p.email || "").toLowerCase().trim();
+          return !ADMIN_EMAILS.includes(e);
+        });
+        setPreinscriptions(filtered);
+        setPreinscTotal(filtered.length);
       }
     } catch {}
     setPreinscLoading(false);
@@ -752,14 +758,100 @@ export default function Pilotage() {
         {/* ════════════════ TAB PRÉ-INSCRITS ════════════════ */}
         {tab === "preinscriptions" && (
           <>
-            {/* ✅ FIX 01/06/2026 — Utilisation du composant SourceBreakdown harmonisé */}
-            <KPI icon="📬" label="Total pré-inscrits" value={preinscTotal} sub="Via formulaire ComingSoon" color="#64b5f6" />
+            {/* ════════════════════════════════════════════════════════════ */}
+            {/* TUILE ACQUISITION — Vue consolidée avec évolution & sources   */}
+            {/* ════════════════════════════════════════════════════════════ */}
 
+            {(() => {
+              // ── Calculs ──────────────────────────────────────────────
+              const now = new Date();
+              const startToday = new Date(now); startToday.setHours(0,0,0,0);
+
+              // Cette semaine (lundi → dimanche)
+              const startThisWeek = new Date(now);
+              const dayOfWeek = now.getDay() === 0 ? 7 : now.getDay(); // lundi=1
+              startThisWeek.setDate(now.getDate() - dayOfWeek + 1);
+              startThisWeek.setHours(0,0,0,0);
+
+              const startPrevWeek = new Date(startThisWeek);
+              startPrevWeek.setDate(startPrevWeek.getDate() - 7);
+
+              // Comptes
+              const todayCount = preinscriptions.filter(p => new Date(p.created_at) >= startToday).length;
+              const thisWeekCount = preinscriptions.filter(p => new Date(p.created_at) >= startThisWeek).length;
+              const prevWeekCount = preinscriptions.filter(p => {
+                const d = new Date(p.created_at);
+                return d >= startPrevWeek && d < startThisWeek;
+              }).length;
+
+              // Évolution
+              let evoPct = null, evoLabel = "Démarrage", evoColor = "#a5d6a7", evoIcon = "✨";
+              if (prevWeekCount === 0 && thisWeekCount > 0) {
+                evoLabel = "Démarrage"; evoColor = "#66BB6A"; evoIcon = "🚀";
+              } else if (prevWeekCount > 0) {
+                evoPct = Math.round(((thisWeekCount - prevWeekCount) / prevWeekCount) * 100);
+                if (evoPct > 5)        { evoLabel = `+${evoPct}%`;  evoColor = "#43a047"; evoIcon = "📈"; }
+                else if (evoPct < -5)  { evoLabel = `${evoPct}%`;   evoColor = "#ef5350"; evoIcon = "📉"; }
+                else                   { evoLabel = "Stable";       evoColor = "#f9a825"; evoIcon = "➡️"; }
+              }
+
+              // Graphique 8 semaines
+              const weeks8 = [];
+              for (let i = 7; i >= 0; i--) {
+                const s = new Date(startThisWeek);
+                s.setDate(s.getDate() - i * 7);
+                const e = new Date(s);
+                e.setDate(s.getDate() + 7);
+                const count = preinscriptions.filter(p => {
+                  const d = new Date(p.created_at);
+                  return d >= s && d < e;
+                }).length;
+                const label = i === 0 ? "Now"
+                            : i === 1 ? "S-1"
+                            : `S-${i}`;
+                weeks8.push({ label, count });
+              }
+
+              // Sources locales (à partir de preinscriptions filtrées)
+              const bySource = {};
+              preinscriptions.forEach(p => {
+                const s = (p.source || "direct").toLowerCase();
+                bySource[s] = (bySource[s] || 0) + 1;
+              });
+
+              return (
+                <>
+                  {/* ── Bloc KPI Total + Évolution ─────────────────────── */}
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, marginBottom:12 }}>
+                    <KPI icon="📬" label="Total inscrits"    value={preinscTotal}   sub="Hors admins" color="#64b5f6" />
+                    <KPI icon="📅" label="Cette semaine"     value={thisWeekCount}  sub={`vs ${prevWeekCount} sem-1`} color="#a5d6a7" />
+                    <KPI icon={evoIcon} label="Évolution"    value={evoLabel}       sub="vs sem précédente" color={evoColor} />
+                  </div>
+
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:12 }}>
+                    <KPI icon="📆" label="Aujourd'hui"       value={todayCount}     sub="Nouvelles inscriptions" color="#a5d6a7" />
+                    <KPI icon="🎯" label="Sources actives"    value={Object.keys(bySource).length} sub="Canaux d'acquisition" color="#a5d6a7" />
+                  </div>
+
+                  {/* ── Graphique évolution 8 semaines ───────────────── */}
+                  <div style={card()}>
+                    <div style={cardTitle}>
+                      <span>📈 Évolution sur 8 semaines</span>
+                      <span style={{ fontSize:10, color: evoColor, fontWeight:700 }}>{evoIcon} {evoLabel}</span>
+                    </div>
+                    <MiniChart data={weeks8} valueKey="count" color="#64b5f6" />
+                  </div>
+                </>
+              );
+            })()}
+
+            {/* ── Sources des inscriptions (composant existant) ───────── */}
             <SourceBreakdown
               sources={users?.waitlistSources}
-              title="📊 Sources des pré-inscriptions"
+              title="📊 Sources des inscriptions"
             />
 
+            {/* ── Boutons actions ──────────────────────────────────────── */}
             <div style={{ display:"flex", gap:8, marginBottom:8 }}>
               <button onClick={fetchPreinscriptions} style={{ flex:1, background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:10, padding:"8px", color:"#81c784", fontSize:12, cursor:"pointer" }}>
                 ↻ Actualiser
@@ -768,6 +860,8 @@ export default function Pilotage() {
                 ⬇ Export CSV
               </button>
             </div>
+
+            {/* ── Graphique 7 derniers jours (existant) ────────────────── */}
             {(() => {
               const days = Array.from({ length: 7 }, (_, i) => {
                 const d = new Date(); d.setDate(d.getDate() - (6 - i));
@@ -778,11 +872,13 @@ export default function Pilotage() {
               });
               return (
                 <div style={card()}>
-                  <div style={cardTitle}><span>📈 Inscriptions 7 derniers jours</span></div>
+                  <div style={cardTitle}><span>📅 Détail 7 derniers jours</span></div>
                   <MiniChart data={days} valueKey="count" color="#64b5f6" />
                 </div>
               );
             })()}
+
+            {/* ── Liste détaillée (existant) ───────────────────────────── */}
             <div style={card()}>
               <div style={cardTitle}>
                 <span>📋 Liste ({preinscriptions.length})</span>
@@ -790,7 +886,7 @@ export default function Pilotage() {
               </div>
               {preinscriptions.length === 0 && !preinscLoading && (
                 <div style={{ fontSize:12, color:"#4a7c5c", textAlign:"center", padding:"16px 0" }}>
-                  Aucune pré-inscription pour l'instant.
+                  Aucune inscription pour l'instant.
                 </div>
               )}
               {preinscriptions.map((p) => (
