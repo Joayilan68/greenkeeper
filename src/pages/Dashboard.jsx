@@ -17,6 +17,7 @@ import { useGreenPoints } from "../lib/useGreenPoints";
 import { useStreak } from "../lib/useStreak";
 import { useClassement } from "../lib/useClassement";
 import { useSaison } from "../lib/useSaison";
+import { useDiagnostics } from "../lib/useDiagnostics";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -40,6 +41,10 @@ export default function Dashboard() {
     ligueActuelle, position, totalJoueurs, pointsSemaine,
     enZonePromotion, enZoneRetrogradation, joursRestants, messageClassement
   } = useClassement(gpHistorique, profile, isPaid);
+
+  // ── Diagnostics photo (source de vérité : Supabase) ────────────────────────
+  // Garantit que le score santé est identique entre PC et mobile.
+  const { diagnostics } = useDiagnostics();
 
   useEffect(() => {
     if (!synced) return;
@@ -65,7 +70,7 @@ export default function Dashboard() {
   const plan  = MONTHLY_PLAN[month];
 
   const { score, potential, label, color, issues, strengths, diagScore, diagEmoji, diagAge, diagInfluence, hasDiag }
-    = calcLawnScore({ weather, profile, history, month });
+    = calcLawnScore({ weather, profile, history, month, diagnostics });
 
   const handleActivatePush = async () => {
     const success = await subscribe();
@@ -90,7 +95,7 @@ export default function Dashboard() {
         const [dd,mm,yy] = (e.date||"").split("/");
         return new Date(yy,mm-1,dd) <= d;
       });
-      pts.push({ day: i === 0 ? "Aujourd'hui" : `Il y a ${days}j`, score: calcLawnScore({ weather, profile, history: h, month }).score });
+      pts.push({ day: i === 0 ? "Aujourd'hui" : `Il y a ${days}j`, score: calcLawnScore({ weather, profile, history: h, month, diagnostics }).score });
     }
     return pts;
   })();

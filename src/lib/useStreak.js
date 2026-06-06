@@ -7,13 +7,31 @@ import { useAuth } from "@clerk/clerk-react";
 import { supabase } from "./supabase";
 import { useSaison } from "./useSaison";
 
-const KEY = "gk_streak";
+const KEY = "mg360_streak";
+const LEGACY_KEY = "gk_streak"; // ancienne clé GreenKeeper — migration unique au démarrage
 
 function defaultState() {
   return { actuel: 0, record: 0, derniere_connexion: null, protege_hiver: false, milestones_atteints: [] };
 }
 function getLocal() {
-  try { return JSON.parse(localStorage.getItem(KEY)) || defaultState(); } catch { return defaultState(); }
+  try {
+    // ✅ Migration douce : si la nouvelle clé n'existe pas mais l'ancienne oui,
+    // on lit l'ancienne et on l'écrit dans la nouvelle (one-shot)
+    const newVal = localStorage.getItem(KEY);
+    if (!newVal) {
+      const legacy = localStorage.getItem(LEGACY_KEY);
+      if (legacy) {
+        try {
+          localStorage.setItem(KEY, legacy);
+          localStorage.removeItem(LEGACY_KEY);
+          console.log("[MG360] Migration gk_streak → mg360_streak effectuée");
+          return JSON.parse(legacy) || defaultState();
+        } catch {}
+      }
+      return defaultState();
+    }
+    return JSON.parse(newVal) || defaultState();
+  } catch { return defaultState(); }
 }
 function saveLocal(s) {
   try { localStorage.setItem(KEY, JSON.stringify(s)); } catch {}

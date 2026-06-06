@@ -1,7 +1,10 @@
-// ─── LAWN HEALTH SCORE ENGINE v4 ─────────────────────────────────────────────
+// ─── LAWN HEALTH SCORE ENGINE v5 ─────────────────────────────────────────────
+// REFACTOR juin 2026 : suppression de la lecture localStorage des diagnostics.
+// Les diagnostics sont désormais passés en paramètre depuis le hook useDiagnostics
+// qui les charge depuis Supabase (source de vérité unique multi-device).
+// ─────────────────────────────────────────────────────────────────────────────
 import { MONTHLY_PLAN } from "./lawn";
 
-const DIAG_KEY     = "gk_diagnostics";
 const DIAG_MAX_AGE = 7;
 
 function daysSince(dateStr) {
@@ -22,19 +25,18 @@ function lastAction(history, keyword) {
   return Math.min(...found.map(h => daysSince(h.date)));
 }
 
-function getLastDiagnostic() {
-  try {
-    const saved = localStorage.getItem(DIAG_KEY);
-    if (!saved) return null;
-    const diags = JSON.parse(saved);
-    if (!diags?.length) return null;
-    const last = diags[0];
-    if (daysSinceISO(last.date) > DIAG_MAX_AGE) return null;
-    return last;
-  } catch { return null; }
+// ── Récupère le diagnostic récent valide depuis le tableau fourni ──────────
+// `diagnostics` est attendu trié par date décroissante (le plus récent en [0])
+// Format attendu : [{ date: ISO string, analysis: { score_visuel, emoji, etat_general, problemes } }, ...]
+function pickLastDiagnostic(diagnostics) {
+  if (!Array.isArray(diagnostics) || diagnostics.length === 0) return null;
+  const last = diagnostics[0];
+  if (!last?.date) return null;
+  if (daysSinceISO(last.date) > DIAG_MAX_AGE) return null;
+  return last;
 }
 
-export function calcLawnScore({ weather, profile, history = [], month }) {
+export function calcLawnScore({ weather, profile, history = [], month, diagnostics = [] }) {
   const plan      = MONTHLY_PLAN[month];
   const issues    = [];
   const strengths = [];
@@ -148,7 +150,8 @@ export function calcLawnScore({ weather, profile, history = [], month }) {
   if (!profilComplet && score > 80) score = 80;
 
   // ── DIAGNOSTIC PHOTO ─────────────────────────────────────────────────────
-  const lastDiag    = getLastDiagnostic();
+  // Source de vérité : tableau `diagnostics` fourni par le caller (depuis Supabase via useDiagnostics)
+  const lastDiag    = pickLastDiagnostic(diagnostics);
   let diagScore     = null;
   let diagEmoji     = null;
   let diagAge       = null;
