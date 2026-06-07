@@ -242,6 +242,17 @@ export function useClassement(gpHistorique = [], profile = null, isPaid = false)
     syncToSupabase(userId, newState);
   }, [state, loaded, userId]);
 
+  // ── 4b. AUTO-DÉCLENCHEMENT DE LA CONNEXION DU JOUR AU MOUNT ──────────────
+  // Une fois les données chargées depuis Supabase, on enregistre automatiquement
+  // la connexion du jour. Garantit que la tuile "connexions" affiche le bon nombre
+  // sans devoir attendre une action explicite.
+  useEffect(() => {
+    if (!loaded || !classementActif) return;
+    const key = dateJourKey();
+    if ((state.connexionsDuMois || []).includes(key)) return;
+    enregistrerConnexionJour();
+  }, [loaded, classementActif]); // eslint-disable-line
+
   // ── 5. CALCUL DU CLASSEMENT AFFICHÉ (bots + user) ────────────────────────
   const ligueActuelle = LIGUES.find(l => l.id === state.ligueActuelle) || LIGUES[0];
   const bots          = genererJoueurs(state.ligueActuelle, state.seed_mois);
