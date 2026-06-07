@@ -59,7 +59,7 @@ export function calcArrosage(month, profile, weather, history = [], debitMmH = D
   const plan = MONTHLY_PLAN[month];
   const baseHebdo = plan?.arrosage_base ?? 0;
   const freq      = plan?.arrosage_freq ?? 0;
-  if (baseHebdo === 0 || freq === 0) return null;
+  if (baseHebdo === 0 || freq === 0) return { skip: true, reason: "off_season" };
 
   // ── Vérification historique — intervalle adaptatif selon fréquence ────────
   // Ex : 3x/sem → intervalle min = floor(7/3) = 2 jours = 48h
@@ -78,7 +78,10 @@ export function calcArrosage(month, profile, weather, history = [], debitMmH = D
 
   if (dernierArrosage) {
     const heuresDepuis = (maintenant - dernierArrosage) / (1000 * 60 * 60);
-    if (heuresDepuis < intervalHeures) return null;
+    if (heuresDepuis < intervalHeures) {
+    const joursRestants = Math.ceil((intervalHeures - (maintenant - dernierArrosage) / (1000 * 60 * 60)) / 24);
+    return { skip: true, reason: "recency", joursRestants };
+  }
   }
 
   // ── Dose par session = besoin hebdomadaire ÷ fréquence ────────────────────
@@ -92,7 +95,7 @@ export function calcArrosage(month, profile, weather, history = [], debitMmH = D
     else if (weather.temp_max > 25) mm *= 1.15;
 
     // Pluie → réduit ou annule
-    if (weather.precip >= 10) return null;
+    if (weather.precip >= 10) return { skip: true, reason: "precip", precip: weather.precip };
     if (weather.precip > 5)   mm = Math.max(0, mm - weather.precip * 0.8);
     else if (weather.precip > 2) mm = Math.max(0, mm - weather.precip * 0.5);
 
@@ -106,7 +109,7 @@ export function calcArrosage(month, profile, weather, history = [], debitMmH = D
   mm = Math.round(mm * 10) / 10;
 
   // Seuil minimum
-  if (mm < 2) return null;
+  if (mm < 2) return { skip: true, reason: "precip_partial" };
 
   // Durée = dose ÷ débit × 60 min
   const minutes = Math.round((mm / debitMmH) * 60);

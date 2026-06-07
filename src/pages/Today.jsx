@@ -166,9 +166,13 @@ export default function Today() {
   const today = new Date();
   const month = today.getMonth() + 1;
   const plan  = MONTHLY_PLAN[month];
-  const arros = profile && weather
+  const _arrosRaw = profile && weather
     ? calcArrosage(month, profile, weather, history, getDebitMmH())
     : null;
+  // arros = résultat utilisable (null si skip ou pas calculé)
+  const arros = (_arrosRaw && !_arrosRaw.skip) ? _arrosRaw : null;
+  // arrosSkip = raison du skip si arros non disponible
+  const arrosSkip = (_arrosRaw?.skip) ? _arrosRaw : null;
 
   // ── Score et zone ─────────────────────────────────────────────────────────
   const score = profile ? calcLawnScore(profile, history, weather) : 70;
@@ -192,7 +196,7 @@ export default function Today() {
 
   // ── Calcul des statuts (source unique planEntretien.js) ───────────────────
   // Déclaré AVANT fetchAI pour éviter la TDZ (Temporal Dead Zone) en prod Vite
-  const actionStatuses = (buildActions(profile, weather, history, score, month, arros) || []);
+  const actionStatuses = (buildActions(profile, weather, history, score, month, _arrosRaw) || []);
   const recommended = actionStatuses.filter(a => a?.status === "recommended");
   const prevoyez    = actionStatuses.filter(a =>
     a?.status === "done_today" || a?.status === "too_soon" ||
@@ -262,7 +266,13 @@ export default function Today() {
           weather
             ? `Météo: ${weather.temp_max}°C/${weather.temp_min}°C ${weather.precip}mm pluie humidité ${weather.humidity}% vent ${weather.wind}km/h.`
             : `Pas de météo locale — conseille selon le profil.`,
-          arros ? `Arrosage calculé: ${arros.mm}mm/session ${arros.minutes}min ${arros.freq}x/sem.` : "",
+          arros
+        ? `Arrosage calculé: ${arros.mm}mm/session ${arros.minutes}min ${arros.freq}x/sem.`
+        : arrosSkip?.reason === "recency"
+          ? `Arrosage non nécessaire aujourd'hui (arrosage récent — prochain dans ${arrosSkip.joursRestants ?? 1}j).`
+          : arrosSkip?.reason === "precip" || arrosSkip?.reason === "precip_partial"
+            ? "Pas d'arrosage aujourd'hui — précipitations suffisantes."
+            : "",
           actionsAFaire.length > 0
             ? `ACTIONS DU JOUR: ${actionsAFaire.join(", ")}. Enrichis ces actions uniquement (timing, dosage, technique). Ne propose pas d'autres actions.`
             : `Aucune action prioritaire. Donne 2-3 conseils de vigilance adaptés au profil.`,

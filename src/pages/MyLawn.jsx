@@ -572,11 +572,12 @@ export default function MyLawn() {
             Optimisé smartphone : lignes haute densité, touch targets ≥44px.
         ── */}
         {(() => {
-          const arrosPlan = profile && weather
+          const _arrosPlanRaw = profile && weather
             ? calcArrosage(month, profile, weather, history, getDebitMmH())
             : null;
+          const arrosPlan = (_arrosPlanRaw && !_arrosPlanRaw.skip) ? _arrosPlanRaw : null;
           const zone    = zoneClimatique(profile);
-          const statuts = buildActions(profile, weather, history, score, month, arrosPlan);
+          const statuts = buildActions(profile, weather, history, score, month, _arrosPlanRaw);
 
           // horsS conservé côté code pour usage interne — non affiché à l'utilisateur
           const recommandes = statuts.filter(a => a.status === "recommended" || a.status === "done_today" || a.status === "too_soon");
@@ -889,8 +890,9 @@ export default function MyLawn() {
 
         {/* ── 8. PRODUITS RECOMMANDÉS ── */}
         {(() => {
-          const arrosProd  = profile && weather ? calcArrosage(month, profile, weather, history, getDebitMmH()) : null;
-          const allStatuts = buildActions(profile, weather, history, score, month, arrosProd);
+          const _arrosProdRaw = profile && weather ? calcArrosage(month, profile, weather, history, getDebitMmH()) : null;
+          const arrosProd = (_arrosProdRaw && !_arrosProdRaw.skip) ? _arrosProdRaw : null;
+          const allStatuts = buildActions(profile, weather, history, score, month, _arrosProdRaw);
 
 
           const actionKeys = allStatuts

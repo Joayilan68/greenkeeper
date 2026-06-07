@@ -501,12 +501,28 @@ export function buildActions(profile, weather, history, score, month, arros) {
     }
 
     // ── 2. Arrosage piloté par météo ──────────────────────────────────────
-    if (action.weatherDriven && !arros) {
-      // Si le mois est actif mais arros=null → pluie suffisante ou récent
-      // On affiche "bloqué" uniquement si on est en saison, sinon off_season
-      if (mois.includes(month)) {
-        return { ...base, status: "blocked", daysLeft: null, blockedReason: "Pluie suffisante — arrosage inutile aujourd'hui" };
+    if (action.weatherDriven && (!arros || arros?.skip)) {
+      if (!mois.includes(month)) return { ...base, status: "off_season", daysLeft: null };
+
+      const reason = arros?.reason;
+
+      // Arrosage trop récent — on sait exactement combien de jours
+      if (reason === "recency") {
+        return {
+          ...base,
+          status: "too_soon",
+          daysLeft: arros.joursRestants ?? 1,
+          blockedReason: `Prochain arrosage dans ${arros.joursRestants ?? 1}j`,
+        };
       }
+      // Pluie forte (≥10mm) ou précipitations suffisantes après déduction
+      if (reason === "precip" || reason === "precip_partial") {
+        const detail = reason === "precip" && arros?.precip
+          ? `${arros.precip}mm de pluie — arrosage inutile aujourd'hui`
+          : "Précipitations suffisantes — arrosage inutile aujourd'hui";
+        return { ...base, status: "blocked", daysLeft: null, blockedReason: detail };
+      }
+      // off_season ou inconnu
       return { ...base, status: "off_season", daysLeft: null };
     }
 
