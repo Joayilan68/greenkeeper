@@ -841,6 +841,33 @@ export default function MyLawn() {
                 <span style={{ fontSize:12, color:"#81c784" }}>Pour 7mm d'eau :</span>
                 <span style={{ fontSize:16, fontWeight:800, color:"#64b5f6" }}>{Math.round((7 / debitMmH) * 60)} min</span>
               </div>
+
+              {/* ── Tip calibrage boîte de conserve ── */}
+              <div style={{ marginTop:14, background:"rgba(100,181,246,0.06)", border:"1px solid rgba(100,181,246,0.2)", borderRadius:12, padding:"12px 14px" }}>
+                <div style={{ fontSize:12, fontWeight:800, color:"#64b5f6", marginBottom:6 }}>
+                  🥫 Comment mesurer votre débit réel ?
+                </div>
+                <div style={{ fontSize:12, color:"#81c784", lineHeight:1.7 }}>
+                  Posez une <strong style={{ color:"#e8f5e9" }}>boîte de conserve vide</strong> sur votre pelouse, à portée de l'arroseur. Lancez l'arrosage pendant <strong style={{ color:"#e8f5e9" }}>exactement 1h</strong>. Mesurez la hauteur d'eau accumulée en mm — c'est votre débit réel.
+                </div>
+                <div style={{ marginTop:10, display:"flex", flexDirection:"column", gap:5 }}>
+                  {[
+                    { step:"1", text:"Posez la boîte sur la pelouse, dans la zone arrosée" },
+                    { step:"2", text:"Arrosez 1h — ou faites une règle de 3 pour moins longtemps" },
+                    { step:"3", text:"Mesurez l'eau en mm avec une règle" },
+                    { step:"4", text:"Entrez la valeur dans le curseur ci-dessus" },
+                  ].map(({ step, text }) => (
+                    <div key={step} style={{ display:"flex", alignItems:"flex-start", gap:8 }}>
+                      <span style={{ flexShrink:0, width:18, height:18, borderRadius:"50%", background:"rgba(100,181,246,0.25)", color:"#64b5f6", fontSize:10, fontWeight:800, display:"flex", alignItems:"center", justifyContent:"center" }}>{step}</span>
+                      <span style={{ fontSize:11, color:"#a5d6a7", lineHeight:1.5 }}>{text}</span>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ marginTop:10, fontSize:11, color:"#4a7c5c", fontStyle:"italic" }}>
+                  💡 Répétez le test en 2–3 points de votre pelouse et faites la moyenne pour plus de précision.
+                </div>
+              </div>
+
               {debitSaved && <div style={{ textAlign:"center", color:"#64b5f6", fontSize:12, marginTop:8 }}>✅ Débit enregistré</div>}
             </div>
           ) : (

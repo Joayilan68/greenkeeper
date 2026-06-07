@@ -123,6 +123,46 @@ export default function Today() {
   const [aiLoading, setAiLoading] = useState(false);
   const [justLogged, setJustLogged] = useState([]);
 
+  // ── Timer arrosage ────────────────────────────────────────────────────────
+  const [timerActive, setTimerActive]   = useState(false);
+  const [timerSeconds, setTimerSeconds] = useState(0);
+  const [timerDone, setTimerDone]       = useState(false);
+  const timerRef = React.useRef(null);
+
+  const startTimer = (minutes) => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    setTimerSeconds(minutes * 60);
+    setTimerActive(true);
+    setTimerDone(false);
+    timerRef.current = setInterval(() => {
+      setTimerSeconds(prev => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current);
+          setTimerActive(false);
+          setTimerDone(true);
+          // Push notification si permission accordée
+          if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+            try { new Notification("💧 Mongazon360 — Arrosage terminé !", { body: "Votre pelouse a reçu sa dose. N'oubliez pas de journaliser !", icon: "/mg360-icon-192.png" }); } catch {}
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const stopTimer = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    setTimerActive(false);
+    setTimerSeconds(0);
+    setTimerDone(false);
+  };
+
+  // Nettoyage à l'unmount
+  React.useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+
+  const fmtTimer = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+
   const today = new Date();
   const month = today.getMonth() + 1;
   const plan  = MONTHLY_PLAN[month];
@@ -375,27 +415,83 @@ export default function Today() {
         {isPaid && alerts.map((a,i) => <AlertBanner key={i} alert={a} />)}
 
         {/* Arrosage détaillé — Premium */}
-        {isPaid && arros && (
-          <div style={{...card(),background:"rgba(25,118,210,0.1)",border:"1px solid rgba(100,181,246,0.25)"}}>
-            <div style={cardTitle}>
-              <span>💧 Arrosage recommandé</span>
-              <span style={{ fontSize:11, color:"#64b5f6", background:"rgba(100,181,246,0.15)", borderRadius:20, padding:"2px 8px" }}>
-                {arros.freq}x/semaine
-              </span>
-            </div>
-            <div style={{display:"flex",gap:8}}>
-              {[{val:`${arros.mm}mm`,label:"mm/session"},{val:`${arros.minutes}min`,label:"min/session"},{val:"5h–9h",label:"Horaire"}].map(({val,label}) => (
-                <div key={label} style={{flex:1,background:"rgba(255,255,255,0.06)",borderRadius:12,padding:"10px 6px",textAlign:"center"}}>
-                  <div style={{fontSize:18,fontWeight:800,color:"#64b5f6"}}>{val}</div>
-                  <div style={{fontSize:10,color:"#81c784"}}>{label}</div>
+        {isPaid && arros && (() => {
+          const arrosageAFaire = recommended.some(a => a.action.id === "arrosage");
+          const arrosageFait   = actionStatuses.some(a => a.action.id === "arrosage" && a.status === "done_today");
+          return (
+            <div style={{...card(),background:"rgba(25,118,210,0.1)",border:`1px solid ${timerDone ? "rgba(74,222,128,0.4)" : timerActive ? "rgba(100,181,246,0.5)" : "rgba(100,181,246,0.25)"}`}}>
+              <div style={cardTitle}>
+                <span>💧 Arrosage recommandé</span>
+                <span style={{ fontSize:11, color:"#64b5f6", background:"rgba(100,181,246,0.15)", borderRadius:20, padding:"2px 8px" }}>
+                  {arros.freq}x/semaine
+                </span>
+              </div>
+              <div style={{display:"flex",gap:8}}>
+                {[{val:`${arros.mm}mm`,label:"mm/session"},{val:`${arros.minutes}min`,label:"min/session"},{val:"5h–9h",label:"Horaire"}].map(({val,label}) => (
+                  <div key={label} style={{flex:1,background:"rgba(255,255,255,0.06)",borderRadius:12,padding:"10px 6px",textAlign:"center"}}>
+                    <div style={{fontSize:18,fontWeight:800,color:"#64b5f6"}}>{val}</div>
+                    <div style={{fontSize:10,color:"#81c784"}}>{label}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{fontSize:11,color:"rgba(100,181,246,0.6)",textAlign:"center",marginTop:8}}>
+                ⚙️ Débit : {arros.debitMmH} mm/h · Précipitations du jour déduites
+              </div>
+
+              {/* ── Timer arrosage — visible si arrosage à faire aujourd'hui ── */}
+              {arrosageAFaire && !arrosageFait && (
+                <div style={{ marginTop:14 }}>
+                  {timerDone ? (
+                    /* État : terminé */
+                    <div style={{ background:"rgba(74,222,128,0.12)", border:"1px solid rgba(74,222,128,0.35)", borderRadius:12, padding:"12px 14px", textAlign:"center" }}>
+                      <div style={{ fontSize:22, marginBottom:4 }}>✅</div>
+                      <div style={{ fontSize:14, fontWeight:800, color:"#4ade80" }}>Arrosage terminé !</div>
+                      <div style={{ fontSize:11, color:"#81c784", marginTop:4 }}>N'oubliez pas de journaliser ci-dessous.</div>
+                      <button
+                        onClick={stopTimer}
+                        style={{ marginTop:10, background:"rgba(100,181,246,0.15)", border:"1px solid rgba(100,181,246,0.3)", borderRadius:10, padding:"7px 18px", color:"#64b5f6", fontSize:12, fontWeight:700, cursor:"pointer" }}
+                      >
+                        ↺ Recommencer
+                      </button>
+                    </div>
+                  ) : timerActive ? (
+                    /* État : timer en cours */
+                    <div style={{ background:"rgba(25,118,210,0.15)", border:"1px solid rgba(100,181,246,0.4)", borderRadius:12, padding:"14px", textAlign:"center" }}>
+                      <div style={{ fontSize:11, color:"#64b5f6", fontWeight:700, letterSpacing:1, marginBottom:8 }}>ARROSAGE EN COURS</div>
+                      <div style={{ fontSize:44, fontWeight:900, color:"#64b5f6", fontVariantNumeric:"tabular-nums", letterSpacing:2, lineHeight:1 }}>
+                        {fmtTimer(timerSeconds)}
+                      </div>
+                      <div style={{ fontSize:11, color:"#81c784", marginTop:6 }}>Restant sur {arros.minutes} min</div>
+                      <div style={{ marginTop:10, background:"rgba(255,255,255,0.06)", borderRadius:8, height:6, overflow:"hidden" }}>
+                        <div style={{ height:"100%", borderRadius:8, background:"linear-gradient(90deg,#1565c0,#64b5f6)", width:`${((arros.minutes * 60 - timerSeconds) / (arros.minutes * 60)) * 100}%`, transition:"width 1s linear" }} />
+                      </div>
+                      <button
+                        onClick={stopTimer}
+                        style={{ marginTop:12, background:"rgba(248,113,113,0.15)", border:"1px solid rgba(248,113,113,0.35)", borderRadius:10, padding:"8px 20px", color:"#f87171", fontSize:12, fontWeight:700, cursor:"pointer" }}
+                      >
+                        ⏹ Annuler
+                      </button>
+                    </div>
+                  ) : (
+                    /* État : prêt à démarrer */
+                    <button
+                      onClick={() => startTimer(arros.minutes)}
+                      style={{ width:"100%", background:"linear-gradient(135deg,rgba(21,101,192,0.6),rgba(13,71,161,0.8))", border:"1px solid rgba(100,181,246,0.4)", borderRadius:12, padding:"12px", color:"#e3f2fd", fontSize:13, fontWeight:800, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}
+                    >
+                      ▶️ Démarrer le compte à rebours — {arros.minutes} min
+                    </button>
+                  )}
                 </div>
-              ))}
+              )}
+
+              {arrosageFait && (
+                <div style={{ marginTop:12, background:"rgba(74,222,128,0.1)", border:"1px solid rgba(74,222,128,0.25)", borderRadius:10, padding:"8px 12px", textAlign:"center", fontSize:12, color:"#4ade80", fontWeight:700 }}>
+                  ✅ Arrosage journalisé aujourd'hui
+                </div>
+              )}
             </div>
-            <div style={{fontSize:11,color:"rgba(100,181,246,0.6)",textAlign:"center",marginTop:8}}>
-              ⚙️ Débit : {arros.debitMmH} mm/h · Précipitations du jour déduites
-            </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* ── JOURNALISER ─────────────────────────────────────────────────── */}
         <div style={{ ...card(), background:"rgba(15,47,31,0.95)", border:"1px solid rgba(102,187,106,0.25)" }}>
