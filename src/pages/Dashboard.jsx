@@ -48,10 +48,22 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!synced) return;
-    const done = localStorage.getItem("mg360_onboarding_done") || localStorage.getItem("gk_onboarding_done");
-    if (!done && !profile) setTimeout(() => setShowOnboarding(true), 800);
-    if (profile && !done) {
-      localStorage.setItem("mg360_onboarding_done", "true");
+    // ✅ Source de vérité : profile.onboarding_done (Supabase, multi-device)
+    // Migration douce : si profile.onboarding_done est undefined mais localStorage
+    // ou profile existe, on backfill dans profile une fois.
+    const done = profile?.onboarding_done === true;
+    const legacyDone = localStorage.getItem("mg360_onboarding_done") || localStorage.getItem("gk_onboarding_done");
+
+    if (!done && !profile) {
+      setTimeout(() => setShowOnboarding(true), 800);
+    } else if (profile && !done && legacyDone) {
+      // Migration : profile existe + ancien localStorage flag → on backfill
+      saveProfile({ ...profile, onboarding_done: true });
+      localStorage.removeItem("mg360_onboarding_done");
+      localStorage.removeItem("gk_onboarding_done");
+    } else if (profile && !done && !legacyDone && profile.pelouse) {
+      // Profil rempli (avec pelouse) mais flag absent → on considère done
+      saveProfile({ ...profile, onboarding_done: true });
     }
   }, [profile, synced]);
 

@@ -326,9 +326,14 @@ export default function OnboardingModal({ onComplete }) {
       materiel:   [],
       budget:     null,
       profileCompletion: 40,
+      // ✅ Phase 3 : flag onboarding stocké dans le profil (Supabase multi-device)
+      onboarding_done: true,
     };
     try {
       localStorage.setItem("mg360_profile_v1",      JSON.stringify(profile));
+      // ⚠️ Le flag localStorage est conservé EN PLUS du profile.onboarding_done
+      // pendant 1 cycle de déploiement pour compatibilité ascendante.
+      // À retirer dans une prochaine release.
       localStorage.setItem("mg360_onboarding_done", "true");
       if (finalCity) localStorage.setItem("mg360_location_name", finalCity);
       if (finalLat)  localStorage.setItem("mg360_lat", String(finalLat));

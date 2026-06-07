@@ -198,17 +198,51 @@ export default function MyLawn() {
   const { reminders, toggle, activeCount, syncToServer } = useReminders(syncFromReminders);
 
   // ── Débit arroseur (Premium) ────────────────────────────────────────────────
+  // ✅ Phase 3 : source de vérité = profile.debit_arrosage_mmh (Supabase, multi-device)
+  // Fallback localStorage pour migration douce des users existants.
   const [debitMmH, setDebitMmH] = useState(() => {
+    // Priorité 1 : profile.debit_arrosage_mmh (Supabase)
+    if (profile?.debit_arrosage_mmh && profile.debit_arrosage_mmh >= 1 && profile.debit_arrosage_mmh <= 20) {
+      return profile.debit_arrosage_mmh;
+    }
+    // Priorité 2 : localStorage legacy (migration douce)
     try {
       const v = parseFloat(localStorage.getItem("mg360_debit_mmh"));
       return (!isNaN(v) && v >= 1 && v <= 20) ? v : DEBIT_DEFAULT_MMH;
     } catch { return DEBIT_DEFAULT_MMH; }
   });
   const [debitSaved, setDebitSaved] = useState(false);
+
+  // ── Hydratation : si profile arrive après le mount, on resync l'état ────────
+  useEffect(() => {
+    if (profile?.debit_arrosage_mmh && profile.debit_arrosage_mmh !== debitMmH) {
+      setDebitMmH(profile.debit_arrosage_mmh);
+    }
+  }, [profile?.debit_arrosage_mmh]); // eslint-disable-line
+
+  // ── Backfill : si profile existe SANS debit_arrosage_mmh mais qu'on a un debit
+  // en localStorage, on migre une fois vers Supabase.
+  useEffect(() => {
+    if (!profile || profile.debit_arrosage_mmh) return;
+    try {
+      const legacy = parseFloat(localStorage.getItem("mg360_debit_mmh"));
+      if (!isNaN(legacy) && legacy >= 1 && legacy <= 20) {
+        saveProfile({ ...profile, debit_arrosage_mmh: legacy });
+        console.log("[MG360] Migration debit_arrosage_mmh →", legacy);
+      }
+    } catch {}
+  }, [profile?.user_id]); // eslint-disable-line
+
   const saveDebit = (val) => {
     const v = Math.round(val * 10) / 10;
     setDebitMmH(v);
-    localStorage.setItem("mg360_debit_mmh", String(v));
+    // ✅ Source de vérité Supabase via profile.debit_arrosage_mmh
+    if (profile) {
+      saveProfile({ ...profile, debit_arrosage_mmh: v });
+    }
+    // ⚠️ localStorage conservé pour compatibilité ascendante 1 cycle.
+    // À retirer dans une prochaine release.
+    try { localStorage.setItem("mg360_debit_mmh", String(v)); } catch {}
     setDebitSaved(true);
     setTimeout(() => setDebitSaved(false), 2000);
   };
