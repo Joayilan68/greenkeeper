@@ -1,12 +1,32 @@
 // src/lib/useClassement.js
-// Classement Mongazon360 — Ligues MENSUELLES
-// Score = (GreenPoints du mois × coeff profil) + jours de connexion
-// 100% localStorage — zéro API — zéro latence
+// ════════════════════════════════════════════════════════════════════════════
+// CLASSEMENT MONGAZON360 — LIGUES MENSUELLES (Phase 2 — Refactor Supabase)
+// ════════════════════════════════════════════════════════════════════════════
+// Source de vérité : table Supabase `classement` (1 ligne par user)
+// Cache local : sessionStorage uniquement pour réactivité UI (filet de sécurité)
+//
+// Architecture HYBRIDE :
+//   • Calcul du score affiché : CÔTÉ CLIENT (réactif, instantané)
+//   • Stockage : SUPABASE (vérité, multi-device)
+//   • Reset mensuel : POSTGRES SCHEDULED FUNCTION (cycle_mensuel_ligues — pg_cron)
+//
+// Bots côté client : 100% déterministes (seed depuis Supabase), donc identiques
+// entre tous les appareils sans avoir à les stocker en DB.
+//
+// Garanties Phase 2 :
+//   ✅ Cohérence multi-device : ligue actuelle, connexions du mois, score
+//   ✅ Promotion/Relégation automatique le 1er de chaque mois (pg_cron côté serveur)
+//   ✅ Reprise saison février : ligue conservée, GreenPoints totaux intacts
+//   ✅ Pas de perte de données en cas de cache vidé navigateur
+//   ✅ Tolérant aux pannes : fallback sessionStorage si Supabase HS
+// ════════════════════════════════════════════════════════════════════════════
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useAuth } from "@clerk/clerk-react";
+import { supabase } from "./supabase";
 import { useSaison } from "./useSaison";
 
-const KEY = "mg360_classement";
+const CACHE_KEY = "mg360_classement_cache"; // sessionStorage uniquement (réactivité)
 
 // ── Définition des ligues ────────────────────────────────────────────────────
 export const LIGUES = [
@@ -30,17 +50,16 @@ export function calcScoreMensuel(gpDuMois, completion, joursConnexion) {
   return Math.round((gpDuMois * coeff) + joursConnexion);
 }
 
-// ── Générateur pseudo-aléatoire déterministe ─────────────────────────────────
+// ── Générateur pseudo-aléatoire déterministe (bots identiques multi-device) ──
 function makeRand(seed) {
   let r = seed;
   return () => { r = (r * 1664525 + 1013904223) & 0xffffffff; return Math.abs(r) / 0xffffffff; };
 }
 
-// ── Génération des joueurs simulés (bots 🤖) ─────────────────────────────────
-// Les bots complètent le classement pendant la phase de lancement.
-// Ils seront retirés automatiquement lorsque la ligue aura 100+ utilisateurs
-// réels actifs sur le mois — ce seuil sera géré côté backend (Supabase/Vercel KV)
-// lors de la migration vers un backend persistant.
+// ── Génération des joueurs simulés (bots 🤖) — 100% déterministe ────────────
+// Le `seed_mois` venant de Supabase garantit que tous les appareils voient les
+// mêmes bots avec les mêmes scores. Les bots disparaîtront naturellement quand
+// la ligue atteindra 100 users réels actifs (à gérer côté Postgres ultérieurement).
 function genererJoueurs(ligueId, seed) {
   const ligue = LIGUES.find(l => l.id === ligueId);
   if (!ligue) return [];
@@ -57,8 +76,7 @@ function genererJoueurs(ligueId, seed) {
   return joueurs;
 }
 
-// ── Tri avec départage ────────────────────────────────────────────────────────
-// 1. Score décroissant  2. Premium > Free  3. Plus ancien = priorité
+// ── Tri avec départage : score / Premium / ancienneté ────────────────────────
 function trierClassement(joueurs) {
   return [...joueurs].sort((a, b) => {
     if (b.score !== a.score) return b.score - a.score;
@@ -69,89 +87,162 @@ function trierClassement(joueurs) {
 
 // ── Helpers dates ─────────────────────────────────────────────────────────────
 function debutMoisActuel() {
-  const d = new Date(); d.setHours(0,0,0,0); d.setDate(1); return d.getTime();
+  const d = new Date(); d.setUTCHours(0,0,0,0); d.setUTCDate(1); return d.getTime();
 }
 function finMoisActuel() {
-  const d = new Date(); d.setHours(23,59,59,999); d.setMonth(d.getMonth()+1,0); return d.getTime();
+  const d = new Date(); d.setUTCHours(23,59,59,999); d.setUTCMonth(d.getUTCMonth()+1,0); return d.getTime();
 }
 function joursRestantsMois() { return Math.ceil((finMoisActuel() - Date.now()) / 86400000); }
-function dateJourKey() { const d = new Date(); return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`; }
+function dateJourKey() {
+  const d = new Date();
+  return `${d.getUTCFullYear()}-${d.getUTCMonth()+1}-${d.getUTCDate()}`;
+}
 
+// ── État par défaut (nouveau user, ou Supabase vide / hors-ligne) ────────────
 function defaultState() {
   return {
-    ligueActuelle:     "semis",
-    connexionsDuMois:  [],
-    historique_ligues: [],
-    seed_mois:         debutMoisActuel(),
-    dernier_mois:      null,
+    ligueActuelle:       "semis",
+    connexionsDuMois:    [],
+    historique_ligues:   [],
+    seed_mois:           debutMoisActuel(),
+    dernier_mois:        null,
     meilleur_classement: null,
-    createdAt:         Date.now(),
+    score_mensuel_final: 0,
+    createdAt:           Date.now(),
   };
 }
 
-function getState() {
-  try { return { ...defaultState(), ...JSON.parse(localStorage.getItem(KEY)) }; }
-  catch { return defaultState(); }
+// ── Cache sessionStorage (réactivité UI) ─────────────────────────────────────
+function readCache() {
+  try {
+    const raw = sessionStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch { return null; }
 }
-function saveState(s) { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch {} }
-
-function calculerMouvementLigue(ligueId, position, total, score) {
-  const idx = LIGUES.findIndex(l => l.id === ligueId);
-  if (idx < 0 || score === 0) return ligueId;
-  if (position <= Math.ceil(total * 0.50) && idx < LIGUES.length-1) return LIGUES[idx+1].id;
-  if (position > Math.floor(total * 0.75) && idx > 0) return LIGUES[idx-1].id;
-  return ligueId;
+function writeCache(state) {
+  try { sessionStorage.setItem(CACHE_KEY, JSON.stringify(state)); } catch {}
 }
 
-// ── Hook principal ────────────────────────────────────────────────────────────
+// ── Sync vers Supabase (best-effort, debouncé côté caller) ───────────────────
+async function syncToSupabase(userId, state) {
+  if (!userId) return;
+  try {
+    await supabase.from("classement").upsert({
+      user_id:              userId,
+      ligue_actuelle:       state.ligueActuelle,
+      connexions_du_mois:   state.connexionsDuMois,
+      historique_ligues:    state.historique_ligues,
+      seed_mois:            state.seed_mois,
+      dernier_mois:         state.dernier_mois,
+      meilleur_classement:  state.meilleur_classement,
+      score_mensuel_final:  state.score_mensuel_final || 0,
+    }, { onConflict: "user_id" });
+  } catch (e) {
+    console.warn("[MG360] classement sync échec (fallback cache):", e?.message);
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// HOOK PRINCIPAL
+// ════════════════════════════════════════════════════════════════════════════
 export function useClassement(gpHistorique = [], profile = null, isPaid = false) {
+  const { userId, isSignedIn } = useAuth();
   const { classementActif } = useSaison();
-  const [state, setState] = useState(() => getState());
+  const [state, setState] = useState(() => readCache() || defaultState());
+  const [loaded, setLoaded] = useState(false);
+  const lastSyncedScore = useRef(null);
 
-  // GreenPoints du mois courant
+  // ── 1. CHARGEMENT INITIAL DEPUIS SUPABASE ────────────────────────────────
+  useEffect(() => {
+    if (!isSignedIn || !userId) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from("classement")
+          .select("*")
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        if (cancelled) return;
+
+        if (error) {
+          console.warn("[MG360] classement load error, fallback cache:", error.message);
+          setLoaded(true);
+          return;
+        }
+
+        if (data) {
+          // ✅ Donnée existante dans Supabase → source de vérité
+          const supaState = {
+            ligueActuelle:       data.ligue_actuelle || "semis",
+            connexionsDuMois:    data.connexions_du_mois || [],
+            historique_ligues:   data.historique_ligues || [],
+            seed_mois:           Number(data.seed_mois) || debutMoisActuel(),
+            dernier_mois:        data.dernier_mois ? Number(data.dernier_mois) : null,
+            meilleur_classement: data.meilleur_classement,
+            score_mensuel_final: data.score_mensuel_final || 0,
+            createdAt:           new Date(data.created_at).getTime(),
+          };
+          setState(supaState);
+          writeCache(supaState);
+        } else {
+          // ⚪ Nouveau user → création initiale dans Supabase
+          const initial = defaultState();
+          await syncToSupabase(userId, initial);
+          setState(initial);
+          writeCache(initial);
+        }
+        setLoaded(true);
+      } catch (e) {
+        console.warn("[MG360] classement load exception:", e?.message);
+        setLoaded(true);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [isSignedIn, userId]);
+
+  // ── 2. CALCULS RÉACTIFS (côté client, instantané) ────────────────────────
   const debutMois = debutMoisActuel();
-  const gpDuMois  = gpHistorique.filter(h => h.date >= debutMois).reduce((s, h) => s + (h.points||0), 0);
-
-  // Score utilisateur
+  const gpDuMois  = gpHistorique.filter(h => h.date >= debutMois).reduce((s, h) => s + (h.points || 0), 0);
   const completion     = profile?.profileCompletion || 40;
   const joursConnexion = (state.connexionsDuMois || []).length;
   const scoreUser      = calcScoreMensuel(gpDuMois, completion, joursConnexion);
 
-  // Reset mensuel
+  // ── 3. SYNC SCORE MENSUEL → SUPABASE (debouncé : seulement si change) ────
+  // Le score_mensuel_final est utilisé par la fonction pg_cron du 1er du mois
+  // pour calculer les promotions/relégations. Il doit donc rester à jour.
   useEffect(() => {
-    if (!classementActif) return;
-    const current = getState();
-    if (!current.dernier_mois || current.dernier_mois < debutMoisActuel()) {
-      const bots = genererJoueurs(current.ligueActuelle, current.seed_mois);
-      const tous = trierClassement([...bots, { id:"user", score:scoreUser, isUser:true, isPaid, createdAt:current.createdAt }]);
-      const pos  = tous.findIndex(j => j.isUser) + 1;
-      const nouvelleLigue = calculerMouvementLigue(current.ligueActuelle, pos, tous.length, scoreUser);
+    if (!loaded || !userId) return;
+    if (scoreUser === lastSyncedScore.current) return;
 
-      const newState = {
-        ...current,
-        connexionsDuMois:  [],
-        ligueActuelle:     nouvelleLigue,
-        dernier_mois:      debutMoisActuel(),
-        seed_mois:         debutMoisActuel(),
-        historique_ligues: [...(current.historique_ligues||[]),
-          { ligue:current.ligueActuelle, score:scoreUser, position:pos, date:Date.now() }
-        ].slice(-24),
-      };
-      saveState(newState); setState(newState);
-    }
-  }, []); // eslint-disable-line
+    const timer = setTimeout(() => {
+      lastSyncedScore.current = scoreUser;
+      const newState = { ...state, score_mensuel_final: scoreUser };
+      syncToSupabase(userId, newState);
+      writeCache(newState);
+    }, 1500); // debounce 1.5s pour éviter spam d'écritures
 
-  // Enregistrer connexion du jour
+    return () => clearTimeout(timer);
+  }, [scoreUser, loaded, userId]); // eslint-disable-line
+
+  // ── 4. ENREGISTRER CONNEXION DU JOUR ─────────────────────────────────────
   const enregistrerConnexionJour = useCallback(() => {
-    const current = getState();
+    if (!loaded) return;
     const key = dateJourKey();
-    const connexions = (current.connexionsDuMois || []);
+    const connexions = state.connexionsDuMois || [];
     if (connexions.includes(key)) return;
-    const newState = { ...current, connexionsDuMois: [...connexions, key] };
-    saveState(newState); setState(newState);
-  }, []);
 
-  // Classement complet
+    const newState = { ...state, connexionsDuMois: [...connexions, key] };
+    setState(newState);
+    writeCache(newState);
+    syncToSupabase(userId, newState);
+  }, [state, loaded, userId]);
+
+  // ── 5. CALCUL DU CLASSEMENT AFFICHÉ (bots + user) ────────────────────────
   const ligueActuelle = LIGUES.find(l => l.id === state.ligueActuelle) || LIGUES[0];
   const bots          = genererJoueurs(state.ligueActuelle, state.seed_mois);
   const tousJoueurs   = trierClassement([
@@ -168,19 +259,33 @@ export function useClassement(gpHistorique = [], profile = null, isPaid = false)
   const messageClassement = !classementActif
     ? "😴 Classement en pause — reprend en février !"
     : enZonePromotion
-      ? `🚀 Zone de promotion ! ${joursRestants} jour${joursRestants>1?"s":""} restant${joursRestants>1?"s":""}`
+      ? `🚀 Zone de promotion ! ${joursRestants} jour${joursRestants > 1 ? "s" : ""} restant${joursRestants > 1 ? "s" : ""}`
       : enZoneRetrogradation
         ? "⚠️ Zone de rétrogradation — remonte vite !"
         : `📊 ${positionUser}ème sur ${totalJoueurs} — continue !`;
 
   return {
-    ligueActuelle, ligues:LIGUES, classementActif,
-    classement:tousJoueurs, position:positionUser, totalJoueurs,
-    scoreUser, gpDuMois, coeff:getCoeffProfil(completion), completion, joursConnexion,
+    // Données ligue
+    ligueActuelle, ligues: LIGUES, classementActif,
+    classement: tousJoueurs, position: positionUser, totalJoueurs,
+
+    // Scores
+    scoreUser, gpDuMois,
+    coeff: getCoeffProfil(completion),
+    completion, joursConnexion,
+
+    // États
     enZonePromotion, enZoneRetrogradation, joursRestants,
-    meilleurClassement:state.meilleur_classement,
-    historiqueLigues:state.historique_ligues || [],
+    meilleurClassement: state.meilleur_classement,
+    historiqueLigues:   state.historique_ligues || [],
+
+    // Actions
     enregistrerConnexionJour,
+
+    // UI
     messageClassement,
+
+    // Debug
+    loaded,
   };
 }
