@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "fr.mongazon360.app",
+    "sha256_cert_fingerprints": ["5D:B4:06:DA:7E:FD:D7:B5:C4:2A:33:4B:37:69:25:50:17:38:95:8D:D9:D2:82:12:22:B8:64:88:E4:2F:62:42"]
+  }
+}]
