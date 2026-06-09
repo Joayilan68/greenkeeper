@@ -141,19 +141,29 @@ function useAccessCheck() {
       (async () => {
         try {
           const { supabase } = await import("./lib/supabase");
-          const { data } = await supabase
+          const { data: profileData } = await supabase
             .from("profiles")
             .select("user_id")
             .eq("user_id", user.id)
             .maybeSingle();
-          if (data) {
+          if (profileData) {
             setUserFlags();
             setAccessStatus("approved");
           } else {
-            // Profil supprimé entre-temps → invalider le cache
-            clearAccessCache();
-            try { localStorage.setItem("mg360_waitlist", "true"); } catch {}
-            setAccessStatus("waitlist");
+            // Pas de profil → vérifier user_access avant de mettre en waitlist
+            const { data: accessData } = await supabase
+              .from("user_access")
+              .select("status")
+              .eq("user_id", user.id)
+              .maybeSingle();
+            if (accessData?.status === "approved" || accessData?.status === "guest") {
+              setUserFlags();
+              setAccessStatus("approved");
+            } else {
+              clearAccessCache();
+              try { localStorage.setItem("mg360_waitlist", "true"); } catch {}
+              setAccessStatus("waitlist");
+            }
           }
         } catch { /* réseau offline — on garde le cache */ }
       })();
@@ -164,13 +174,28 @@ function useAccessCheck() {
     (async () => {
       try {
         const { supabase } = await import("./lib/supabase");
-        const { data } = await supabase
+        // 1. Vérifier profiles (user a terminé l'onboarding)
+        const { data: profileData } = await supabase
           .from("profiles")
           .select("user_id")
           .eq("user_id", user.id)
           .maybeSingle();
 
-        if (data) {
+        if (profileData) {
+          setUserFlags();
+          setAccessStatus("approved");
+          return;
+        }
+
+        // 2. Pas de profil → vérifier user_access (guest ou approved sans profil)
+        // Couvre : guest code, code admin, préinscrit qui n'a pas fini l'onboarding
+        const { data: accessData } = await supabase
+          .from("user_access")
+          .select("status")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (accessData?.status === "approved" || accessData?.status === "guest") {
           setUserFlags();
           setAccessStatus("approved");
         } else {

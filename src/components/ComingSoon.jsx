@@ -263,6 +263,19 @@ export default function ComingSoon() {
         return;
       }
 
+      // ✅ Persistance Supabase — garantit l'accès sur tout device/navigateur
+      if (user?.id) {
+        await supabase
+          .from("user_access")
+          .upsert({
+            user_id:              user.id,
+            status:               "approved",
+            approved_at:          new Date().toISOString(),
+            onboarding_completed: false,
+            updated_at:           new Date().toISOString(),
+          }, { onConflict: "user_id" });
+      }
+
       setAdminUnlocked(true);
       // ✅ FIX : reload complet pour relancer useAccessCheck depuis zéro
       setTimeout(() => { window.location.href = "/"; }, 1200);
@@ -333,6 +346,20 @@ export default function ComingSoon() {
         .from("guest_codes")
         .update({ uses_count: (data.uses_count || 0) + 1 })
         .eq("id", data.id);
+
+      // ✅ Persistance Supabase — garantit l'accès sur tout device/navigateur
+      if (user?.id) {
+        await supabase
+          .from("user_access")
+          .upsert({
+            user_id:              user.id,
+            status:               "guest",
+            guest_code:           guestCode.trim().toUpperCase(),
+            approved_at:          new Date().toISOString(),
+            onboarding_completed: false,
+            updated_at:           new Date().toISOString(),
+          }, { onConflict: "user_id" });
+      }
 
       setGuestUnlocked(true);
       // ✅ FIX : reload propre — garantit que useAccessCheck repart à zéro
