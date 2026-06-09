@@ -29,17 +29,52 @@ import { useUTMInjection } from "./lib/useUTMInjection"; // ✅ Bloc 1 — injec
 // ── Emails admin — accès permanent garanti ────────────────────────────────────
 const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
 
+// localStorage = cache court terme UNIQUEMENT (évite un flash au rechargement)
+// Source de vérité = Supabase. Durée de cache : 1h max.
+const ACCESS_CACHE_KEY = "mg360_access_cache";
+const ACCESS_CACHE_TTL = 60 * 60 * 1000; // 1h en ms
+
+function getAccessCache() {
+  try {
+    const raw = localStorage.getItem(ACCESS_CACHE_KEY);
+    if (!raw) return null;
+    const { status, ts } = JSON.parse(raw);
+    if (Date.now() - ts > ACCESS_CACHE_TTL) {
+      localStorage.removeItem(ACCESS_CACHE_KEY);
+      return null;
+    }
+    return status; // "approved" | "waitlist" | "admin"
+  } catch { return null; }
+}
+
+function setAccessCache(status) {
+  try {
+    localStorage.setItem(ACCESS_CACHE_KEY, JSON.stringify({ status, ts: Date.now() }));
+  } catch {}
+}
+
+function clearAccessCache() {
+  try { localStorage.removeItem(ACCESS_CACHE_KEY); } catch {}
+}
+
 function setAdminFlags() {
-  localStorage.setItem("mg360_approved",        "true");
-  localStorage.setItem("mg360_onboarding_done",  "true");
-  localStorage.setItem("gk_admin_code",          "GREENKEEPER2024");
-  localStorage.removeItem("mg360_waitlist");
+  setAccessCache("admin");
+  // Rétrocompat — certains composants lisent encore ces clés
+  try {
+    localStorage.setItem("mg360_approved",       "true");
+    localStorage.setItem("mg360_onboarding_done", "true");
+    localStorage.setItem("gk_admin_code",         "GREENKEEPER2024");
+    localStorage.removeItem("mg360_waitlist");
+  } catch {}
 }
 
 function setUserFlags() {
-  localStorage.setItem("mg360_approved",        "true");
-  localStorage.setItem("mg360_onboarding_done",  "true");
-  localStorage.removeItem("mg360_waitlist");
+  setAccessCache("approved");
+  try {
+    localStorage.setItem("mg360_approved",       "true");
+    localStorage.setItem("mg360_onboarding_done", "true");
+    localStorage.removeItem("mg360_waitlist");
+  } catch {}
 }
 
 function AppWithWeather({ children }) {
@@ -69,10 +104,14 @@ function LoadingScreen() {
   );
 }
 
-// ── Hook qui vérifie l'accès et retourne l'état de chargement ────────────────
+// ── Hook qui vérifie l'accès — SOURCE DE VÉRITÉ = SUPABASE ──────────────────
+// localStorage = cache 1h uniquement pour éviter le flash au rechargement.
+// Sur nouveau device, Safari iOS (efface localStorage après 7j), ou cache expiré :
+// on retombe systématiquement sur Supabase → aucun user ne se retrouve bloqué.
 function useAccessCheck() {
   const { user, isLoaded } = useUser();
-  const [checking, setChecking] = useState(true);
+  const [checking,  setChecking]  = useState(true);
+  const [accessStatus, setAccessStatus] = useState(null); // "approved"|"waitlist"|"admin"|null
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -85,22 +124,43 @@ function useAccessCheck() {
     const email   = user.primaryEmailAddress?.emailAddress || "";
     const isAdmin = ADMIN_EMAILS.includes(email) || user.publicMetadata?.role === "admin";
 
+    // Admin → toujours approuvé, pas besoin de Supabase
     if (isAdmin) {
       setAdminFlags();
+      setAccessStatus("admin");
       setChecking(false);
       return;
     }
 
-    if (localStorage.getItem("mg360_approved") === "true") {
+    // Cache valide (< 1h) → on évite le round-trip Supabase pour le rechargement
+    const cached = getAccessCache();
+    if (cached) {
+      setAccessStatus(cached);
       setChecking(false);
+      // Revalide en arrière-plan sans bloquer l'UI
+      (async () => {
+        try {
+          const { supabase } = await import("./lib/supabase");
+          const { data } = await supabase
+            .from("profiles")
+            .select("user_id")
+            .eq("user_id", user.id)
+            .maybeSingle();
+          if (data) {
+            setUserFlags();
+            setAccessStatus("approved");
+          } else {
+            // Profil supprimé entre-temps → invalider le cache
+            clearAccessCache();
+            try { localStorage.setItem("mg360_waitlist", "true"); } catch {}
+            setAccessStatus("waitlist");
+          }
+        } catch { /* réseau offline — on garde le cache */ }
+      })();
       return;
     }
 
-    if (localStorage.getItem("mg360_waitlist") === "true") {
-      setChecking(false);
-      return;
-    }
-
+    // Pas de cache ou cache expiré → vérification Supabase obligatoire
     (async () => {
       try {
         const { supabase } = await import("./lib/supabase");
@@ -108,25 +168,44 @@ function useAccessCheck() {
           .from("profiles")
           .select("user_id")
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle();
 
         if (data) {
           setUserFlags();
+          setAccessStatus("approved");
         } else {
-          localStorage.setItem("mg360_waitlist", "true");
+          clearAccessCache();
+          try {
+            localStorage.setItem("mg360_waitlist", "true");
+            localStorage.removeItem("mg360_approved");
+          } catch {}
+          setAccessStatus("waitlist");
         }
       } catch {
-        localStorage.setItem("mg360_waitlist", "true");
+        // Erreur réseau — fallback sur l'ancien localStorage pour ne pas bloquer
+        try {
+          const legacy = localStorage.getItem("mg360_approved");
+          if (legacy === "true") {
+            setAccessStatus("approved");
+          } else {
+            setAccessStatus("waitlist");
+          }
+        } catch {
+          setAccessStatus("waitlist");
+        }
       } finally {
         setChecking(false);
       }
     })();
   }, [isLoaded, user]); // eslint-disable-line
 
-  return { checking };
+  return { checking, accessStatus };
 }
 
-function isOnWaitlist() {
+function isOnWaitlist(accessStatus) {
+  // Priorité sur accessStatus (state React) si disponible
+  if (accessStatus !== null) return accessStatus === "waitlist";
+  // Fallback localStorage (rétrocompat)
   try {
     return localStorage.getItem("mg360_waitlist") === "true" &&
            localStorage.getItem("mg360_approved") !== "true";
@@ -143,11 +222,11 @@ function PrivateRoute({ children }) {
 }
 
 function AppRoutes() {
-  const { checking } = useAccessCheck();
+  const { checking, accessStatus } = useAccessCheck();
 
   if (checking) return <LoadingScreen />;
 
-  const onWaitlist = isOnWaitlist();
+  const onWaitlist = isOnWaitlist(accessStatus);
 
   return (
     <Routes>
