@@ -1,16 +1,45 @@
 {
-  "name": "GreenKeeper – Entretien Pelouse",
-  "short_name": "GreenKeeper",
-  "description": "Votre expert pelouse intelligent : météo, IA, planning",
+  "name": "Mongazon360™ - Votre Expert Gazon Intelligent",
+  "short_name": "Mongazon360",
+  "description": "Mongazon360™ : l'application intelligente d'entretien du gazon. Météo temps réel, IA agronomique, planning personnalisé, diagnostic photo.",
+  "id": "fr.mongazon360.app",
+  "lang": "fr",
+  "dir": "ltr",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#0d2b1a",
-  "theme_color": "#1a4731",
   "orientation": "portrait",
+  "background_color": "#1a4731",
+  "theme_color": "#1a4731",
+  "categories": ["lifestyle", "utilities", "productivity"],
   "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "/icon-192x192.png",         "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512x512.png",         "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-192x192.png","sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon-maskable-512x512.png","sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
-  "categories": ["lifestyle", "utilities"],
-  "lang": "fr"
+  "screenshots": [
+    {
+      "src": "/screenshots/screen-dashboard.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "platform": "narrow",
+      "label": "Dashboard — Score santé et météo"
+    },
+    {
+      "src": "/screenshots/screen-today.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "platform": "narrow",
+      "label": "Aujourd'hui — Actions du jour"
+    },
+    {
+      "src": "/screenshots/screen-mylawn.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "platform": "narrow",
+      "label": "Mon Gazon — Plan du mois"
+    }
+  ],
+  "prefer_related_applications": false
 }
