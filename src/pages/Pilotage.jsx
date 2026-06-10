@@ -416,6 +416,7 @@ export default function Pilotage() {
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:4 }}>
               <KPI icon="👥" label="Total inscrits" value={loadingUsers ? "..." : preinscTotal} sub="Hors admins" color="#a5d6a7" />
               <KPI icon="🆕" label="Nouveaux 7j" value={loadingUsers ? "..." : (users?.newLast7 ?? "—")} sub={users?.newLast30 ? `+${users.newLast30} ce mois` : ""} color="#90caf9" />
+              <KPI icon="🟢" label="Actifs aujourd'hui" value={loadingUsers ? "..." : (users?.activeToday ?? "—")} sub="Dernières 24h" color="#66BB6A" />
               <KPI icon="✅" label="Actifs 30j" value={loadingUsers ? "..." : (users?.activeL30 ?? "—")} sub="Connectés ce mois" color="#a5d6a7" />
               <KPI icon="📸" label="Diagnostics" value={local?.diagnostics.total ?? "—"} sub={`+${local?.diagnostics.ce7j ?? 0} cette semaine`} color="#ce93d8" />
             </div>

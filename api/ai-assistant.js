@@ -1,12 +1,73 @@
 // api/ai-assistant.js
 // Assistant IA gazon — Groq/Llama 3.1 avec contexte personnalisé
 
+const { createClerkClient } = require("@clerk/backend");
+const { createClient }      = require("@supabase/supabase-js");
+
+const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
+
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).end();
+
+  // ✅ AUTH — token Clerk obligatoire
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Token manquant" });
+  }
+
+  let clerkUserId;
+  try {
+    const payload = await clerk.verifyToken(authHeader.replace("Bearer ", ""));
+    clerkUserId   = payload.sub;
+  } catch {
+    return res.status(401).json({ error: "Token invalide" });
+  }
+
+  // ✅ RATE LIMITING — max 20 messages Bob par jour (Free + Premium)
+  // Premium a accès à Bob mais avec limite raisonnable pour contrôler les coûts
+  try {
+    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+    const today    = new Date().toISOString().split("T")[0];
+    const rateKey  = `bob_${clerkUserId}_${today}`;
+
+    const { data: rateData } = await supabase
+      .from("rate_limits")
+      .select("count")
+      .eq("key", rateKey)
+      .maybeSingle();
+
+    const currentCount = rateData?.count || 0;
+
+    // Admins illimités
+    const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
+    const clerkUser    = await clerk.users.getUser(clerkUserId);
+    const userEmail    = clerkUser.emailAddresses?.[0]?.emailAddress || "";
+    const isAdmin      = ADMIN_EMAILS.includes(userEmail) || clerkUser.publicMetadata?.role === "admin";
+    const isPremium    = clerkUser.publicMetadata?.isSubscribed === true ||
+                         clerkUser.publicMetadata?.subscriptionStatus === "active";
+
+    // Free : 5 messages/jour — Premium : 20 messages/jour
+    const dailyLimit = isAdmin ? 9999 : isPremium ? 20 : 5;
+
+    if (currentCount >= dailyLimit) {
+      const msg = isPremium
+        ? "Limite journalière atteinte (20 messages). Revenez demain !"
+        : "Limite gratuite atteinte (5 messages). Passez Premium pour 20 messages/jour.";
+      return res.status(429).json({ error: msg });
+    }
+
+    // Incrémenter
+    await supabase.from("rate_limits").upsert(
+      { key: rateKey, count: currentCount + 1, updated_at: new Date().toISOString() },
+      { onConflict: "key" }
+    );
+  } catch (e) {
+    console.warn("[MG360] bob rate_limit (non bloquant):", e.message);
+  }
 
   try {
     const { messages, profile = {}, weather = {}, score = 0, month = 1 } = req.body;

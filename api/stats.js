@@ -138,10 +138,13 @@ async function handleUsers(req, res) {
     const day7   = now - 7  * 24 * 60 * 60 * 1000;
     const day30  = now - 30 * 24 * 60 * 60 * 1000;
 
-    const total     = allUsers.length;
-    const newLast7  = allUsers.filter(u => u.created_at > day7).length;
-    const newLast30 = allUsers.filter(u => u.created_at > day30).length;
-    const activeL30 = allUsers.filter(u => u.last_active_at && u.last_active_at > day30).length;
+    const total      = allUsers.length;
+    const newLast7   = allUsers.filter(u => u.created_at > day7).length;
+    const newLast30  = allUsers.filter(u => u.created_at > day30).length;
+    const activeL30  = allUsers.filter(u => u.last_active_at && u.last_active_at > day30).length;
+    // Actifs aujourd'hui = last_active_at dans les dernières 24h
+    const day1       = now - 24 * 60 * 60 * 1000;
+    const activeToday = allUsers.filter(u => u.last_active_at && u.last_active_at > day1).length;
 
     // Grouper par semaine (8 dernières semaines)
     const weeks = [];
@@ -179,6 +182,7 @@ async function handleUsers(req, res) {
       newLast7,
       newLast30,
       activeL30,
+      activeToday,
       weeks,
       months,
       // Backward compat avec l'ancien champ "sources"

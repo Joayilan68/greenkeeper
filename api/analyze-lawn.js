@@ -68,8 +68,65 @@ module.exports = async function handler(req, res) {
   }
 
   // ── Route principale : diagnostic photo ────────────────────────────────────
+
+  // ✅ AUTH + PREMIUM CHECK — obligatoire avant tout appel Groq/Cloudinary
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Token manquant — authentification requise" });
+  }
+
+  let clerkUserId;
+  let clerkUser;
+  try {
+    const payload = await clerk.verifyToken(authHeader.replace("Bearer ", ""));
+    clerkUserId   = payload.sub;
+    clerkUser     = await clerk.users.getUser(clerkUserId);
+  } catch {
+    return res.status(401).json({ error: "Token invalide" });
+  }
+
+  // Vérification Premium (isSubscribed) ou Admin
+  const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
+  const userEmail    = clerkUser.emailAddresses?.[0]?.emailAddress || "";
+  const isAdmin      = ADMIN_EMAILS.includes(userEmail) || clerkUser.publicMetadata?.role === "admin";
+  const isPremium    = clerkUser.publicMetadata?.isSubscribed === true ||
+                       clerkUser.publicMetadata?.subscriptionStatus === "active";
+
+  if (!isAdmin && !isPremium) {
+    return res.status(403).json({ error: "Fonctionnalité réservée aux membres Premium" });
+  }
+
+  // ✅ RATE LIMITING — max 3 diagnostics par jour par user
+  try {
+    const { createClient } = require("@supabase/supabase-js");
+    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+    const today    = new Date().toISOString().split("T")[0];
+    const rateKey  = `diag_${clerkUserId}_${today}`;
+
+    const { data: rateData } = await supabase
+      .from("rate_limits")
+      .select("count")
+      .eq("key", rateKey)
+      .maybeSingle();
+
+    const currentCount = rateData?.count || 0;
+    if (!isAdmin && currentCount >= 3) {
+      return res.status(429).json({ error: "Limite atteinte — 3 diagnostics maximum par jour. Revenez demain !" });
+    }
+
+    // Incrémenter le compteur
+    await supabase.from("rate_limits").upsert(
+      { key: rateKey, count: currentCount + 1, updated_at: new Date().toISOString() },
+      { onConflict: "key" }
+    );
+  } catch (e) {
+    console.warn("[MG360] rate_limit check failed (non bloquant):", e.message);
+    // Non bloquant — on continue si la table rate_limits est indisponible
+  }
+
   try {
     const { imageBase64, mimeType = "image/jpeg", profile = {}, weather = {}, score = 0, userId } = req.body;
+    const resolvedUserId = userId || clerkUserId;
     if (!imageBase64) throw new Error("Image manquante");
 
     // ── 1. UPLOAD CLOUDINARY ──────────────────────────────────────────────
@@ -258,7 +315,7 @@ Si la photo ne montre pas du gazon, retourne score_visuel à 0 et explique dans 
     }
 
     // ── 3. SAUVEGARDE SUPABASE ────────────────────────────────────────────
-    if (userId) {
+    if (resolvedUserId) {
       try {
         const { createClient } = require("@supabase/supabase-js");
         const supabase = createClient(
@@ -266,7 +323,7 @@ Si la photo ne montre pas du gazon, retourne score_visuel à 0 et explique dans 
           process.env.SUPABASE_SERVICE_KEY
         );
         await supabase.from("diagnostics").insert({
-          user_id:        userId,
+          user_id:        resolvedUserId,
           image_url:      imageUrl,
           public_id:      publicId,
           etat_general:   analysis.etat_general || null,
