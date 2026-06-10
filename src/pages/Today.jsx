@@ -39,6 +39,12 @@ const CONSEILS_MAP = {
   engrais_automne: "engrais",
   engrais_hiver:   "engrais",
   aeration:        "aeration",
+  scarification:   "aeration",   // conseil post-scarification similaire à aération
+  verticut:        "aeration",   // idem
+  desherbage:      "tonte",      // conseil post-désherbage : entretien général
+  antimousse:      "tonte",      // conseil post-antimousse
+  biostimulant:    "arrosage",   // conseil post-biostimulant : bien arroser après
+  regarnissage:    "engrais",    // conseil post-semences : fertilisation légère
 };
 
 // ── Composant bouton géolocalisation ─────────────────────────────────────────
@@ -191,7 +197,7 @@ export default function Today() {
   const afficherToast = (resultat, conseil = null) => {
     if (!resultat?.succes) return;
     setToastPoints({ ...resultat, conseil });
-    setTimeout(() => setToastPoints(null), 3500);
+    setTimeout(() => setToastPoints(null), 4500);
   };
 
   // ── Calcul des statuts (source unique planEntretien.js) ───────────────────
@@ -717,12 +723,23 @@ export default function Today() {
 
       {/* Toast GreenPoints */}
       {toastPoints && (
-        <div style={{ position:"fixed", bottom:80, left:"50%", transform:"translateX(-50%)", zIndex:9999, background:"#1a2e1a", border:"2px solid #43a047", borderRadius:16, padding:"12px 20px", boxShadow:"0 8px 32px rgba(0,0,0,0.4)", maxWidth:340, width:"90vw" }}>
+        <div style={{ position:"fixed", bottom:80, left:"50%", transform:"translateX(-50%)", zIndex:9999, background:"#1a2e1a", border:`2px solid ${toastPoints.succes === false ? "#81c784" : "#43a047"}`, borderRadius:16, padding:"12px 20px", boxShadow:"0 8px 32px rgba(0,0,0,0.4)", maxWidth:340, width:"90vw" }}>
           <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-            <span style={{ fontSize:28 }}>{toastPoints.icone}</span>
+            <span style={{ fontSize:28 }}>{toastPoints.icone || "✅"}</span>
             <div style={{ flex:1 }}>
-              <div style={{ fontWeight:700, color:"#a5d6a7", fontSize:16 }}>+{toastPoints.points} GreenPoints !</div>
-              <div style={{ color:"#81c784", fontSize:12 }}>Total : {toastPoints.total?.toLocaleString("fr-FR")} pts · {toastPoints.palier?.icone} {toastPoints.palier?.label}</div>
+              {toastPoints.succes === false ? (
+                <>
+                  <div style={{ fontWeight:700, color:"#a5d6a7", fontSize:16 }}>✅ {toastPoints.label}</div>
+                  <div style={{ color:"#81c784", fontSize:12 }}>
+                    {toastPoints.raison === "plafond_atteint" ? "Plafond atteint cette période — action enregistrée !" : "Action journalisée avec succès"}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div style={{ fontWeight:700, color:"#a5d6a7", fontSize:16 }}>+{toastPoints.points} GreenPoints !</div>
+                  <div style={{ color:"#81c784", fontSize:12 }}>Total : {toastPoints.total?.toLocaleString("fr-FR")} pts · {toastPoints.palier?.icone} {toastPoints.palier?.label}</div>
+                </>
+              )}
             </div>
           </div>
           {toastPoints.conseil && (
