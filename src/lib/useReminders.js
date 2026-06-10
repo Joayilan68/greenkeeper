@@ -85,7 +85,7 @@ export function useReminders(syncFromReminders) {
           // Supabase vide → migration depuis localStorage
           const local = loadLocal();
           await supabase.from("reminders").upsert(
-            { user_id: userId, preferences: local, updated_at: new Date().toISOString() },
+            { user_id: userId, preferences: local, consents: {}, updated_at: new Date().toISOString() },
             { onConflict: "user_id" }
           );
         }
@@ -103,9 +103,10 @@ export function useReminders(syncFromReminders) {
 
     // Sync Supabase
     if (isSignedIn && userId) {
+      // ✅ consents requis NOT NULL — lire depuis Supabase ou fallback {}
       supabase.from("reminders").upsert(
-        { user_id: userId, preferences: updated, updated_at: new Date().toISOString() },
-        { onConflict: "user_id" }
+        { user_id: userId, preferences: updated, consents: {}, updated_at: new Date().toISOString() },
+        { onConflict: "user_id", ignoreDuplicates: false }
       ).then(({ error }) => {
         if (error) console.warn("[MG360] reminders upsert:", error.message);
       });
@@ -145,12 +146,11 @@ export function useReminders(syncFromReminders) {
   const syncToServer = async (userId, email, consents) => {
     if (!userId) return;
     try {
-      // ✅ Utiliser le state React (source de vérité) et non localStorage
-      // localStorage peut être vide sur un nouveau device
+      const prefs = JSON.parse(localStorage.getItem(KEY) || "{}");
       await fetch("/api/send?type=save-reminders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, email: email || null, preferences: reminders, consents: consents || {} }),
+        body: JSON.stringify({ userId, email: email || null, preferences: prefs, consents: consents || {} }),
       });
     } catch {}
   };
