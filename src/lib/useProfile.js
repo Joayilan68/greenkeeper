@@ -75,6 +75,11 @@ async function verifierVilleEnLigne(profile, saveProfile) {
   } catch {}
 }
 
+// ── Helper démarrage programme Rénover/Créer ─────────────────────────────────
+// Appeler depuis Setup.jsx ou onboarding quand l'objectif est sélectionné
+// profile.date_debut_programme = new Date().toISOString()
+// saveProfile({ ...profile, date_debut_programme: new Date().toISOString() })
+
 // ── Hook principal ────────────────────────────────────────────────────────────
 export function useProfile() {
   const { userId, isSignedIn } = useAuth();
