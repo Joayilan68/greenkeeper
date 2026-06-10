@@ -200,10 +200,21 @@ export default function Today() {
   const jProg = joursProgramme(profile); // null si pas de programme actif
   const isProgramme = profile?.objectif === "creer" || profile?.objectif === "renover";
   const recommended = actionStatuses.filter(a => a?.status === "recommended");
-  const prevoyez    = actionStatuses.filter(a =>
-    a?.status === "done_today" || a?.status === "too_soon" ||
-    a?.status === "blocked"    || a?.status === "exclusive"
-  );
+  const prevoyez    = actionStatuses
+    .filter(a =>
+      a?.status === "done_today" || a?.status === "too_soon" ||
+      a?.status === "blocked"    || a?.status === "exclusive"
+    )
+    .sort((a, b) => {
+      // Tri par délai croissant — null/undefined = en dernier
+      const scoreA = a.status === "done_today" ? -1
+        : a.daysLeft != null ? a.daysLeft
+        : 9999;
+      const scoreB = b.status === "done_today" ? -1
+        : b.daysLeft != null ? b.daysLeft
+        : 9999;
+      return scoreA - scoreB;
+    });
   const pasPrevu    = actionStatuses.filter(a => a?.status === "off_season");
 
   // ── Clé localStorage IA du jour ─────────────────────────────────────────
@@ -595,8 +606,9 @@ export default function Today() {
                 PRÉVOIR
               </div>
               {prevoyez.map(({ action, status, daysLeft, blockedReason, exclusiveWith, alternative }) => {
-                const isNaturelAlt = alternative === "manuel";
+                const isNaturelAlt      = alternative === "manuel";
                 const isProgrammeBloque = isProgramme && blockedReason?.includes("J0-J");
+                const amazonKey         = ACTION_TO_AMAZON[action.id];
                 const badgeStyle = status === "done_today"
                   ? { color:"#4ade80", bg:"rgba(74,222,128,0.15)", border:"rgba(74,222,128,0.3)" }
                   : status === "too_soon"
@@ -615,6 +627,7 @@ export default function Today() {
                   `⚠️ Excl. ${daysLeft}j`;
                 return (
                   <div key={action.id} style={{ display:"flex", flexDirection:"column", gap:4, padding:"9px 12px", marginBottom:5, borderRadius:9, background:"rgba(255,255,255,0.07)", border:"1px solid rgba(255,255,255,0.08)" }}>
+                    {/* Ligne label + badge */}
                     <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                       <div style={{ fontSize:13, fontWeight:600, color:"#c8e6c9" }}>{action.label}</div>
                       <div style={{ fontSize:11, fontWeight:700, color:badgeStyle.color, background:badgeStyle.bg, border:`1px solid ${badgeStyle.border}`, borderRadius:8, padding:"3px 10px", whiteSpace:"nowrap", marginLeft:8 }}>
@@ -632,6 +645,10 @@ export default function Today() {
                       <div style={{ fontSize:11, color:"#90caf9", fontStyle:"italic" }}>
                         📅 Programme {profile?.objectif === "creer" ? "Création" : "Rénovation"} — J{jProg} · {blockedReason?.split(" : ")[1] || blockedReason}
                       </div>
+                    )}
+                    {/* ── Bouton Amazon inline si l'action a un produit ── */}
+                    {amazonKey && profile && status !== "done_today" && (
+                      <ProductCard actionKey={amazonKey} profile={profile} compact />
                     )}
                   </div>
                 );
