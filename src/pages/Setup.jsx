@@ -4,7 +4,16 @@ import { useNavigate } from "react-router-dom";
 import { useProfile } from "../lib/useProfile";
 import { appShell, btn } from "../lib/styles";
 
+const OBJECTIFS_OPTIONS = [
+  { v:"gazon_parfait", label:"🏆 Gazon parfait",         desc:"Qualité visuelle maximale, suivi intensif" },
+  { v:"fonctionnel",   label:"⚽ Pelouse fonctionnelle", desc:"Résistance et facilité d'entretien" },
+  { v:"naturel",       label:"🌿 Gazon naturel",         desc:"Bio uniquement, biodiversité, zéro chimique" },
+  { v:"renover",       label:"🔧 Rénover ma pelouse",    desc:"Programme 6 mois — réhabilitation complète" },
+  { v:"creer",         label:"🌱 Créer une nouvelle pelouse", desc:"Programme 90 jours — création from scratch" },
+];
+
 const STEPS = [
+  { title:"Votre objectif principal", field:"objectif", options: OBJECTIFS_OPTIONS },
   { title:"Type de gazon", field:"pelouse", options:[
     { v:"sport",       label:"⚽ Sport / résistant",      desc:"Résistance au piétinement" },
     { v:"ornemental",  label:"🌸 Ornemental",             desc:"Aspect parfait, usage limité" },
@@ -70,7 +79,7 @@ export default function Setup() {
   const { profile, saveProfile } = useProfile();
   const [step, setStep] = useState(0);
   const [tmp, setTmp] = useState(profile || {
-    pelouse:"", sol:"", exposition:"", surface:"",
+    objectif:"", pelouse:"", sol:"", exposition:"", surface:"",
     arrosage:"", tondeuse:[], materiel:[], budget:""
   });
 
@@ -100,7 +109,13 @@ export default function Setup() {
     ];
     const p2Done     = p2Fields.filter(Boolean).length;
     const completion = Math.min(90, 40 + Math.round((p2Done / 6) * 50));
-    saveProfile({ ...tmp, profileCompletion: completion });
+    const extras = (tmp.objectif === "creer" || tmp.objectif === "renover")
+      // Si l'objectif change, on réinitialise date_debut seulement si c'est un changement
+      ? { date_debut_programme: profile?.objectif !== tmp.objectif
+            ? new Date().toISOString()
+            : (profile?.date_debut_programme || new Date().toISOString()) }
+      : {};
+    saveProfile({ ...tmp, profileCompletion: completion, ...extras });
     navigate("/");
   };
 

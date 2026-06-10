@@ -6,7 +6,7 @@ import { useHistory } from "../lib/useHistory";
 import { useAuth } from "@clerk/clerk-react";
 import { useSubscription } from "../lib/useSubscription";
 import { MONTHLY_PLAN, MONTHS_FR, calcArrosage, getWMO, getDebitMmH } from "../lib/lawn";
-import { buildActions, zoneClimatique, ZONE_LABELS } from "../lib/planEntretien";
+import { buildActions, zoneClimatique, ZONE_LABELS, joursProgramme } from "../lib/planEntretien";
 import { calcLawnScore } from "../lib/lawnScore";
 import AlertBanner from "../components/AlertBanner";
 import ProductCard from "../components/ProductCard";
@@ -197,6 +197,8 @@ export default function Today() {
   // ── Calcul des statuts (source unique planEntretien.js) ───────────────────
   // Déclaré AVANT fetchAI pour éviter la TDZ (Temporal Dead Zone) en prod Vite
   const actionStatuses = (buildActions(profile, weather, history, score, month, _arrosRaw) || []);
+  const jProg = joursProgramme(profile); // null si pas de programme actif
+  const isProgramme = profile?.objectif === "creer" || profile?.objectif === "renover";
   const recommended = actionStatuses.filter(a => a?.status === "recommended");
   const prevoyez    = actionStatuses.filter(a =>
     a?.status === "done_today" || a?.status === "too_soon" ||
@@ -512,6 +514,31 @@ export default function Today() {
             </span>
           </div>
 
+          {/* ── BANNIÈRE PROGRAMME RÉNOVER/CRÉER ──────────────────────────── */}
+          {isProgramme && jProg !== null && (
+            <div style={{ background: profile?.objectif === "creer" ? "rgba(103,58,183,0.15)" : "rgba(25,118,210,0.15)", border: `1px solid ${profile?.objectif === "creer" ? "rgba(149,117,205,0.4)" : "rgba(100,181,246,0.4)"}`, borderRadius:12, padding:"12px 14px", marginBottom:14 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                <div>
+                  <div style={{ fontSize:13, fontWeight:800, color: profile?.objectif === "creer" ? "#ce93d8" : "#90caf9" }}>
+                    {profile?.objectif === "creer" ? "🌱 Programme Création" : "🔧 Programme Rénovation"}
+                  </div>
+                  <div style={{ fontSize:11, color:"#a5d6a7", marginTop:2 }}>
+                    {profile?.objectif === "creer"
+                      ? jProg <= 60 ? `J${jProg} · Arrosage quotidien requis · encore ${60 - jProg}j` : jProg <= 90 ? `J${jProg} · Phase de consolidation` : `J${jProg} · Programme terminé 🎉`
+                      : jProg <= 60 ? `J${jProg} · Phase intensive · encore ${60 - jProg}j` : `J${jProg} · Phase de stabilisation`
+                    }
+                  </div>
+                </div>
+                <div style={{ fontSize:22, fontWeight:900, color: profile?.objectif === "creer" ? "rgba(149,117,205,0.7)" : "rgba(100,181,246,0.7)" }}>
+                  J{jProg}
+                </div>
+              </div>
+              <div style={{ marginTop:8, background:"rgba(255,255,255,0.08)", borderRadius:6, height:4 }}>
+                <div style={{ height:"100%", borderRadius:6, background: profile?.objectif === "creer" ? "linear-gradient(90deg,#7b1fa2,#ce93d8)" : "linear-gradient(90deg,#1565c0,#90caf9)", width:`${Math.min(100, Math.round((jProg / (profile?.objectif === "creer" ? 90 : 180)) * 100))}%`, transition:"width 0.5s" }} />
+              </div>
+            </div>
+          )}
+
           {/* À FAIRE AUJOURD'HUI */}
           {recommended.length > 0 ? (
             <div style={{ marginBottom:16 }}>
@@ -567,23 +594,45 @@ export default function Today() {
               <div style={{ fontSize:10, fontWeight:800, color:"#a5d6a7", letterSpacing:1, marginBottom:8 }}>
                 PRÉVOIR
               </div>
-              {prevoyez.map(({ action, status, daysLeft, blockedReason, exclusiveWith }) => {
+              {prevoyez.map(({ action, status, daysLeft, blockedReason, exclusiveWith, alternative }) => {
+                const isNaturelAlt = alternative === "manuel";
+                const isProgrammeBloque = isProgramme && blockedReason?.includes("J0-J");
                 const badgeStyle = status === "done_today"
                   ? { color:"#4ade80", bg:"rgba(74,222,128,0.15)", border:"rgba(74,222,128,0.3)" }
                   : status === "too_soon"
                   ? { color:"#fbbf24", bg:"rgba(251,191,36,0.15)", border:"rgba(251,191,36,0.3)" }
+                  : isNaturelAlt
+                  ? { color:"#a5d6a7", bg:"rgba(76,175,80,0.12)", border:"rgba(76,175,80,0.3)" }
+                  : isProgrammeBloque
+                  ? { color:"#90caf9", bg:"rgba(33,150,243,0.12)", border:"rgba(33,150,243,0.3)" }
                   : { color:"#f87171", bg:"rgba(248,113,113,0.15)", border:"rgba(248,113,113,0.3)" };
                 const badgeText =
                   status === "done_today" ? "✓ Fait aujourd'hui" :
                   status === "too_soon"   ? `Dans ${daysLeft}j` :
-                  status === "blocked"    ? `⛔ ${blockedReason?.split(" — ")[0] || "Bloqué"}` :
+                  status === "blocked" && isNaturelAlt ? "🌿 Manuel" :
+                  status === "blocked" && isProgrammeBloque ? `📅 J${jProg}` :
+                  status === "blocked"   ? `⛔ ${blockedReason?.split(" — ")[0] || "Bloqué"}` :
                   `⚠️ Excl. ${daysLeft}j`;
                 return (
-                  <div key={action.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"9px 12px", marginBottom:5, borderRadius:9, background:"rgba(255,255,255,0.07)", border:"1px solid rgba(255,255,255,0.08)" }}>
-                    <div style={{ fontSize:13, fontWeight:600, color:"#c8e6c9" }}>{action.label}</div>
-                    <div style={{ fontSize:11, fontWeight:700, color:badgeStyle.color, background:badgeStyle.bg, border:`1px solid ${badgeStyle.border}`, borderRadius:8, padding:"3px 10px", whiteSpace:"nowrap", marginLeft:8 }}>
-                      {badgeText}
+                  <div key={action.id} style={{ display:"flex", flexDirection:"column", gap:4, padding:"9px 12px", marginBottom:5, borderRadius:9, background:"rgba(255,255,255,0.07)", border:"1px solid rgba(255,255,255,0.08)" }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                      <div style={{ fontSize:13, fontWeight:600, color:"#c8e6c9" }}>{action.label}</div>
+                      <div style={{ fontSize:11, fontWeight:700, color:badgeStyle.color, background:badgeStyle.bg, border:`1px solid ${badgeStyle.border}`, borderRadius:8, padding:"3px 10px", whiteSpace:"nowrap", marginLeft:8 }}>
+                        {badgeText}
+                      </div>
                     </div>
+                    {/* Message alternatif Naturel */}
+                    {isNaturelAlt && (
+                      <div style={{ fontSize:11, color:"#a5d6a7", fontStyle:"italic" }}>
+                        🌿 Désherbage chimique bloqué — arrachez manuellement ou utilisez un outil à désherber
+                      </div>
+                    )}
+                    {/* Contexte programme Rénover/Créer */}
+                    {isProgrammeBloque && (
+                      <div style={{ fontSize:11, color:"#90caf9", fontStyle:"italic" }}>
+                        📅 Programme {profile?.objectif === "creer" ? "Création" : "Rénovation"} — J{jProg} · {blockedReason?.split(" : ")[1] || blockedReason}
+                      </div>
+                    )}
                   </div>
                 );
               })}

@@ -319,6 +319,10 @@ export default function OnboardingModal({ onComplete }) {
       ville: finalCity, lat: finalLat, lon: finalLon, usages,
       isCreer,
       cityVerified: locStatus === "success" || geoSelected !== null,
+      // ✅ Programme Rénover/Créer : date de début stockée pour calcul des jours J0→J90
+      ...(( objectif === "creer" || objectif === "renover")
+        ? { date_debut_programme: new Date().toISOString() }
+        : {}),
       sol:        null,
       exposition: null,
       arrosage:   null,
