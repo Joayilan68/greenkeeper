@@ -111,9 +111,15 @@ export default function Dashboard() {
     }
     return pts;
   })();
-  const tontes    = history.filter(h => h.action?.toLowerCase().includes("tonte")).length;
-  const arrosages = history.filter(h => h.action?.toLowerCase().includes("arrosage")).length;
-  const engrais   = history.filter(h => h.action?.toLowerCase().includes("engrais")).length;
+  const tontes        = history.filter(h => h.action?.toLowerCase().includes("tonte")).length;
+  const arrosages     = history.filter(h => h.action?.toLowerCase().includes("arrosage")).length;
+  const engrais       = history.filter(h => h.action?.toLowerCase().includes("engrais")).length;
+  const desherbages   = history.filter(h => h.action?.toLowerCase().includes("désherb") || h.action?.toLowerCase().includes("desherb")).length;
+  const biostimulants = history.filter(h => h.action?.toLowerCase().includes("biostimulant")).length;
+  const aerations     = history.filter(h => h.action?.toLowerCase().includes("aération") || h.action?.toLowerCase().includes("aeration")).length;
+  const scarifs       = history.filter(h => h.action?.toLowerCase().includes("scarif") || h.action?.toLowerCase().includes("verticut")).length;
+  const regarnissages = history.filter(h => h.action?.toLowerCase().includes("regarnissage") || h.action?.toLowerCase().includes("semences")).length;
+  const antimousses   = history.filter(h => h.action?.toLowerCase().includes("anti-mousse") || h.action?.toLowerCase().includes("antimousse")).length;
   const minScore  = Math.min(...scoreHistory.map(p => p.score));
   const maxScore  = Math.max(...scoreHistory.map(p => p.score));
   const scoreRange = maxScore - minScore || 1;
@@ -410,16 +416,22 @@ export default function Dashboard() {
             <span>Aujourd'hui</span>
           </div>
 
-          <div style={{ display:"flex", gap:8 }}>
+          <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:4 }}>
             {[
-              { icon:"✂️", val:tontes, label:"Tontes" },
-              { icon:"💧", val:arrosages, label:"Arrosages" },
-              { icon:"🌱", val:engrais, label:"Engrais" },
+              { icon:"✂️",  val:tontes,        label:"Tontes" },
+              { icon:"💧",  val:arrosages,      label:"Arrosages" },
+              { icon:"🌱",  val:engrais,        label:"Engrais" },
+              { icon:"🪴",  val:desherbages,    label:"Désherb." },
+              { icon:"🌿",  val:biostimulants,  label:"Biostim." },
+              { icon:"🌀",  val:aerations,      label:"Aérations" },
+              { icon:"🔧",  val:scarifs,        label:"Scarif." },
+              { icon:"🌾",  val:regarnissages,  label:"Semences" },
+              { icon:"💊",  val:antimousses,    label:"Anti-m." },
             ].map(({ icon, val, label }) => (
-              <div key={label} style={{ flex:1, background:"rgba(255,255,255,0.05)", borderRadius:10, padding:"8px 6px", textAlign:"center" }}>
-                <div style={{ fontSize:18 }}>{icon}</div>
-                <div style={{ fontSize:18, fontWeight:800, color:"#a5d6a7" }}>{val}</div>
-                <div style={{ fontSize:10, color:"#81c784" }}>{label}</div>
+              <div key={label} style={{ flexShrink:0, minWidth:56, background:"rgba(255,255,255,0.05)", borderRadius:10, padding:"8px 6px", textAlign:"center" }}>
+                <div style={{ fontSize:16 }}>{icon}</div>
+                <div style={{ fontSize:16, fontWeight:800, color:"#a5d6a7" }}>{val}</div>
+                <div style={{ fontSize:9, color:"#81c784" }}>{label}</div>
               </div>
             ))}
           </div>

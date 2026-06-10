@@ -283,10 +283,12 @@ export default function MyLawn() {
 
   const month = new Date().getMonth() + 1;
   const plan  = MONTHLY_PLAN[month];
+
+  // ── useDiagnostics AVANT calcLawnScore (évite "Cannot access before initialization") ──
+  const { diagnostics } = useDiagnostics();
   const { score, potential, label, color, issues, strengths, composantes } = calcLawnScore({ weather, profile, history, month, diagnostics });
 
   // ── Conseil du mois ──
-  const { diagnostics } = useDiagnostics();
   const { recommandationPrincipale } = useRecommandations(profile, score, weather, history);
 
   const safeHistory = Array.isArray(history) ? history : [];
