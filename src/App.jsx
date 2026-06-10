@@ -246,6 +246,21 @@ function PrivateRoute({ children }) {
   );
 }
 
+// ── Route admin uniquement ────────────────────────────────────────────────────
+function AdminRoute({ children }) {
+  const { user, isLoaded } = useUser();
+  if (!isLoaded) return null;
+  const email   = user?.primaryEmailAddress?.emailAddress || "";
+  const isAdmin = ADMIN_EMAILS.includes(email) || user?.publicMetadata?.role === "admin";
+  if (!isAdmin) return <Navigate to="/" replace />;
+  return (
+    <>
+      <SignedIn>{children}</SignedIn>
+      <SignedOut><RedirectToSignIn /></SignedOut>
+    </>
+  );
+}
+
 function AppRoutes() {
   const { checking, accessStatus } = useAccessCheck();
 
@@ -278,7 +293,7 @@ function AppRoutes() {
         <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Settings /></Layout>}</PrivateRoute>
       } />
 
-      <Route path="/pilotage"          element={<Layout><Pilotage /></Layout>} />
+      <Route path="/pilotage"          element={<AdminRoute><Layout><Pilotage /></Layout></AdminRoute>} />
 
       <Route path="/"                  element={
         <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Dashboard /></Layout>}</PrivateRoute>
