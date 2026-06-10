@@ -145,11 +145,12 @@ export function useReminders(syncFromReminders) {
   const syncToServer = async (userId, email, consents) => {
     if (!userId) return;
     try {
-      const prefs = JSON.parse(localStorage.getItem(KEY) || "{}");
+      // ✅ Utiliser le state React (source de vérité) et non localStorage
+      // localStorage peut être vide sur un nouveau device
       await fetch("/api/send?type=save-reminders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, email: email || null, preferences: prefs, consents: consents || {} }),
+        body: JSON.stringify({ userId, email: email || null, preferences: reminders, consents: consents || {} }),
       });
     } catch {}
   };

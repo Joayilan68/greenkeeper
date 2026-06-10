@@ -208,7 +208,26 @@ export function useClassement(gpHistorique = [], profile = null, isPaid = false)
   // ── 2. CALCULS RÉACTIFS (côté client, instantané) ────────────────────────
   const debutMois = debutMoisActuel();
   const gpDuMois  = gpHistorique.filter(h => h.date >= debutMois).reduce((s, h) => s + (h.points || 0), 0);
-  const completion     = profile?.profileCompletion || 40;
+  // ✅ Recalcul dynamique — ne pas lire profileCompletion stocké (peut être périmé)
+  // On recompute selon les champs réels du profil + flag diagnostic
+  // Un profil avec tous les champs = 90%, avec diagnostic photo Premium = 100%
+  const completion = (() => {
+    if (!profile) return 40;
+    const p2Fields = [
+      profile.sol && profile.sol !== "N/A",
+      profile.exposition,
+      profile.arrosage && profile.arrosage !== "N/A",
+      profile.tondeuse?.length > 0,
+      profile.materiel?.length > 0,
+      profile.budget,
+    ];
+    const p2Done = p2Fields.filter(Boolean).length;
+    const p2Pct  = Math.round((p2Done / 6) * 50);
+    const base   = 40;
+    // profileCompletion stocké à 100% = profil + diagnostic photo confirmé
+    const storedAt100 = profile.profileCompletion === 100;
+    return storedAt100 ? 100 : Math.min(90, base + p2Pct);
+  })();
   const joursConnexion = (state.connexionsDuMois || []).length;
   const scoreUser      = calcScoreMensuel(gpDuMois, completion, joursConnexion);
 
