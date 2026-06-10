@@ -200,6 +200,7 @@ export default function MyLawn() {
   const { user }                  = useUser();
   const { syncFromReminders }     = useConsents();
   const { reminders, toggle, activeCount, syncToServer } = useReminders(syncFromReminders);
+  const { diagnostics } = useDiagnostics(); // ✅ Déclaré en premier — utilisé dans calcCompletion et calcLawnScore
 
   // ── Débit arroseur (Premium) ────────────────────────────────────────────────
   // ✅ Phase 3 : source de vérité = profile.debit_arrosage_mmh (Supabase, multi-device)
@@ -284,8 +285,6 @@ export default function MyLawn() {
   const month = new Date().getMonth() + 1;
   const plan  = MONTHLY_PLAN[month];
 
-  // ── useDiagnostics AVANT calcLawnScore (évite "Cannot access before initialization") ──
-  const { diagnostics } = useDiagnostics();
   const { score, potential, label, color, issues, strengths, composantes } = calcLawnScore({ weather, profile, history, month, diagnostics });
 
   // ── Conseil du mois ──
