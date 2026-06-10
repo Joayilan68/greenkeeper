@@ -29,7 +29,7 @@ function buildReminderHtml(reminders, userName, profile, score) {
   <div style="padding:24px 28px;">
     <div style="font-size:20px;font-weight:800;color:#1a4731;margin-bottom:6px;">👋 Bonjour ${userName} !</div>
     <div style="font-size:13px;color:#555;margin-bottom:20px;line-height:1.6;">
-      Voici vos rappels d'entretien du jour. Votre score actuel est de <strong style="color:#1a4731;">${score}/100</strong>.
+      Voici vos rappels d'entretien du jour.
       ${profile && profile.pelouse ? `<br/>Gazon : ${profile.pelouse} — Sol : ${profile.sol} — ${profile.surface}m²` : ""}
     </div>
     <div style="margin-bottom:24px;">
@@ -122,7 +122,7 @@ module.exports = async function handler(req, res) {
         // ── Push ────────────────────────────────────────────────────────────
         const sub = subMap[user_id];
         if (consents?.notifications && sub) {
-          for (const r of due.filter(r => r.push)) {
+          for (const r of due.filter(r => r.push !== false)) { // push:true par défaut si non défini
             try {
               await webpush.sendNotification(sub, JSON.stringify({
                 title: `🌿 Mongazon360 — ${r.label}`,
@@ -170,7 +170,8 @@ module.exports = async function handler(req, res) {
           .eq("user_id", user_id);
       }
 
-      return res.json({ success: true, date: today, pushSent, emailSent });
+      console.log("[CRON] reminders:", remindersData?.length || 0, "subs:", subsData?.length || 0, "pushSent:", pushSent, "emailSent:", emailSent);
+      return res.json({ success: true, date: today, pushSent, emailSent, reminders: remindersData?.length || 0, subs: subsData?.length || 0 });
     } catch (e) {
       console.error("cron reminders:", e.message);
       return res.status(500).json({ error: e.message });

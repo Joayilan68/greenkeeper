@@ -316,7 +316,7 @@ export const ACTIONS_PLAN = [
   {
     id:    "verticut",
     label: "Verticut 🔧",
-    gp:    "scarification",
+    gp:    "verticut",
     getMois: (zone, sol, isSynth, profile) => {
       return Object.entries(MONTHLY_PLAN).filter(([,p]) => p.verticut).map(([m]) => +m);
     },
@@ -477,7 +477,7 @@ export const ACTIONS_PLAN = [
   {
     id:    "biostimulant",
     label: "Biostimulant 🌿",
-    gp:    "anti_mousse",
+    gp:    "biostimulant",
     getMois: (zone, sol, isSynth, profile) => {
       return [3,4,5,6,7,8,9,10];
     },

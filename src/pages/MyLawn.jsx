@@ -9,6 +9,7 @@ import { useConsents } from "../lib/useConsents";
 import { useReminders } from "../lib/useReminders";
 import { useRecommandations } from "../lib/useRecommandations";
 import { calcLawnScore } from "../lib/lawnScore";
+import { useDiagnostics } from "../lib/useDiagnostics";
 import { MONTHLY_PLAN, MONTHS_FR, calcArrosage, DEBIT_DEFAULT_MMH, getDebitMmH } from "../lib/lawn";
 import { buildActions, zoneClimatique, ZONE_LABELS } from "../lib/planEntretien";
 import { card, cardTitle, btn, scroll, header } from "../lib/styles";
@@ -127,7 +128,7 @@ const BUDGETS = [
 ];
 
 // ── Calcul complétude profil ──────────────────────────────────────────────────
-function calcCompletion(profile, isPaid) {
+function calcCompletion(profile, isPaid, diagnostics) {
   if (!profile) return 0;
   const p2Fields = [
     profile.sol && profile.sol !== "N/A",
@@ -140,7 +141,10 @@ function calcCompletion(profile, isPaid) {
   const p2Done = p2Fields.filter(Boolean).length;
   const p2Pct  = Math.round((p2Done / 6) * 50);
   const base   = 40;
-  const total  = Math.min(90, base + p2Pct);
+  // Profil complet à 90% sans diagnostic photo
+  // Premium + au moins 1 diagnostic photo → 100%
+  const hasDiag = isPaid && Array.isArray(diagnostics) && diagnostics.length > 0;
+  const total   = hasDiag ? 100 : Math.min(90, base + p2Pct);
   return total;
 }
 
@@ -151,7 +155,7 @@ function ShareScore({ score, label, profile }) {
   const emoji          = score >= 85 ? "🏆" : score >= 70 ? "😊" : score >= 55 ? "😐" : score >= 40 ? "😟" : "😰";
   const gazon          = profile?.pelouse ? ` Mon ${profile.pelouse}` : " Mon gazon";
   const surface        = profile?.surface ? ` (${profile.surface}m²)` : "";
-  const message        = `${emoji}${gazon}${surface} a un score de santé de ${score}/100 sur Mon Gazon 360 !\n🌿 "${label}"\n\nSuivez votre gazon en temps réel :\n${appUrl}`;
+  const message        = `${emoji} Mon gazon a un score santé de ${score}/100 sur Mongazon360™ !\n🌿 "${label}"\n\nSuivez votre gazon en temps réel :\n${appUrl}`;
   const messageEncoded = encodeURIComponent(message);
   const urlEncoded     = encodeURIComponent(appUrl);
   const SHARE_OPTIONS  = [
@@ -257,7 +261,7 @@ export default function MyLawn() {
     budget:     profile?.budget     || null,
   });
 
-  const completion = calcCompletion(profile, isPaid);
+  const completion = calcCompletion(profile, isPaid, diagnostics);
 
   const toggleMulti = (field, id) => {
     setP2(prev => {
@@ -273,15 +277,16 @@ export default function MyLawn() {
 
   const handleSaveP2 = () => {
     const updated = { ...profile, ...p2 };
-    updated.profileCompletion = calcCompletion(updated, isPaid);
+    updated.profileCompletion = calcCompletion(updated, isPaid, diagnostics);
     saveProfile(updated);
   };
 
   const month = new Date().getMonth() + 1;
   const plan  = MONTHLY_PLAN[month];
-  const { score, potential, label, color, issues, strengths, composantes } = calcLawnScore({ weather, profile, history, month });
+  const { score, potential, label, color, issues, strengths, composantes } = calcLawnScore({ weather, profile, history, month, diagnostics });
 
   // ── Conseil du mois ──
+  const { diagnostics } = useDiagnostics();
   const { recommandationPrincipale } = useRecommandations(profile, score, weather, history);
 
   const safeHistory = Array.isArray(history) ? history : [];
