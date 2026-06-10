@@ -146,7 +146,7 @@ async function syncToSupabase(userId, state) {
 // ════════════════════════════════════════════════════════════════════════════
 // HOOK PRINCIPAL
 // ════════════════════════════════════════════════════════════════════════════
-export function useClassement(gpHistorique = [], profile = null, isPaid = false) {
+export function useClassement(gpHistorique = [], profile = null, isPaid = false, diagnostics = null) {
   const { userId, isSignedIn } = useAuth();
   const { classementActif } = useSaison();
   const [state, setState] = useState(() => readCache() || defaultState());
@@ -208,11 +208,11 @@ export function useClassement(gpHistorique = [], profile = null, isPaid = false)
   // ── 2. CALCULS RÉACTIFS (côté client, instantané) ────────────────────────
   const debutMois = debutMoisActuel();
   const gpDuMois  = gpHistorique.filter(h => h.date >= debutMois).reduce((s, h) => s + (h.points || 0), 0);
-  // ✅ Recalcul dynamique — ne pas lire profileCompletion stocké (peut être périmé)
-  // On recompute selon les champs réels du profil + flag diagnostic
-  // Un profil avec tous les champs = 90%, avec diagnostic photo Premium = 100%
+  // ✅ Recalcul dynamique — 100% pur, sans dépendre de profileCompletion stocké
+  // profileCompletion en cache/Supabase peut être périmé → on recalcule toujours
   const completion = (() => {
     if (!profile) return 40;
+    // Champs Phase 2 (Setup.jsx)
     const p2Fields = [
       profile.sol && profile.sol !== "N/A",
       profile.exposition,
@@ -221,12 +221,21 @@ export function useClassement(gpHistorique = [], profile = null, isPaid = false)
       profile.materiel?.length > 0,
       profile.budget,
     ];
+    // Champ objectif (ajouté dans Setup.jsx lors du dernier patch)
+    const hasObjectif = !!profile.objectif;
+    // Champs Phase 1 (onboarding)
+    const hasVille  = !!profile.ville;
+    const hasPelouse = !!profile.pelouse;
     const p2Done = p2Fields.filter(Boolean).length;
     const p2Pct  = Math.round((p2Done / 6) * 50);
-    const base   = 40;
-    // profileCompletion stocké à 100% = profil + diagnostic photo confirmé
-    const storedAt100 = profile.profileCompletion === 100;
-    return storedAt100 ? 100 : Math.min(90, base + p2Pct);
+    const base   = 40; // onboarding complet = 40%
+    // Bonus objectif renseigné : +5% (plafonné à 90% sans diagnostic)
+    const bonusObjectif = hasObjectif ? 5 : 0;
+    // 100% = tous les champs + au moins 1 diagnostic photo (Premium)
+    // diagnostics passé depuis le composant parent — source fraîche, pas de cache
+    const hasDiag = isPaid && Array.isArray(diagnostics) && diagnostics.length > 0;
+    if (hasDiag) return 100;
+    return Math.min(90, base + p2Pct + bonusObjectif);
   })();
   const joursConnexion = (state.connexionsDuMois || []).length;
   const scoreUser      = calcScoreMensuel(gpDuMois, completion, joursConnexion);

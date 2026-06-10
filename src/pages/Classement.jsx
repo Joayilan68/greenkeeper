@@ -5,6 +5,7 @@ import { useClassement, LIGUES, getCoeffProfil } from "../lib/useClassement";
 import { useGreenPoints } from "../lib/useGreenPoints";
 import { useStreak } from "../lib/useStreak";
 import { useProfile } from "../lib/useProfile";
+import { useDiagnostics } from "../lib/useDiagnostics";
 import { useSubscription } from "../lib/useSubscription";
 import { useSaison } from "../lib/useSaison";
 import { card, cardTitle, scroll } from "../lib/styles";
@@ -13,6 +14,7 @@ import LiguesModal from "../components/LiguesModal";
 export default function Classement() {
   const navigate = useNavigate();
   const { profile } = useProfile();
+  const { diagnostics } = useDiagnostics();
   const { isPaid = false } = useSubscription() || {};
   const { historique, total: gpTotal } = useGreenPoints();
   const { actuel: streak } = useStreak();
@@ -23,7 +25,7 @@ export default function Classement() {
     scoreUser, gpDuMois, coeff, completion, joursConnexion,
     enZonePromotion, enZoneRetrogradation, joursRestants,
     messageClassement, historiqueLigues, enregistrerConnexionJour,
-  } = useClassement(historique, profile, isPaid);
+  } = useClassement(historique, profile, isPaid, diagnostics);
 
   // Enregistrer la connexion du jour au chargement
   useEffect(() => { enregistrerConnexionJour(); }, []);
