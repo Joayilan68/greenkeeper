@@ -409,9 +409,10 @@ export const ACTIONS_PLAN = [
     },
     getInterval: (month) => (month === 9 || month === 10) ? 14 : 7,
     getBlocked: (w, profile) => {
-      // Objectif Naturel → désherbage chimique bloqué, manuel autorisé
+      // Objectif Naturel → désherbage manuel autorisé, pas de blocage
+      // L'action passe en "recommended" avec flag isManuel pour adapter le label
       if (isObjectifNaturel(profile))
-        return { blocked: true, raison: "Objectif Naturel — désherbage MANUEL recommandé (chimique bloqué)", alternative: "manuel" };
+        return { blocked: false, isManuel: true };
       // Programme Créer : désherbant bloqué J0-J45
       if (isObjectifCreer(profile) && estDansProgramme(profile, 45))
         return { blocked: true, raison: `Création J0-J45 : désherbant bloqué (gazon trop jeune)` };
@@ -644,6 +645,12 @@ export function buildActions(profile, weather, history, score, month, arros) {
     }
 
     // ── 8. ✅ Recommandé ───────────────────────────────────────────────────
-    return { ...base, status: "recommended", daysLeft: null, joursProgramme: jProg };
+    return {
+      ...base,
+      status: "recommended",
+      daysLeft: null,
+      joursProgramme: jProg,
+      isManuel: blockResult.isManuel || false,
+    };
   });
 }

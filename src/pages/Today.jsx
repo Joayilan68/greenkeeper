@@ -557,17 +557,21 @@ export default function Today() {
                 <span style={{ width:6, height:6, borderRadius:"50%", background:"#66BB6A", display:"inline-block" }} />
                 À FAIRE AUJOURD'HUI
               </div>
-              {recommended.map(({ action }) => {
-                const isFlashing   = justLogged.includes(action.id);
-                const detail       = action.detail?.(plan, arros, profile, month, zone);
-                const amazonKey    = ACTION_TO_AMAZON[action.id];
+              {recommended.map(({ action, isManuel }) => {
+                const isFlashing    = justLogged.includes(action.id);
+                const detail        = action.detail?.(plan, arros, profile, month, zone);
+                const amazonKey     = ACTION_TO_AMAZON[action.id];
+                const labelDisplay  = isManuel ? "Désherbage Manuel 🌿" : action.label;
+                const detailDisplay = isManuel
+                  ? "Arrachez les adventices ou utilisez un outil à désherber"
+                  : detail;
                 return (
                   <div key={action.id} style={{ marginBottom:8 }}>
                     {/* Ligne action + bouton journaliser */}
-                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 12px", background:"rgba(102,187,106,0.08)", borderRadius:10, border:"1px solid rgba(102,187,106,0.2)" }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 12px", background: isManuel ? "rgba(76,175,80,0.06)" : "rgba(102,187,106,0.08)", borderRadius:10, border:`1px solid ${isManuel ? "rgba(76,175,80,0.25)" : "rgba(102,187,106,0.2)"}` }}>
                       <div style={{ flex:1, marginRight:10 }}>
-                        <div style={{ fontSize:13, fontWeight:700, color:"#e8f5e9" }}>{action.label}</div>
-                        {detail && <div style={{ fontSize:11, color:"#81c784", marginTop:2 }}>{detail}</div>}
+                        <div style={{ fontSize:13, fontWeight:700, color:"#e8f5e9" }}>{labelDisplay}</div>
+                        {detailDisplay && <div style={{ fontSize:11, color:"#81c784", marginTop:2 }}>{detailDisplay}</div>}
                       </div>
                       <button
                         onClick={() => log(action)}
@@ -583,8 +587,8 @@ export default function Today() {
                         {isFlashing ? "✓ Fait !" : "Faire →"}
                       </button>
                     </div>
-                    {/* Produit Amazon — si action a un produit et que le profil est chargé */}
-                    {amazonKey && profile && (
+                    {/* Amazon masqué pour désherbage manuel (pas de chimique) */}
+                    {amazonKey && profile && !isManuel && (
                       <div style={{ marginTop:4 }}>
                         <ProductCard actionKey={amazonKey} profile={profile} compact />
                       </div>
