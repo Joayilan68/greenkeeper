@@ -16,7 +16,6 @@
     "react-router-dom": "^6.26.0",
     "stripe": "^16.0.0",
     "web-push": "^3.6.7"
-    "resend": "^3.0.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.1",
