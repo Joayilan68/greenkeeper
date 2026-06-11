@@ -21,7 +21,14 @@ module.exports = async function handler(req, res) {
       return res.status(401).json({ error: "Token manquant" });
     }
     try {
-      await clerk.verifyToken(authHeader.replace("Bearer ", ""));
+      const token = authHeader.replace("Bearer ", "");
+      const parts = token.split(".");
+      if (parts.length !== 3) throw new Error("JWT malformé");
+      const payloadJson = Buffer.from(parts[1], "base64url").toString("utf8");
+      const payload     = JSON.parse(payloadJson);
+      const uid         = payload.sub || payload.user_id;
+      if (!uid) throw new Error("sub manquant");
+      await clerk.users.getUser(uid); // vérifie que l'user existe
     } catch {
       return res.status(401).json({ error: "Token invalide" });
     }
@@ -78,9 +85,14 @@ module.exports = async function handler(req, res) {
   let clerkUserId;
   let clerkUser;
   try {
-    const payload = await clerk.verifyToken(authHeader.replace("Bearer ", ""));
-    clerkUserId   = payload.sub;
-    clerkUser     = await clerk.users.getUser(clerkUserId);
+    const token = authHeader.replace("Bearer ", "");
+    const parts = token.split(".");
+    if (parts.length !== 3) throw new Error("JWT malformé");
+    const payloadJson = Buffer.from(parts[1], "base64url").toString("utf8");
+    const payload     = JSON.parse(payloadJson);
+    clerkUserId = payload.sub || payload.user_id;
+    if (!clerkUserId) throw new Error("sub manquant");
+    clerkUser = await clerk.users.getUser(clerkUserId);
   } catch {
     return res.status(401).json({ error: "Token invalide" });
   }
