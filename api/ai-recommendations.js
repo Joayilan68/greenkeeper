@@ -161,7 +161,7 @@ module.exports = async function handler(req, res) {
     const text = data.choices?.[0]?.message?.content;
     if (!text) throw new Error("Réponse vide de Groq");
 
-    res.json({ text, meta: { count, limit: limit === Infinity ? "unlimited" : limit } });
+    res.json({ text });
 
   } catch (e) {
     console.error("AI Error:", e.message);
