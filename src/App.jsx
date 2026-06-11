@@ -20,7 +20,6 @@ import Settings from "./pages/Settings";
 import Pilotage from "./pages/Pilotage";
 import { MentionsLegales, Confidentialite, CGU, CGV, Cookies } from "./pages/Legal";
 import Layout from "./components/Layout";
-import ComingSoon from "./components/ComingSoon";
 import { WeatherProvider } from "./lib/WeatherContext";
 import { usePilotage }     from "./lib/usePilotage";
 import { useUTMCapture }   from "./lib/useUTMCapture";   // ✅ Bloc 1 — capture UTM dès l'arrivée
@@ -266,18 +265,11 @@ function AppRoutes() {
 
   if (checking) return <LoadingScreen />;
 
-  const onWaitlist = isOnWaitlist(accessStatus);
-
   return (
     <Routes>
       <Route path="/login"             element={<Login />} />
       <Route path="/admin"             element={<Admin />} />
-
-      <Route path="/register"          element={
-        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Register />}</PrivateRoute>
-      } />
-
-      <Route path="/coming-soon"       element={<PrivateRoute><ComingSoon /></PrivateRoute>} />
+      <Route path="/register"          element={<PrivateRoute><Register /></PrivateRoute>} />
 
       <Route path="/free"              element={<PrivateRoute><Layout><Free /></Layout></PrivateRoute>} />
       <Route path="/subscribe"         element={<PrivateRoute><Subscribe /></PrivateRoute>} />
@@ -289,37 +281,18 @@ function AppRoutes() {
       <Route path="/cgv"               element={<CGV />} />
       <Route path="/cookies"           element={<Cookies />} />
 
-      <Route path="/parametres"        element={
-        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Settings /></Layout>}</PrivateRoute>
-      } />
-
+      <Route path="/parametres"        element={<PrivateRoute><Layout><Settings /></Layout></PrivateRoute>} />
       <Route path="/pilotage"          element={<AdminRoute><Layout><Pilotage /></Layout></AdminRoute>} />
 
-      <Route path="/"                  element={
-        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Dashboard /></Layout>}</PrivateRoute>
-      } />
-      <Route path="/diagnostic"        element={
-        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Diagnostic /></Layout>}</PrivateRoute>
-      } />
-      <Route path="/my-lawn"           element={
-        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><MyLawn /></Layout>}</PrivateRoute>
-      } />
-      <Route path="/today"             element={
-        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Today /></Layout>}</PrivateRoute>
-      } />
-      <Route path="/products"          element={
-        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Products /></Layout>}</PrivateRoute>
-      } />
-      <Route path="/history"           element={
-        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><History /></Layout>}</PrivateRoute>
-      } />
-      <Route path="/setup"             element={
-        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Setup /></Layout>}</PrivateRoute>
-      } />
-      <Route path="/classement"        element={
-        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Classement /></Layout>}</PrivateRoute>
-      } />
-      <Route path="*" element={<SignedOut><RedirectToSignIn /></SignedOut>} />
+      <Route path="/"                  element={<PrivateRoute><Layout><Dashboard /></Layout></PrivateRoute>} />
+      <Route path="/diagnostic"        element={<PrivateRoute><Layout><Diagnostic /></Layout></PrivateRoute>} />
+      <Route path="/my-lawn"           element={<PrivateRoute><Layout><MyLawn /></Layout></PrivateRoute>} />
+      <Route path="/today"             element={<PrivateRoute><Layout><Today /></Layout></PrivateRoute>} />
+      <Route path="/products"          element={<PrivateRoute><Layout><Products /></Layout></PrivateRoute>} />
+      <Route path="/history"           element={<PrivateRoute><Layout><History /></Layout></PrivateRoute>} />
+      <Route path="/setup"             element={<PrivateRoute><Layout><Setup /></Layout></PrivateRoute>} />
+      <Route path="/classement"        element={<PrivateRoute><Layout><Classement /></Layout></PrivateRoute>} />
+      <Route path="*"                  element={<SignedOut><RedirectToSignIn /></SignedOut>} />
     </Routes>
   );
 }
