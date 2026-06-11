@@ -82,8 +82,12 @@ export function usePushNotifications(userId) {
     setError(null);
 
     try {
-      const perm = await Notification.requestPermission();
-      setPermission(perm);
+      // Si permission déjà accordée, ne pas redemander
+      let perm = Notification.permission;
+      if (perm !== "granted") {
+        perm = await Notification.requestPermission();
+        setPermission(perm);
+      }
       if (perm !== "granted") {
         setError("Permission refusée");
         setLoading(false);
@@ -91,23 +95,29 @@ export function usePushNotifications(userId) {
       }
 
       const reg = await navigator.serviceWorker.ready;
-      const sub = await reg.pushManager.subscribe({
-        userVisibleOnly:   true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
-      });
-      setSubscription(sub);
-      safeLocalStorage.set("gk_push_sub", JSON.stringify(sub));
 
-      // Sauvegarder dans Supabase via API
+      // Récupérer subscription existante OU en créer une nouvelle
+      let sub = await reg.pushManager.getSubscription();
+      if (!sub) {
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly:      true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+        });
+      }
+      setSubscription(sub);
+      safeLocalStorage.set("gk_push_sub", JSON.stringify(sub.toJSON()));
+
+      // Sauvegarder dans Supabase — toujours, même si subscription existait déjà
       try {
         const saveRes = await fetch("/api/send?type=save-sub", {
           method:  "POST",
           headers: { "Content-Type": "application/json" },
           body:    JSON.stringify({ subscription: sub.toJSON(), userId }),
         });
-        if (!saveRes.ok) {
-          const err = await saveRes.text();
-          console.warn("[MG360] save-sub HTTP error:", saveRes.status, err);
+        if (saveRes.ok) {
+          console.log("[MG360] save-sub OK");
+        } else {
+          console.warn("[MG360] save-sub error:", saveRes.status, await saveRes.text());
         }
       } catch (e) {
         console.warn("[MG360] save-sub fetch error:", e.message);
