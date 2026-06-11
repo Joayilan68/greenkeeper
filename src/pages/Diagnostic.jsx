@@ -1,7 +1,7 @@
 // src/pages/Diagnostic.jsx
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useUser } from "@clerk/clerk-react";
+import { useUser, useAuth } from "@clerk/clerk-react";
 import { useProfile } from "../lib/useProfile";
 import { useWeather } from "../lib/useWeather";
 import { useSubscription } from "../lib/useSubscription";
@@ -60,6 +60,7 @@ const compressImage = (file, maxSize = 1280, quality = 0.82) =>
 export default function Diagnostic() {
   const navigate   = useNavigate();
   const { user }   = useUser();
+  const { getToken } = useAuth();
   const { profile }  = useProfile();
   const { weather }  = useWeather() || {};
   const { isPaid, isAdmin } = useSubscription() || {};
@@ -127,9 +128,13 @@ export default function Diagnostic() {
     setLoading(true);
     setError("");
     try {
+      const token = await getToken();
       const res = await fetch("/api/analyze-lawn", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ imageBase64: imageB64, mimeType, profile: profile || {}, weather: weather || {}, score, userId: user?.id })
       });
 
