@@ -98,14 +98,20 @@ export function usePushNotifications(userId) {
       setSubscription(sub);
       safeLocalStorage.set("gk_push_sub", JSON.stringify(sub));
 
-      // Sauvegarder dans Supabase via API (non bloquant)
+      // Sauvegarder dans Supabase via API
       try {
-        await fetch("/api/send?type=save-sub", {
+        const saveRes = await fetch("/api/send?type=save-sub", {
           method:  "POST",
           headers: { "Content-Type": "application/json" },
-          body:    JSON.stringify({ subscription: sub, userId }),
+          body:    JSON.stringify({ subscription: sub.toJSON(), userId }),
         });
-      } catch {} // Echec silencieux — localStorage suffit
+        if (!saveRes.ok) {
+          const err = await saveRes.text();
+          console.warn("[MG360] save-sub HTTP error:", saveRes.status, err);
+        }
+      } catch (e) {
+        console.warn("[MG360] save-sub fetch error:", e.message);
+      }
 
       setLoading(false);
       return true;
