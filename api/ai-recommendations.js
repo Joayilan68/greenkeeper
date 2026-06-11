@@ -125,23 +125,15 @@ module.exports = async function handler(req, res) {
     }
 
     // ── 2. Rate limiting ─────────────────────────────────────────────────────
-    const { allowed, count, limit } = await checkRateLimit(userId, tier);
-
-    // Headers informatifs (utiles pour le debug)
-    res.setHeader("X-RateLimit-Limit",     limit === Infinity ? "unlimited" : limit);
-    res.setHeader("X-RateLimit-Remaining", limit === Infinity ? "unlimited" : Math.max(0, limit - count));
-
-    if (!allowed) {
-      return res.status(429).json({
-        error:   "Limite quotidienne atteinte",
-        message: tier === "free"
-          ? `Vous avez atteint la limite de ${limit} recommandations IA par jour. Passez Premium pour en obtenir ${LIMITS.paid}.`
-          : `Limite de ${limit} recommandations IA/jour atteinte. Réessayez demain.`,
-        limit,
-        count,
-        tier,
+    // Bloquer uniquement les appels sans token valide (tier "unknown" = IP)
+    if (tier === "unknown") {
+      return res.status(401).json({
+        error:   "Authentification requise",
+        message: "Connectez-vous pour accéder aux recommandations IA.",
       });
     }
+    // Admin et Premium : pas de rate limiting — cache localStorage côté client
+    // gère la fréquence (1 appel/jour max via AI_RECO_KEY)
 
     // ── 3. Appel Groq ────────────────────────────────────────────────────────
     const response = await fetch(
