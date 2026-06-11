@@ -8,8 +8,8 @@ const { createClient } = require("@supabase/supabase-js");
 const { createClerkClient } = require("@clerk/backend");
 
 const supabase = createClient(
-  process.env.VITE_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY // clé service_role (pas anon) pour contourner RLS
+  process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY
 );
 
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
@@ -18,8 +18,8 @@ const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 const LIMITS = {
   admin:   Infinity, // illimité — Jordan uniquement
   paid:    10,       // 10/jour — largement suffisant pour usage normal
-  free:    0,        // 0 — les Free n'ont pas accès à l'IA dans l'UI
-  unknown: 2,        // 2/jour par IP — blocage bots et appels directs
+  free:    1,        // 1/jour — recommandation automatique du jour uniquement
+  unknown: 0,        // 0 — appels sans token bloqués
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
