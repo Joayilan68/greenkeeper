@@ -252,8 +252,7 @@ export default function Today() {
   const pasPrevu    = actionStatuses.filter(a => a?.status === "off_season");
 
   // ── Clé localStorage IA du jour ─────────────────────────────────────────
-  // Clé cache par user pour éviter que les comptes partagent le cache
-  const AI_RECO_KEY = `mg360_ai_reco_today_${profile?.ville || "default"}`;
+  const AI_RECO_KEY = "mg360_ai_reco_today";
   // Ref : empêche les appels multiples (closure stale proof)
   const aiCalledRef = React.useRef(false);
 
@@ -389,11 +388,23 @@ export default function Today() {
     } catch { fetchAI(); }
   }, [isPaid, weather]); // eslint-disable-line
 
-  // ── Trigger 2 : fallback 3s pour utilisateurs sans géolocalisation ────────
+  // ── Trigger 2 : fallback 5s pour utilisateurs sans géolocalisation ────────
+  // Se redéclenche si isPaid change (Clerk qui charge lentement sur laptop)
   useEffect(() => {
     if (!isPaid) return;
+    // Si déjà déclenché via weather, juste vérifier le cache
+    if (aiCalledRef.current) {
+      try {
+        const saved    = JSON.parse(localStorage.getItem(AI_RECO_KEY) || "{}");
+        const todayStr = new Date().toISOString().slice(0, 10);
+        if (saved.date === todayStr && saved.text && !aiReco) {
+          setAiReco(saved.text);
+        }
+      } catch {}
+      return;
+    }
     const timer = setTimeout(() => {
-      if (aiCalledRef.current) return; // Déjà déclenché via weather
+      if (aiCalledRef.current) return;
       aiCalledRef.current = true;
       try {
         const saved    = JSON.parse(localStorage.getItem(AI_RECO_KEY) || "{}");
@@ -401,10 +412,10 @@ export default function Today() {
         if (saved.date === todayStr && saved.text) {
           setAiReco(saved.text);
         } else {
-          fetchAI(); // fetchAI gère le cas weather=null
+          fetchAI();
         }
       } catch { fetchAI(); }
-    }, 3000);
+    }, 5000);
     return () => clearTimeout(timer);
   }, [isPaid]); // eslint-disable-line
 
