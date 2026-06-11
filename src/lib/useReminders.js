@@ -103,7 +103,6 @@ export function useReminders(syncFromReminders) {
 
     // Sync Supabase
     if (isSignedIn && userId) {
-      // ✅ consents requis NOT NULL — lire depuis Supabase ou fallback {}
       supabase.from("reminders").upsert(
         { user_id: userId, preferences: updated, consents: {}, updated_at: new Date().toISOString() },
         { onConflict: "user_id", ignoreDuplicates: false }
