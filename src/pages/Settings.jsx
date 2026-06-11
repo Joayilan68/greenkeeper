@@ -8,6 +8,7 @@ import { useWeather } from "../lib/useWeather";
 import { usePushNotifications } from "../lib/usePushNotifications";
 import { useConsents } from "../lib/useConsents";
 import { card, cardTitle, btn, scroll } from "../lib/styles";
+import { supabase } from "../lib/supabase";
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -15,6 +16,76 @@ export default function Settings() {
   const { signOut } = useClerk();
   const { getToken } = useAuth();
   const { isPaid, isAdmin } = useSubscription();
+
+  // ── Code invité ───────────────────────────────────────────────────────────
+  const [guestCode, setGuestCode]       = useState("");
+  const [guestLoading, setGuestLoading] = useState(false);
+  const [guestError, setGuestError]     = useState("");
+  const [guestSuccess, setGuestSuccess] = useState(false);
+
+  const validateGuestCode = async () => {
+    const code = guestCode.trim().toUpperCase();
+    if (!code) return;
+    setGuestLoading(true);
+    setGuestError("");
+    try {
+      const { data, error } = await supabase
+        .from("guest_codes")
+        .select("id, actif, expires_at, max_uses, uses_count")
+        .eq("code", code)
+        .single();
+
+      if (error || !data) {
+        setGuestError("Code invalide ou inexistant.");
+        setGuestLoading(false);
+        return;
+      }
+      if (!data.actif) {
+        setGuestError("Ce code n'est plus actif.");
+        setGuestLoading(false);
+        return;
+      }
+      if (data.expires_at && new Date(data.expires_at) < new Date()) {
+        setGuestError("Ce code a expiré.");
+        setGuestLoading(false);
+        return;
+      }
+      if (data.max_uses !== null && data.uses_count >= data.max_uses) {
+        setGuestError("Ce code a atteint son nombre maximum d'utilisations.");
+        setGuestLoading(false);
+        return;
+      }
+
+      // ✅ Code valide — activer le tier guest
+      localStorage.setItem("mg360_guest_validated", "true");
+
+      // Incrémenter uses_count
+      await supabase
+        .from("guest_codes")
+        .update({ uses_count: (data.uses_count || 0) + 1 })
+        .eq("id", data.id);
+
+      // Persistance Supabase user_access
+      if (user?.id) {
+        await supabase
+          .from("user_access")
+          .upsert({
+            user_id:              user.id,
+            status:               "guest",
+            guest_code:           code,
+            approved_at:          new Date().toISOString(),
+            onboarding_completed: true,
+            updated_at:           new Date().toISOString(),
+          }, { onConflict: "user_id" });
+      }
+
+      setGuestSuccess(true);
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (e) {
+      setGuestError("Erreur lors de la validation. Réessayez.");
+    }
+    setGuestLoading(false);
+  };
   const { history } = useHistory();
   const { profile } = useProfile();
   const { locationName } = useWeather() || {};
@@ -412,6 +483,49 @@ export default function Settings() {
         </div>
 
         {/* ── DROITS RGPD ── */}
+        {/* ── CODE INVITÉ — visible uniquement si Free ───────────────────── */}
+        {!isPaid && !isAdmin && (
+          <div style={{ ...card(), background:"rgba(76,175,80,0.06)", border:"1px solid rgba(76,175,80,0.25)" }}>
+            <div style={cardTitle}><span>🎁 Code d'accès invité</span></div>
+            {guestSuccess ? (
+              <div style={{ textAlign:"center", padding:"12px 0" }}>
+                <div style={{ fontSize:28, marginBottom:8 }}>🎉</div>
+                <div style={{ fontSize:14, fontWeight:800, color:"#a5d6a7" }}>Accès Premium activé !</div>
+                <div style={{ fontSize:12, color:"#81c784", marginTop:4 }}>Rechargement en cours...</div>
+              </div>
+            ) : (
+              <>
+                <div style={{ fontSize:12, color:"#81c784", marginBottom:12 }}>
+                  Vous avez reçu un code d'accès ? Entrez-le ci-dessous pour activer votre accès Premium.
+                </div>
+                <div style={{ display:"flex", gap:8 }}>
+                  <input
+                    type="text"
+                    value={guestCode}
+                    onChange={e => setGuestCode(e.target.value.toUpperCase())}
+                    onKeyDown={e => e.key === "Enter" && validateGuestCode()}
+                    placeholder="Ex : FAMILLE2026"
+                    maxLength={20}
+                    style={{ flex:1, background:"rgba(255,255,255,0.08)", border:"1px solid rgba(165,214,167,0.3)", borderRadius:10, padding:"10px 14px", color:"#e8f5e9", fontSize:13, outline:"none", fontFamily:"inherit", letterSpacing:1 }}
+                  />
+                  <button
+                    onClick={validateGuestCode}
+                    disabled={guestLoading || !guestCode.trim()}
+                    style={{ background:"rgba(76,175,80,0.25)", border:"1px solid rgba(76,175,80,0.5)", borderRadius:10, padding:"10px 16px", color:"#a5d6a7", fontSize:13, fontWeight:700, cursor:"pointer", opacity: guestLoading || !guestCode.trim() ? 0.5 : 1 }}
+                  >
+                    {guestLoading ? "⌛" : "Valider"}
+                  </button>
+                </div>
+                {guestError && (
+                  <div style={{ marginTop:8, fontSize:12, color:"#ef9a9a", background:"rgba(211,47,47,0.1)", borderRadius:8, padding:"8px 12px" }}>
+                    ⚠️ {guestError}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
         <div style={{ ...card(), background:"rgba(33,150,243,0.06)", border:"1px solid rgba(33,150,243,0.2)" }}>
           <div style={cardTitle}><span>⚖️ Vos droits RGPD</span></div>
           <div style={{ fontSize:12, color:"#e8f5e9", lineHeight:1.8 }}>
