@@ -330,12 +330,22 @@ export default function Today() {
         ].filter(Boolean).join(" ");
 
     try {
-      const token = await getToken();
+      // Attendre que le token Clerk soit disponible (max 5s)
+      let token = await getToken();
+      if (!token) {
+        await new Promise(r => setTimeout(r, 2000));
+        token = await getToken();
+      }
+      if (!token) {
+        setAiReco("Impossible d'obtenir le token d'authentification. Rechargez la page.");
+        setAiLoading(false);
+        return;
+      }
       const res   = await fetch("/api/ai-recommendations", {
         method:  "POST",
         headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          "Content-Type":  "application/json",
+          "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify({ prompt }),
       });
@@ -374,6 +384,13 @@ export default function Today() {
   };
 
   // ── Trigger 1 : dès que weather est disponible (cas normal) ──────────────
+  // Réinitialiser aiCalledRef si la reco précédente était une erreur/limite
+  useEffect(() => {
+    if (aiReco && (aiReco.includes("Limite") || aiReco.includes("Impossible") || aiReco.includes("Appuyez"))) {
+      aiCalledRef.current = false;
+    }
+  }, [aiReco]); // eslint-disable-line
+
   useEffect(() => {
     if (!isPaid || !weather || aiCalledRef.current) return;
     aiCalledRef.current = true;
@@ -388,23 +405,11 @@ export default function Today() {
     } catch { fetchAI(); }
   }, [isPaid, weather]); // eslint-disable-line
 
-  // ── Trigger 2 : fallback 5s pour utilisateurs sans géolocalisation ────────
-  // Se redéclenche si isPaid change (Clerk qui charge lentement sur laptop)
+  // ── Trigger 2 : fallback 3s pour utilisateurs sans géolocalisation ────────
   useEffect(() => {
     if (!isPaid) return;
-    // Si déjà déclenché via weather, juste vérifier le cache
-    if (aiCalledRef.current) {
-      try {
-        const saved    = JSON.parse(localStorage.getItem(AI_RECO_KEY) || "{}");
-        const todayStr = new Date().toISOString().slice(0, 10);
-        if (saved.date === todayStr && saved.text && !aiReco) {
-          setAiReco(saved.text);
-        }
-      } catch {}
-      return;
-    }
     const timer = setTimeout(() => {
-      if (aiCalledRef.current) return;
+      if (aiCalledRef.current) return; // Déjà déclenché via weather
       aiCalledRef.current = true;
       try {
         const saved    = JSON.parse(localStorage.getItem(AI_RECO_KEY) || "{}");
@@ -412,10 +417,10 @@ export default function Today() {
         if (saved.date === todayStr && saved.text) {
           setAiReco(saved.text);
         } else {
-          fetchAI();
+          fetchAI(); // fetchAI gère le cas weather=null
         }
       } catch { fetchAI(); }
-    }, 5000);
+    }, 3000);
     return () => clearTimeout(timer);
   }, [isPaid]); // eslint-disable-line
 
