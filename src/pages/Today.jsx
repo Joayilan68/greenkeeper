@@ -123,7 +123,7 @@ export default function Today() {
   const alerts = Array.isArray(rawAlerts) ? rawAlerts : [];
   const { profile }         = useProfile();
   const { history, addEntry } = useHistory();
-  const { getToken } = useAuth();
+  const { getToken, isLoaded: clerkLoaded } = useAuth();
   const { isPaid, isAdmin, isFree } = useSubscription();
   const [aiReco, setAiReco]       = useState("");
   const [aiLoading, setAiLoading] = useState(false);
@@ -330,14 +330,9 @@ export default function Today() {
         ].filter(Boolean).join(" ");
 
     try {
-      // Attendre que le token Clerk soit disponible (max 5s)
-      let token = await getToken();
+      const token = await getToken();
       if (!token) {
-        await new Promise(r => setTimeout(r, 2000));
-        token = await getToken();
-      }
-      if (!token) {
-        setAiReco("Impossible d'obtenir le token d'authentification. Rechargez la page.");
+        aiCalledRef.current = false; // Permettre un retry
         setAiLoading(false);
         return;
       }
@@ -384,15 +379,8 @@ export default function Today() {
   };
 
   // ── Trigger 1 : dès que weather est disponible (cas normal) ──────────────
-  // Réinitialiser aiCalledRef si la reco précédente était une erreur/limite
   useEffect(() => {
-    if (aiReco && (aiReco.includes("Limite") || aiReco.includes("Impossible") || aiReco.includes("Appuyez"))) {
-      aiCalledRef.current = false;
-    }
-  }, [aiReco]); // eslint-disable-line
-
-  useEffect(() => {
-    if (!isPaid || !weather || aiCalledRef.current) return;
+    if (!isPaid || !weather || !clerkLoaded || aiCalledRef.current) return;
     aiCalledRef.current = true;
     try {
       const saved    = JSON.parse(localStorage.getItem(AI_RECO_KEY) || "{}");
@@ -405,11 +393,11 @@ export default function Today() {
     } catch { fetchAI(); }
   }, [isPaid, weather]); // eslint-disable-line
 
-  // ── Trigger 2 : fallback 3s pour utilisateurs sans géolocalisation ────────
+  // ── Trigger 2 : fallback — attend clerkLoaded pour garantir le token ────────
   useEffect(() => {
-    if (!isPaid) return;
+    if (!isPaid || !clerkLoaded) return;
     const timer = setTimeout(() => {
-      if (aiCalledRef.current) return; // Déjà déclenché via weather
+      if (aiCalledRef.current) return;
       aiCalledRef.current = true;
       try {
         const saved    = JSON.parse(localStorage.getItem(AI_RECO_KEY) || "{}");
@@ -417,12 +405,12 @@ export default function Today() {
         if (saved.date === todayStr && saved.text) {
           setAiReco(saved.text);
         } else {
-          fetchAI(); // fetchAI gère le cas weather=null
+          fetchAI();
         }
       } catch { fetchAI(); }
-    }, 3000);
+    }, 1000);
     return () => clearTimeout(timer);
-  }, [isPaid]); // eslint-disable-line
+  }, [isPaid, clerkLoaded]); // eslint-disable-line
 
   // ── Journalisation ────────────────────────────────────────────────────────
   const log = (action) => {
