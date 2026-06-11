@@ -71,7 +71,7 @@ const USAGES = [
 
 const FEATURES = [
   { icon: "📅", title: "Planning intelligent",  desc: "Votre programme d'entretien personnalisé, semaine par semaine.", premium: false },
-  { icon: "🤖", title: "Ilan, votre IA gazon",  desc: "Posez toutes vos questions à votre expert pelouse disponible 24h/24.", premium: true },
+  { icon: "🤖", title: "Bob, votre IA gazon",   desc: "Posez toutes vos questions à votre expert pelouse disponible 24h/24.", premium: true },
   { icon: "📸", title: "Diagnostic photo",       desc: "Photographiez votre gazon — notre IA analyse et ajuste votre score en temps réel. Valide 7 jours.", premium: true },
   { icon: "🌦️", title: "Météo en temps réel",   desc: "Conseils adaptés aux conditions climatiques de votre jardin.", premium: true },
   { icon: "🏆", title: "GreenPoints & Ligues",  desc: "Gagnez des points, montez en ligue et restez motivé toute la saison.", premium: false },
@@ -452,7 +452,7 @@ export default function OnboardingModal({ onComplete }) {
               </div>
               <div style={{ fontSize: 12, color: C.textSoft, lineHeight: 1.6 }}>
                 {isCreer
-                  ? "Quel type de gazon souhaitez-vous créer ? Ilan vous guidera selon votre sol et votre région."
+                  ? "Quel type de gazon souhaitez-vous créer ? Bob vous guidera selon votre sol et votre région."
                   : "Cette information est clé pour calibrer vos conseils d'entretien."}
               </div>
             </div>

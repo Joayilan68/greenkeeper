@@ -252,7 +252,8 @@ export default function Today() {
   const pasPrevu    = actionStatuses.filter(a => a?.status === "off_season");
 
   // ── Clé localStorage IA du jour ─────────────────────────────────────────
-  const AI_RECO_KEY = "mg360_ai_reco_today";
+  // Clé cache par user pour éviter que les comptes partagent le cache
+  const AI_RECO_KEY = `mg360_ai_reco_today_${profile?.ville || "default"}`;
   // Ref : empêche les appels multiples (closure stale proof)
   const aiCalledRef = React.useRef(false);
 
