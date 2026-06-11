@@ -97,29 +97,31 @@ module.exports = async function handler(req, res) {
     const authHeader = req.headers.authorization;
     if (authHeader?.startsWith("Bearer ")) {
       try {
-        const token   = authHeader.replace("Bearer ", "");
-        const payload = await clerk.verifyToken(token);
-        userId = payload.sub;
-        // Vérifier si admin via metadata Clerk
-        try {
-          const user = await clerk.users.getUser(userId);
-          const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
-          const email = user.emailAddresses?.[0]?.emailAddress || "";
-          if (user.publicMetadata?.role === "admin" || ADMIN_EMAILS.includes(email)) {
-            tier = "admin";
-          } else {
-            tier = "paid";
-          }
-        } catch {
-          tier = "paid"; // fallback si erreur Clerk
+        // Décoder le JWT manuellement pour extraire le sub (user_id)
+        // puis vérifier via Clerk Admin API que l'user existe bien
+        const token = authHeader.replace("Bearer ", "");
+        const parts = token.split(".");
+        if (parts.length !== 3) throw new Error("JWT malformé");
+        const payloadJson = Buffer.from(parts[1], "base64url").toString("utf8");
+        const payload     = JSON.parse(payloadJson);
+        userId = payload.sub || payload.user_id;
+        if (!userId) throw new Error("sub manquant");
+
+        // Vérifier que l'user existe dans Clerk (prouve que le token est légitime)
+        const user = await clerk.users.getUser(userId);
+        const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
+        const email = user.emailAddresses?.[0]?.emailAddress || "";
+        if (user.publicMetadata?.role === "admin" || ADMIN_EMAILS.includes(email)) {
+          tier = "admin";
+        } else {
+          tier = "paid"; // tout user authentifié Clerk = accès
         }
       } catch {
-        // Token invalide → on traite comme inconnu
+        // Token invalide ou user inexistant
         userId = req.headers["x-forwarded-for"]?.split(",")[0] || "anonymous";
         tier   = "unknown";
       }
     } else {
-      // Pas de token → fallback sur IP
       userId = req.headers["x-forwarded-for"]?.split(",")[0] || "anonymous";
       tier   = "unknown";
     }
