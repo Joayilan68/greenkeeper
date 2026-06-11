@@ -129,51 +129,79 @@ export default function Today() {
   const [aiLoading, setAiLoading] = useState(false);
   const [justLogged, setJustLogged] = useState([]);
 
-  // ── Timer arrosage ────────────────────────────────────────────────────────
-  const [timerActive, setTimerActive]   = useState(false);
-  const [timerSeconds, setTimerSeconds] = useState(0);
-  const [timerDone, setTimerDone]       = useState(false);
+  // ── Timer arrosage persistant (survit au changement de page) ────────────────
+  // Stocke heure de départ + durée dans localStorage — recalcule à chaque render
+  const TIMER_KEY = "mg360_timer_arrosage";
+
+  const getTimerState = () => {
+    try {
+      const raw = localStorage.getItem(TIMER_KEY);
+      if (!raw) return { active: false, done: false, secondsLeft: 0 };
+      const { startedAt, durationSeconds } = JSON.parse(raw);
+      const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+      const secondsLeft = Math.max(0, durationSeconds - elapsed);
+      if (secondsLeft <= 0) {
+        return { active: false, done: true, secondsLeft: 0 };
+      }
+      return { active: true, done: false, secondsLeft };
+    } catch { return { active: false, done: false, secondsLeft: 0 }; }
+  };
+
+  const initial = getTimerState();
+  const [timerActive, setTimerActive]   = useState(initial.active);
+  const [timerSeconds, setTimerSeconds] = useState(initial.secondsLeft);
+  const [timerDone, setTimerDone]       = useState(initial.done);
   const timerRef = React.useRef(null);
 
+  // Tick chaque seconde — recalcule depuis localStorage (robuste au démontage)
+  React.useEffect(() => {
+    if (!timerActive) return;
+    timerRef.current = setInterval(() => {
+      const { active, done, secondsLeft } = getTimerState();
+      setTimerSeconds(secondsLeft);
+      if (!active) {
+        clearInterval(timerRef.current);
+        setTimerActive(false);
+        setTimerDone(done);
+        localStorage.removeItem(TIMER_KEY);
+        if (done && typeof Notification !== "undefined" && Notification.permission === "granted") {
+          try { new Notification("💧 Mongazon360 — Arrosage terminé !", { body: "Votre pelouse a reçu sa dose. N'oubliez pas de journaliser !", icon: "/mg360-icon-192.png" }); } catch {}
+        }
+      }
+    }, 1000);
+    return () => clearInterval(timerRef.current);
+  }, [timerActive]); // eslint-disable-line
+
   const startTimer = (minutes) => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    setTimerSeconds(minutes * 60);
+    const durationSeconds = minutes * 60;
+    try {
+      localStorage.setItem(TIMER_KEY, JSON.stringify({
+        startedAt:       Date.now(),
+        durationSeconds,
+      }));
+    } catch {}
+    setTimerSeconds(durationSeconds);
     setTimerActive(true);
     setTimerDone(false);
-    timerRef.current = setInterval(() => {
-      setTimerSeconds(prev => {
-        if (prev <= 1) {
-          clearInterval(timerRef.current);
-          setTimerActive(false);
-          setTimerDone(true);
-          // Push notification si permission accordée
-          if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-            try { new Notification("💧 Mongazon360 — Arrosage terminé !", { body: "Votre pelouse a reçu sa dose. N'oubliez pas de journaliser !", icon: "/mg360-icon-192.png" }); } catch {}
-          }
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
   };
 
   const stopTimer = () => {
     if (timerRef.current) clearInterval(timerRef.current);
+    try { localStorage.removeItem(TIMER_KEY); } catch {}
     setTimerActive(false);
     setTimerSeconds(0);
     setTimerDone(false);
   };
-
-  // Nettoyage à l'unmount
-  React.useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
 
   const fmtTimer = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
   const today = new Date();
   const month = today.getMonth() + 1;
   const plan  = MONTHLY_PLAN[month];
+  // ✅ Débit depuis Supabase (profile.debit_arrosage_mmh) prioritaire sur localStorage
+  const debitMmH = profile?.debit_arrosage_mmh || getDebitMmH();
   const _arrosRaw = profile && weather
-    ? calcArrosage(month, profile, weather, history, getDebitMmH())
+    ? calcArrosage(month, profile, weather, history, debitMmH)
     : null;
   // arros = résultat utilisable (null si skip ou pas calculé)
   const arros = (_arrosRaw && !_arrosRaw.skip) ? _arrosRaw : null;
