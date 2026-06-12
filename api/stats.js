@@ -5,6 +5,9 @@
 //   GET /api/stats?type=revenue  → stats Stripe
 //   GET /api/stats?type=users    → stats Clerk + sources UTM (Clerk + Supabase waitlist)
 
+// Emails admin — exclus de TOUTES les stats (règle "admins exclus de tout")
+const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
+
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
@@ -132,7 +135,14 @@ async function handleRevenue(req, res) {
 async function handleUsers(req, res) {
   try {
     // ✅ Pagination explicite + parsing format multi-version Clerk
-    const allUsers = await fetchAllClerkUsers();
+    const allUsersRaw = await fetchAllClerkUsers();
+
+    // Exclure les comptes admin de TOUTES les stats (règle "admins exclus de tout")
+    const allUsers = allUsersRaw.filter(u => {
+      const primary = u.email_addresses?.find(e => e.id === u.primary_email_address_id)?.email_address
+        || u.email_addresses?.[0]?.email_address || "";
+      return !ADMIN_EMAILS.includes(primary.toLowerCase());
+    });
 
     const now    = Date.now();
     const day7   = now - 7  * 24 * 60 * 60 * 1000;
