@@ -32,6 +32,9 @@ export default function Settings() {
   const [deleteReport, setDeleteReport] = useState(null);
   const [portalLoading, setPortalLoading] = useState(false);
   const [portalError, setPortalError] = useState("");
+  const [guestCode, setGuestCode]       = useState("");
+  const [guestLoading, setGuestLoading] = useState(false);
+  const [guestMsg, setGuestMsg]         = useState(null); // { ok:bool, text:string }
 
   useEffect(() => {
     if (navigator.permissions) {
@@ -76,6 +79,40 @@ export default function Settings() {
       },
       () => setGeoStatus("denied")
     );
+  };
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // CODE INVITÉ — valide un code → user_access.status = "guest" (serveur)
+  // Appelle /api/send?type=validate-guest. Au succès, on recharge pour que
+  // useSubscription relise le statut et active le Premium.
+  // ══════════════════════════════════════════════════════════════════════════
+  const validateGuestCode = async () => {
+    const code = guestCode.trim();
+    if (!code) { setGuestMsg({ ok: false, text: "Saisis un code." }); return; }
+    setGuestLoading(true);
+    setGuestMsg(null);
+    try {
+      const token = await getToken();
+      if (!token) throw new Error("Token Clerk manquant");
+
+      const res = await fetch("/api/send?type=validate-guest", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body:    JSON.stringify({ code }),
+      });
+      const data = await res.json();
+
+      if (res.ok && data.ok) {
+        setGuestMsg({ ok: true, text: "✅ Code validé — accès Premium activé. Rechargement…" });
+        setTimeout(() => window.location.reload(), 1500);
+      } else {
+        setGuestMsg({ ok: false, text: data.error || "Code invalide." });
+        setGuestLoading(false);
+      }
+    } catch (e) {
+      setGuestMsg({ ok: false, text: e.message || "Erreur réseau." });
+      setGuestLoading(false);
+    }
   };
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -448,6 +485,39 @@ export default function Settings() {
             </div>
           ))}
         </div>
+
+        {/* ── CODE INVITÉ — visible uniquement pour les comptes non-Premium ── */}
+        {!isPaid && !isAdmin && (
+          <div style={{ ...card(), background:"rgba(76,175,80,0.05)", border:"1px solid rgba(76,175,80,0.25)" }}>
+            <div style={cardTitle}><span>🎟️ Code invité</span></div>
+            <div style={{ fontSize:12, color:"#81c784", marginBottom:12, lineHeight:1.6 }}>
+              Vous avez reçu un code invité ? Saisissez-le ici pour débloquer l'accès Premium.
+            </div>
+            <div style={{ display:"flex", gap:8 }}>
+              <input
+                type="text"
+                placeholder="Votre code"
+                value={guestCode}
+                onChange={e => { setGuestCode(e.target.value); setGuestMsg(null); }}
+                onKeyDown={e => e.key === "Enter" && !guestLoading && validateGuestCode()}
+                disabled={guestLoading}
+                style={{ flex:1, background:"rgba(255,255,255,0.08)", border:"1px solid rgba(165,214,167,0.3)", borderRadius:10, padding:"10px 12px", color:"#e8f5e9", fontSize:14, fontWeight:600, outline:"none", fontFamily:"inherit" }}
+              />
+              <button
+                onClick={validateGuestCode}
+                disabled={guestLoading || !guestCode.trim()}
+                style={{ background:"rgba(76,175,80,0.2)", border:"1px solid #43a047", borderRadius:10, padding:"10px 16px", color:"#a5d6a7", fontSize:13, fontWeight:700, cursor: guestLoading ? "not-allowed" : "pointer", opacity: (guestLoading || !guestCode.trim()) ? 0.5 : 1, whiteSpace:"nowrap" }}
+              >
+                {guestLoading ? "⏳" : "Valider"}
+              </button>
+            </div>
+            {guestMsg && (
+              <div style={{ marginTop:10, fontSize:12, fontWeight:600, color: guestMsg.ok ? "#a5d6a7" : "#ef9a9a" }}>
+                {guestMsg.text}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* MENTION 10 AVOCAT — Gérer mon abonnement Stripe Customer Portal */}
