@@ -2,94 +2,90 @@
 import { useState, useEffect } from "react";
 import { useAuth, useUser } from "@clerk/clerk-react";
 
+// Emails admin — seule source d'accès admin (vérifiée par Clerk, infalsifiable côté client)
 const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
-const ADMIN_CODE   = "GREENKEEPER2024";
 
-// ── Set tous les flags admin en localStorage ──────────────────────────────────
+// ── Flags localStorage pour un accès admin (cache d'affichage, pas une preuve) ──
 function setAdminFlags() {
-  localStorage.setItem("mg360_approved",       "true");
-  localStorage.setItem("gk_admin_code",         ADMIN_CODE);
-  localStorage.setItem("mg360_onboarding_done", "true");
-  localStorage.removeItem("mg360_waitlist");
+  try {
+    localStorage.setItem("mg360_approved",       "true");
+    localStorage.setItem("mg360_onboarding_done", "true");
+    localStorage.removeItem("mg360_waitlist");
+  } catch {}
 }
 
 export function useSubscription() {
   const { isSignedIn }     = useAuth();
   const { user, isLoaded } = useUser();
-  const [tier, setTier]    = useState(() => {
-    if (typeof window !== "undefined" &&
-        localStorage.getItem("gk_admin_code") === ADMIN_CODE) return "admin";
-    return "free";
-  });
+  const [tier, setTier]    = useState("free");
   const [isLoading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!isLoaded) return;
+    let cancelled = false;
 
-    // ════════════════════════════════════════════════════════════════════════
-    // 🧪 TEST MODE — Force Free (uniquement si admin a activé le flag)
-    // ════════════════════════════════════════════════════════════════════════
-    // Pour activer : window.Clerk.user.update({ unsafeMetadata: { force_free_for_test: true } })
-    // Pour désactiver : ...force_free_for_test: false
-    // Ce flag fonctionne UNIQUEMENT pour les emails admin (sécurité).
-    if (user) {
-      const email = user.primaryEmailAddress?.emailAddress || "";
-      const isAdminEmail = ADMIN_EMAILS.includes(email);
-      const forceFreeTest = user.unsafeMetadata?.force_free_for_test === true;
+    (async () => {
+      // ── Mode test (réservé aux emails admin) : simuler un compte Free ────────
+      // Activer  : window.Clerk.user.update({ unsafeMetadata: { force_free_for_test: true } })
+      // Désactiver : ...force_free_for_test: false
+      if (user) {
+        const email         = user.primaryEmailAddress?.emailAddress || "";
+        const isAdminEmail  = ADMIN_EMAILS.includes(email);
+        const forceFreeTest = user.unsafeMetadata?.force_free_for_test === true;
 
-      if (isAdminEmail && forceFreeTest) {
-        // En mode test, on simule un compte Free vierge
-        localStorage.removeItem("gk_admin_code");
-        localStorage.removeItem("mg360_guest_validated");
-        localStorage.setItem("mg360_approved", "true");      // bypass ComingSoon
-        localStorage.setItem("mg360_onboarding_done", "true"); // bypass onboarding
-        setTier("free");
-        setLoading(false);
+        if (isAdminEmail && forceFreeTest) {
+          try {
+            localStorage.setItem("mg360_approved", "true");
+            localStorage.setItem("mg360_onboarding_done", "true");
+          } catch {}
+          if (!cancelled) { setTier("free"); setLoading(false); }
+          return;
+        }
+
+        // 1. Admin = email Clerk vérifié UNIQUEMENT (plus de code en dur)
+        if (isAdminEmail || user.publicMetadata?.role === "admin") {
+          setAdminFlags();
+          if (!cancelled) { setTier("admin"); setLoading(false); }
+          return;
+        }
+      }
+
+      if (!isSignedIn || !user) {
+        if (!cancelled) { setTier("free"); setLoading(false); }
         return;
       }
-    }
-    // ════════════════════════════════════════════════════════════════════════
 
-    // 1. Email admin hardcodé → tier admin garanti
-    if (user) {
-      const email = user.primaryEmailAddress?.emailAddress || "";
-      if (ADMIN_EMAILS.includes(email) || user.publicMetadata?.role === "admin") {
-        setAdminFlags();
-        setTier("admin");
-        setLoading(false);
+      // 2. Abonnement Stripe actif (via Clerk metadata, posé par le webhook)
+      const meta = user.publicMetadata || {};
+      const subscribed = meta.isSubscribed === true ||
+                         meta.subscriptionStatus === "active" ||
+                         meta.subscriptionStatus === "trialing";
+      if (subscribed) {
+        if (!cancelled) { setTier("paid"); setLoading(false); }
         return;
       }
-    }
 
-    // 2. localStorage admin code
-    if (localStorage.getItem("gk_admin_code") === ADMIN_CODE) {
-      setTier("admin"); setLoading(false); return;
-    }
+      // 3. Premium invité — VÉRITÉ SERVEUR : user_access.status === "guest"
+      //    Lecture scopée par RLS (chacun ne lit que sa propre ligne).
+      //    Remplace l'ancien flag localStorage "mg360_guest_validated" (falsifiable).
+      try {
+        const { supabase } = await import("./supabase");
+        const { data } = await supabase
+          .from("user_access")
+          .select("status")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (!cancelled && data?.status === "guest") {
+          setTier("paid"); setLoading(false);
+          return;
+        }
+      } catch { /* réseau indisponible — on retombe sur free */ }
 
-    // 3. Code invité validé (famille, proches) → accès Premium sans paiement
-    if (localStorage.getItem("mg360_guest_validated") === "true") {
-      setTier("paid"); setLoading(false); return;
-    }
+      if (!cancelled) { setTier("free"); setLoading(false); }
+    })();
 
-    if (!isSignedIn || !user) { setTier("free"); setLoading(false); return; }
-
-    // 4. Abonnement Stripe actif
-    const meta = user.publicMetadata || {};
-    const subscribed = meta.isSubscribed === true ||
-                       meta.subscriptionStatus === "active" ||
-                       meta.subscriptionStatus === "trialing";
-    setTier(subscribed ? "paid" : "free");
-    setLoading(false);
+    return () => { cancelled = true; };
   }, [isSignedIn, isLoaded, user]); // eslint-disable-line
-
-  const activateAdmin = (code) => {
-    if (code.trim().toUpperCase() === ADMIN_CODE) {
-      setAdminFlags();
-      setTier("admin");
-      return true;
-    }
-    return false;
-  };
 
   return {
     tier,
@@ -98,6 +94,5 @@ export function useSubscription() {
     isFree:       tier === "free",
     isSubscribed: tier === "paid" || tier === "admin",
     isLoading,
-    activateAdmin,
   };
 }

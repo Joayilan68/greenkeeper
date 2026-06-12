@@ -62,7 +62,6 @@ function setAdminFlags() {
   try {
     localStorage.setItem("mg360_approved",       "true");
     localStorage.setItem("mg360_onboarding_done", "true");
-    localStorage.setItem("gk_admin_code",         "GREENKEEPER2024");
     localStorage.removeItem("mg360_waitlist");
   } catch {}
 }
