@@ -76,6 +76,24 @@ function setUserFlags() {
   } catch {}
 }
 
+// ── Présence quotidienne (DAU) ───────────────────────────────────────────────
+// Enregistre 1 ligne par utilisateur par jour dans daily_active_users.
+// Idempotent (clé composite user_id+day) + garde localStorage : 1 écriture/jour/appareil.
+// Hors admin (appelé uniquement pour les non-admins). Non bloquant.
+async function pingPresence(userId) {
+  if (!userId) return;
+  try {
+    const today = new Date().toLocaleDateString("fr-CA"); // YYYY-MM-DD
+    const key   = `mg360_dau_ping_${today}`;
+    if (localStorage.getItem(key)) return; // déjà compté aujourd'hui sur cet appareil
+    const { supabase } = await import("./lib/supabase");
+    const { error } = await supabase
+      .from("daily_active_users")
+      .upsert({ user_id: userId, day: today }, { onConflict: "user_id,day", ignoreDuplicates: true });
+    if (!error) localStorage.setItem(key, "1");
+  } catch { /* non bloquant */ }
+}
+
 function AppWithWeather({ children }) {
   usePilotage();
   useUTMCapture();   // capte les UTM dès l'arrivée sur le site
@@ -122,6 +140,9 @@ function useAccessCheck() {
 
     const email   = user.primaryEmailAddress?.emailAddress || "";
     const isAdmin = ADMIN_EMAILS.includes(email) || user.publicMetadata?.role === "admin";
+
+    // DAU — compter l'utilisateur (hors admin) une fois par jour, sans bloquer l'accès
+    if (!isAdmin) pingPresence(user.id);
 
     // Admin → toujours approuvé, pas besoin de Supabase
     if (isAdmin) {
