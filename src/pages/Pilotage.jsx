@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import { useSubscription } from "../lib/useSubscription";
 import { card, cardTitle, btn, scroll, header, appShell } from "../lib/styles";
-import { supabase } from "../lib/supabase";
 
 function safeGet(key, fallback = null) {
   try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch { return fallback; }
@@ -138,9 +137,6 @@ export default function Pilotage() {
   const [loadingUsers, setLoadingUsers]     = useState(false);
   const [loadingRevenue, setLoadingRevenue] = useState(false);
   const [tab, setTab]         = useState("activite");
-  const [preinscriptions, setPreinscriptions] = useState([]);
-  const [preinscLoading, setPreinscLoading]   = useState(false);
-  const [preinscTotal, setPreinscTotal]       = useState(0);
   const [purging, setPurging]             = useState(false);
   const [purgeResult, setPurgeResult]     = useState(null);
   const [expandedPhases, setExpandedPhases] = useState({});
@@ -163,7 +159,6 @@ export default function Pilotage() {
     computeLocal();
     fetchUsers();
     fetchRevenue();
-    fetchPreinscriptions();
     fetchRoadmap();
     setLastUpdate(new Date().toLocaleTimeString("fr-FR"));
   }
@@ -224,41 +219,6 @@ export default function Pilotage() {
       setRoadmapError("Impossible de charger la roadmap : " + e.message);
     }
     setRoadmapLoading(false);
-  }
-
-  async function fetchPreinscriptions() {
-    setPreinscLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('preinscriptions')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(500);
-      if (!error) {
-        // ✅ Exclure les emails admin du comptage et de l'affichage
-        const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
-        const filtered = (data || []).filter(p => {
-          const e = (p.email || "").toLowerCase().trim();
-          return !ADMIN_EMAILS.includes(e);
-        });
-        setPreinscriptions(filtered);
-        setPreinscTotal(filtered.length);
-      }
-    } catch {}
-    setPreinscLoading(false);
-  }
-
-  function exportCSV() {
-    if (!preinscriptions.length) return;
-    const header = 'Email,Source,Date\n';
-    const rows = preinscriptions.map(p =>
-      `${p.email},${p.source},${new Date(p.created_at).toLocaleDateString('fr-FR')}`
-    ).join('\n');
-    const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8;' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a'); a.href = url;
-    a.download = `MG360_preinscriptions_${new Date().toISOString().split('T')[0]}.csv`;
-    a.click(); URL.revokeObjectURL(url);
   }
 
   async function purgeDiagnostics() {
@@ -355,7 +315,6 @@ export default function Pilotage() {
     { id:"roadmap",         label:"📊 Roadmap" },
     { id:"services",        label:"⚙️ Services" },
     { id:"bugs",            label:"🐛 Bugs" },
-    { id:"preinscriptions", label:"📬 Pré-inscrits" },
   ];
 
   const PHASE_ORDER = ["Phase 1","Juridique","Phase 2","Phase 3","Tech","Stores","Growth J1-J30","Growth J30-J90","Marketing","Sprint IA","Phase 4","Sécurité","Branding"];
@@ -383,6 +342,15 @@ export default function Pilotage() {
     const pct    = Math.round((done / tasks.length) * 100);
     return { phase, tasks, done, total: tasks.length, pct };
   }).filter(Boolean);
+
+  // ── Valeurs dérivées pour l'onglet Activité ──────────────────────────────
+  const todayLabel  = new Date().toLocaleDateString("fr-FR", { day:"2-digit", month:"2-digit" });
+  const dauToday    = users?.dauByDay?.find(d => d.label === todayLabel)?.count ?? 0;
+  const inscrits    = users?.total ?? null;
+  const waitlist    = users?.waitlistTotal ?? null;
+  const premiumTot  = revenue?.totalPremium ?? null;
+  const pctInscrits = (waitlist && inscrits != null)   ? Math.round((inscrits / waitlist) * 100)   : null;
+  const pctPremium  = (inscrits && premiumTot != null) ? Math.round((premiumTot / inscrits) * 100) : null;
 
   return (
     <div>
@@ -414,19 +382,59 @@ export default function Pilotage() {
         {tab === "activite" && (
           <>
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:4 }}>
-              <KPI icon="👥" label="Total inscrits" value={loadingUsers ? "..." : preinscTotal} sub="Hors admins" color="#a5d6a7" />
-              <KPI icon="🆕" label="Nouveaux 7j" value={loadingUsers ? "..." : (users?.newLast7 ?? "—")} sub={users?.newLast30 ? `+${users.newLast30} ce mois` : ""} color="#90caf9" />
-              <KPI icon="🟢" label="Actifs aujourd'hui" value={loadingUsers ? "..." : (users?.activeToday ?? "—")} sub="Dernières 24h" color="#66BB6A" />
-              <KPI icon="✅" label="Actifs 30j" value={loadingUsers ? "..." : (users?.activeL30 ?? "—")} sub="Connectés ce mois" color="#a5d6a7" />
+              <KPI icon="👥" label="Total inscrits" value={loadingUsers ? "..." : (users?.total ?? "—")} sub="Hors admins" color="#a5d6a7" />
+              <KPI icon="🟢" label="Actifs aujourd'hui" value={loadingUsers ? "..." : dauToday} sub="Connectés ce jour" color="#66BB6A" />
+              <KPI icon="🆕" label="Nouveaux aujourd'hui" value={loadingUsers ? "..." : (users?.newToday ?? "—")} sub="Inscriptions du jour" color="#90caf9" />
+              <KPI icon="📅" label="Nouveaux cette semaine" value={loadingUsers ? "..." : (users?.newLast7 ?? "—")} sub="7 derniers jours" color="#81d4fa" />
+              <KPI icon="🗓️" label="Nouveaux ce mois" value={loadingUsers ? "..." : (users?.newLast30 ?? "—")} sub="30 derniers jours" color="#ffcc80" />
               <KPI icon="📸" label="Diagnostics" value={local?.diagnostics.total ?? "—"} sub={`+${local?.diagnostics.ce7j ?? 0} cette semaine`} color="#ce93d8" />
             </div>
 
-            {/* ✅ FIX 01/06/2026 — Sources des inscrits Clerk (UTM first-touch) */}
+            {/* ── Entonnoir de conversion : Préinscrits → Inscrits → Premium ── */}
+            <div style={card()}>
+              <div style={cardTitle}><span>🔻 Entonnoir de conversion</span></div>
+              <div style={{ display:"flex", alignItems:"stretch", gap:6, marginTop:4 }}>
+                {[
+                  { label:"Préinscrits", value: waitlist,   color:"#bcaaa4" },
+                  { label:"Inscrits",    value: inscrits,   color:"#90caf9", pct: pctInscrits, pctLabel:"des préinscrits" },
+                  { label:"Premium",     value: premiumTot, color:"#f9a825", pct: pctPremium,  pctLabel:"des inscrits" },
+                ].map((s, i) => (
+                  <div key={s.label} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center" }}>
+                    <div style={{ width:"100%", background:"rgba(255,255,255,0.05)", border:`1px solid ${s.color}55`, borderRadius:12, padding:"12px 6px", textAlign:"center" }}>
+                      <div style={{ fontSize:24, fontWeight:800, color:s.color }}>{loadingUsers ? "..." : (s.value ?? "—")}</div>
+                      <div style={{ fontSize:10, color:"#81c784", marginTop:2 }}>{s.label}</div>
+                    </div>
+                    {s.pct != null && (
+                      <div style={{ fontSize:10, color:s.color, marginTop:6, fontWeight:700 }}>
+                        ↓ {s.pct}% <span style={{ color:"#4a7c5c", fontWeight:400 }}>{s.pctLabel}</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Sources des inscrits Clerk (UTM first-touch) */}
             <SourceBreakdown
               sources={users?.clerkSources}
               title="🎯 Sources d'inscription (comptes créés)"
             />
 
+            {users?.days?.length > 0 && (
+              <div style={card()}>
+                <div style={cardTitle}><span>🆕 Nouveaux inscrits — 30 jours</span></div>
+                <MiniChart data={users.days} valueKey="count" color="#90caf9" />
+              </div>
+            )}
+            {users?.dauByDay?.length > 0 && (
+              <div style={card()}>
+                <div style={cardTitle}><span>🟢 Actifs par jour</span></div>
+                <MiniChart data={users.dauByDay} valueKey="count" color="#66BB6A" />
+                <div style={{ fontSize:10, color:"#4a7c5c", marginTop:6, lineHeight:1.5 }}>
+                  Connexions réelles, hors admins. L'historique se construit jour après jour depuis l'activation du suivi.
+                </div>
+              </div>
+            )}
             {users?.weeks && (
               <div style={card()}>
                 <div style={cardTitle}><span>📈 Inscriptions — 8 semaines</span></div>
@@ -756,154 +764,6 @@ export default function Pilotage() {
           </>
         )}
 
-        {/* ════════════════ TAB PRÉ-INSCRITS ════════════════ */}
-        {tab === "preinscriptions" && (
-          <>
-            {/* ════════════════════════════════════════════════════════════ */}
-            {/* TUILE ACQUISITION — Vue consolidée avec évolution & sources   */}
-            {/* ════════════════════════════════════════════════════════════ */}
-
-            {(() => {
-              // ── Calculs ──────────────────────────────────────────────
-              const now = new Date();
-              const startToday = new Date(now); startToday.setHours(0,0,0,0);
-
-              // Cette semaine (lundi → dimanche)
-              const startThisWeek = new Date(now);
-              const dayOfWeek = now.getDay() === 0 ? 7 : now.getDay(); // lundi=1
-              startThisWeek.setDate(now.getDate() - dayOfWeek + 1);
-              startThisWeek.setHours(0,0,0,0);
-
-              const startPrevWeek = new Date(startThisWeek);
-              startPrevWeek.setDate(startPrevWeek.getDate() - 7);
-
-              // Comptes
-              const todayCount = preinscriptions.filter(p => new Date(p.created_at) >= startToday).length;
-              const thisWeekCount = preinscriptions.filter(p => new Date(p.created_at) >= startThisWeek).length;
-              const prevWeekCount = preinscriptions.filter(p => {
-                const d = new Date(p.created_at);
-                return d >= startPrevWeek && d < startThisWeek;
-              }).length;
-
-              // Évolution
-              let evoPct = null, evoLabel = "Démarrage", evoColor = "#a5d6a7", evoIcon = "✨";
-              if (prevWeekCount === 0 && thisWeekCount > 0) {
-                evoLabel = "Démarrage"; evoColor = "#66BB6A"; evoIcon = "🚀";
-              } else if (prevWeekCount > 0) {
-                evoPct = Math.round(((thisWeekCount - prevWeekCount) / prevWeekCount) * 100);
-                if (evoPct > 5)        { evoLabel = `+${evoPct}%`;  evoColor = "#43a047"; evoIcon = "📈"; }
-                else if (evoPct < -5)  { evoLabel = `${evoPct}%`;   evoColor = "#ef5350"; evoIcon = "📉"; }
-                else                   { evoLabel = "Stable";       evoColor = "#f9a825"; evoIcon = "➡️"; }
-              }
-
-              // Graphique 8 semaines
-              const weeks8 = [];
-              for (let i = 7; i >= 0; i--) {
-                const s = new Date(startThisWeek);
-                s.setDate(s.getDate() - i * 7);
-                const e = new Date(s);
-                e.setDate(s.getDate() + 7);
-                const count = preinscriptions.filter(p => {
-                  const d = new Date(p.created_at);
-                  return d >= s && d < e;
-                }).length;
-                const label = i === 0 ? "Now"
-                            : i === 1 ? "S-1"
-                            : `S-${i}`;
-                weeks8.push({ label, count });
-              }
-
-              // Sources locales (à partir de preinscriptions filtrées)
-              const bySource = {};
-              preinscriptions.forEach(p => {
-                const s = (p.source || "direct").toLowerCase();
-                bySource[s] = (bySource[s] || 0) + 1;
-              });
-
-              return (
-                <>
-                  {/* ── Bloc KPI Total + Évolution ─────────────────────── */}
-                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, marginBottom:12 }}>
-                    <KPI icon="📬" label="Total inscrits"    value={preinscTotal}   sub="Hors admins" color="#64b5f6" />
-                    <KPI icon="📅" label="Cette semaine"     value={thisWeekCount}  sub={`vs ${prevWeekCount} sem-1`} color="#a5d6a7" />
-                    <KPI icon={evoIcon} label="Évolution"    value={evoLabel}       sub="vs sem précédente" color={evoColor} />
-                  </div>
-
-                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:12 }}>
-                    <KPI icon="📆" label="Aujourd'hui"       value={todayCount}     sub="Nouvelles inscriptions" color="#a5d6a7" />
-                    <KPI icon="🎯" label="Sources actives"    value={Object.keys(bySource).length} sub="Canaux d'acquisition" color="#a5d6a7" />
-                  </div>
-
-                  {/* ── Graphique évolution 8 semaines ───────────────── */}
-                  <div style={card()}>
-                    <div style={cardTitle}>
-                      <span>📈 Évolution sur 8 semaines</span>
-                      <span style={{ fontSize:10, color: evoColor, fontWeight:700 }}>{evoIcon} {evoLabel}</span>
-                    </div>
-                    <MiniChart data={weeks8} valueKey="count" color="#64b5f6" />
-                  </div>
-                </>
-              );
-            })()}
-
-            {/* ── Sources des inscriptions (composant existant) ───────── */}
-            <SourceBreakdown
-              sources={users?.waitlistSources}
-              title="📊 Sources des inscriptions"
-            />
-
-            {/* ── Boutons actions ──────────────────────────────────────── */}
-            <div style={{ display:"flex", gap:8, marginBottom:8 }}>
-              <button onClick={fetchPreinscriptions} style={{ flex:1, background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:10, padding:"8px", color:"#81c784", fontSize:12, cursor:"pointer" }}>
-                ↻ Actualiser
-              </button>
-              <button onClick={exportCSV} disabled={!preinscriptions.length} style={{ flex:1, background:"rgba(100,181,246,0.15)", border:"1px solid rgba(100,181,246,0.3)", borderRadius:10, padding:"8px", color:"#64b5f6", fontSize:12, fontWeight:700, cursor:"pointer", opacity: preinscriptions.length ? 1 : 0.5 }}>
-                ⬇ Export CSV
-              </button>
-            </div>
-
-            {/* ── Graphique 7 derniers jours (existant) ────────────────── */}
-            {(() => {
-              const days = Array.from({ length: 7 }, (_, i) => {
-                const d = new Date(); d.setDate(d.getDate() - (6 - i));
-                const label = d.toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit' });
-                const key   = d.toISOString().split('T')[0];
-                const count = preinscriptions.filter(p => p.created_at?.startsWith(key)).length;
-                return { label, count };
-              });
-              return (
-                <div style={card()}>
-                  <div style={cardTitle}><span>📅 Détail 7 derniers jours</span></div>
-                  <MiniChart data={days} valueKey="count" color="#64b5f6" />
-                </div>
-              );
-            })()}
-
-            {/* ── Liste détaillée (existant) ───────────────────────────── */}
-            <div style={card()}>
-              <div style={cardTitle}>
-                <span>📋 Liste ({preinscriptions.length})</span>
-                {preinscLoading && <span style={{ fontSize:11, color:"#81c784" }}>Chargement…</span>}
-              </div>
-              {preinscriptions.length === 0 && !preinscLoading && (
-                <div style={{ fontSize:12, color:"#4a7c5c", textAlign:"center", padding:"16px 0" }}>
-                  Aucune inscription pour l'instant.
-                </div>
-              )}
-              {preinscriptions.map((p) => (
-                <div key={p.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 0", borderBottom:"1px solid rgba(255,255,255,0.05)", gap:8 }}>
-                  <div style={{ flex:1, minWidth:0 }}>
-                    <div style={{ fontSize:12, fontWeight:700, color:"#e8f5e9", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{p.email}</div>
-                    <div style={{ fontSize:10, color:"#81c784" }}>{new Date(p.created_at).toLocaleDateString('fr-FR')} · {p.source}</div>
-                  </div>
-                  <span style={{ fontSize:10, fontWeight:700, color:"#64b5f6", background:"rgba(100,181,246,0.12)", border:"1px solid rgba(100,181,246,0.25)", borderRadius:6, padding:"2px 7px", whiteSpace:"nowrap" }}>
-                    {p.source}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
 
         <div style={{ paddingBottom:32 }} />
       </div>
