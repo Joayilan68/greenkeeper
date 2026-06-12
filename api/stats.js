@@ -172,19 +172,41 @@ async function handleUsers(req, res) {
       });
     }
 
+    // Nouveaux inscrits par JOUR (30 derniers jours) — exact, depuis created_at Clerk
+    const days = [];
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - i);
+      const start = d.getTime();
+      const end   = start + 24 * 60 * 60 * 1000;
+      const count = allUsers.filter(u => u.created_at >= start && u.created_at < end).length;
+      days.push({ label: d.toLocaleDateString("fr-FR", { day:"2-digit", month:"2-digit" }), count });
+    }
+
+    // Nouveaux inscrits aujourd'hui (jour calendaire)
+    const startToday = new Date(); startToday.setHours(0, 0, 0, 0);
+    const newToday   = allUsers.filter(u => u.created_at >= startToday.getTime()).length;
+
     // ✅ Sources UTM séparées : Clerk (inscrits convertis) vs Waitlist (prospects pré-inscrits)
     const clerkSources    = aggregateClerkSources(allUsers);
     const waitlistSources = await aggregateWaitlistSources();
 
+    // Actifs/jour (table daily_active_users via vue) + total waitlist (entonnoir)
+    const dauByDay      = await fetchDauByDay();
+    const waitlistTotal = await getWaitlistTotal();
+
     res.json({
       success: true,
       total,
+      newToday,
       newLast7,
       newLast30,
       activeL30,
       activeToday,
+      days,
       weeks,
       months,
+      dauByDay,
+      waitlistTotal,
       // Backward compat avec l'ancien champ "sources"
       sources: clerkSources,
       // Nouveaux champs explicites pour Pilotage
@@ -287,4 +309,66 @@ async function aggregateWaitlistSources() {
   }
 
   return counts;
+}
+// ── Helper : actifs/jour depuis la vue dau_by_day (service_role) ──────────────
+// Renvoie [{ label:"JJ/MM", count }] sur les 30 derniers jours.
+async function fetchDauByDay() {
+  try {
+    const supaUrl = process.env.SUPABASE_URL;
+    const supaKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!supaUrl || !supaKey) {
+      console.warn("stats-users: env vars manquantes pour dauByDay");
+      return [];
+    }
+
+    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const r = await fetch(
+      `${supaUrl}/rest/v1/dau_by_day?day=gte.${since}&order=day.asc`,
+      { headers: { "apikey": supaKey, "Authorization": `Bearer ${supaKey}` } }
+    );
+
+    if (!r.ok) {
+      console.warn("stats-users dauByDay HTTP:", r.status);
+      return [];
+    }
+
+    const rows = await r.json();
+    return rows.map(row => ({
+      label: new Date(row.day).toLocaleDateString("fr-FR", { day:"2-digit", month:"2-digit" }),
+      count: parseInt(row.count) || 0,
+    }));
+  } catch (e) {
+    console.warn("stats-users dauByDay:", e.message);
+    return [];
+  }
+}
+
+// ── Helper : total préinscrits (hors admins) pour l'entonnoir ────────────────
+async function getWaitlistTotal() {
+  try {
+    const supaUrl = process.env.SUPABASE_URL;
+    const supaKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!supaUrl || !supaKey) return 0;
+
+    const admins = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
+    const filter = encodeURIComponent(`not.in.(${admins.join(",")})`);
+    const r = await fetch(
+      `${supaUrl}/rest/v1/preinscriptions?select=email&email=${filter}`,
+      {
+        headers: {
+          "apikey":        supaKey,
+          "Authorization": `Bearer ${supaKey}`,
+          "Prefer":        "count=exact",
+          "Range":         "0-0",
+        }
+      }
+    );
+
+    const cr    = r.headers.get("content-range") || "";
+    const total = parseInt(cr.split("/")[1] || "0", 10);
+    return isNaN(total) ? 0 : total;
+  } catch (e) {
+    console.warn("stats-users waitlistTotal:", e.message);
+    return 0;
+  }
 }
