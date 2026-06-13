@@ -111,10 +111,29 @@ module.exports = async function handler(req, res) {
         const user = await clerk.users.getUser(userId);
         const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
         const email = user.emailAddresses?.[0]?.emailAddress || "";
-        if (user.publicMetadata?.role === "admin" || ADMIN_EMAILS.includes(email)) {
+
+        const isAdmin   = user.publicMetadata?.role === "admin" || ADMIN_EMAILS.includes(email);
+        const isPremium = user.publicMetadata?.isSubscribed === true ||
+                          user.publicMetadata?.subscriptionStatus === "active";
+
+        if (isAdmin) {
           tier = "admin";
+        } else if (isPremium) {
+          tier = "paid";
         } else {
-          tier = "paid"; // tout user authentifié Clerk = accès
+          // Premium invité — vérité serveur : user_access.status === "guest"
+          let isGuest = false;
+          try {
+            const { data: ua } = await supabase
+              .from("user_access")
+              .select("status")
+              .eq("user_id", userId)
+              .maybeSingle();
+            isGuest = ua?.status === "guest";
+          } catch (e) {
+            console.warn("[MG360] guest check (ai-reco) :", e.message);
+          }
+          tier = isGuest ? "paid" : "free";
         }
       } catch {
         // Token invalide ou user inexistant
@@ -127,11 +146,18 @@ module.exports = async function handler(req, res) {
     }
 
     // ── 2. Rate limiting ─────────────────────────────────────────────────────
-    // Bloquer uniquement les appels sans token valide (tier "unknown" = IP)
+    // Bloquer les appels sans token valide (unknown = IP) ET les comptes gratuits.
+    // Accès réservé : admin, Premium Stripe, invité (user_access.status="guest").
     if (tier === "unknown") {
       return res.status(401).json({
         error:   "Authentification requise",
         message: "Connectez-vous pour accéder aux recommandations IA.",
+      });
+    }
+    if (tier === "free") {
+      return res.status(403).json({
+        error:   "Fonctionnalité réservée aux membres Premium",
+        message: "Passez Premium pour débloquer les recommandations IA.",
       });
     }
     // Admin et Premium : pas de rate limiting — cache localStorage côté client
