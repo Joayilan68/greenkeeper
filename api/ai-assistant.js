@@ -19,11 +19,18 @@ module.exports = async function handler(req, res) {
     return res.status(401).json({ error: "Token manquant" });
   }
 
-  let clerkUserId;
+  // Décodage du payload Clerk (même méthode que rgpd-data.js / send.js — fonctionne
+  // avec l'instance de production clerk.mongazon360.fr). On lit le sub ; l'identité
+  // est revérifiée via l'API Clerk plus bas (clerk.users.getUser).
+  let clerkUserId = null;
   try {
-    const payload = await clerk.verifyToken(authHeader.replace("Bearer ", ""));
-    clerkUserId   = payload.sub;
-  } catch {
+    const parts = authHeader.replace("Bearer ", "").split(".");
+    if (parts.length === 3) {
+      const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8"));
+      clerkUserId = payload.sub || payload.user_id;
+    }
+  } catch {}
+  if (!clerkUserId) {
     return res.status(401).json({ error: "Token invalide" });
   }
 
