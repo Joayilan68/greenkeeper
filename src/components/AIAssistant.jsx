@@ -7,6 +7,7 @@
 // ════════════════════════════════════════════════════════════════════════════
 
 import { useState, useRef, useEffect } from "react";
+import { useAuth } from "@clerk/clerk-react";
 import { useProfile } from "../lib/useProfile";
 import { useWeather } from "../lib/useWeather";
 import { useSubscription } from "../lib/useSubscription";
@@ -40,6 +41,7 @@ function TypingIndicator() {
 }
 
 export default function AIAssistant() {
+  const { getToken }       = useAuth();
   const { profile }        = useProfile();
   const { weather }        = useWeather() || {};
   const { history = [] }   = useHistory();
@@ -80,9 +82,13 @@ export default function AIAssistant() {
     setLoading(true);
 
     try {
+      const token = await getToken();
       const res  = await fetch("/api/ai-assistant", {
         method:  "POST",
-        headers: { "Content-Type":"application/json" },
+        headers: {
+          "Content-Type":  "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           messages: newMessages.map(m => ({ role:m.role, content:m.content })),
           profile:  profile || {},
@@ -92,9 +98,12 @@ export default function AIAssistant() {
         })
       });
       const data = await res.json();
+      const fallback = res.status === 429
+        ? (data.error || "Limite journalière atteinte. Revenez demain !")
+        : "Désolé, une erreur est survenue.";
       setMessages(prev => [...prev, {
         role:"assistant",
-        content: data.reply || "Désolé, une erreur est survenue."
+        content: data.reply || fallback
       }]);
     } catch {
       setMessages(prev => [...prev, {
