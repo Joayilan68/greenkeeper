@@ -104,7 +104,25 @@ module.exports = async function handler(req, res) {
   const isPremium    = clerkUser.publicMetadata?.isSubscribed === true ||
                        clerkUser.publicMetadata?.subscriptionStatus === "active";
 
+  // Premium invité — vérité serveur : user_access.status === "guest"
+  // (le Premium d'un guest n'est PAS dans Clerk, il vit dans Supabase)
+  let isGuest = false;
   if (!isAdmin && !isPremium) {
+    try {
+      const { createClient } = require("@supabase/supabase-js");
+      const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+      const { data: ua } = await sb
+        .from("user_access")
+        .select("status")
+        .eq("user_id", clerkUserId)
+        .maybeSingle();
+      isGuest = ua?.status === "guest";
+    } catch (e) {
+      console.warn("[MG360] guest check (analyze-lawn) :", e.message);
+    }
+  }
+
+  if (!isAdmin && !isPremium && !isGuest) {
     return res.status(403).json({ error: "Fonctionnalité réservée aux membres Premium" });
   }
 
