@@ -11,7 +11,7 @@ const REMINDER_LABELS = {
   desherbage:{ icon:"🪴", label:"Désherbage",           desc:"Élimination des mauvaises herbes" },
 };
 
-function buildReminderHtml(reminders, userName, profile, score) {
+function buildReminderHtml(reminders, userName, profile) {
   const year = new Date().getFullYear();
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"/></head>
@@ -39,7 +39,6 @@ function buildReminderHtml(reminders, userName, profile, score) {
         <div style="flex:1;">
           <div style="font-size:15px;font-weight:800;color:#1a4731;margin-bottom:4px;">${r.label}</div>
           <div style="font-size:12px;color:#555;line-height:1.5;">${r.desc}</div>
-          <div style="font-size:11px;color:#888;margin-top:6px;">📅 Fréquence : tous les ${r.days} jours</div>
         </div>
       </div>`).join("")}
     </div>
@@ -59,6 +58,9 @@ function buildReminderHtml(reminders, userName, profile, score) {
     <div style="color:#81c784;font-size:9px;margin-top:4px;">
       © ${year} Mongazon360<sup style="font-size:7px;">™</sup> — Marque déposée à l'EUIPO ·
       <a href="https://mongazon360.fr/mentions-legales" style="color:#52b788;">Mentions légales</a>
+    </div>
+    <div style="color:#9e9e9e;font-size:8px;line-height:1.5;text-align:left;margin-top:10px;padding-top:10px;border-top:1px solid #e8f5e9;">
+      Vous bénéficiez d'un droit d'accès, d'opposition, de rectification, de suppression et, à certaines conditions, de portabilité de vos données personnelles en vous adressant à la Société Mongazon360, <a href="mailto:contact@mongazon360.fr" style="color:#52b788;">contact@mongazon360.fr</a>. Vous avez également le droit de retirer votre consentement à nos envois de nature commerciale à tout moment. Vous bénéficiez également du droit d'introduire une réclamation auprès de la CNIL. Nous vous invitons à consulter notre politique d'utilisation des données personnelles disponible <a href="https://mongazon360.fr/confidentialite" style="color:#52b788;">ici</a>.
     </div>
   </div>
 </div>
@@ -159,7 +161,7 @@ module.exports = async function handler(req, res) {
                   from:    "Mongazon360 <bonjour@mongazon360.fr>",
                   to:      [email],
                   subject: `🌿 [Mongazon360™] Rappel : ${emailDue.map(r => r.label).join(", ")}`,
-                  html:    buildReminderHtml(emailDue, "Jardinier", {}, 0),
+                  html:    buildReminderHtml(emailDue, "Jardinier", {}),
                 }),
               });
               const d = await emailRes.json();
@@ -790,7 +792,7 @@ module.exports = async function handler(req, res) {
   // ── REMINDER (email) ──────────────────────────────────────────────────────
   if (type === "reminder") {
     try {
-      const { reminders, userEmail, userName = "Jardinier", profile = {}, score = 0 } = req.body;
+      const { reminders, userEmail, userName = "Jardinier", profile = {} } = req.body;
       if (!reminders?.length || !userEmail) throw new Error("Données manquantes");
 
       const emailRes = await fetch("https://api.resend.com/emails", {
@@ -800,7 +802,7 @@ module.exports = async function handler(req, res) {
           from:    "Mongazon360 <bonjour@mongazon360.fr>",
           to:      [userEmail],
           subject: `🌿 [Mongazon360™] Rappel : ${reminders.map(r => r.label).join(", ")}`,
-          html:    buildReminderHtml(reminders, userName, profile, score),
+          html:    buildReminderHtml(reminders, userName, profile),
         }),
       });
 
