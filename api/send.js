@@ -104,10 +104,6 @@ module.exports = async function handler(req, res) {
       const INTERVALLES = { tonte:5, arrosage:3, engrais:45, fongicide:14, aeration:90, desherbage:21 };
 
       let pushSent = 0, emailSent = 0;
-      // ── DIAGNOSTIC TEMPORAIRE ──────────────────────────────────────────────
-      let pushAttempts = 0;
-      const pushErrors = [];
-      const debug = [];
       const today = new Date().toISOString().slice(0, 10);
 
       for (const row of (remindersData || [])) {
@@ -134,12 +130,9 @@ module.exports = async function handler(req, res) {
 
         // ── Push : piloté par le SEUL consentement global "notifications" ──────
         const sub = subMap[user_id];
-        // DIAGNOSTIC : état de cet utilisateur (seulement si des rappels sont dus)
-        debug.push({ u: user_id.slice(-6), due: due.length, sub: !!sub, notif: !!userConsents.notifications });
         if (userConsents.notifications && sub) {
           for (const r of due) {
             try {
-              pushAttempts++;
               await webpush.sendNotification(sub, JSON.stringify({
                 title: `🌿 Mongazon360 — ${r.label}`,
                 body:  `Il est temps de faire votre ${r.label.toLowerCase()} !`,
@@ -150,15 +143,7 @@ module.exports = async function handler(req, res) {
               }));
               updatedPrefs[r.id] = { ...updatedPrefs[r.id], lastSent: new Date().toISOString() };
               pushSent++;
-            } catch (e) {
-              pushErrors.push({
-                u:      user_id.slice(-6),
-                r:      r.id,
-                status: e.statusCode || null,
-                msg:    (e.message || "").slice(0, 200),
-                body:   (e.body ? String(e.body) : "").slice(0, 200),
-              });
-            }
+            } catch {}
           }
         }
 
@@ -195,14 +180,7 @@ module.exports = async function handler(req, res) {
       }
 
       console.log("[CRON] reminders:", remindersData?.length || 0, "subs:", subsData?.length || 0, "pushSent:", pushSent, "emailSent:", emailSent);
-      return res.json({
-        success: true, date: today, pushSent, emailSent,
-        reminders: remindersData?.length || 0, subs: subsData?.length || 0,
-        // ── DIAGNOSTIC TEMPORAIRE — à retirer une fois le bug compris ──
-        pushAttempts,
-        pushErrors,
-        debug: debug.filter(d => d.due > 0),
-      });
+      return res.json({ success: true, date: today, pushSent, emailSent, reminders: remindersData?.length || 0, subs: subsData?.length || 0 });
     } catch (e) {
       console.error("cron reminders:", e.message);
       return res.status(500).json({ error: e.message });
@@ -212,6 +190,85 @@ module.exports = async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
   const { type } = req.query;
+
+  // ════════════════════════════════════════════════════════════════════════
+  // VALIDATE-GUEST — Valide un code invité → user_access.status = "guest"
+  // POST /api/send?type=validate-guest   body: { code }   Bearer Clerk obligatoire
+  // Tout est serveur (service_role) : le client n'accède jamais à guest_codes.
+  // ════════════════════════════════════════════════════════════════════════
+  if (type === "validate-guest") {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader?.startsWith("Bearer ")) {
+        return res.status(401).json({ error: "Token manquant" });
+      }
+      const token = authHeader.replace("Bearer ", "");
+      let userId = null;
+      try {
+        const parts = token.split(".");
+        if (parts.length === 3) {
+          const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8"));
+          userId = payload.sub || payload.user_id;
+        }
+      } catch {}
+      if (!userId) return res.status(401).json({ error: "Token JWT invalide" });
+
+      const rawCode = (req.body?.code || "").trim();
+      if (!rawCode) return res.status(400).json({ ok: false, error: "Code manquant" });
+
+      const { createClient } = require("@supabase/supabase-js");
+      const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+
+      // 1. Récupérer le code (correspondance exacte, sensible à la casse)
+      const { data: gc, error: gcErr } = await supabase
+        .from("guest_codes")
+        .select("*")
+        .eq("code", rawCode)
+        .maybeSingle();
+
+      if (gcErr) return res.status(500).json({ ok: false, error: "Erreur lecture code" });
+      if (!gc)   return res.status(404).json({ ok: false, error: "Code invalide" });
+
+      // 2. Vérifications de validité
+      if (gc.actif === false) {
+        return res.status(403).json({ ok: false, error: "Ce code n'est plus actif" });
+      }
+      if (gc.expires_at && new Date(gc.expires_at).getTime() < Date.now()) {
+        return res.status(403).json({ ok: false, error: "Ce code a expiré" });
+      }
+      if (gc.max_uses != null && (gc.uses_count || 0) >= gc.max_uses) {
+        return res.status(403).json({ ok: false, error: "Ce code a atteint sa limite d'utilisation" });
+      }
+
+      // 3. Écrire l'accès invité (select-then-update/insert, sans dépendre d'une contrainte unique)
+      const nowIso = new Date().toISOString();
+      const { data: existing } = await supabase
+        .from("user_access")
+        .select("user_id")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (existing) {
+        await supabase.from("user_access")
+          .update({ status: "guest", guest_code: gc.code, approved_at: nowIso, updated_at: nowIso })
+          .eq("user_id", userId);
+      } else {
+        await supabase.from("user_access")
+          .insert({ user_id: userId, status: "guest", guest_code: gc.code, approved_at: nowIso, updated_at: nowIso });
+      }
+
+      // 4. Incrémenter le compteur d'utilisation du code
+      await supabase.from("guest_codes")
+        .update({ uses_count: (gc.uses_count || 0) + 1 })
+        .eq("id", gc.id);
+
+      return res.json({ ok: true, message: "Code invité validé — accès Premium activé" });
+    } catch (e) {
+      console.error("[send] validate-guest:", e.message);
+      return res.status(500).json({ ok: false, error: e.message });
+    }
+  }
+
 
   // ════════════════════════════════════════════════════════════════════════
   // ACQUISITION-STATS — Stats consolidées pour Pilotage (admin uniquement)
