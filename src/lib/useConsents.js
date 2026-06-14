@@ -122,14 +122,15 @@ export function useConsents() {
   }, [consents, isSignedIn, userId]);
 
   // ── Sync push_active / email_active depuis les rappels ───────────────────
-  // Appelé par useReminders après chaque changement de canal
+  // Appelé par useReminders après chaque changement de rappel.
+  // IMPORTANT : ne met à jour QUE les indicateurs informatifs push_active/email_active.
+  // notifications et marketing sont pilotés EXCLUSIVEMENT par les toggles de Paramètres —
+  // syncFromReminders ne doit JAMAIS les rabaisser (ancien bug qui écrasait le consentement
+  // et empêchait l'envoi des push pour presque tous les utilisateurs).
   const syncFromReminders = useCallback(async (reminders) => {
     if (!reminders || typeof reminders !== "object") return;
 
-    // ✅ FIX 26/05/2026 : filtrer pour ne garder QUE les objets réels
-    // Avant : Object.values(reminders).some(r => r?.enabled && r?.push)
-    //   → plantait si r était une string/bool/nombre (ancien format localStorage)
-    //   → message exact sur Safari iOS : "undefined is not an object (evaluating 'e.enabled')"
+    // Filtrer pour ne garder QUE les objets réels (guard ancien format localStorage)
     const vals = Object.values(reminders).filter(
       r => r !== null && typeof r === "object"
     );
@@ -137,17 +138,9 @@ export function useConsents() {
     const pushActive  = vals.some(r => r.enabled === true && r.push  === true);
     const emailActive = vals.some(r => r.enabled === true && r.email === true);
 
-    const patch = {
-      push_active:   pushActive,
-      email_active:  emailActive,
-      // Si aucun rappel push actif → désactiver notifications
-      notifications: pushActive  ? consents.notifications : false,
-      // Si aucun rappel email actif → désactiver marketing
-      marketing:     emailActive ? consents.marketing     : false,
-    };
-
-    await updateConsents(patch);
-  }, [consents, updateConsents]);
+    // On NE touche PLUS à notifications / marketing ici.
+    await updateConsents({ push_active: pushActive, email_active: emailActive });
+  }, [updateConsents]);
 
   // ── showPushBanner : doit-on afficher la tuile "Activez les alertes" ? ──
   const showPushBanner = synced && !loading && (
