@@ -58,7 +58,10 @@ export function useSubscription() {
       const subscribed = meta.isSubscribed === true ||
                          meta.subscriptionStatus === "active" ||
                          meta.subscriptionStatus === "trialing";
-      if (subscribed) {
+      // Invité validé : flag guestAccess posé dans Clerk par validate-guest.
+      // Chemin fiable (lu par useUser, sans RLS ni fetch) — comme un abonné Stripe.
+      const guestAccess = meta.guestAccess === true;
+      if (subscribed || guestAccess) {
         if (!cancelled) { setTier("paid"); setLoading(false); }
         return;
       }

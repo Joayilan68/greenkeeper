@@ -312,7 +312,19 @@ module.exports = async function handler(req, res) {
         return res.status(500).json({ ok: false, error: "Statut non confirmé après écriture" });
       }
 
-      // 5. Incrémenter le compteur d'utilisation du code
+      // 5. Marquer le Premium invité dans Clerk publicMetadata (chemin fiable,
+      //    identique à un abonné Stripe — lu instantanément par useUser au rechargement).
+      try {
+        await fetch(`https://api.clerk.com/v1/users/${userId}/metadata`, {
+          method:  "PATCH",
+          headers: { "Authorization": `Bearer ${process.env.CLERK_SECRET_KEY}`, "Content-Type": "application/json" },
+          body:    JSON.stringify({ public_metadata: { guestAccess: true } }),
+        });
+      } catch (e) {
+        console.warn("[send] validate-guest clerk metadata:", e.message);
+      }
+
+      // 6. Incrémenter le compteur d'utilisation du code
       await supabase.from("guest_codes")
         .update({ uses_count: (gc.uses_count || 0) + 1 })
         .eq("id", gc.id);
