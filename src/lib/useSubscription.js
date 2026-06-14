@@ -15,8 +15,8 @@ function setAdminFlags() {
 }
 
 export function useSubscription() {
-  const { isSignedIn }     = useAuth();
-  const { user, isLoaded } = useUser();
+  const { isSignedIn, getToken } = useAuth();
+  const { user, isLoaded }       = useUser();
   const [tier, setTier]    = useState("free");
   const [isLoading, setLoading] = useState(true);
 
@@ -26,8 +26,6 @@ export function useSubscription() {
 
     (async () => {
       // ── Mode test (réservé aux emails admin) : simuler un compte Free ────────
-      // Activer  : window.Clerk.user.update({ unsafeMetadata: { force_free_for_test: true } })
-      // Désactiver : ...force_free_for_test: false
       if (user) {
         const email         = user.primaryEmailAddress?.emailAddress || "";
         const isAdminEmail  = ADMIN_EMAILS.includes(email);
@@ -65,28 +63,23 @@ export function useSubscription() {
         return;
       }
 
-      // 3. Premium invité — VÉRITÉ SERVEUR : user_access.status === "guest"
-      //    Lecture scopée par RLS (chacun ne lit que sa propre ligne).
+      // 3. Premium invité — VÉRITÉ SERVEUR via endpoint dédié.
+      //    On NE lit PLUS user_access côté client (bloqué par le RLS au rechargement).
+      //    Le serveur lit en service_role et nous répond { isGuest: true/false }.
       try {
-        const { supabase } = await import("./supabase");
-        const { data, error } = await supabase
-          .from("user_access")
-          .select("status")
-          .eq("user_id", user.id)
-          .maybeSingle();
-
-        // ── DIAGNOSTIC TEMPORAIRE — à retirer une fois la cause comprise ──
-        console.log("[MG360][guest-check] user_id:", user.id,
-                    "| data:", data,
-                    "| error:", error ? `${error.code || ""} ${error.message}` : "aucune");
-
-        if (!cancelled && data?.status === "guest") {
-          setTier("paid"); setLoading(false);
-          return;
+        const token = await getToken();
+        if (token) {
+          const res  = await fetch("/api/send?type=guest-status", {
+            method:  "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          });
+          const data = await res.json();
+          if (!cancelled && data?.isGuest) {
+            setTier("paid"); setLoading(false);
+            return;
+          }
         }
-      } catch (e) {
-        console.log("[MG360][guest-check] EXCEPTION:", e.message);
-      }
+      } catch { /* réseau indisponible — on retombe sur free */ }
 
       if (!cancelled) { setTier("free"); setLoading(false); }
     })();

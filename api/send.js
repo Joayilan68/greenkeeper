@@ -192,6 +192,42 @@ module.exports = async function handler(req, res) {
   const { type } = req.query;
 
   // ════════════════════════════════════════════════════════════════════════
+  // GUEST-STATUS — l'utilisateur a-t-il un accès invité ? (lecture SERVEUR)
+  // POST /api/send?type=guest-status   Bearer Clerk obligatoire
+  // Lit user_access en service_role → contourne le RLS (fiable au rechargement).
+  // ════════════════════════════════════════════════════════════════════════
+  if (type === "guest-status") {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader?.startsWith("Bearer ")) return res.status(401).json({ error: "Token manquant", isGuest: false });
+      const token = authHeader.replace("Bearer ", "");
+      let userId = null;
+      try {
+        const parts = token.split(".");
+        if (parts.length === 3) {
+          const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8"));
+          userId = payload.sub || payload.user_id;
+        }
+      } catch {}
+      if (!userId) return res.status(401).json({ error: "Token invalide", isGuest: false });
+
+      const { createClient } = require("@supabase/supabase-js");
+      const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+      const { data } = await supabase
+        .from("user_access")
+        .select("status")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      return res.json({ status: data?.status || null, isGuest: data?.status === "guest" });
+    } catch (e) {
+      console.error("[send] guest-status:", e.message);
+      return res.status(500).json({ error: e.message, isGuest: false });
+    }
+  }
+
+
+  // ════════════════════════════════════════════════════════════════════════
   // VALIDATE-GUEST — Valide un code invité → user_access.status = "guest"
   // POST /api/send?type=validate-guest   body: { code }   Bearer Clerk obligatoire
   // Tout est serveur (service_role) : le client n'accède jamais à guest_codes.
