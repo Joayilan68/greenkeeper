@@ -53,14 +53,24 @@ export function useSubscription() {
         return;
       }
 
-      // 2. Abonnement Stripe actif (via Clerk metadata, posé par le webhook)
-      const meta = user.publicMetadata || {};
+      // 2. Premium via Clerk metadata (Stripe OU invité validé).
+      //    On force user.reload() pour récupérer un guestAccess fraîchement posé
+      //    côté serveur : sinon la session garde l'ancien publicMetadata en cache.
+      let meta = user.publicMetadata || {};
       const subscribed = meta.isSubscribed === true ||
                          meta.subscriptionStatus === "active" ||
                          meta.subscriptionStatus === "trialing";
-      // Invité validé : flag guestAccess posé dans Clerk par validate-guest.
-      // Chemin fiable (lu par useUser, sans RLS ni fetch) — comme un abonné Stripe.
-      const guestAccess = meta.guestAccess === true;
+      let guestAccess = meta.guestAccess === true;
+
+      if (!subscribed && !guestAccess && typeof user.reload === "function") {
+        try {
+          await user.reload();
+          if (cancelled) return;
+          meta = user.publicMetadata || {};
+          guestAccess = meta.guestAccess === true;
+        } catch { /* reload impossible — on garde la valeur en cache */ }
+      }
+
       if (subscribed || guestAccess) {
         if (!cancelled) { setTier("paid"); setLoading(false); }
         return;
