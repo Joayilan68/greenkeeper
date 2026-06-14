@@ -14,7 +14,7 @@ export default function Settings() {
   const { user } = useUser();
   const { signOut } = useClerk();
   const { getToken } = useAuth();
-  const { isPaid, isAdmin } = useSubscription();
+  const { isPaid, isAdmin, refresh } = useSubscription();
   const { history } = useHistory();
   const { profile } = useProfile();
   const { locationName } = useWeather() || {};
@@ -83,8 +83,8 @@ export default function Settings() {
 
   // ══════════════════════════════════════════════════════════════════════════
   // CODE INVITÉ — valide un code → user_access.status = "guest" (serveur)
-  // Appelle /api/send?type=validate-guest. Au succès, on recharge pour que
-  // useSubscription relise le statut et active le Premium.
+  // Appelle /api/send?type=validate-guest. Au succès, on appelle refresh()
+  // pour basculer en Premium SANS recharger la page (reload en filet de sécurité).
   // ══════════════════════════════════════════════════════════════════════════
   const validateGuestCode = async () => {
     const code = guestCode.trim();
@@ -103,8 +103,15 @@ export default function Settings() {
       const data = await res.json();
 
       if (res.ok && data.ok) {
-        setGuestMsg({ ok: true, text: "✅ Code validé — accès Premium activé. Rechargement…" });
-        setTimeout(() => window.location.reload(), 1500);
+        setGuestMsg({ ok: true, text: "✅ Code validé — accès Premium activé !" });
+        try {
+          // Bascule en Premium sans recharger la page
+          await refresh();
+          setGuestLoading(false);
+        } catch {
+          // Filet de sécurité : si refresh() échoue, on retombe sur le rechargement fiable
+          setTimeout(() => window.location.reload(), 1500);
+        }
       } else {
         setGuestMsg({ ok: false, text: data.error || "Code invalide." });
         setGuestLoading(false);
