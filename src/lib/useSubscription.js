@@ -67,19 +67,26 @@ export function useSubscription() {
 
       // 3. Premium invité — VÉRITÉ SERVEUR : user_access.status === "guest"
       //    Lecture scopée par RLS (chacun ne lit que sa propre ligne).
-      //    Remplace l'ancien flag localStorage "mg360_guest_validated" (falsifiable).
       try {
         const { supabase } = await import("./supabase");
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from("user_access")
           .select("status")
           .eq("user_id", user.id)
           .maybeSingle();
+
+        // ── DIAGNOSTIC TEMPORAIRE — à retirer une fois la cause comprise ──
+        console.log("[MG360][guest-check] user_id:", user.id,
+                    "| data:", data,
+                    "| error:", error ? `${error.code || ""} ${error.message}` : "aucune");
+
         if (!cancelled && data?.status === "guest") {
           setTier("paid"); setLoading(false);
           return;
         }
-      } catch { /* réseau indisponible — on retombe sur free */ }
+      } catch (e) {
+        console.log("[MG360][guest-check] EXCEPTION:", e.message);
+      }
 
       if (!cancelled) { setTier("free"); setLoading(false); }
     })();
