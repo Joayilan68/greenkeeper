@@ -240,7 +240,7 @@ module.exports = async function handler(req, res) {
         return res.status(403).json({ ok: false, error: "Ce code a atteint sa limite d'utilisation" });
       }
 
-      // 3. Écrire l'accès invité (select-then-update/insert, sans dépendre d'une contrainte unique)
+      // 3. Écrire l'accès invité (select-then-update/insert) — AVEC contrôle d'erreur
       const nowIso = new Date().toISOString();
       const { data: existing } = await supabase
         .from("user_access")
@@ -248,16 +248,35 @@ module.exports = async function handler(req, res) {
         .eq("user_id", userId)
         .maybeSingle();
 
+      let writeErr = null;
       if (existing) {
-        await supabase.from("user_access")
+        const { error } = await supabase.from("user_access")
           .update({ status: "guest", guest_code: gc.code, approved_at: nowIso, updated_at: nowIso })
           .eq("user_id", userId);
+        writeErr = error;
       } else {
-        await supabase.from("user_access")
+        const { error } = await supabase.from("user_access")
           .insert({ user_id: userId, status: "guest", guest_code: gc.code, approved_at: nowIso, updated_at: nowIso });
+        writeErr = error;
       }
 
-      // 4. Incrémenter le compteur d'utilisation du code
+      if (writeErr) {
+        // L'écriture a échoué → on le DIT, au lieu de prétendre que c'est validé
+        console.error("[send] validate-guest write error:", writeErr.message);
+        return res.status(500).json({ ok: false, error: `Écriture accès échouée : ${writeErr.message}` });
+      }
+
+      // 4. Vérifier que la ligne est bien en "guest" (lecture de contrôle)
+      const { data: check } = await supabase
+        .from("user_access")
+        .select("status")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (check?.status !== "guest") {
+        return res.status(500).json({ ok: false, error: "Statut non confirmé après écriture" });
+      }
+
+      // 5. Incrémenter le compteur d'utilisation du code
       await supabase.from("guest_codes")
         .update({ uses_count: (gc.uses_count || 0) + 1 })
         .eq("id", gc.id);
