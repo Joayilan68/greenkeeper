@@ -64,27 +64,42 @@ export default function Register() {
     setError("");
     setLoading(true);
 
-    const payload = {
-      ...consents,
-      cgu: true,  // alias rétrocompatibilité (ancien nom dans useConsents)
-      date:    new Date().toISOString(),
-      version: "1.0",
+    // ── Payload Supabase : UNIQUEMENT les colonnes réelles de user_consents ──
+    // La table user_consents contient : cgu, confidentialite, notifications,
+    // marketing, data_resale, cookies, push_active, email_active, updated_at.
+    // L'UI utilise cgu_cgv (case CGU+CGV) et dataResale → on les mappe ici sur
+    // les vrais noms de colonnes. Les champs date/version n'existent PAS en base
+    // et provoquaient l'échec total de l'upsert (PGRST204) → on les retire.
+    const supabasePayload = {
+      cgu:             consents.cgu_cgv,       // case CGU+CGV → colonne cgu
+      confidentialite: consents.confidentialite,
+      notifications:   consents.notifications,
+      marketing:       consents.marketing,
+      data_resale:     consents.dataResale,    // dataResale (UI) → data_resale (colonne)
     };
 
     // ── PRIMAIRE — Sauvegarde Supabase via useConsents ───────────────────────
     let supabaseSuccess = false;
     try {
       if (updateConsents) {
-        await updateConsents(payload);
+        await updateConsents(supabasePayload);
         supabaseSuccess = true;
       }
     } catch (e) {
       console.warn("[Register] Supabase write failed, fallback localStorage:", e?.message);
     }
 
-    // ── SECOURS — localStorage (toujours écrit, comme cache + fallback) ──────
+    // ── SECOURS — localStorage (cache + fallback, format riche conservé) ─────
+    // Le cache local peut garder date/version/cgu_cgv pour l'affichage et le
+    // "skip" au prochain montage — ce sont des données locales, pas des colonnes.
+    const localPayload = {
+      ...consents,
+      cgu:     consents.cgu_cgv,   // pour que le check (c.cgu || c.cgu_cgv) reste vrai
+      date:    new Date().toISOString(),
+      version: "1.0",
+    };
     try {
-      localStorage.setItem("mg360_consents", JSON.stringify(payload));
+      localStorage.setItem("mg360_consents", JSON.stringify(localPayload));
     } catch (e) {
       console.error("[Register] localStorage write failed:", e?.message);
       // Si même le localStorage échoue et que Supabase a aussi échoué, on bloque
