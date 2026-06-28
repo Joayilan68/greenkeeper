@@ -289,6 +289,11 @@ Si la photo ne montre pas du gazon, retourne score_visuel à 0 et explique dans 
         model:       "qwen/qwen3.6-27b",
         max_tokens:  1500,
         temperature: 0.2,
+        // qwen est un modèle "thinking" : sans ces réglages, il enrobe sa réponse
+        // de raisonnement et le JSON.parse échoue (→ fallback "Analyse incomplète").
+        reasoning_effort: "none",                  // désactive le raisonnement (qwen3)
+        reasoning_format: "hidden",                // requis avec le JSON mode
+        response_format:  { type: "json_object" }, // force une sortie JSON valide
         messages: [{
           role: "user",
           content: [
