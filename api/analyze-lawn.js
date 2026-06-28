@@ -286,7 +286,7 @@ Si la photo ne montre pas du gazon, retourne score_visuel à 0 et explique dans 
         "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
       },
       body: JSON.stringify({
-        model:       "meta-llama/llama-4-scout-17b-16e-instruct",
+        model:       "qwen/qwen3.6-27b",
         max_tokens:  1500,
         temperature: 0.2,
         messages: [{
