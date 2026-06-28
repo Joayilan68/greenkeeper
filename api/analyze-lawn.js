@@ -251,6 +251,20 @@ Analyse cette photo de gazon et fournis un diagnostic complet.
 Contexte: ${profileCtx}. ${weatherCtx}. Score actuel: ${score}/100.
 ${reglesProfil ? `RÈGLES KB OBLIGATOIRES: ${reglesProfil}` : ""}
 
+BARÈME DE NOTATION (score_visuel) — ÉCHELLE EXIGEANTE, À RESPECTER STRICTEMENT :
+- 90-100 (exceptionnel) : qualité green de golf — densité parfaite, vert parfaitement uniforme, AUCUN défaut visible, coupe nette. TRÈS RARE, réservé à l'excellence absolue.
+- 75-89 (excellent) : très beau gazon, dense et homogène, seulement des défauts mineurs. Réservé aux pelouses vraiment exemplaires.
+- 60-74 (bon) : gazon sain et correct avec quelques imperfections visibles (densité moyenne, légères irrégularités, petites zones plus claires). C'EST ICI QUE SE SITUE UN BEAU GAZON ORDINAIRE BIEN ENTRETENU.
+- 45-59 (moyen) : défauts nets et visibles — zones clairsemées, jaunissements localisés, signes de stress marqués.
+- 30-44 (mauvais) : problèmes importants — zones mortes, maladie active, envahissement de mauvaises herbes.
+- 0-29 (critique) : gazon très dégradé, malade ou quasi inexistant.
+
+RÈGLES DE CALIBRAGE OBLIGATOIRES :
+1. Les notes >= 80 sont RARES et réservées aux gazons réellement exceptionnels. Un beau gazon vert et dense "normal" se situe entre 60 et 74, PAS à 90.
+2. Ne pénalise QUE les défauts réellement et clairement VISIBLES sur la photo. N'invente jamais un défaut supposé (compactage, maladie, etc.) qui ne se voit pas distinctement.
+3. La météo (chaleur, sécheresse, pluie) n'est PAS un défaut du gazon : signale-la en conseil/action si pertinent, mais ne fais PAS chuter le score_visuel à cause des conditions climatiques.
+4. Sois exigeant mais juste : un gazon correct ne mérite ni 33 (trop sévère) ni 90 (trop généreux).
+
 Réponds UNIQUEMENT avec ce JSON valide (sans balises markdown, sans texte avant ou après) :
 {
   "etat_general": "excellent|bon|moyen|mauvais|critique",
@@ -286,9 +300,14 @@ Si la photo ne montre pas du gazon, retourne score_visuel à 0 et explique dans 
         "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
       },
       body: JSON.stringify({
-        model:       "meta-llama/llama-4-scout-17b-16e-instruct",
+        model:       "qwen/qwen3.6-27b",
         max_tokens:  1500,
         temperature: 0.2,
+        // qwen est un modèle "thinking" : sans ces réglages, il enrobe sa réponse
+        // de raisonnement et le JSON.parse échoue (→ fallback "Analyse incomplète").
+        reasoning_effort: "none",                  // désactive le raisonnement (qwen3)
+        reasoning_format: "hidden",                // requis avec le JSON mode
+        response_format:  { type: "json_object" }, // force une sortie JSON valide
         messages: [{
           role: "user",
           content: [
