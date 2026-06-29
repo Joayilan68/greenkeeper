@@ -173,9 +173,13 @@ module.exports = async function handler(req, res) {
           "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
         },
         body: JSON.stringify({
-          model:       "llama-3.1-8b-instant",
-          max_tokens:  800,
-          temperature: 0.7,
+          model:                 "openai/gpt-oss-20b",
+          max_completion_tokens: 800,
+          temperature:           0.7,
+          // gpt-oss est un modèle de raisonnement : on désactive le raisonnement
+          // visible pour ne récupérer que le texte de recommandation final.
+          reasoning_effort:  "low",
+          include_reasoning: false,
           messages:    [{ role: "user", content: prompt }],
         }),
       }
