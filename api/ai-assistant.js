@@ -112,9 +112,14 @@ RÈGLES :
         "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
       },
       body: JSON.stringify({
-        model:       "llama-3.1-8b-instant",
-        max_tokens:  600,
-        temperature: 0.7,
+        model:                 "openai/gpt-oss-20b",
+        max_completion_tokens: 600,
+        temperature:           0.7,
+        // gpt-oss est un modèle de raisonnement : sans ces réglages, il peut
+        // renvoyer son raisonnement interne dans la réponse. On le désactive
+        // pour que Bob ne renvoie QUE sa réponse finale.
+        reasoning_effort:  "low",   // raisonnement minimal (réponses simples + rapides)
+        include_reasoning: false,   // ne pas inclure le raisonnement dans la réponse
         messages: [
           { role:"system", content: systemPrompt },
           ...messages
