@@ -14,6 +14,19 @@ const supabase = createClient(
 
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 
+// ── DOCTRINE MONGAZON360 ──────────────────────────────────────────────────────
+// Règles officielles de l'app, injectées en message system pour que les
+// recommandations IA restent cohérentes avec ce que l'app préconise.
+// (Identique à la doctrine du chat Bob — ai-assistant.js.)
+const DOCTRINE_MG360 = `Tu es l'assistant agronomique de l'application Mongazon360™. Tes recommandations doivent respecter IMPÉRATIVEMENT la doctrine officielle suivante :
+- ARROSAGE : toujours recommander tôt LE MATIN (jamais le soir). L'arrosage matinal limite les maladies fongiques et l'évaporation.
+- FRÉQUENCE ARROSAGE : environ 2x/semaine en conditions normales, davantage en été/forte chaleur, jamais par forte pluie (≥8mm).
+- HAUTEUR DE TONTE selon le type de gazon : ombre/mi-ombre 6-8cm · rustique 7-10cm · sport 3-4cm (jamais sous 2,5cm) · standard 4-5cm.
+- OBJECTIF NATUREL : si l'objectif de l'utilisateur est "naturel", ne recommander QUE des produits bio/organiques (engrais organique, soufre anti-mousse, désherbage manuel) — jamais de produits chimiques.
+- BERMUDA EN HIVER (nov-mars) : la couleur brune est une dormance normale, ne recommander aucune intervention.
+- RÈGLE MAÎTRESSE : tes recommandations doivent toujours être COHÉRENTES avec ce que l'application Mongazon360 préconise. Ne contredis jamais l'app.
+- Réponds toujours en français.`;
+
 // ── Limites par tier ──────────────────────────────────────────────────────────
 const LIMITS = {
   admin:   Infinity, // illimité — Jordan uniquement
@@ -180,7 +193,10 @@ module.exports = async function handler(req, res) {
           // visible pour ne récupérer que le texte de recommandation final.
           reasoning_effort:  "low",
           include_reasoning: false,
-          messages:    [{ role: "user", content: prompt }],
+          messages: [
+            { role: "system", content: DOCTRINE_MG360 },
+            { role: "user",   content: prompt },
+          ],
         }),
       }
     );
