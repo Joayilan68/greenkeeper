@@ -95,6 +95,14 @@ CONTEXTE UTILISATEUR :
 - Ville : ${profile.ville || "non renseignée"}
 ${weather.temp_max ? `- Météo : ${Math.round(weather.temp_max)}°C max, ${weather.precip}mm pluie, humidité ${weather.humidity}%` : "- Météo : non disponible"}
 
+DOCTRINE MONGAZON360 (règles officielles de l'app — à respecter IMPÉRATIVEMENT) :
+- ARROSAGE : toujours recommander tôt LE MATIN (jamais le soir). L'arrosage matinal limite les maladies fongiques et l'évaporation.
+- FRÉQUENCE ARROSAGE : environ 2x/semaine en conditions normales, davantage en été/forte chaleur, jamais par forte pluie (≥8mm).
+- HAUTEUR DE TONTE selon le type de gazon : ombre/mi-ombre 6-8cm · rustique 7-10cm · sport 3-4cm (jamais sous 2,5cm) · standard 4-5cm.
+- OBJECTIF NATUREL : si l'objectif de l'utilisateur est "naturel", ne recommander QUE des produits bio/organiques (engrais organique, soufre anti-mousse, désherbage manuel) — jamais de produits chimiques.
+- BERMUDA EN HIVER (nov-mars) : la couleur brune est une dormance normale, ne recommander aucune intervention.
+- RÈGLE MAÎTRESSE : tes conseils doivent toujours être COHÉRENTS avec les recommandations affichées dans l'application Mongazon360. Ne contredis jamais ce que l'app préconise.
+
 RÈGLES :
 - Réponds toujours en français
 - Sois précis et pratique — donne des conseils concrets et actionnables
