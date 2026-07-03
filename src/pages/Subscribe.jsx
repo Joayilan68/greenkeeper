@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth, useUser } from "@clerk/clerk-react";
 import { appShell, btn, card } from "../lib/styles";
+import { isAndroidTWA } from "../lib/platform";
 
 // ════════════════════════════════════════════════════════════════════════════
 // SUBSCRIBE — Page de souscription Premium (avant Stripe Checkout)
@@ -86,6 +87,45 @@ export default function Subscribe() {
     }
     setLoading(false);
   };
+
+  // ── Option C : conformité Google Play ──────────────────────────────────────
+  // Dans le TWA Android (app installée depuis le Play Store), on NE propose PAS
+  // l'achat Stripe in-app (règle Google Play Billing). On affiche un écran
+  // informatif, sans lien ni bouton de paiement (pas d'incitation externe).
+  // L'abonnement reste disponible via le navigateur web (mongazon360.fr).
+  if (isAndroidTWA()) {
+    return (
+      <div style={{ ...appShell, fontFamily:"'Nunito','Segoe UI',sans-serif", padding:"48px 20px 40px", overflowY:"auto" }}>
+        <div style={{ textAlign:"center", marginBottom:24 }}>
+          <img src="/mg360-mascot-transparent.png" alt="Mongazon360" style={{ width:72, height:72, objectFit:"contain", marginBottom:4 }} />
+          <div style={{ fontSize:22, fontWeight:800, color:"#a5d6a7", marginTop:8 }}>
+            Mongazon360<sup style={{ fontSize:8 }}>™</sup> Premium
+          </div>
+        </div>
+
+        <div style={{ ...card, textAlign:"center", padding:"20px 18px" }}>
+          <div style={{ fontSize:15, fontWeight:800, color:"#e8f5e9", marginBottom:12 }}>
+            🌿 Continuez à profiter de Mongazon360
+          </div>
+          <div style={{ fontSize:13, color:"#c8e6c9", lineHeight:1.6 }}>
+            La gestion de votre abonnement Premium se fait depuis votre espace
+            personnel sur notre site web.
+          </div>
+          <div style={{ fontSize:13, color:"#c8e6c9", lineHeight:1.6, marginTop:12 }}>
+            Rendez-vous sur <strong style={{ color:"#a5d6a7" }}>mongazon360.fr</strong> depuis
+            votre navigateur pour gérer votre compte.
+          </div>
+        </div>
+
+        <button
+          onClick={() => navigate("/")}
+          style={{ background:"rgba(255,255,255,0.1)", border:"1px solid rgba(255,255,255,0.2)", borderRadius:10, padding:"12px", color:"#e8f5e9", cursor:"pointer", fontSize:13, fontWeight:700, width:"100%", marginTop:20 }}
+        >
+          ← Retour à l'accueil
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div style={{ ...appShell, fontFamily:"'Nunito','Segoe UI',sans-serif", padding:"48px 20px 40px", overflowY:"auto" }}>
