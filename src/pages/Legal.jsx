@@ -142,7 +142,7 @@ export function MentionsLegales() {
 export function Confidentialite() {
   return (
     <div>
-      <PageHeader emoji="🔒" title="Politique de confidentialité" subtitle="Mise à jour : 26 mai 2026" />
+      <PageHeader emoji="🔒" title="Politique de confidentialité" subtitle="Mise à jour : 16 juillet 2026" />
       <div style={scroll}>
 
         <Section title="1. Préambule">
@@ -219,7 +219,7 @@ export function Confidentialite() {
             • <strong>Supabase Inc.</strong> (base de données — UE Frankfurt)<br/>
             • <strong>Clerk Inc.</strong> (authentification)<br/>
             • <strong>Stripe Inc.</strong> (traitement des paiements)<br/>
-            • <strong>Groq Inc.</strong> (inférence IA pour l'assistant conversationnel)<br/>
+            • <strong>Groq Inc.</strong> (inférence IA : assistant conversationnel, analyse des photos de diagnostic, génération des recommandations personnalisées)<br/>
             • <strong>Cloudinary Ltd</strong> (hébergement et traitement des photos de diagnostic)<br/>
             • <strong>Plus Five Five Inc. (Resend)</strong> (envoi des emails transactionnels)<br/>
             • <strong>Vercel Inc.</strong> (hébergement frontend)<br/>
@@ -240,7 +240,7 @@ export function Confidentialite() {
 
         <Section title="7. Transferts de données hors Union européenne">
           Les données personnelles des Utilisateurs sont stockées en Union européenne (Supabase, Frankfurt).<br/><br/>
-          Des transferts de données personnelles en dehors de l'Union européenne ne peuvent cependant être totalement exclus dans le cadre de l'utilisation de l'application, par l'intermédiaire des sous-traitants suivants notamment : <strong>Clerk Inc.</strong> (authentification), <strong>Stripe LLC</strong> (paiement), <strong>Groq Inc.</strong> (inférence IA), <strong>Cloudinary Ltd</strong> (traitement d'images), <strong>Plus Five Five, Inc./Resend</strong> (envoi d'emails), <strong>Vercel Inc.</strong> (hébergement frontend) et <strong>Google LLC/Gmail</strong> (support email). Des données personnelles pourraient alors être stockées et/ou des transferts de données pourraient intervenir en dehors de l'Union européenne, notamment aux États-Unis.<br/><br/>
+          Des transferts de données personnelles en dehors de l'Union européenne ne peuvent cependant être totalement exclus dans le cadre de l'utilisation de l'application, par l'intermédiaire des sous-traitants suivants notamment : <strong>Clerk Inc.</strong> (authentification), <strong>Stripe LLC</strong> (paiement), <strong>Groq Inc.</strong> (inférence IA : assistant conversationnel, analyse des photos de diagnostic, recommandations personnalisées), <strong>Cloudinary Ltd</strong> (traitement d'images), <strong>Plus Five Five, Inc./Resend</strong> (envoi d'emails), <strong>Vercel Inc.</strong> (hébergement frontend) et <strong>Google LLC/Gmail</strong> (support email). Des données personnelles pourraient alors être stockées et/ou des transferts de données pourraient intervenir en dehors de l'Union européenne, notamment aux États-Unis.<br/><br/>
           De plus, <strong>Supabase Inc.</strong> est une société de droit américain. Bien que les données soient hébergées en Union européenne (Frankfurt), un accès distant depuis les États-Unis ou Singapour ne peut être exclu (support, maintenance).<br/><br/>
           Le responsable de traitement s'engage à ce que ces transferts soient réalisés :<br/>
           • vers des pays présentant un niveau de protection dit adéquat au sens des autorités européennes de protection des données, ou<br/>
