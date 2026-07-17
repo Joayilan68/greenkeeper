@@ -12,7 +12,8 @@ import { card, scroll, btn } from "../lib/styles";
 // Décisions appliquées :
 //   - AGMG → Mongazon360 (correction erreur avocat)
 //   - Téléphone perso retiré (contact email uniquement)
-//   - Mentions Apple/Google Play conservées par anticipation
+//   - Mentions Apple/Google Play conservées par anticipation, sous réserve explicite
+//     (canaux stores non disponibles à ce jour — Option C, cf. CGV encadré + CGU art.3)
 //   - "[XXX]" → "💳 S'abonner — [montant][période]" (libellé réel app)
 //   - Suppression mentions "[à confirmer avec le client]"
 //   - Page Cookies : version simple basée sur fonctionnement réel app
@@ -193,7 +194,7 @@ export function Confidentialite() {
             <strong>Données de profil gazon :</strong> type de gazon, surface, type de sol, exposition, ville, objectifs d'entretien, budget.<br/><br/>
             <strong>Données d'activité :</strong> historique des interventions, GreenPoints, streak, classement, photos de diagnostic.<br/><br/>
             <strong>Données techniques :</strong> identifiants techniques, journaux de connexion, adresse IP, type de navigateur, langue.<br/><br/>
-            <strong>Données de paiement :</strong> en cas d'abonnement Premium, les données de paiement sont traitées directement par Stripe (web) ou Apple/Google Play (stores) — Mongazon360 n'a pas accès aux numéros de carte bancaire.<br/><br/>
+            <strong>Données de paiement :</strong> en cas d'abonnement Premium, les données de paiement sont traitées directement par Stripe — Mongazon360 n'a pas accès aux numéros de carte bancaire.<br/><br/>
             <strong>Données de géolocalisation :</strong> coordonnées GPS approximatives (avec votre consentement uniquement).
           </SubSection>
 
@@ -297,7 +298,7 @@ export function CGU() {
   const navigate = useNavigate();
   return (
     <div>
-      <PageHeader emoji="📜" title="Conditions Générales d'Utilisation" subtitle="Mise à jour : 27 mai 2026" />
+      <PageHeader emoji="📜" title="Conditions Générales d'Utilisation" subtitle="Mise à jour : 17 juillet 2026" />
       <div style={scroll}>
 
         <div style={{ ...card(), background:"rgba(33,150,243,0.06)", border:"1px solid rgba(33,150,243,0.2)" }}>
@@ -325,7 +326,7 @@ export function CGU() {
           Les identifiants de connexion sont personnels et confidentiels. L'Utilisateur est seul responsable de leur conservation et de leur protection contre la perte et l'accès non autorisé. Toute utilisation de l'Application réalisée à partir des identifiants de l'Utilisateur est réputée effectuée par ce dernier.<br/><br/>
           L'Utilisateur s'engage à informer Mongazon360, par tout moyen et dans les meilleurs délais, en cas de vol ou de perte de ses identifiants, ou en cas de vol ou de perte de son terminal, pouvant permettre à un tiers d'accéder à l'Application par le biais de ses identifiants.<br/><br/>
           L'Utilisateur peut demander la clôture de son compte à tout moment en adressant sa demande à l'adresse suivante : contact@mongazon360.fr. La suppression du compte intervient dans un délai de 45 jours à compter de la demande, sous réserve de l'abonnement Premium en cours le cas échéant.<br/><br/>
-          Lorsque l'abonnement Premium a été souscrit par l'intermédiaire de l'Apple App Store ou du Google Play Store, la suppression du compte n'emporte pas résiliation de l'abonnement. L'Utilisateur doit procéder séparément à la résiliation de son abonnement depuis les réglages de la plateforme concernée, conformément à l'article 5d des présentes.<br/><br/>
+          Lorsque l'abonnement Premium aura été souscrit par l'intermédiaire de l'Apple App Store ou du Google Play Store, ces canaux de souscription étant rendus disponibles dans l'Application, la suppression du compte n'emportera pas résiliation de l'abonnement. L'Utilisateur devra procéder séparément à la résiliation de son abonnement depuis les réglages de la plateforme concernée, conformément à l'article 5d des présentes.<br/><br/>
           En cas d'inactivité du compte pendant une durée de 24 mois, Mongazon360 adresse un email à l'Utilisateur pour l'informer de la suppression prochaine de son compte. En l'absence de réponse dans un délai de 45 jours, le compte et les données associées sont supprimés.
         </Section>
 
@@ -492,7 +493,7 @@ export function CGV() {
   const navigate = useNavigate();
   return (
     <div>
-      <PageHeader emoji="💳" title="Conditions Générales de Vente" subtitle="Mise à jour : 27 mai 2026" />
+      <PageHeader emoji="💳" title="Conditions Générales de Vente" subtitle="Mise à jour : 17 juillet 2026" />
       <div style={scroll}>
 
         <div style={{ ...card(), background:"rgba(33,150,243,0.06)", border:"1px solid rgba(33,150,243,0.2)" }}>
@@ -501,6 +502,16 @@ export function CGV() {
             <span onClick={() => navigate("/cgu")} style={{ color:"#a5d6a7", textDecoration:"underline", cursor:"pointer" }}>
               Conditions Générales d'Utilisation
             </span>{" "}qui restent applicables.
+          </div>
+        </div>
+
+        <div style={{ ...card(), background:"rgba(245,158,11,0.05)", border:"1px solid rgba(245,158,11,0.25)" }}>
+          <div style={{ fontSize:12, color:"#fbbf24", lineHeight:1.6 }}>
+            ⚠️ <strong>Canal de souscription actuellement disponible</strong><br/><br/>
+            <span style={{ color:"#e8f5e9" }}>
+              À ce jour, la souscription à l'abonnement Premium s'effectue exclusivement depuis le site web ou l'application web, le paiement étant traité par Stripe.<br/><br/>
+              Les stipulations des présentes visant la souscription par l'intermédiaire de l'Apple App Store ou du Google Play Store s'appliqueront lorsque ces canaux de souscription seront rendus disponibles dans l'Application. Elles sont sans objet tant que tel n'est pas le cas.
+            </span>
           </div>
         </div>
 
