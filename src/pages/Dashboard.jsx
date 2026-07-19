@@ -159,7 +159,7 @@ export default function Dashboard() {
       <div style={scroll}>
 
         {/* ── NOTIF PUSH ────────────────────────────────────────────────────── */}
-        {isSupported && isPaid && showPushBanner && (
+        {isSupported && showPushBanner && (
           <div style={{ background:"linear-gradient(135deg,rgba(27,94,32,0.6),rgba(13,43,26,0.8))", border:"1px solid rgba(102,187,106,0.35)", borderRadius:14, padding:"14px 16px", marginBottom:4, display:"flex", alignItems:"center", gap:12 }}>
             <span style={{ fontSize:24, flexShrink:0 }}>🔔</span>
             <div style={{ flex:1 }}>
