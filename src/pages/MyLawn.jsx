@@ -1,12 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useUser } from "@clerk/clerk-react";
 import { useProfile } from "../lib/useProfile";
 import { useHistory } from "../lib/useHistory";
 import { useWeather } from "../lib/useWeather";
 import { useSubscription } from "../lib/useSubscription";
-import { useConsents } from "../lib/useConsents";
-import { useReminders } from "../lib/useReminders";
 import { useRecommandations } from "../lib/useRecommandations";
 import { calcLawnScore } from "../lib/lawnScore";
 import { useDiagnostics } from "../lib/useDiagnostics";
@@ -31,50 +28,6 @@ const ACTION_TO_AMAZON = {
 
 // ── Fréquences agronomiques fixes (Knowledge Base v4) ─────────────────────────
 // Ces valeurs sont définitives — l'utilisateur ne les choisit pas.
-const REMINDER_TYPES = [
-  {
-    id: "tonte",
-    icon: "✂️",
-    label: "Tonte",
-    // Fréquence dynamique selon saison (calculée à l'affichage)
-    getFrequence: (month) => {
-      if (month >= 5 && month <= 8) return "tous les 4-5 jours (été)";
-      if (month >= 3 && month <= 10) return "tous les 5-7 jours (printemps/automne)";
-      return "pause hivernale";
-    },
-  },
-  {
-    id: "arrosage",
-    icon: "💧",
-    label: "Arrosage",
-    getFrequence: () => "selon météo et sol",
-  },
-  {
-    id: "engrais",
-    icon: "🌱",
-    label: "Engrais",
-    getFrequence: () => "délai min. 45 jours entre applications",
-  },
-  {
-    id: "fongicide",
-    icon: "💊",
-    label: "Traitement fongicide",
-    getFrequence: () => "si conditions à risque détectées",
-  },
-  {
-    id: "aeration",
-    icon: "🌀",
-    label: "Aération",
-    getFrequence: () => "1-2 fois/an (délai min. 90 jours)",
-  },
-  {
-    id: "desherbage",
-    icon: "🪴",
-    label: "Désherbage",
-    getFrequence: () => "délai min. 21 jours entre traitements",
-  },
-];
-
 // ── Data Phase 2 ─────────────────────────────────────────────────────────────
 const SOLS = [
   { id:"argileux", label:"Argileux",    icon:"🏔️" },
@@ -197,9 +150,6 @@ export default function MyLawn() {
   const { history = [] }          = useHistory();
   const { weather }               = useWeather() || {};
   const { isPaid = false }        = useSubscription() || {};
-  const { user }                  = useUser();
-  const { syncFromReminders }     = useConsents();
-  const { reminders, toggle, activeCount, syncToServer } = useReminders(syncFromReminders);
   const { diagnostics } = useDiagnostics(); // ✅ Déclaré en premier — utilisé dans calcCompletion et calcLawnScore
 
   // ── Débit arroseur (Premium) ────────────────────────────────────────────────
@@ -749,58 +699,6 @@ export default function MyLawn() {
             </div>
           );
         })()}
-
-        {/* ── 6. RAPPELS D'ENTRETIEN ──────────────────────────────────────────
-            Fréquences fixes calquées sur la Knowledge Base v4.
-            L'utilisateur active/désactive — il ne choisit pas la fréquence.
-        ── */}
-        {isPaid && (
-          <div style={card()}>
-            <div style={cardTitle}>
-              <span>🔔 Rappels d'entretien</span>
-              <span style={{ fontSize:11, color:"#66BB6A" }}>{activeCount} actif{activeCount > 1 ? "s" : ""}</span>
-            </div>
-            <div style={{ fontSize:12, color:"#81c784", marginBottom:12, lineHeight:1.5 }}>
-              Activez les rappels souhaités. Les alertes sont envoyées chaque matin à 8h selon le calendrier agronomique de votre gazon.
-            </div>
-
-            {REMINDER_TYPES.map(type => {
-              const r        = reminders[type.id] || {};
-              const isActive = !!r.enabled;
-              const syncReminders = () => {
-                if (!user?.id) return;
-                const consents = JSON.parse(localStorage.getItem("mg360_consents") || "{}");
-                syncToServer(user.id, user.primaryEmailAddress?.emailAddress, consents);
-              };
-              return (
-                <div key={type.id} style={{ borderBottom:"1px solid rgba(255,255,255,0.05)", paddingBottom:12, marginBottom:12 }}>
-                  <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                    <span style={{ fontSize:22, minWidth:28 }}>{type.icon}</span>
-                    <div style={{ flex:1 }}>
-                      <div style={{ fontSize:13, fontWeight:700, color: isActive ? "#F1F8F2" : "#81c784" }}>
-                        {type.label}
-                      </div>
-                      <div style={{ fontSize:11, color:"#4a7c5c", marginTop:2 }}>
-                        {type.getFrequence(month)}
-                      </div>
-                    </div>
-                    <div
-                      onClick={() => { toggle(type.id); syncReminders(); }}
-                      style={{ width:40, height:22, borderRadius:11, cursor:"pointer", background: isActive ? "#66BB6A" : "rgba(255,255,255,0.15)", position:"relative", transition:"background 0.3s", flexShrink:0 }}
-                    >
-                      <div style={{ width:16, height:16, borderRadius:"50%", background:"#fff", position:"absolute", top:3, left: isActive ? 21 : 3, transition:"left 0.3s" }} />
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-
-            <div style={{ fontSize:11, color:"#f9a825", marginTop:4, padding:"8px 10px", background:"rgba(249,168,37,0.1)", border:"1px solid rgba(249,168,37,0.3)", borderRadius:8, lineHeight:1.5 }}>
-              ⚠️ Pour recevoir les notifications et rappels, activez Push et Emails dans{" "}
-              <span onClick={() => navigate("/parametres")} style={{ color:"#66BB6A", cursor:"pointer", textDecoration:"underline", fontWeight:700 }}>Paramètres</span>
-            </div>
-          </div>
-        )}
 
         {/* ── 7. CALIBRAGE ARROSEUR ── */}
         <div style={{ ...card(), background:"linear-gradient(135deg,rgba(25,118,210,0.1),rgba(13,43,26,0.6))", border:"1px solid rgba(100,181,246,0.3)" }}>

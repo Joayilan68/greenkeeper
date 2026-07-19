@@ -145,7 +145,9 @@ module.exports = async function handler(req, res) {
               }));
               updatedPrefs[r.id] = { ...updatedPrefs[r.id], lastSent: new Date().toISOString() };
               pushSent++;
-            } catch {}
+            } catch (e) {
+              console.warn("[CRON] push échec user", user_id, "rappel", r.id, "-", e.message, "statusCode:", e.statusCode || "n/a");
+            }
           }
         }
 

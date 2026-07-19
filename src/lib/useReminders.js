@@ -1,13 +1,11 @@
 // src/lib/useReminders.js
 // ─────────────────────────────────────────────────────────────────────────────
-// Supabase = source de vérité pour les préférences de rappels
-// localStorage = cache fallback si offline
+// Supabase = source UNIQUE de vérité pour les préférences de rappels.
+// Plus de cache localStorage — tout est lu/écrit directement en base.
 // ─────────────────────────────────────────────────────────────────────────────
 import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { supabase } from "./supabase";
-
-const KEY = "mg360_reminders";
 
 // Fréquences fixes calquées sur la Knowledge Base v4
 // L'utilisateur ne choisit pas la fréquence — elle est agronomique
@@ -26,37 +24,12 @@ const defaultReminders = () =>
     [r.id]: { enabled: false, lastSent: null, email: false, push: false }
   }), {});
 
-function loadLocal() {
-  try {
-    const saved = localStorage.getItem(KEY);
-    if (!saved) return defaultReminders();
-    const parsed = JSON.parse(saved);
-    // Merge avec les defaults pour ajouter de nouveaux types éventuels
-    // On supprime le champ "days" s'il existe — la fréquence est désormais fixe
-    const merged = { ...defaultReminders() };
-    Object.keys(merged).forEach(id => {
-      // ✅ FIX 26/05/2026 : vérifier que parsed[id] est bien un objet avant destructuration
-      // Avant : if (parsed[id]) { ... } → si parsed[id] était un booléen ou une string,
-      // la destructuration produisait un objet mais propageait le problème en aval
-      if (parsed[id] && typeof parsed[id] === "object") {
-        const { days: _removed, ...rest } = parsed[id]; // supprimer days résiduel
-        merged[id] = { ...merged[id], ...rest };
-      }
-    });
-    return merged;
-  } catch { return defaultReminders(); }
-}
-
-function saveLocal(r) {
-  try { localStorage.setItem(KEY, JSON.stringify(r)); } catch {}
-}
-
 export function useReminders(syncFromReminders) {
   const { userId, isSignedIn } = useAuth();
-  const [reminders, setReminders] = useState(loadLocal);
+  const [reminders, setReminders] = useState(defaultReminders);
   const [synced, setSynced]       = useState(false);
 
-  // ── Lecture Supabase au montage ────────────────────────────────────────────
+  // ── Lecture Supabase au montage — source unique ────────────────────────────
   useEffect(() => {
     if (!isSignedIn || !userId) return;
 
@@ -69,23 +42,21 @@ export function useReminders(syncFromReminders) {
           .single();
 
         if (!error && data?.preferences && Object.keys(data.preferences).length > 0) {
-          // Supabase prioritaire — nettoyer le champ "days" résiduel
+          // Nettoyer le champ "days" résiduel (ancien format obsolète)
           const remote = { ...defaultReminders() };
           Object.keys(remote).forEach(id => {
-            // ✅ FIX 26/05/2026 : même guard défensif côté Supabase
-            // Protège contre les anciennes lignes au format obsolète
             if (data.preferences[id] && typeof data.preferences[id] === "object") {
               const { days: _removed, ...rest } = data.preferences[id];
               remote[id] = { ...remote[id], ...rest };
             }
           });
           setReminders(remote);
-          saveLocal(remote);
         } else {
-          // Supabase vide → migration depuis localStorage
-          const local = loadLocal();
+          // Pas encore de ligne pour cet utilisateur → créer la ligne par défaut en base
+          const defaults = defaultReminders();
+          setReminders(defaults);
           await supabase.from("reminders").upsert(
-            { user_id: userId, preferences: local, consents: {}, updated_at: new Date().toISOString() },
+            { user_id: userId, preferences: defaults, consents: {}, updated_at: new Date().toISOString() },
             { onConflict: "user_id" }
           );
         }
@@ -96,12 +67,10 @@ export function useReminders(syncFromReminders) {
     })();
   }, [isSignedIn, userId]); // eslint-disable-line
 
-  // ── save : local immédiat + Supabase async ────────────────────────────────
+  // ── save : écrit directement en Supabase, plus de cache local ─────────────
   const save = (updated) => {
     setReminders(updated);
-    saveLocal(updated);
 
-    // Sync Supabase
     if (isSignedIn && userId) {
       supabase.from("reminders").upsert(
         { user_id: userId, preferences: updated, consents: {}, updated_at: new Date().toISOString() },
@@ -111,22 +80,24 @@ export function useReminders(syncFromReminders) {
       });
     }
 
-    // Sync consentements push/email (comportement existant)
+    // Sync consentements push/email dérivés (push_active / email_active)
     if (typeof syncFromReminders === "function") {
       syncFromReminders(updated).catch(() => {});
     }
   };
 
   const toggle = (id) => {
-    // ✅ FIX 26/05/2026 : garantir que reminders[id] est un objet avant spread
     const current = (reminders[id] && typeof reminders[id] === "object")
       ? reminders[id]
       : { enabled: false, lastSent: null, email: false, push: false };
-    save({ ...reminders, [id]: { ...current, enabled: !current.enabled } });
+    const nowEnabled = !current.enabled;
+    // ✅ FIX maillon 2 (18/07/2026) : activer un rappel active aussi son canal push,
+    // désactiver le rappel désactive le push. Avant : enabled changeait seul, push
+    // restait bloqué à false tant que toggleChannel(id,"push") n'était pas appelé séparément.
+    save({ ...reminders, [id]: { ...current, enabled: nowEnabled, push: nowEnabled } });
   };
 
   const toggleChannel = (id, channel) => {
-    // ✅ FIX 26/05/2026 : idem
     const current = (reminders[id] && typeof reminders[id] === "object")
       ? reminders[id]
       : { enabled: false, lastSent: null, email: false, push: false };
@@ -134,27 +105,12 @@ export function useReminders(syncFromReminders) {
   };
 
   const markSent = (id) => {
-    // ✅ FIX 26/05/2026 : idem
     const current = (reminders[id] && typeof reminders[id] === "object")
       ? reminders[id]
       : { enabled: false, lastSent: null, email: false, push: false };
     save({ ...reminders, [id]: { ...current, lastSent: new Date().toISOString() } });
   };
 
-  // ── syncToServer — endpoint push/email (comportement existant conservé) ───
-  const syncToServer = async (userId, email, consents) => {
-    if (!userId) return;
-    try {
-      const prefs = JSON.parse(localStorage.getItem(KEY) || "{}");
-      await fetch("/api/send?type=save-reminders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, email: email || null, preferences: prefs, consents: consents || {} }),
-      });
-    } catch {}
-  };
-
-  // ✅ FIX 26/05/2026 : filter défensif — accepte uniquement les objets
   const activeCount = Object.values(reminders || {}).filter(
     r => r !== null && typeof r === "object" && r.enabled === true
   ).length;
@@ -163,7 +119,6 @@ export function useReminders(syncFromReminders) {
   const getDueReminders = (history = []) => {
     if (!reminders || typeof reminders !== "object") return [];
     const safeHistory = Array.isArray(history) ? history : [];
-    // Intervalles agronomiques fixes KB v4
     const INTERVALLES = {
       tonte:     5,  // printemps/automne (été géré dynamiquement)
       arrosage:  3,
@@ -183,7 +138,6 @@ export function useReminders(syncFromReminders) {
     };
     return REMINDER_TYPES
       .filter(type => {
-        // ✅ FIX 26/05/2026 : vérifier que c'est un objet avant d'accéder à .enabled
         const r = reminders[type.id];
         return r && typeof r === "object" && r.enabled === true;
       })
@@ -193,5 +147,5 @@ export function useReminders(syncFromReminders) {
       });
   };
 
-  return { reminders, toggle, toggleChannel, markSent, activeCount, getDueReminders, syncToServer, synced };
+  return { reminders, toggle, toggleChannel, markSent, activeCount, getDueReminders, synced };
 }
