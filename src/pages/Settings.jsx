@@ -19,7 +19,7 @@ export default function Settings() {
   const { history } = useHistory();
   const { profile } = useProfile();
   const { locationName } = useWeather() || {};
-  const { permission, subscribe: subscribePush, isSupported } = usePushNotifications(user?.id);
+  const { permission, subscribe: subscribePush, isSupported, sendTestNotification } = usePushNotifications(user?.id);
   const { consents, updateConsent, updateConsents, syncFromReminders } = useConsents();
   const { enableAll, disableAll } = useReminders(syncFromReminders);
 
@@ -453,6 +453,15 @@ export default function Settings() {
               </div>
             );
           })}
+
+          {consents.notifications && permission === "granted" && (
+            <div
+              onClick={() => sendTestNotification()}
+              style={{ marginTop:10, fontSize:12, fontWeight:600, color:"#a5d6a7", cursor:"pointer", textAlign:"center", padding:"8px 0", border:"1px solid rgba(165,214,167,0.3)", borderRadius:8 }}
+            >
+              🔔 Envoyer une notification de test
+            </div>
+          )}
 
           {consents.lastUpdated && (
             <div style={{ fontSize:10, color:"#4a7c5c", marginTop:8 }}>
