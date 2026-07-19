@@ -7,7 +7,7 @@ import { useProfile } from "../lib/useProfile";
 import { useWeather } from "../lib/useWeather";
 import { usePushNotifications } from "../lib/usePushNotifications";
 import { useConsents } from "../lib/useConsents";
-import { useReminders, REMINDER_TYPES } from "../lib/useReminders";
+import { useReminders } from "../lib/useReminders";
 import { card, cardTitle, btn, scroll } from "../lib/styles";
 
 export default function Settings() {
@@ -21,7 +21,7 @@ export default function Settings() {
   const { locationName } = useWeather() || {};
   const { permission, subscribe: subscribePush, isSupported } = usePushNotifications(user?.id);
   const { consents, updateConsent, updateConsents, syncFromReminders } = useConsents();
-  const { reminders, toggle: toggleReminder, activeCount } = useReminders(syncFromReminders);
+  const { enableAll, disableAll } = useReminders(syncFromReminders);
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showAccountDeleteConfirm, setShowAccountDeleteConfirm] = useState(false);
@@ -56,8 +56,10 @@ export default function Settings() {
         await subscribePush();
       }
       await updateConsent("notifications", true);
+      enableAll(); // ✅ active tous les types de rappels (tonte, arrosage, engrais...) en un seul geste
     } else {
       await updateConsent("notifications", false);
+      disableAll(); // ✅ désactive tous les types de rappels en même temps
     }
   };
 
@@ -413,7 +415,7 @@ export default function Settings() {
           </div>
 
           {[
-            { key:"notifications", label:"🔔 Notifications push", desc:"Alertes téléphone — rappels d'entretien et météo" },
+            { key:"notifications", label:"🔔 Notifications push", desc:"Alertes téléphone — active tous les rappels d'entretien (tonte, arrosage, engrais...) et météo" },
             { key:"dataResale",    label:"📊 Données anonymisées", desc:"Partage avec partenaires jardinage — jamais nom/email" },
             { key:"marketing",     label:"📧 Emails Mongazon360", desc:"Conseils saisonniers et nouveautés" },
             { key:"cookies",       label:"🍪 Cookies analytiques", desc:"Amélioration de l'expérience — données anonymes" },
@@ -451,40 +453,6 @@ export default function Settings() {
               </div>
             );
           })}
-
-          {isPaid && (
-            <div style={{ marginTop:12, paddingTop:12, borderTop:"1px solid rgba(255,255,255,0.08)" }}>
-              <div style={{ fontSize:12, fontWeight:600, color:"#81c784", marginBottom:8 }}>
-                Rappels d'entretien actifs ({activeCount})
-              </div>
-              {REMINDER_TYPES.map(type => {
-                const r = reminders[type.id] || {};
-                const isActive = !!r.enabled;
-                return (
-                  <div key={type.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 0", borderBottom:"1px solid rgba(255,255,255,0.04)" }}>
-                    <div style={{ flex:1 }}>
-                      <div style={{ fontSize:12, fontWeight:600 }}>{type.icon} {type.label}</div>
-                      <div style={{ fontSize:10, color:"#4a7c5c", marginTop:1 }}>{type.desc}</div>
-                    </div>
-                    <div
-                      onClick={async () => {
-                        const activating = !isActive;
-                        toggleReminder(type.id);
-                        // Pré-arme la souscription technique — le consentement RGPD "notifications"
-                        // reste exclusivement piloté par le toggle ci-dessus (handleNotifToggle)
-                        if (activating && isSupported && permission !== "granted") {
-                          await subscribePush();
-                        }
-                      }}
-                      style={{ width:36, height:20, borderRadius:10, cursor:"pointer", background: isActive ? "#66BB6A" : "rgba(255,255,255,0.15)", position:"relative", transition:"background 0.2s", flexShrink:0, marginLeft:8 }}
-                    >
-                      <div style={{ width:14, height:14, borderRadius:"50%", background:"#fff", position:"absolute", top:3, left: isActive ? 19 : 3, transition:"left 0.2s" }} />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
 
           {consents.lastUpdated && (
             <div style={{ fontSize:10, color:"#4a7c5c", marginTop:8 }}>

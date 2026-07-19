@@ -104,6 +104,27 @@ export function useReminders(syncFromReminders) {
     save({ ...reminders, [id]: { ...current, [channel]: !current[channel] } });
   };
 
+  // ✅ Ajout (18/07/2026) : active/désactive TOUS les types de rappels en un seul
+  // geste — utilisé par le toggle unique "Notifications push" des Réglages.
+  // Conserve lastSent existant pour ne pas fausser les intervalles agronomiques.
+  const enableAll = () => {
+    const updated = {};
+    REMINDER_TYPES.forEach(t => {
+      const current = reminders[t.id] || {};
+      updated[t.id] = { ...current, enabled: true, push: true };
+    });
+    save(updated);
+  };
+
+  const disableAll = () => {
+    const updated = {};
+    REMINDER_TYPES.forEach(t => {
+      const current = reminders[t.id] || {};
+      updated[t.id] = { ...current, enabled: false, push: false };
+    });
+    save(updated);
+  };
+
   const markSent = (id) => {
     const current = (reminders[id] && typeof reminders[id] === "object")
       ? reminders[id]
@@ -147,5 +168,5 @@ export function useReminders(syncFromReminders) {
       });
   };
 
-  return { reminders, toggle, toggleChannel, markSent, activeCount, getDueReminders, synced };
+  return { reminders, toggle, toggleChannel, enableAll, disableAll, markSent, activeCount, getDueReminders, synced };
 }
