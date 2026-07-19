@@ -133,6 +133,7 @@ module.exports = async function handler(req, res) {
         // ── Push : piloté par le SEUL consentement global "notifications" ──────
         const sub = subMap[user_id];
         if (userConsents.notifications && sub) {
+          let subExpired = false;
           for (const r of due) {
             try {
               await webpush.sendNotification(sub, JSON.stringify({
@@ -145,9 +146,18 @@ module.exports = async function handler(req, res) {
               }));
               updatedPrefs[r.id] = { ...updatedPrefs[r.id], lastSent: new Date().toISOString() };
               pushSent++;
-            } catch (e) {
-              console.warn("[CRON] push échec user", user_id, "rappel", r.id, "-", e.message, "statusCode:", e.statusCode || "n/a");
+            } catch (err) {
+              // On NE masque plus l'erreur : statusCode + body web-push sont loggés
+              const status = err && err.statusCode;
+              console.error(`[CRON][push] echec user=${user_id} reminder=${r.id} status=${status || "?"} detail=${(err && (err.body || err.message)) || err}`);
+              // 404 / 410 = souscription perimee (Gone) -> on la marque pour suppression
+              if (status === 404 || status === 410) subExpired = true;
             }
+          }
+          // Nettoyer la souscription perimee pour ne plus reessayer indefiniment
+          if (subExpired) {
+            await supabase.from("push_subscriptions").delete().eq("user_id", user_id);
+            console.warn(`[CRON][push] souscription perimee supprimee user=${user_id}`);
           }
         }
 
