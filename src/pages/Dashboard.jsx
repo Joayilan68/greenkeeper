@@ -8,6 +8,7 @@ import { MONTHLY_PLAN, MONTHS_FR, getWMO } from "../lib/lawn";
 import { calcLawnScore } from "../lib/lawnScore";
 import { usePushNotifications } from "../lib/usePushNotifications";
 import { useConsents } from "../lib/useConsents";
+import { useReminders } from "../lib/useReminders";
 import AlertBanner from "../components/AlertBanner";
 import OnboardingModal from "../components/OnboardingModal";
 import GreenScoreModal from "../components/GreenScoreModal";
@@ -31,7 +32,8 @@ export default function Dashboard() {
   const [showScoreInfo, setShowScoreInfo] = useState(false);
 
   const { permission, subscribe, sendTestNotification, isSupported } = usePushNotifications(user?.id);
-  const { consents, updateConsents, showPushBanner } = useConsents();
+  const { consents, updateConsents, showPushBanner, syncFromReminders } = useConsents();
+  const { enableAll } = useReminders(syncFromReminders);
 
   // ── Nouveaux hooks ──────────────────────────────────────────────────────────
   const { classementActif } = useSaison();
@@ -89,6 +91,7 @@ export default function Dashboard() {
     if (success) {
       await sendTestNotification();
       await updateConsents({ notifications: true });
+      enableAll(); // ✅ aligné sur Settings (21/07/2026) : sans rappels enabled, le cron n'envoie rien
     }
   };
 
@@ -159,32 +162,25 @@ export default function Dashboard() {
       <div style={scroll}>
 
         {/* ── NOTIF PUSH ────────────────────────────────────────────────────── */}
-        {isSupported && isPaid && showPushBanner && (
+        {isSupported && showPushBanner && (
           <div style={{ background:"linear-gradient(135deg,rgba(27,94,32,0.6),rgba(13,43,26,0.8))", border:"1px solid rgba(102,187,106,0.35)", borderRadius:14, padding:"14px 16px", marginBottom:4, display:"flex", alignItems:"center", gap:12 }}>
             <span style={{ fontSize:24, flexShrink:0 }}>🔔</span>
             <div style={{ flex:1 }}>
               <div style={{ fontSize:13, fontWeight:800, color:"#F1F8F2", marginBottom:3 }}>Activez les alertes</div>
               <div style={{ fontSize:12, color:"#81c784", lineHeight:1.5 }}>
-                {permission === "granted"
-                  ? "Activez au moins un rappel dans Mon Gazon pour recevoir des alertes."
-                  : "Recevez vos rappels d'entretien même app fermée."}
+                Recevez vos rappels d'entretien même app fermée.
               </div>
             </div>
             <div
               role="button"
-              onClick={() => permission === "granted"
-                ? navigate("/my-lawn", { state: { scrollTo: "rappels" } })
-                : handleActivatePush()
-              }
+              onClick={() => handleActivatePush()}
               onTouchEnd={(e) => {
                 e.preventDefault();
-                permission === "granted"
-                  ? navigate("/my-lawn", { state: { scrollTo: "rappels" } })
-                  : handleActivatePush();
+                handleActivatePush();
               }}
               style={{ flexShrink:0, padding:"8px 14px", borderRadius:10, background:"linear-gradient(135deg,#43a047,#2e7d32)", color:"#fff", fontWeight:800, fontSize:12, cursor:"pointer", userSelect:"none", WebkitTapHighlightColor:"transparent" }}
             >
-              {permission === "granted" ? "Rappels →" : "Activer"}
+              Activer
             </div>
           </div>
         )}
