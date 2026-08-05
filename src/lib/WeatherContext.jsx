@@ -57,7 +57,7 @@ export function WeatherProvider({ children, isPaid }) {
     setLoading(true); setError(null);
     const { lat, lon } = loc;
     try {
-      const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode,relative_humidity_2m_mean,windspeed_10m_max&timezone=auto&forecast_days=7`);
+      const r = await fetch(`/api/weather?lat=${lat}&lon=${lon}`);
       const d = await r.json();
       const daily = d.daily;
       const days = daily.time.map((date, i) => ({
