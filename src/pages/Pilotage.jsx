@@ -275,17 +275,6 @@ export default function Pilotage() {
     setLoadingRevenue(false);
   }
 
-  const sendReportNow = async () => {
-    setSending(true); setSent("");
-    try {
-      const res  = await fetch("/api/weekly-report");
-      const data = await res.json();
-      setSent(data.success ? "✅ Rapport envoyé à mongazon360@gmail.com !" : "❌ Erreur : " + data.error);
-    } catch (e) { setSent("❌ Erreur : " + e.message); }
-    setSending(false);
-    setTimeout(() => setSent(""), 5000);
-  };
-
   const sendTestAlert = async () => {
     setSending(true); setSent("");
     try {
@@ -698,15 +687,9 @@ export default function Pilotage() {
                 </div>
               )}
               <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-                <button onClick={sendReportNow} disabled={sending} style={{ ...btn.primary, fontSize:13, padding:"12px", opacity:sending?0.7:1 }}>
-                  {sending ? "⌛ Envoi..." : "📧 Envoyer rapport maintenant"}
-                </button>
                 <button onClick={sendTestAlert} disabled={sending} style={{ ...btn.ghost, fontSize:13, opacity:sending?0.7:1 }}>
                   🧪 Tester l'alerte email
                 </button>
-              </div>
-              <div style={{ fontSize:10, color:"#4a7c5c", marginTop:10, textAlign:"center" }}>
-                📅 Rapport automatique chaque lundi à 8h00 → mongazon360@gmail.com
               </div>
             </div>
           </>
