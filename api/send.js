@@ -73,7 +73,12 @@ module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Admin-Secret");
   if (req.method === "OPTIONS") return res.status(200).end();
 
-  // ── GET = CRON QUOTIDIEN (8h00 via Vercel) ────────────────────────────────
+  // ── GET = CRON (matin 8h / soir 17h locale via Vercel) ────────────────────
+  // Itération 2a : PUSH piloté par le moteur intelligent (notificationEngine).
+  //   ?slot=matin (défaut) → priorité la plus haute disponible (niveaux 2-6)
+  //   ?slot=soir           → arrosage (N10, bilan hydrique ET₀)
+  // EMAIL de rappel entretien : logique historique CONSERVÉE (inchangée),
+  //   ne tourne qu'au créneau matin pour éviter les doublons.
   if (req.method === "GET") {
     try {
       const { createClient } = require("@supabase/supabase-js");
@@ -88,83 +93,115 @@ module.exports = async function handler(req, res) {
         process.env.VAPID_PRIVATE_KEY
       );
 
-      // Récupérer rappels + souscriptions + consentements (source de vérité)
-      const [{ data: remindersData }, { data: subsData }, { data: consentsData }] = await Promise.all([
+      const { decideNotification, appendNotifLog } = require("./notificationEngine.cjs");
+
+      // Créneau courant (matin par défaut si non précisé)
+      const slot = (req.query.slot === "soir") ? "soir" : "matin";
+      const today = new Date().toISOString().slice(0, 10);
+      const month = new Date().getMonth() + 1;
+
+      // Récupérer rappels + souscriptions + consentements + profils
+      const [{ data: remindersData }, { data: subsData }, { data: consentsData }, { data: profilesData }] = await Promise.all([
         supabase.from("reminders").select("*"),
         supabase.from("push_subscriptions").select("*"),
         supabase.from("user_consents").select("user_id, notifications, marketing"),
+        supabase.from("profiles").select("user_id, data"),
       ]);
 
       const subMap = {};
       (subsData || []).forEach(s => { subMap[s.user_id] = s.subscription; });
-
-      // Consentements lus depuis user_consents (et NON reminders.consents qui est toujours {})
       const consentMap = {};
       (consentsData || []).forEach(c => { consentMap[c.user_id] = c; });
+      const profileMap = {};
+      (profilesData || []).forEach(p => { profileMap[p.user_id] = p.data || {}; });
 
-      // Intervalles agronomiques fixes (KB v4) — alignés sur useReminders.getDueReminders
-      const INTERVALLES = { tonte:5, arrosage:3, engrais:45, fongicide:14, aeration:90, desherbage:21 };
+      // Cache météo par zone arrondie (1 fetch/zone/exécution → protège le quota)
+      const weatherCache = {};
+      async function getWeatherForUser(profile) {
+        const lat = profile && profile.lat;
+        const lon = profile && profile.lon;
+        if (typeof lat !== "number" || typeof lon !== "number") return null;
+        const key = `${lat.toFixed(2)}_${lon.toFixed(2)}`;
+        if (key in weatherCache) return weatherCache[key];
+        try {
+          const base = process.env.SELF_BASE_URL || "https://mongazon360.fr";
+          const r = await fetch(`${base}/api/weather?lat=${lat}&lon=${lon}&premium=true`);
+          if (!r.ok) { weatherCache[key] = null; return null; }
+          const data = await r.json();
+          const d = data.daily || {};
+          // On expose au moteur la météo du JOUR (index 0)
+          const w = {
+            temp_min: d.temperature_2m_min ? d.temperature_2m_min[0] : null,
+            temp_max: d.temperature_2m_max ? d.temperature_2m_max[0] : null,
+            precip:   d.precipitation_sum  ? d.precipitation_sum[0]  : null,
+            wind:     d.windspeed_10m_max  ? d.windspeed_10m_max[0]  : null,
+            soil_temp: d.soil_temp ? d.soil_temp[0] : null,
+            et0:      d.et0 ? d.et0[0] : null,
+          };
+          weatherCache[key] = w;
+          return w;
+        } catch (e) {
+          console.error("cron weather:", e.message);
+          weatherCache[key] = null;
+          return null;
+        }
+      }
 
-      let pushSent = 0, emailSent = 0;
-      const today = new Date().toISOString().slice(0, 10);
+      let pushSent = 0, emailSent = 0, skipped = 0;
 
       for (const row of (remindersData || [])) {
-        const { user_id, email, preferences } = row;
+        const { user_id, email, preferences, notif_log } = row;
         const prefs = preferences || {};
         const userConsents = consentMap[user_id] || {};
-        const due = [];
-
-        // Calculer rappels dus (intervalles agronomiques, plus de r.days)
-        for (const [id, r] of Object.entries(prefs)) {
-          if (!r || typeof r !== "object" || !r.enabled) continue;
-          const lastSent = r.lastSent ? new Date(r.lastSent) : null;
-          const daysSince = lastSent
-            ? Math.floor((Date.now() - lastSent.getTime()) / 86400000)
-            : 999;
-          if (daysSince >= (INTERVALLES[id] || 7)) {
-            const info = REMINDER_LABELS[id] || { icon:"🌿", label:id, desc:"" };
-            due.push({ id, ...r, ...info });
-          }
-        }
-
-        if (!due.length) continue;
-        const updatedPrefs = { ...prefs };
-
-        // ── Push : piloté par le SEUL consentement global "notifications" ──────
+        const profile = profileMap[user_id] || {};
         const sub = subMap[user_id];
+
+        const weather = (userConsents.notifications && sub) || (userConsents.marketing && email)
+          ? await getWeatherForUser(profile)
+          : null;
+
+        // Décision UNIQUE du moteur (sert au push ET à l'email)
+        const decision = decideNotification({
+          profile, weather,
+          reminderPrefs: prefs,
+          history: Array.isArray(profile.history) ? profile.history : [],
+          notifLog: notif_log,
+          month, slot, today,
+          gami: profile.gamification || null,
+        });
+
+        if (!decision) continue;
+
+        let logUpdated = notif_log;
+
+        // ── PUSH : toute décision, si consentement + subscription ─────────────
         if (userConsents.notifications && sub) {
-          let subExpired = false;
-          for (const r of due) {
-            try {
-              await webpush.sendNotification(sub, JSON.stringify({
-                title: `🌿 Mongazon360 — ${r.label}`,
-                body:  `Il est temps de faire votre ${r.label.toLowerCase()} !`,
-                icon:  "/icon-192.png",
-                tag:   `reminder-${r.id}`,
-                url:   "/today",
-                actionRoute: "/today",
-              }));
-              updatedPrefs[r.id] = { ...updatedPrefs[r.id], lastSent: new Date().toISOString() };
-              pushSent++;
-            } catch (err) {
-              // On NE masque plus l'erreur : statusCode + body web-push sont loggés
-              const status = err && err.statusCode;
-              console.error(`[CRON][push] echec user=${user_id} reminder=${r.id} status=${status || "?"} detail=${(err && (err.body || err.message)) || err}`);
-              // 404 / 410 = souscription perimee (Gone) -> on la marque pour suppression
-              if (status === 404 || status === 410) subExpired = true;
-            }
-          }
-          // Nettoyer la souscription perimee pour ne plus reessayer indefiniment
-          if (subExpired) {
-            await supabase.from("push_subscriptions").delete().eq("user_id", user_id);
-            console.warn(`[CRON][push] souscription perimee supprimee user=${user_id}`);
+          try {
+            await webpush.sendNotification(sub, JSON.stringify({
+              title: decision.title,
+              body:  decision.body,
+              icon:  "/icon-192.png",
+              tag:   decision.tag,
+              url:   decision.url,
+              actionRoute: decision.url,
+            }));
+            logUpdated = appendNotifLog(logUpdated, {
+              date: today, priority: decision.priority, type: decision.type, slot,
+            });
+            pushSent++;
+          } catch (e) {
+            console.error("cron push:", user_id, e.message);
+            skipped++;
           }
         }
 
-        // ── Email ───────────────────────────────────────────────────────────
-        if (userConsents.marketing && email) {
-          const emailDue = due.filter(r => r.email);
-          if (emailDue.length) {
+        // ── EMAIL : UNIQUEMENT urgences niveau 1, max 1/jour ──────────────────
+        // Consentement marketing requis. Plafond via notif_log (email_sent flag du jour).
+        if (decision.priority === 1 && userConsents.marketing && email) {
+          const alreadyEmailedToday = (logUpdated && Array.isArray(logUpdated.history))
+            ? logUpdated.history.some(h => h.date === today && h.channel === "email")
+            : false;
+          if (!alreadyEmailedToday) {
             try {
               const emailRes = await fetch("https://api.resend.com/emails", {
                 method: "POST",
@@ -172,31 +209,36 @@ module.exports = async function handler(req, res) {
                 body: JSON.stringify({
                   from:    "Mongazon360 <bonjour@mongazon360.fr>",
                   to:      [email],
-                  subject: `🌿 [Mongazon360™] Rappel : ${emailDue.map(r => r.label).join(", ")}`,
-                  html:    buildReminderHtml(emailDue, "Jardinier", {}),
+                  subject: `🌿 [Mongazon360™] ${decision.title}`,
+                  html:    buildReminderHtml(
+                             [{ icon: "⚠️", label: decision.title, desc: decision.body }],
+                             "Jardinier", profile
+                           ),
                 }),
               });
               const d = await emailRes.json();
               if (!d.error) {
-                emailDue.forEach(r => {
-                  updatedPrefs[r.id] = { ...updatedPrefs[r.id], lastSent: new Date().toISOString() };
+                logUpdated = appendNotifLog(logUpdated, {
+                  date: today, priority: 1, type: decision.type, slot, channel: "email",
                 });
                 emailSent++;
               }
-            } catch {}
+            } catch (e) { console.error("cron email:", e.message); }
           }
         }
 
-        // Mettre à jour lastSent dans Supabase
-        await supabase.from("reminders")
-          .update({ preferences: updatedPrefs, updated_at: new Date().toISOString() })
-          .eq("user_id", user_id);
+        // Persister le notif_log si modifié
+        if (logUpdated !== notif_log) {
+          await supabase.from("reminders")
+            .update({ notif_log: logUpdated, updated_at: new Date().toISOString() })
+            .eq("user_id", user_id);
+        }
       }
 
-      console.log("[CRON] reminders:", remindersData?.length || 0, "subs:", subsData?.length || 0, "pushSent:", pushSent, "emailSent:", emailSent);
-      return res.json({ success: true, date: today, pushSent, emailSent, reminders: remindersData?.length || 0, subs: subsData?.length || 0 });
+      console.log(`[CRON ${slot}] reminders:`, remindersData?.length || 0, "pushSent:", pushSent, "emailSent:", emailSent, "skipped:", skipped);
+      return res.json({ success: true, date: today, slot, pushSent, emailSent, skipped, reminders: remindersData?.length || 0 });
     } catch (e) {
-      console.error("cron reminders:", e.message);
+      console.error("cron:", e.message);
       return res.status(500).json({ error: e.message });
     }
   }
