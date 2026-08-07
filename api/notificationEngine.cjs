@@ -313,10 +313,11 @@ function sameTypeSentToday(notifLog, today, type) {
 }
 
 // ── Mise à jour du notif_log (appelée par send.js après envoi réussi) ────────
-function appendNotifLog(notifLog, { date, priority, type, slot }) {
+function appendNotifLog(notifLog, entry) {
   const base = (notifLog && typeof notifLog === "object") ? notifLog : { history: [], ignored_streak: 0 };
   const history = Array.isArray(base.history) ? base.history.slice() : [];
-  history.push({ date, priority, type, slot });
+  // Conserve tous les champs fournis (date, priority, type, slot, et channel si présent)
+  history.push({ ...entry });
   // borne : ne garder que les 14 derniers jours
   const cutoff = new Date(Date.now() - 14 * 86400000).toISOString().slice(0, 10);
   const pruned = history.filter(h => h.date >= cutoff);
