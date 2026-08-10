@@ -7,7 +7,6 @@ import { useProfile } from "../lib/useProfile";
 import { useWeather } from "../lib/useWeather";
 import { usePushNotifications } from "../lib/usePushNotifications";
 import { useConsents } from "../lib/useConsents";
-import { useReminders } from "../lib/useReminders";
 import { card, cardTitle, btn, scroll } from "../lib/styles";
 
 export default function Settings() {
@@ -19,9 +18,8 @@ export default function Settings() {
   const { history } = useHistory();
   const { profile } = useProfile();
   const { locationName } = useWeather() || {};
-  const { permission, subscribe: subscribePush, isSupported, sendTestNotification } = usePushNotifications(user?.id);
-  const { consents, updateConsent, updateConsents, syncFromReminders } = useConsents();
-  const { enableAll, disableAll } = useReminders(syncFromReminders);
+  const { permission, subscribe: subscribePush, isSupported } = usePushNotifications(user?.id);
+  const { consents, updateConsent, updateConsents } = useConsents();
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showAccountDeleteConfirm, setShowAccountDeleteConfirm] = useState(false);
@@ -56,10 +54,8 @@ export default function Settings() {
         await subscribePush();
       }
       await updateConsent("notifications", true);
-      enableAll(); // ✅ active tous les types de rappels (tonte, arrosage, engrais...) en un seul geste
     } else {
       await updateConsent("notifications", false);
-      disableAll(); // ✅ désactive tous les types de rappels en même temps
     }
   };
 
@@ -335,7 +331,7 @@ export default function Settings() {
             { label:"Email",        val: user?.emailAddresses[0]?.emailAddress || "—" },
             { label:"Nom",          val: user?.fullName || "—" },
             { label:"Abonnement",   val: isAdmin ? "👑 Admin" : isPaid ? "✅ Premium" : "🆓 Gratuit" },
-            { label:"Interventions",val: `${history?.length || 0} entrées` },
+            { label:"Interventions",val: `${history?.length || 0} ${(history?.length || 0) > 1 ? "entrées" : "entrée"}` },
             { label:"Profil gazon", val: profile ? `${profile.pelouse || "?"} — ${profile.surface || "?"}m²` : "Non configuré" },
             { label:"Localisation", val: locationName || "Non définie" },
             { label:"Conservation", val: "Supabase (chiffré) + cache navigateur" },
@@ -415,7 +411,7 @@ export default function Settings() {
           </div>
 
           {[
-            { key:"notifications", label:"🔔 Notifications push", desc:"Alertes téléphone — active tous les rappels d'entretien (tonte, arrosage, engrais...) et météo" },
+            { key:"notifications", label:"🔔 Notifications push", desc:"Alertes téléphone — rappels d'entretien et météo" },
             { key:"dataResale",    label:"📊 Données anonymisées", desc:"Partage avec partenaires jardinage — jamais nom/email" },
             { key:"marketing",     label:"📧 Emails Mongazon360", desc:"Conseils saisonniers et nouveautés" },
             { key:"cookies",       label:"🍪 Cookies analytiques", desc:"Amélioration de l'expérience — données anonymes" },
@@ -453,15 +449,6 @@ export default function Settings() {
               </div>
             );
           })}
-
-          {consents.notifications && permission === "granted" && (
-            <div
-              onClick={() => sendTestNotification()}
-              style={{ marginTop:10, fontSize:12, fontWeight:600, color:"#a5d6a7", cursor:"pointer", textAlign:"center", padding:"8px 0", border:"1px solid rgba(165,214,167,0.3)", borderRadius:8 }}
-            >
-              🔔 Envoyer une notification de test
-            </div>
-          )}
 
           {consents.lastUpdated && (
             <div style={{ fontSize:10, color:"#4a7c5c", marginTop:8 }}>

@@ -19,9 +19,14 @@ function daysSinceISO(isoStr) {
   return Math.floor((Date.now() - new Date(isoStr).getTime()) / (1000 * 60 * 60 * 24));
 }
 
+// Valeur sentinelle : action JAMAIS réalisée (aucun historique).
+// Utilisée pour le calcul (pénalise le score comme "très en retard") ET
+// détectée à l'affichage pour montrer "Aucun ... enregistré" au lieu de "999j".
+const JAMAIS = 999;
+
 function lastAction(history, keyword) {
   const found = history?.filter(h => h.action?.toLowerCase().includes(keyword.toLowerCase()));
-  if (!found?.length) return 999;
+  if (!found?.length) return JAMAIS;
   return Math.min(...found.map(h => daysSince(h.date)));
 }
 
@@ -50,15 +55,15 @@ export function calcLawnScore({ weather, profile, history = [], month, diagnosti
   // ── 1. TONTE — KB v4 : été=4j, printemps=5j, hiver=14j ─────────────────
   const tonteFreq     = month >= 5 && month <= 8 ? 4 : month >= 3 && month <= 10 ? 5 : 14;
   const derniereTonte = lastAction(history, "tonte");
-  if (derniereTonte > tonteFreq * 3)      { deductEntretien += 25; issues.push({ icon:"✂️", label:`Tonte abandonnée depuis ${derniereTonte}j`, impact:-25 }); }
-  else if (derniereTonte > tonteFreq * 2) { deductEntretien += 18; issues.push({ icon:"✂️", label:`Tonte très en retard (${derniereTonte}j)`, impact:-18 }); }
+  if (derniereTonte > tonteFreq * 3)      { deductEntretien += 25; issues.push({ icon:"✂️", label: derniereTonte >= JAMAIS ? "Aucune tonte enregistrée" : `Tonte abandonnée depuis ${derniereTonte}j`, impact:-25 }); }
+  else if (derniereTonte > tonteFreq * 2) { deductEntretien += 18; issues.push({ icon:"✂️", label: derniereTonte >= JAMAIS ? "Aucune tonte enregistrée" : `Tonte très en retard (${derniereTonte}j)`, impact:-18 }); }
   else if (derniereTonte > tonteFreq + 2) { deductEntretien += 10; issues.push({ icon:"✂️", label:"Tonte en retard", impact:-10 }); }
   else if (derniereTonte <= tonteFreq)    { strengths.push({ icon:"✂️", label:"Tonte régulière ✓" }); }
 
   // ── 2. ENGRAIS — KB v4 : bloqué >90j, alerte >45j ──────────────────────
   if (plan?.engrais) {
     const dernierEngrais = lastAction(history, "engrais");
-    if (dernierEngrais > 90)      { deductNutriments += 15; issues.push({ icon:"🌱", label:`Aucun engrais depuis ${dernierEngrais}j`, impact:-15 }); }
+    if (dernierEngrais > 90)      { deductNutriments += 15; issues.push({ icon:"🌱", label: dernierEngrais >= JAMAIS ? "Aucun engrais enregistré" : `Aucun engrais depuis ${dernierEngrais}j`, impact:-15 }); }
     else if (dernierEngrais > 45) { deductNutriments += 8;  issues.push({ icon:"🌱", label:"Engrais en retard (délai 45j min)", impact:-8 }); }
     else                          { strengths.push({ icon:"🌱", label:"Fertilisation à jour ✓" }); }
   }
