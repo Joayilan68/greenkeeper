@@ -18,9 +18,9 @@ import Free from "./pages/Free";
 import Register from "./pages/Register";
 import Settings from "./pages/Settings";
 import Pilotage from "./pages/Pilotage";
+import Parcours from "./pages/Parcours";
 import { MentionsLegales, Confidentialite, CGU, CGV, Cookies } from "./pages/Legal";
 import Layout from "./components/Layout";
-import ComingSoon from "./components/ComingSoon";
 import { WeatherProvider } from "./lib/WeatherContext";
 import { usePilotage }     from "./lib/usePilotage";
 import { useUTMCapture }   from "./lib/useUTMCapture";   // ✅ Bloc 1 — capture UTM dès l'arrivée
@@ -29,17 +29,69 @@ import { useUTMInjection } from "./lib/useUTMInjection"; // ✅ Bloc 1 — injec
 // ── Emails admin — accès permanent garanti ────────────────────────────────────
 const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
 
+// localStorage = cache court terme UNIQUEMENT (évite un flash au rechargement)
+// Source de vérité = Supabase. Durée de cache : 1h max.
+const ACCESS_CACHE_KEY = "mg360_access_cache";
+const ACCESS_CACHE_TTL = 60 * 60 * 1000; // 1h en ms
+
+function getAccessCache() {
+  try {
+    const raw = localStorage.getItem(ACCESS_CACHE_KEY);
+    if (!raw) return null;
+    const { status, ts } = JSON.parse(raw);
+    if (Date.now() - ts > ACCESS_CACHE_TTL) {
+      localStorage.removeItem(ACCESS_CACHE_KEY);
+      return null;
+    }
+    return status; // "approved" | "waitlist" | "admin"
+  } catch { return null; }
+}
+
+function setAccessCache(status) {
+  try {
+    localStorage.setItem(ACCESS_CACHE_KEY, JSON.stringify({ status, ts: Date.now() }));
+  } catch {}
+}
+
+function clearAccessCache() {
+  try { localStorage.removeItem(ACCESS_CACHE_KEY); } catch {}
+}
+
 function setAdminFlags() {
-  localStorage.setItem("mg360_approved",        "true");
-  localStorage.setItem("mg360_onboarding_done",  "true");
-  localStorage.setItem("gk_admin_code",          "GREENKEEPER2024");
-  localStorage.removeItem("mg360_waitlist");
+  setAccessCache("admin");
+  // Rétrocompat — certains composants lisent encore ces clés
+  try {
+    localStorage.setItem("mg360_approved",       "true");
+    localStorage.setItem("mg360_onboarding_done", "true");
+    localStorage.removeItem("mg360_waitlist");
+  } catch {}
 }
 
 function setUserFlags() {
-  localStorage.setItem("mg360_approved",        "true");
-  localStorage.setItem("mg360_onboarding_done",  "true");
-  localStorage.removeItem("mg360_waitlist");
+  setAccessCache("approved");
+  try {
+    localStorage.setItem("mg360_approved",       "true");
+    localStorage.setItem("mg360_onboarding_done", "true");
+    localStorage.removeItem("mg360_waitlist");
+  } catch {}
+}
+
+// ── Présence quotidienne (DAU) ───────────────────────────────────────────────
+// Enregistre 1 ligne par utilisateur par jour dans daily_active_users.
+// Idempotent (clé composite user_id+day) + garde localStorage : 1 écriture/jour/appareil.
+// Hors admin (appelé uniquement pour les non-admins). Non bloquant.
+async function pingPresence(userId) {
+  if (!userId) return;
+  try {
+    const today = new Date().toLocaleDateString("fr-CA"); // YYYY-MM-DD
+    const key   = `mg360_dau_ping_${today}`;
+    if (localStorage.getItem(key)) return; // déjà compté aujourd'hui sur cet appareil
+    const { supabase } = await import("./lib/supabase");
+    const { error } = await supabase
+      .from("daily_active_users")
+      .upsert({ user_id: userId, day: today }, { onConflict: "user_id,day", ignoreDuplicates: true });
+    if (!error) localStorage.setItem(key, "1");
+  } catch { /* non bloquant */ }
 }
 
 function AppWithWeather({ children }) {
@@ -69,10 +121,14 @@ function LoadingScreen() {
   );
 }
 
-// ── Hook qui vérifie l'accès et retourne l'état de chargement ────────────────
+// ── Hook qui vérifie l'accès — SOURCE DE VÉRITÉ = SUPABASE ──────────────────
+// localStorage = cache 1h uniquement pour éviter le flash au rechargement.
+// Sur nouveau device, Safari iOS (efface localStorage après 7j), ou cache expiré :
+// on retombe systématiquement sur Supabase → aucun user ne se retrouve bloqué.
 function useAccessCheck() {
   const { user, isLoaded } = useUser();
-  const [checking, setChecking] = useState(true);
+  const [checking,  setChecking]  = useState(true);
+  const [accessStatus, setAccessStatus] = useState(null); // "approved"|"waitlist"|"admin"|null
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -85,48 +141,116 @@ function useAccessCheck() {
     const email   = user.primaryEmailAddress?.emailAddress || "";
     const isAdmin = ADMIN_EMAILS.includes(email) || user.publicMetadata?.role === "admin";
 
+    // DAU — compter l'utilisateur (hors admin) une fois par jour, sans bloquer l'accès
+    if (!isAdmin) pingPresence(user.id);
+
+    // Admin → toujours approuvé, pas besoin de Supabase
     if (isAdmin) {
       setAdminFlags();
+      setAccessStatus("admin");
       setChecking(false);
       return;
     }
 
-    if (localStorage.getItem("mg360_approved") === "true") {
+    // Cache valide (< 1h) → on évite le round-trip Supabase pour le rechargement
+    const cached = getAccessCache();
+    if (cached) {
+      setAccessStatus(cached);
       setChecking(false);
+      // Revalide en arrière-plan sans bloquer l'UI
+      (async () => {
+        try {
+          const { supabase } = await import("./lib/supabase");
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("user_id")
+            .eq("user_id", user.id)
+            .maybeSingle();
+          if (profileData) {
+            setUserFlags();
+            setAccessStatus("approved");
+          } else {
+            // Pas de profil → vérifier user_access avant de mettre en waitlist
+            const { data: accessData } = await supabase
+              .from("user_access")
+              .select("status")
+              .eq("user_id", user.id)
+              .maybeSingle();
+            if (accessData?.status === "approved" || accessData?.status === "guest") {
+              setUserFlags();
+              setAccessStatus("approved");
+            } else {
+              clearAccessCache();
+              try { localStorage.setItem("mg360_waitlist", "true"); } catch {}
+              setAccessStatus("waitlist");
+            }
+          }
+        } catch { /* réseau offline — on garde le cache */ }
+      })();
       return;
     }
 
-    if (localStorage.getItem("mg360_waitlist") === "true") {
-      setChecking(false);
-      return;
-    }
-
+    // Pas de cache ou cache expiré → vérification Supabase obligatoire
     (async () => {
       try {
         const { supabase } = await import("./lib/supabase");
-        const { data } = await supabase
+        // 1. Vérifier profiles (user a terminé l'onboarding)
+        const { data: profileData } = await supabase
           .from("profiles")
           .select("user_id")
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle();
 
-        if (data) {
+        if (profileData) {
           setUserFlags();
+          setAccessStatus("approved");
+          return;
+        }
+
+        // 2. Pas de profil → vérifier user_access (guest ou approved sans profil)
+        // Couvre : guest code, code admin, préinscrit qui n'a pas fini l'onboarding
+        const { data: accessData } = await supabase
+          .from("user_access")
+          .select("status")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (accessData?.status === "approved" || accessData?.status === "guest") {
+          setUserFlags();
+          setAccessStatus("approved");
         } else {
-          localStorage.setItem("mg360_waitlist", "true");
+          clearAccessCache();
+          try {
+            localStorage.setItem("mg360_waitlist", "true");
+            localStorage.removeItem("mg360_approved");
+          } catch {}
+          setAccessStatus("waitlist");
         }
       } catch {
-        localStorage.setItem("mg360_waitlist", "true");
+        // Erreur réseau — fallback sur l'ancien localStorage pour ne pas bloquer
+        try {
+          const legacy = localStorage.getItem("mg360_approved");
+          if (legacy === "true") {
+            setAccessStatus("approved");
+          } else {
+            setAccessStatus("waitlist");
+          }
+        } catch {
+          setAccessStatus("waitlist");
+        }
       } finally {
         setChecking(false);
       }
     })();
   }, [isLoaded, user]); // eslint-disable-line
 
-  return { checking };
+  return { checking, accessStatus };
 }
 
-function isOnWaitlist() {
+function isOnWaitlist(accessStatus) {
+  // Priorité sur accessStatus (state React) si disponible
+  if (accessStatus !== null) return accessStatus === "waitlist";
+  // Fallback localStorage (rétrocompat)
   try {
     return localStorage.getItem("mg360_waitlist") === "true" &&
            localStorage.getItem("mg360_approved") !== "true";
@@ -142,23 +266,31 @@ function PrivateRoute({ children }) {
   );
 }
 
+// ── Route admin uniquement ────────────────────────────────────────────────────
+function AdminRoute({ children }) {
+  const { user, isLoaded } = useUser();
+  if (!isLoaded) return null;
+  const email   = user?.primaryEmailAddress?.emailAddress || "";
+  const isAdmin = ADMIN_EMAILS.includes(email) || user?.publicMetadata?.role === "admin";
+  if (!isAdmin) return <Navigate to="/" replace />;
+  return (
+    <>
+      <SignedIn>{children}</SignedIn>
+      <SignedOut><RedirectToSignIn /></SignedOut>
+    </>
+  );
+}
+
 function AppRoutes() {
-  const { checking } = useAccessCheck();
+  const { checking, accessStatus } = useAccessCheck();
 
   if (checking) return <LoadingScreen />;
-
-  const onWaitlist = isOnWaitlist();
 
   return (
     <Routes>
       <Route path="/login"             element={<Login />} />
       <Route path="/admin"             element={<Admin />} />
-
-      <Route path="/register"          element={
-        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Register />}</PrivateRoute>
-      } />
-
-      <Route path="/coming-soon"       element={<PrivateRoute><ComingSoon /></PrivateRoute>} />
+      <Route path="/register"          element={<PrivateRoute><Register /></PrivateRoute>} />
 
       <Route path="/free"              element={<PrivateRoute><Layout><Free /></Layout></PrivateRoute>} />
       <Route path="/subscribe"         element={<PrivateRoute><Subscribe /></PrivateRoute>} />
@@ -170,37 +302,19 @@ function AppRoutes() {
       <Route path="/cgv"               element={<CGV />} />
       <Route path="/cookies"           element={<Cookies />} />
 
-      <Route path="/parametres"        element={
-        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Settings /></Layout>}</PrivateRoute>
-      } />
+      <Route path="/parametres"        element={<PrivateRoute><Layout><Settings /></Layout></PrivateRoute>} />
+      <Route path="/pilotage"          element={<AdminRoute><Layout><Pilotage /></Layout></AdminRoute>} />
 
-      <Route path="/pilotage"          element={<Layout><Pilotage /></Layout>} />
-
-      <Route path="/"                  element={
-        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Dashboard /></Layout>}</PrivateRoute>
-      } />
-      <Route path="/diagnostic"        element={
-        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Diagnostic /></Layout>}</PrivateRoute>
-      } />
-      <Route path="/my-lawn"           element={
-        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><MyLawn /></Layout>}</PrivateRoute>
-      } />
-      <Route path="/today"             element={
-        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Today /></Layout>}</PrivateRoute>
-      } />
-      <Route path="/products"          element={
-        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Products /></Layout>}</PrivateRoute>
-      } />
-      <Route path="/history"           element={
-        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><History /></Layout>}</PrivateRoute>
-      } />
-      <Route path="/setup"             element={
-        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Setup /></Layout>}</PrivateRoute>
-      } />
-      <Route path="/classement"        element={
-        <PrivateRoute>{onWaitlist ? <Navigate to="/coming-soon" replace /> : <Layout><Classement /></Layout>}</PrivateRoute>
-      } />
-      <Route path="*" element={<SignedOut><RedirectToSignIn /></SignedOut>} />
+      <Route path="/"                  element={<PrivateRoute><Layout><Dashboard /></Layout></PrivateRoute>} />
+      <Route path="/diagnostic"        element={<PrivateRoute><Layout><Diagnostic /></Layout></PrivateRoute>} />
+      <Route path="/my-lawn"           element={<PrivateRoute><Layout><MyLawn /></Layout></PrivateRoute>} />
+      <Route path="/parcours"          element={<PrivateRoute><Layout><Parcours /></Layout></PrivateRoute>} />
+      <Route path="/today"             element={<PrivateRoute><Layout><Today /></Layout></PrivateRoute>} />
+      <Route path="/products"          element={<PrivateRoute><Layout><Products /></Layout></PrivateRoute>} />
+      <Route path="/history"           element={<PrivateRoute><Layout><History /></Layout></PrivateRoute>} />
+      <Route path="/setup"             element={<PrivateRoute><Layout><Setup /></Layout></PrivateRoute>} />
+      <Route path="/classement"        element={<PrivateRoute><Layout><Classement /></Layout></PrivateRoute>} />
+      <Route path="*"                  element={<SignedOut><RedirectToSignIn /></SignedOut>} />
     </Routes>
   );
 }
