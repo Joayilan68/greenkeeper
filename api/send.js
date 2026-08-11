@@ -870,5 +870,45 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  return res.status(400).json({ error: "Type requis : ?type=alert|notification|reminder" });
+  // ── PARCOURS (Création / Regarnissage) — expose le moteur au front ────────
+  // ?type=parcours-cansow : analyse de fenêtre (canSow) — lecture seule, aucun écrit
+  if (type === "parcours-cansow") {
+    try {
+      const { canSow } = require("./parcoursEngine.cjs");
+      const { lat, lon, zoneKey, soilTemp, month, dateSemis, soilTempSource } = req.body || {};
+      const verdict = canSow({ lat, lon, zoneKey, soilTemp, month, dateSemis, soilTempSource });
+      return res.json({ success: true, verdict });
+    } catch (e) {
+      console.error("parcours-cansow:", e.message);
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
+  // ?type=parcours-schedule : échéancier des 6 phases (buildSchedule) — lecture seule
+  if (type === "parcours-schedule") {
+    try {
+      const { buildSchedule } = require("./parcoursEngine.cjs");
+      const { parcoursType, dateSemis } = req.body || {};
+      const schedule = buildSchedule({ type: parcoursType, dateSemis });
+      return res.json({ success: true, schedule });
+    } catch (e) {
+      console.error("parcours-schedule:", e.message);
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
+  // ?type=parcours-current : phase courante + blocages (currentPhase) — lecture seule
+  if (type === "parcours-current") {
+    try {
+      const { currentPhase } = require("./parcoursEngine.cjs");
+      const { parcoursType, dateSemis, today } = req.body || {};
+      const state = currentPhase({ type: parcoursType, dateSemis, today });
+      return res.json({ success: true, state });
+    } catch (e) {
+      console.error("parcours-current:", e.message);
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
+  return res.status(400).json({ error: "Type requis : ?type=alert|notification|reminder|parcours-cansow|parcours-schedule|parcours-current" });
 };
