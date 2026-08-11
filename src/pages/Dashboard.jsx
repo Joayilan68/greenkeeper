@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useUser, UserButton } from "@clerk/clerk-react";
 import { useWeather } from "../lib/useWeather";
 import { useProfile } from "../lib/useProfile";
+import { useParcours } from "../lib/useParcours";
 import { useHistory } from "../lib/useHistory";
 import { useSubscription } from "../lib/useSubscription";
 import { MONTHLY_PLAN, MONTHS_FR, getWMO } from "../lib/lawn";
@@ -196,6 +197,9 @@ export default function Dashboard() {
             <button onClick={() => setShowOnboarding(true)} style={{ background:"rgba(239,108,0,0.3)", border:"1px solid rgba(239,108,0,0.5)", borderRadius:10, padding:"6px 12px", color:"#f9a825", fontSize:11, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap" }}>Corriger →</button>
           </div>
         )}
+
+        {/* ── PARCOURS (Semis / Regarnissage en cours) ──────────────────── */}
+        <CarteParcours />
 
         {/* ── LIGNE 1 : SCORE + MÉTÉO ────────────────────────────────────── */}
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:4, alignItems:"stretch" }}>
@@ -461,4 +465,50 @@ export default function Dashboard() {
       {showScoreInfo && <GreenScoreModal onClose={() => setShowScoreInfo(false)} />}
     </div>
   );
+}
+
+
+// ── Carte Parcours : affiche l'état du parcours en cours sur le Dashboard ──────
+function CarteParcours() {
+  const navigate = useNavigate();
+  const { parcours } = useParcours();
+  if (!parcours) return null;
+
+  const typeLabel = parcours.type === "regarnissage" ? "regarnissage" : "semis";
+
+  if (parcours.statut === "en_attente_fenetre") {
+    return (
+      <div style={{ background:"linear-gradient(135deg,rgba(255,193,7,0.15),rgba(13,43,26,0.6))", border:"1px solid rgba(255,193,7,0.35)", borderRadius:14, padding:"14px 16px", marginBottom:4, display:"flex", alignItems:"center", gap:12 }}>
+        <span style={{ fontSize:24, flexShrink:0 }}>⏳</span>
+        <div style={{ flex:1 }}>
+          <div style={{ fontSize:13, fontWeight:800, color:"#F1F8F2", marginBottom:3 }}>Projet de {typeLabel} enregistré</div>
+          <div style={{ fontSize:12, color:"#ffe082", lineHeight:1.5 }}>
+            On surveille la météo de votre zone. Vous serez prévenu dès l'ouverture de la fenêtre.
+          </div>
+        </div>
+        <div role="button" onClick={() => navigate("/parcours")}
+          style={{ flexShrink:0, padding:"8px 14px", borderRadius:10, background:"rgba(255,193,7,0.25)", border:"1px solid rgba(255,193,7,0.4)", color:"#ffe082", fontWeight:800, fontSize:12, cursor:"pointer" }}>
+          Voir
+        </div>
+      </div>
+    );
+  }
+
+  if (parcours.statut === "actif") {
+    return (
+      <div style={{ background:"linear-gradient(135deg,rgba(76,175,80,0.25),rgba(13,43,26,0.6))", border:"1px solid rgba(102,187,106,0.4)", borderRadius:14, padding:"14px 16px", marginBottom:4, display:"flex", alignItems:"center", gap:12 }}>
+        <span style={{ fontSize:24, flexShrink:0 }}>🌱</span>
+        <div style={{ flex:1 }}>
+          <div style={{ fontSize:13, fontWeight:800, color:"#F1F8F2", marginBottom:3 }}>Parcours de {typeLabel} en cours</div>
+          <div style={{ fontSize:12, color:"#a5d6a7", lineHeight:1.5 }}>Suivez votre programme jour par jour.</div>
+        </div>
+        <div role="button" onClick={() => navigate("/parcours")}
+          style={{ flexShrink:0, padding:"8px 14px", borderRadius:10, background:"linear-gradient(135deg,#43a047,#2e7d32)", color:"#fff", fontWeight:800, fontSize:12, cursor:"pointer" }}>
+          Suivre
+        </div>
+      </div>
+    );
+  }
+
+  return null;
 }
