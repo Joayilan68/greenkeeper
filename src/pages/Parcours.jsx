@@ -78,7 +78,7 @@ export default function Parcours() {
         statut,
       });
       setPopup(null);
-      navigate("/mon-gazon"); // retour à Mon Gazon ; le suivi (C+D) s'affichera ensuite
+      navigate("/my-lawn"); // retour à Mon Gazon ; le suivi (C+D) s'affichera ensuite
     } catch (e) {
       setErreur(e.message || "Impossible de créer le parcours.");
     } finally {
@@ -178,7 +178,7 @@ export default function Parcours() {
           {busy ? "Analyse en cours…" : "Vérifier ma fenêtre de semis"}
         </button>
 
-        <button onClick={() => navigate("/mon-gazon")}
+        <button onClick={() => navigate("/my-lawn")}
           style={{ marginTop: 12, width: "100%", background: "none", border: "none", color: "#4a7c5c", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>
           Annuler
         </button>
