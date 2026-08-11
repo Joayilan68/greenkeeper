@@ -235,8 +235,92 @@ module.exports = async function handler(req, res) {
         }
       }
 
-      console.log(`[CRON ${slot}] reminders:`, remindersData?.length || 0, "pushSent:", pushSent, "emailSent:", emailSent, "skipped:", skipped);
-      return res.json({ success: true, date: today, slot, pushSent, emailSent, skipped, reminders: remindersData?.length || 0 });
+      // ── SURVEILLANCE DES PARCOURS (fenêtre de semis) — créneau MATIN ────────
+      // Pour chaque parcours 'en_attente_fenetre' : détecter l'ouverture de la
+      // fenêtre (canSow) et notifier selon N12/N13 (ouverture + relance) et N14
+      // (anticipation ~10-14j avant). La notif parcours s'AJOUTE à l'entretien.
+      let parcoursSent = 0;
+      if (slot === "matin") {
+        try {
+          const { canSow } = require("./parcoursEngine.cjs");
+          const { data: parcoursData } = await supabase
+            .from("parcours")
+            .select("*")
+            .eq("statut", "en_attente_fenetre");
+
+          for (const p of (parcoursData || [])) {
+            const profile = profileMap[p.user_id] || {};
+            const sub = subMap[p.user_id];
+            const consent = consentMap[p.user_id] || {};
+            if (!consent.notifications || !sub) continue; // pas de push possible
+
+            const lat = profile.lat, lon = profile.lon;
+            // Verdict pour AUJOURD'HUI (date du jour = candidat de semis)
+            const verdict = canSow({ lat, lon, dateSemis: today, soilTempSource: "estime" });
+
+            const ev = (p.etapes_validees && typeof p.etapes_validees === "object" && !Array.isArray(p.etapes_validees))
+              ? p.etapes_validees : {};
+            const suivi = ev.fenetre || { nbRappels: 0, premierRappel: null, dernierRappel: null, anticipe: false };
+
+            let notif = null; // { title, body }
+
+            // ── Fenêtre OUVERTE (feu_vert ou avertissement) → N12 / N13 ────────
+            if (verdict.verdict === "feu_vert" || verdict.verdict === "avertissement") {
+              const n = suivi.nbRappels || 0;
+              // N13 : quotidien les 7 premiers jours, puis 1 fois tous les 3 jours
+              const dernier = suivi.dernierRappel ? new Date(suivi.dernierRappel) : null;
+              const joursDepuisDernier = dernier ? Math.floor((Date.now() - dernier.getTime()) / 86400000) : 999;
+              const doitRelancer = (n < 7) ? (joursDepuisDernier >= 1) : (joursDepuisDernier >= 3);
+
+              if (doitRelancer) {
+                const typeLabel = p.type === "regarnissage" ? "regarnissage" : "semis";
+                if (n === 0) {
+                  notif = { title: "🌱 C'est le moment !",
+                    body: `La fenêtre de ${typeLabel} vient de s'ouvrir dans votre région. Ouvrez l'app pour démarrer.` };
+                } else if (n < 7) {
+                  notif = { title: "🌱 Fenêtre de semis ouverte",
+                    body: `Ne tardez pas : la fenêtre optimale de ${typeLabel} est en cours. Lancez votre parcours.` };
+                } else {
+                  notif = { title: "⏳ La fenêtre file",
+                    body: `Votre fenêtre de ${typeLabel} reste ouverte, mais se referme peu à peu. C'est encore le bon moment.` };
+                }
+                suivi.nbRappels = n + 1;
+                suivi.premierRappel = suivi.premierRappel || today;
+                suivi.dernierRappel = today;
+              }
+            }
+            // ── Fenêtre PAS ENCORE ouverte → N14 (anticipation, 1 seule fois) ──
+            else if (verdict.verdict === "bloque" && verdict.prochaineFenetre && !suivi.anticipe) {
+              // On envoie l'anticipation une seule fois quand on approche (heuristique :
+              // dès qu'un parcours en attente est vu et pas encore anticipé).
+              notif = { title: "⏳ Votre fenêtre de semis approche",
+                body: `${verdict.prochaineFenetre}. Profitez-en pour préparer votre sol.` };
+              suivi.anticipe = true;
+            }
+
+            if (notif) {
+              try {
+                await webpush.sendNotification(sub, JSON.stringify({
+                  title: notif.title, body: notif.body,
+                  icon: "/icon-192.png", tag: "mg360-parcours-fenetre",
+                  url: "/parcours", actionRoute: "/parcours",
+                }));
+                await supabase.from("parcours")
+                  .update({ etapes_validees: { ...ev, fenetre: suivi }, updated_at: new Date().toISOString() })
+                  .eq("id", p.id);
+                parcoursSent++;
+              } catch (e) {
+                console.error("cron parcours:", p.user_id, e.message);
+              }
+            }
+          }
+        } catch (e) {
+          console.error("cron surveillance parcours:", e.message);
+        }
+      }
+
+      console.log(`[CRON ${slot}] reminders:`, remindersData?.length || 0, "pushSent:", pushSent, "emailSent:", emailSent, "skipped:", skipped, "parcoursSent:", parcoursSent);
+      return res.json({ success: true, date: today, slot, pushSent, emailSent, skipped, parcoursSent, reminders: remindersData?.length || 0 });
     } catch (e) {
       console.error("cron:", e.message);
       return res.status(500).json({ error: e.message });
