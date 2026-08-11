@@ -18,6 +18,7 @@ import Free from "./pages/Free";
 import Register from "./pages/Register";
 import Settings from "./pages/Settings";
 import Pilotage from "./pages/Pilotage";
+import Parcours from "./pages/Parcours";
 import { MentionsLegales, Confidentialite, CGU, CGV, Cookies } from "./pages/Legal";
 import Layout from "./components/Layout";
 import { WeatherProvider } from "./lib/WeatherContext";
@@ -307,6 +308,7 @@ function AppRoutes() {
       <Route path="/"                  element={<PrivateRoute><Layout><Dashboard /></Layout></PrivateRoute>} />
       <Route path="/diagnostic"        element={<PrivateRoute><Layout><Diagnostic /></Layout></PrivateRoute>} />
       <Route path="/my-lawn"           element={<PrivateRoute><Layout><MyLawn /></Layout></PrivateRoute>} />
+      <Route path="/parcours"          element={<PrivateRoute><Layout><Parcours /></Layout></PrivateRoute>} />
       <Route path="/today"             element={<PrivateRoute><Layout><Today /></Layout></PrivateRoute>} />
       <Route path="/products"          element={<PrivateRoute><Layout><Products /></Layout></PrivateRoute>} />
       <Route path="/history"           element={<PrivateRoute><Layout><History /></Layout></PrivateRoute>} />
