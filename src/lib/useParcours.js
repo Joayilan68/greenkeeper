@@ -28,7 +28,10 @@ export function phaseParcours(parcours) {
   const j0 = new Date(parcours.date_semis);
   if (isNaN(j0.getTime())) return null;
   const jour = Math.floor((Date.now() - j0.getTime()) / 86400000);
-  if (jour > 60) return { phase: 5, jour, nom: "Terminé", termine: true, arrosage: "Retour au cycle d'arrosage normal." };
+  // Parcours terminé (J>60) : on renvoie null pour que "Aujourd'hui" reprenne
+  // entièrement le mode entretien classique (pas de bandeau, pas de filtrage,
+  // arrosage météo normal). L'écran de suivi du parcours gère "Terminé" de son côté.
+  if (jour > 60) return null;
   if (jour < -7) return { phase: 0, jour, nom: "Fenêtre", arrosage: null };
   // Chercher la phase (la plus avancée sur chevauchement de bornes)
   let ph = { phase: 0, nom: "Fenêtre", arrosage: null };
