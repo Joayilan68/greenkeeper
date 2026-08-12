@@ -21,7 +21,7 @@ export default function Parcours() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const { profile } = useProfile();
-  const { parcours, aUnParcoursActif, analyserFenetre, creerParcours, loading } = useParcours();
+  const { parcours, aUnParcoursActif, analyserFenetre, analyserPhase, creerParcours, demarrerParcours, validerJalon, loading, reload } = useParcours();
 
   // Type initial depuis l'URL (?type=creation|regarnissage) posé par les boutons de Mon Gazon
   const typeInitial = params.get("type") === "regarnissage" ? "regarnissage" : "creation";
@@ -88,6 +88,34 @@ export default function Parcours() {
 
   const labelType = type === "creation" ? "Création" : "Regarnissage";
 
+  // ── AIGUILLAGE selon l'état du parcours ────────────────────────────────────
+  // Parcours actif → écran de suivi C+D (phase, action, timeline, jalons).
+  if (parcours && parcours.statut === "actif") {
+    return (
+      <SuiviParcours
+        parcours={parcours}
+        analyserPhase={analyserPhase}
+        validerJalon={validerJalon}
+        onRetour={() => navigate("/my-lawn")}
+      />
+    );
+  }
+
+  // Parcours en attente → écran dédié (bouton Démarrer si fenêtre ouverte, sinon surveillance)
+  if (parcours && parcours.statut === "en_attente_fenetre") {
+    return (
+      <EnAttenteParcours
+        parcours={parcours}
+        profile={profile}
+        analyserFenetre={analyserFenetre}
+        demarrerParcours={demarrerParcours}
+        onRetour={() => navigate("/my-lawn")}
+        onReload={reload}
+      />
+    );
+  }
+
+  // Aucun parcours actif → écran de création (états A + B ci-dessous)
   return (
     <div style={{ ...appShell, fontFamily: "'Nunito','Segoe UI',sans-serif", paddingBottom: 100 }}>
       <div style={{ padding: "48px 20px 16px" }}>
@@ -265,6 +293,281 @@ function PopupVerdict({ popup, labelType, busy, onClose, onConfirmer }) {
             Annuler
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EN ATTENTE — parcours en_attente_fenetre : bouton Démarrer si fenêtre ouverte,
+// sinon message de surveillance.
+// ─────────────────────────────────────────────────────────────────────────────
+function EnAttenteParcours({ parcours, profile, analyserFenetre, demarrerParcours, onRetour, onReload }) {
+  const [verdict, setVerdict] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [erreur, setErreur] = useState(null);
+
+  useEffect(() => {
+    let annule = false;
+    (async () => {
+      try {
+        const v = await analyserFenetre({
+          lat: profile?.lat, lon: profile?.lon,
+          soilTempSource: "estime",
+          month: new Date().getMonth() + 1,
+          dateSemis: new Date().toISOString().slice(0, 10),
+        });
+        if (!annule) setVerdict(v);
+      } catch (e) { if (!annule) setErreur(e.message); }
+    })();
+    return () => { annule = true; };
+  }, []); // eslint-disable-line
+
+  const fenetreOuverte = verdict && (verdict.verdict === "feu_vert" || verdict.verdict === "avertissement");
+  const typeLabel = parcours.type === "regarnissage" ? "regarnissage" : "semis";
+
+  const demarrer = async () => {
+    setBusy(true); setErreur(null);
+    try { await demarrerParcours(); }
+    catch (e) { setErreur(e.message || "Impossible de démarrer."); }
+    finally { setBusy(false); }
+  };
+
+  return (
+    <div style={{ ...appShell, fontFamily: "'Nunito','Segoe UI',sans-serif", paddingBottom: 100 }}>
+      <div style={{ padding: "48px 20px 16px" }}>
+        <div style={{ fontSize: 20, fontWeight: 800, color: "#F1F8F2" }}>Mon projet de {typeLabel}</div>
+      </div>
+      <div style={{ padding: "0 16px" }}>
+        {!verdict && !erreur && (
+          <div style={{ textAlign: "center", color: "#81c784", padding: 24 }}>Analyse de votre fenêtre…</div>
+        )}
+
+        {fenetreOuverte && (
+          <div style={{ background: "linear-gradient(135deg,rgba(76,175,80,0.25),rgba(15,47,31,0.6))", border: "1px solid rgba(102,187,106,0.4)", borderRadius: 20, padding: 20, marginBottom: 16 }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "#a5d6a7", marginBottom: 8 }}>🌱 C'est le moment !</div>
+            <div style={{ fontSize: 14, color: "#d7ebd9", lineHeight: 1.5, marginBottom: 16 }}>
+              La fenêtre de {typeLabel} est ouverte dans votre zone. Quand vous avez semé, démarrez votre parcours pour suivre les 6 phases jour par jour.
+            </div>
+            <button onClick={demarrer} disabled={busy}
+              style={{ ...btn.primary, width: "100%", opacity: busy ? 0.6 : 1 }}>
+              {busy ? "Démarrage…" : "Démarrer mon parcours"}
+            </button>
+          </div>
+        )}
+
+        {verdict && !fenetreOuverte && (
+          <div style={{ background: "rgba(255,193,7,0.12)", border: "1px solid rgba(255,193,7,0.35)", borderRadius: 20, padding: 20, marginBottom: 16 }}>
+            <div style={{ fontSize: 16, fontWeight: 800, color: "#ffe082", marginBottom: 8 }}>⏳ On surveille votre fenêtre</div>
+            <div style={{ fontSize: 14, color: "#d7ebd9", lineHeight: 1.5 }}>
+              {verdict.raison}
+            </div>
+            {verdict.prochaineFenetre && (
+              <div style={{ fontSize: 13, color: "#a5d6a7", marginTop: 10 }}>
+                🗓️ {verdict.prochaineFenetre}. Vous serez prévenu dès l'ouverture.
+              </div>
+            )}
+          </div>
+        )}
+
+        {erreur && (
+          <div style={{ background: "rgba(198,40,40,0.15)", border: "1px solid rgba(198,40,40,0.4)", borderRadius: 12, padding: "12px 14px", marginBottom: 16, fontSize: 13, color: "#ef9a9a" }}>{erreur}</div>
+        )}
+
+        <button onClick={onRetour}
+          style={{ marginTop: 8, width: "100%", background: "none", border: "none", color: "#4a7c5c", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>
+          Retour
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SUIVI (C+D) — parcours actif : phase du jour, action, arrosage, timeline 6
+// phases, blocages, et validation des jalons ponctuels.
+// ─────────────────────────────────────────────────────────────────────────────
+const PHASES_LABELS = [
+  { n: 0, nom: "Fenêtre" },
+  { n: 1, nom: "Préparation" },
+  { n: 2, nom: "Semis" },
+  { n: 3, nom: "Germination" },
+  { n: 4, nom: "Levée" },
+  { n: 5, nom: "Consolidation" },
+];
+
+// Jalons ponctuels (miroir de parcoursEngine.JALONS, côté front pour l'affichage)
+const JALONS_FRONT = [
+  { cle: "sol_prepare",    phaseMin: 1, label: "Sol préparé",                  icon: "🪓" },
+  { cle: "seme",           phaseMin: 2, label: "Semé",                         icon: "🌱" },
+  { cle: "premiere_tonte", phaseMin: 4, label: "Première tonte effectuée",      icon: "✂️" },
+  { cle: "engrais_demarr", phaseMin: 5, label: "Engrais de démarrage appliqué", icon: "🧪" },
+];
+
+function SuiviParcours({ parcours, analyserPhase, validerJalon, onRetour }) {
+  const [etat, setEtat] = useState(null);   // { phase, nom, jour, action, arrosage, blocages, termine }
+  const [busy, setBusy] = useState(false);
+  const [erreur, setErreur] = useState(null);
+  const [jalons, setJalons] = useState(() => {
+    const ev = parcours.etapes_validees;
+    return (ev && typeof ev === "object" && !Array.isArray(ev) && ev.jalons) ? ev.jalons : {};
+  });
+
+  useEffect(() => {
+    let annule = false;
+    (async () => {
+      try {
+        const s = await analyserPhase({ type: parcours.type, dateSemis: parcours.date_semis });
+        if (!annule) setEtat(s);
+      } catch (e) { if (!annule) setErreur(e.message); }
+    })();
+    return () => { annule = true; };
+  }, []); // eslint-disable-line
+
+  const toggleJalon = async (cle) => {
+    setBusy(true); setErreur(null);
+    try {
+      const updated = await validerJalon(cle);
+      const ev = updated?.etapes_validees;
+      setJalons((ev && ev.jalons) ? ev.jalons : {});
+    } catch (e) { setErreur(e.message); }
+    finally { setBusy(false); }
+  };
+
+  const typeLabel = parcours.type === "regarnissage" ? "regarnissage" : "semis";
+  const phaseCourante = etat?.phase ?? parcours.phase_courante ?? 0;
+
+  return (
+    <div style={{ ...appShell, fontFamily: "'Nunito','Segoe UI',sans-serif", paddingBottom: 100 }}>
+      <div style={{ padding: "48px 20px 16px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 28 }}>{parcours.type === "creation" ? "🌱" : "🌾"}</span>
+          <div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: "#F1F8F2" }}>Mon {typeLabel}</div>
+            {etat && !etat.termine && (
+              <div style={{ fontSize: 12, color: "#66BB6A", marginTop: 2 }}>
+                {etat.nom} · Jour {etat.jour}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ padding: "0 16px" }}>
+        {!etat && !erreur && (
+          <div style={{ textAlign: "center", color: "#81c784", padding: 24 }}>Chargement de votre parcours…</div>
+        )}
+
+        {/* ── Parcours terminé ── */}
+        {etat?.termine && (
+          <div style={{ background: "linear-gradient(135deg,rgba(76,175,80,0.25),rgba(15,47,31,0.6))", border: "1px solid rgba(102,187,106,0.4)", borderRadius: 20, padding: 24, textAlign: "center", marginBottom: 16 }}>
+            <div style={{ fontSize: 36, marginBottom: 8 }}>🎉</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "#a5d6a7", marginBottom: 6 }}>Parcours terminé !</div>
+            <div style={{ fontSize: 14, color: "#d7ebd9", lineHeight: 1.5 }}>{etat.action}</div>
+          </div>
+        )}
+
+        {/* ── Timeline des 6 phases ── */}
+        {etat && !etat.termine && (
+          <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: 20, border: "1px solid rgba(165,214,167,0.15)", padding: 18, marginBottom: 16 }}>
+            <div style={{ fontSize: 12, color: "#81c784", fontWeight: 700, marginBottom: 14 }}>Progression</div>
+            <div style={{ display: "flex", justifyContent: "space-between", position: "relative" }}>
+              {PHASES_LABELS.map((p) => {
+                const passee = p.n < phaseCourante;
+                const courante = p.n === phaseCourante;
+                return (
+                  <div key={p.n} style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: 1, zIndex: 1 }}>
+                    <div style={{
+                      width: 26, height: 26, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 12, fontWeight: 800, marginBottom: 6,
+                      background: courante ? "#43a047" : passee ? "rgba(76,175,80,0.4)" : "rgba(255,255,255,0.08)",
+                      border: courante ? "2px solid #a5d6a7" : "1px solid rgba(255,255,255,0.15)",
+                      color: courante || passee ? "#fff" : "#4a7c5c",
+                    }}>
+                      {passee ? "✓" : p.n}
+                    </div>
+                    <div style={{ fontSize: 8.5, color: courante ? "#a5d6a7" : "#4a7c5c", textAlign: "center", lineHeight: 1.2 }}>{p.nom}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ── Action + arrosage du jour ── */}
+        {etat && !etat.termine && (
+          <div style={{ background: "linear-gradient(135deg,rgba(27,94,32,0.4),rgba(13,43,26,0.6))", border: "1px solid rgba(102,187,106,0.3)", borderRadius: 20, padding: 20, marginBottom: 16 }}>
+            <div style={{ fontSize: 11, color: "#66BB6A", fontWeight: 700, letterSpacing: 1, marginBottom: 8 }}>À FAIRE AUJOURD'HUI</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#F1F8F2", lineHeight: 1.5, marginBottom: 12 }}>{etat.action}</div>
+            {etat.arrosage && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(100,181,246,0.1)", border: "1px solid rgba(100,181,246,0.25)", borderRadius: 12, padding: "10px 12px" }}>
+                <span style={{ fontSize: 18 }}>💧</span>
+                <span style={{ fontSize: 13, color: "#a5d6a7" }}>{etat.arrosage}</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Blocages actifs ── */}
+        {etat && !etat.termine && etat.blocages && etat.blocages.length > 0 && (
+          <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 16, border: "1px solid rgba(255,255,255,0.08)", padding: 16, marginBottom: 16 }}>
+            <div style={{ fontSize: 12, color: "#4a7c5c", fontWeight: 700, letterSpacing: 1, marginBottom: 10 }}>PAS ENCORE LE MOMENT</div>
+            {etat.blocages.map((b) => (
+              <div key={b.action} style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 8, opacity: 0.85 }}>
+                <span style={{ fontSize: 16, flexShrink: 0 }}>🔒</span>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#81c784", textTransform: "capitalize" }}>{b.action}</div>
+                  <div style={{ fontSize: 11.5, color: "#6b9b7a", lineHeight: 1.4 }}>{b.message}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ── Jalons ponctuels (validation) ── */}
+        {etat && !etat.termine && (
+          <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: 20, border: "1px solid rgba(165,214,167,0.15)", padding: 18, marginBottom: 16 }}>
+            <div style={{ fontSize: 12, color: "#81c784", fontWeight: 700, marginBottom: 4 }}>Mes étapes</div>
+            <div style={{ fontSize: 11, color: "#4a7c5c", marginBottom: 14 }}>Cochez ce que vous avez fait — pour votre suivi.</div>
+            {JALONS_FRONT.map((j) => {
+              const fait = !!jalons[j.cle];
+              const dispo = phaseCourante >= j.phaseMin;
+              return (
+                <button key={j.cle} disabled={!dispo || busy} onClick={() => toggleJalon(j.cle)}
+                  style={{
+                    width: "100%", display: "flex", alignItems: "center", gap: 12, marginBottom: 8,
+                    padding: "12px 14px", borderRadius: 12, cursor: dispo ? "pointer" : "not-allowed",
+                    fontFamily: "inherit", textAlign: "left",
+                    background: fait ? "rgba(76,175,80,0.18)" : "rgba(255,255,255,0.04)",
+                    border: `1px solid ${fait ? "rgba(102,187,106,0.4)" : "rgba(255,255,255,0.1)"}`,
+                    opacity: dispo ? 1 : 0.4,
+                  }}>
+                  <span style={{
+                    width: 24, height: 24, borderRadius: 7, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
+                    background: fait ? "#43a047" : "rgba(255,255,255,0.06)",
+                    border: `1px solid ${fait ? "#43a047" : "rgba(255,255,255,0.2)"}`,
+                    color: "#fff", fontSize: 13, fontWeight: 800,
+                  }}>{fait ? "✓" : ""}</span>
+                  <span style={{ fontSize: 14 }}>{j.icon}</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: fait ? "#a5d6a7" : "#e8f5e9" }}>{j.label}</div>
+                    {fait && <div style={{ fontSize: 10, color: "#66BB6A" }}>Fait le {jalons[j.cle]}</div>}
+                    {!dispo && <div style={{ fontSize: 10, color: "#4a7c5c" }}>Disponible plus tard dans le parcours</div>}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {erreur && (
+          <div style={{ background: "rgba(198,40,40,0.15)", border: "1px solid rgba(198,40,40,0.4)", borderRadius: 12, padding: "12px 14px", marginBottom: 16, fontSize: 13, color: "#ef9a9a" }}>{erreur}</div>
+        )}
+
+        <button onClick={onRetour}
+          style={{ marginTop: 8, width: "100%", background: "none", border: "none", color: "#4a7c5c", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>
+          Retour à Mon Gazon
+        </button>
       </div>
     </div>
   );

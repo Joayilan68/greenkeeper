@@ -396,4 +396,17 @@ function currentPhase({ type, dateSemis, today }) {
 }
 
 
-module.exports = { canSow, zoneFromLatLon, ZONES, buildSchedule, PHASES, currentPhase };
+// ─────────────────────────────────────────────────────────────────────────────
+// JALONS PONCTUELS par phase (validables par l'utilisateur dans l'écran de suivi)
+// Cocher un jalon = suivi/gamification ; NE change PAS la phase (gouvernée par le temps).
+// Un jalon n'est cochable que si la phase courante >= phaseMin du jalon.
+// Les phases 0 (fenêtre) et 3 (germination = arrosage récurrent) n'ont pas de jalon ponctuel.
+// ─────────────────────────────────────────────────────────────────────────────
+const JALONS = [
+  { cle: "sol_prepare",    phase: 1, phaseMin: 1, label: "Sol préparé",                 icon: "🪓" },
+  { cle: "seme",           phase: 2, phaseMin: 2, label: "Semé",                        icon: "🌱" },
+  { cle: "premiere_tonte", phase: 4, phaseMin: 4, label: "Première tonte effectuée",     icon: "✂️" },
+  { cle: "engrais_demarr", phase: 5, phaseMin: 5, label: "Engrais de démarrage appliqué", icon: "🧪" },
+];
+
+module.exports = { canSow, zoneFromLatLon, ZONES, buildSchedule, PHASES, currentPhase, JALONS };

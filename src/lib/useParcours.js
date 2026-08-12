@@ -94,6 +94,56 @@ export function useParcours() {
     return data;
   }, [isSignedIn, userId]);
 
+  // ── Démarrer un parcours en attente → passage en 'actif' (date_semis = aujourd'hui) ──
+  const demarrerParcours = useCallback(async () => {
+    if (!parcours || parcours.statut !== "en_attente_fenetre") return null;
+    const today = new Date().toISOString().slice(0, 10);
+    const { data, error } = await supabase
+      .from("parcours")
+      .update({ statut: "actif", date_semis: today, phase_courante: 2, updated_at: new Date().toISOString() })
+      .eq("id", parcours.id)
+      .select()
+      .single();
+    if (error) throw new Error("Démarrage: " + error.message);
+    setParcours(data);
+    return data;
+  }, [parcours]);
+
+  // ── Valider (cocher) un jalon ponctuel → stocké dans etapes_validees.jalons ──
+  // Cocher = suivi/gamification ; ne change PAS la phase (gouvernée par le temps).
+  const validerJalon = useCallback(async (cleJalon) => {
+    if (!parcours) return;
+    const today = new Date().toISOString().slice(0, 10);
+    const ev = (parcours.etapes_validees && typeof parcours.etapes_validees === "object" && !Array.isArray(parcours.etapes_validees))
+      ? parcours.etapes_validees : {};
+    const jalons = { ...(ev.jalons || {}) };
+    // Toggle : si déjà coché, on décoche ; sinon on coche avec la date du jour
+    if (jalons[cleJalon]) delete jalons[cleJalon];
+    else jalons[cleJalon] = today;
+    const newEv = { ...ev, jalons };
+    const { data, error } = await supabase
+      .from("parcours")
+      .update({ etapes_validees: newEv, updated_at: new Date().toISOString() })
+      .eq("id", parcours.id)
+      .select()
+      .single();
+    if (error) throw new Error("Validation jalon: " + error.message);
+    setParcours(data);
+    return data;
+  }, [parcours]);
+
+  // ── Appel moteur : phase courante d'un parcours actif (currentPhase) ────────
+  const analyserPhase = useCallback(async ({ type, dateSemis }) => {
+    const res = await fetch("/api/send?type=parcours-current", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ parcoursType: type, dateSemis }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.error || "Analyse de phase impossible");
+    return data.state; // { phase, cle, nom, jour, action, arrosage, blocages, termine }
+  }, []);
+
   // ── Abandonner le parcours courant (sans en créer un nouveau) ──────────────
   const abandonnerParcours = useCallback(async () => {
     if (!parcours) return;
@@ -111,7 +161,10 @@ export function useParcours() {
     error,
     reload,
     analyserFenetre,    // appel moteur canSow
+    analyserPhase,      // appel moteur currentPhase (parcours actif)
     creerParcours,      // crée (et archive l'ancien si besoin)
+    demarrerParcours,   // en_attente_fenetre → actif
+    validerJalon,       // coche/décoche un jalon ponctuel
     abandonnerParcours, // archive le courant
     aUnParcoursActif: !!parcours,
   };
