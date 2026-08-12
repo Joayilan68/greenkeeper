@@ -236,20 +236,28 @@ export default function Today() {
   const actionStatusesRaw = (buildActions(profile, weather, history, score, month, _arrosRaw) || []);
 
   // ── Alignement PARCOURS : si un parcours de semis/regarnissage est actif,
-  // on bloque les actions incompatibles avec la phase (tonte < levée, engrais
-  // < consolidation). Le parcours est la source de vérité ; on adapte l'affichage
-  // sans toucher à la logique d'entretien (buildActions reste intact).
+  // on bloque les actions incompatibles avec la phase (matrice agronomique).
+  // Le parcours est la source de vérité ; on adapte l'affichage sans toucher
+  // à la logique d'entretien (buildActions reste intact).
+  //   - Tonte           : bloquée avant la LEVÉE (phase 4)
+  //   - Actions agressives (engrais, désherbage, antimousse, aération,
+  //     scarification, verticut) : bloquées avant la CONSOLIDATION (phase 5)
+  //   - Biostimulant, arrosage, regarnissage : jamais bloqués (bénéfiques/vitaux)
+  const AGRESSIVES_PH5 = ["desherbage", "antimousse", "aeration", "scarification", "verticut"];
   const actionStatuses = !phaseP ? actionStatusesRaw : actionStatusesRaw.map((a) => {
     const id = a?.action?.id;
-    const estTonte   = id === "tonte";
-    const estEngrais = typeof id === "string" && id.startsWith("engrais");
+    const estTonte    = id === "tonte";
+    const estEngrais  = typeof id === "string" && id.startsWith("engrais");
+    const estAgressive = AGRESSIVES_PH5.includes(id);
+    // Tonte : bloquée avant la levée (phase 4)
     if (estTonte && phaseP.phase < 4) {
       return { ...a, status: "blocked", daysLeft: null,
         blockedReason: "🌱 Parcours semis — première tonte après la levée (~3 semaines)", parcoursBloque: true };
     }
-    if (estEngrais && phaseP.phase < 5) {
+    // Engrais + actions agressives : bloqués avant la consolidation (phase 5)
+    if ((estEngrais || estAgressive) && phaseP.phase < 5) {
       return { ...a, status: "blocked", daysLeft: null,
-        blockedReason: "🌱 Parcours semis — engrais après la consolidation (~6 semaines)", parcoursBloque: true };
+        blockedReason: "🌱 Parcours semis — action déconseillée sur jeune gazon (après consolidation)", parcoursBloque: true };
     }
     return a;
   });
