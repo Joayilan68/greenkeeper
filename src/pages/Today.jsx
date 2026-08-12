@@ -244,6 +244,10 @@ export default function Today() {
   //     scarification, verticut) : bloquées avant la CONSOLIDATION (phase 5)
   //   - Biostimulant, arrosage, regarnissage : jamais bloqués (bénéfiques/vitaux)
   const AGRESSIVES_PH5 = ["desherbage", "antimousse", "aeration", "scarification", "verticut"];
+  // Jalon "première tonte" déjà validé ? (pour afficher la consigne adaptée tant qu'elle n'est pas faite)
+  const premiereTonteFaite = !!(parcours?.etapes_validees && typeof parcours.etapes_validees === "object"
+    && !Array.isArray(parcours.etapes_validees) && parcours.etapes_validees.jalons
+    && parcours.etapes_validees.jalons.premiere_tonte);
   const actionStatuses = !phaseP ? actionStatusesRaw : actionStatusesRaw.map((a) => {
     const id = a?.action?.id;
     const estTonte    = id === "tonte";
@@ -253,6 +257,13 @@ export default function Today() {
     if (estTonte && phaseP.phase < 4) {
       return { ...a, status: "blocked", daysLeft: null,
         blockedReason: "🌱 Parcours semis — première tonte après la levée (~3 semaines)", parcoursBloque: true };
+    }
+    // Première tonte (phase 4, tant que le jalon n'est pas coché) : consigne adaptée "haute"
+    if (estTonte && phaseP.phase === 4 && !premiereTonteFaite) {
+      return { ...a,
+        parcoursLabel: "Première tonte (haute)",
+        parcoursDetail: "Coupez juste les pointes (~1/3 de la hauteur), lame bien affûtée, gazon sec. Les jeunes plants sont encore fragiles.",
+      };
     }
     // Engrais + actions agressives : bloqués avant la consolidation (phase 5)
     if ((estEngrais || estAgressive) && phaseP.phase < 5) {
@@ -667,14 +678,14 @@ export default function Today() {
                 <span style={{ width:6, height:6, borderRadius:"50%", background:"#66BB6A", display:"inline-block" }} />
                 À FAIRE AUJOURD'HUI
               </div>
-              {recommended.map(({ action, isManuel }) => {
+              {recommended.map(({ action, isManuel, parcoursLabel, parcoursDetail }) => {
                 const isFlashing    = justLogged.includes(action.id);
                 const detail        = action.detail?.(plan, arros, profile, month, zone);
                 const amazonKey     = ACTION_TO_AMAZON[action.id];
-                const labelDisplay  = isManuel ? "Désherbage Manuel 🌿" : action.label;
-                const detailDisplay = isManuel
+                const labelDisplay  = parcoursLabel ? parcoursLabel : (isManuel ? "Désherbage Manuel 🌿" : action.label);
+                const detailDisplay = parcoursDetail ? parcoursDetail : (isManuel
                   ? "Arrachez les adventices ou utilisez un outil à désherber"
-                  : detail;
+                  : detail);
                 return (
                   <div key={action.id} style={{ marginBottom:8 }}>
                     {/* Ligne action + bouton journaliser */}
