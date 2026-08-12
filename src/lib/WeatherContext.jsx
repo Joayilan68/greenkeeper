@@ -57,7 +57,7 @@ export function WeatherProvider({ children, isPaid }) {
     setLoading(true); setError(null);
     const { lat, lon } = loc;
     try {
-      const r = await fetch(`/api/weather?lat=${lat}&lon=${lon}`);
+      const r = await fetch(`/api/weather?lat=${lat}&lon=${lon}&premium=${isPaid ? "true" : "false"}`);
       const d = await r.json();
       const daily = d.daily;
       const days = daily.time.map((date, i) => ({
@@ -68,6 +68,10 @@ export function WeatherProvider({ children, isPaid }) {
         code:      daily.weathercode[i],
         humidity:  daily.relative_humidity_2m_mean[i],
         wind:      daily.windspeed_10m_max[i],
+        // Données agronomiques Premium (présentes seulement si premium=true côté API)
+        et0:           daily.et0 ? daily.et0[i] : null,
+        soil_temp:     daily.soil_temp ? daily.soil_temp[i] : null,
+        soil_moisture: daily.soil_moisture ? daily.soil_moisture[i] : null,
       }));
       setWeek(days);
       setWeather(days[0]);
