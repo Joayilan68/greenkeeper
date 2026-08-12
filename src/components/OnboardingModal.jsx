@@ -38,8 +38,6 @@ const OBJECTIFS = [
   { id: "parfait",     icon: "🏆", label: "Gazon parfait",            desc: "Dense, vert, impeccable" },
   { id: "fonctionnel", icon: "⚽", label: "Pelouse fonctionnelle",     desc: "Résistante, facile d'entretien" },
   { id: "naturel",     icon: "🌿", label: "Gazon naturel",             desc: "Écologique, peu d'entretien" },
-  { id: "renover",     icon: "🔄", label: "Rénover ma pelouse",        desc: "Regarnir, ressemer, restaurer" },
-  { id: "creer",       icon: "✨", label: "Créer une nouvelle pelouse", desc: "Partir de zéro" },
 ];
 
 const GAZONS_STANDARD = [
@@ -319,10 +317,6 @@ export default function OnboardingModal({ onComplete }) {
       ville: finalCity, lat: finalLat, lon: finalLon, usages,
       isCreer,
       cityVerified: locStatus === "success" || geoSelected !== null,
-      // ✅ Programme Rénover/Créer : date de début stockée pour calcul des jours J0→J90
-      ...(( objectif === "creer" || objectif === "renover")
-        ? { date_debut_programme: new Date().toISOString() }
-        : {}),
       sol:        null,
       exposition: null,
       arrosage:   null,

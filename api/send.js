@@ -319,8 +319,33 @@ module.exports = async function handler(req, res) {
         }
       }
 
-      console.log(`[CRON ${slot}] reminders:`, remindersData?.length || 0, "pushSent:", pushSent, "emailSent:", emailSent, "skipped:", skipped, "parcoursSent:", parcoursSent);
-      return res.json({ success: true, date: today, slot, pushSent, emailSent, skipped, parcoursSent, reminders: remindersData?.length || 0 });
+      // ── CLÔTURE AUTOMATIQUE des parcours terminés (J > 60) — créneau MATIN ──
+      // Un parcours actif dont la date de semis dépasse 60 jours est considéré
+      // terminé : on passe son statut à 'termine' pour libérer l'utilisateur
+      // (plus de blocages d'entretien, carte Dashboard à jour).
+      let parcoursTermines = 0;
+      if (slot === "matin") {
+        try {
+          const limite = new Date(Date.now() - 60 * 86400000).toISOString().slice(0, 10);
+          const { data: aClore } = await supabase
+            .from("parcours")
+            .select("id")
+            .eq("statut", "actif")
+            .lt("date_semis", limite);
+          for (const p of (aClore || [])) {
+            const { error } = await supabase
+              .from("parcours")
+              .update({ statut: "termine", updated_at: new Date().toISOString() })
+              .eq("id", p.id);
+            if (!error) parcoursTermines++;
+          }
+        } catch (e) {
+          console.error("cron clôture parcours:", e.message);
+        }
+      }
+
+      console.log(`[CRON ${slot}] reminders:`, remindersData?.length || 0, "pushSent:", pushSent, "emailSent:", emailSent, "skipped:", skipped, "parcoursSent:", parcoursSent, "parcoursTermines:", parcoursTermines);
+      return res.json({ success: true, date: today, slot, pushSent, emailSent, skipped, parcoursSent, parcoursTermines, reminders: remindersData?.length || 0 });
     } catch (e) {
       console.error("cron:", e.message);
       return res.status(500).json({ error: e.message });
