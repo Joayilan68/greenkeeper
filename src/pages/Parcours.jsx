@@ -13,6 +13,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useProfile } from "../lib/useProfile";
 import { useParcours } from "../lib/useParcours";
+import { useGreenPoints } from "../lib/useGreenPoints";
 import { appShell, btn } from "../lib/styles";
 
 const VERT = "#43a047";
@@ -405,6 +406,7 @@ const JALONS_FRONT = [
 ];
 
 function SuiviParcours({ parcours, analyserPhase, validerJalon, onRetour }) {
+  const { gagnerPoints } = useGreenPoints();
   const [etat, setEtat] = useState(null);   // { phase, nom, jour, action, arrosage, blocages, termine }
   const [busy, setBusy] = useState(false);
   const [erreur, setErreur] = useState(null);
@@ -412,6 +414,19 @@ function SuiviParcours({ parcours, analyserPhase, validerJalon, onRetour }) {
     const ev = parcours.etapes_validees;
     return (ev && typeof ev === "object" && !Array.isArray(ev) && ev.jalons) ? ev.jalons : {};
   });
+
+  // Clé GreenPoints pour un jalon donné (valeurs différenciées création/regarnissage).
+  // Le plafond/cooldown du système GreenPoints gère l'anti-farming (pas de double compte).
+  const cleGreenPoints = (cleJalon) => {
+    const estRegarn = parcours.type === "regarnissage";
+    switch (cleJalon) {
+      case "sol_prepare":    return estRegarn ? "sol_prepare_regarn" : "sol_prepare_creation";
+      case "seme":           return estRegarn ? "seme_regarn"        : "seme_creation";
+      case "premiere_tonte": return "tonte";    // barème existant
+      case "engrais_demarr": return "engrais";  // barème existant
+      default:               return null;
+    }
+  };
 
   useEffect(() => {
     let annule = false;
@@ -426,10 +441,17 @@ function SuiviParcours({ parcours, analyserPhase, validerJalon, onRetour }) {
 
   const toggleJalon = async (cle) => {
     setBusy(true); setErreur(null);
+    const etaitCoche = !!jalons[cle]; // état AVANT le toggle
     try {
       const updated = await validerJalon(cle);
       const ev = updated?.etapes_validees;
       setJalons((ev && ev.jalons) ? ev.jalons : {});
+      // Attribution de points UNIQUEMENT à la coche (pas à la décoche).
+      // Le plafond/cooldown GreenPoints empêche le farming (coche/décoche répétés).
+      if (!etaitCoche) {
+        const gpKey = cleGreenPoints(cle);
+        if (gpKey) gagnerPoints(gpKey);
+      }
     } catch (e) { setErreur(e.message); }
     finally { setBusy(false); }
   };

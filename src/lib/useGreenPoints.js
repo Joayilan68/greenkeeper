@@ -24,6 +24,11 @@ export const GP_REGLES = {
   diagnostic_photo:      { points: 100, label: "Diagnostic photo",                     icone: "📸", plafond: { type: "semaine", max: 1 }, cooldown_jours: 7   },
   biostimulant:          { points: 50,  label: "Biostimulant appliqué",               icone: "🌿", plafond: { type: "mois",    max: 2 }, cooldown_jours: 14  },
   verticut:              { points: 80,  label: "Verticut réalisé",                    icone: "🔧", plafond: { type: "an",      max: 2 }, cooldown_jours: 90  },
+  // ── Jalons de parcours (Semis / Regarnissage) — valeurs différenciées ──
+  sol_prepare_creation:  { points: 50,  label: "Sol préparé (création)",              icone: "🪓", plafond: { type: "an",      max: 2 }, cooldown_jours: 30  },
+  sol_prepare_regarn:    { points: 40,  label: "Sol préparé (regarnissage)",          icone: "🪓", plafond: { type: "an",      max: 2 }, cooldown_jours: 30  },
+  seme_creation:         { points: 40,  label: "Semé (création)",                     icone: "🌱", plafond: { type: "an",      max: 2 }, cooldown_jours: 30  },
+  seme_regarn:           { points: 30,  label: "Semé (regarnissage)",                 icone: "🌱", plafond: { type: "an",      max: 2 }, cooldown_jours: 30  },
   profil_complet:        { points: 200, label: "Profil complété",                      icone: "👤", plafond: { type: "total",   max: 1 }, cooldown_jours: 0   },
   streak_7j:             { points: 200, label: "Streak 7 jours",                       icone: "🔥", plafond: { type: "semaine", max: 1 }, cooldown_jours: 7   },
   streak_30j:            { points: 1000,label: "Streak 30 jours",                      icone: "🔥", plafond: { type: "mois",    max: 1 }, cooldown_jours: 30  },
