@@ -6,7 +6,7 @@ import { useParcours, phaseParcours } from "../lib/useParcours";
 import { useHistory } from "../lib/useHistory";
 import { useAuth } from "@clerk/clerk-react";
 import { useSubscription } from "../lib/useSubscription";
-import { MONTHLY_PLAN, MONTHS_FR, calcArrosage, getWMO, getDebitMmH } from "../lib/lawn";
+import { MONTHLY_PLAN, MONTHS_FR, calcArrosage, calcArrosageSemis, getWMO, getDebitMmH } from "../lib/lawn";
 import { buildActions, zoneClimatique, ZONE_LABELS, joursProgramme } from "../lib/planEntretien";
 import { calcLawnScore } from "../lib/lawnScore";
 import AlertBanner from "../components/AlertBanner";
@@ -210,6 +210,19 @@ export default function Today() {
   const arros = (_arrosRaw && !_arrosRaw.skip) ? _arrosRaw : null;
   // arrosSkip = raison du skip si arros non disponible
   const arrosSkip = (_arrosRaw?.skip) ? _arrosRaw : null;
+
+  // ── Arrosage SEMIS dynamique (germination, phase 3) — Premium + ET₀ ────────
+  // Calcul basé sur l'ET₀ (déficit hydrique → micro-arrosages). Null si pas en
+  // germination, pas Premium, ou ET₀ absente → le front affiche alors la consigne texte.
+  const arrosSemis = (isPaid && phaseP && phaseP.phase === 3 && weather && weather.et0 != null)
+    ? calcArrosageSemis({
+        et0: weather.et0,
+        precip: weather.precip,
+        type: parcours?.type === "regarnissage" ? "regarnissage" : "creation",
+        debitMmH,
+      })
+    : null;
+  const arrosSemisOk = arrosSemis && !arrosSemis.skip;
 
   // ── Score et zone ─────────────────────────────────────────────────────────
   const score = profile ? calcLawnScore(profile, history, weather) : 70;
@@ -533,6 +546,29 @@ export default function Today() {
                 {phaseP.arrosage}
               </div>
             </div>
+
+            {/* Calcul dynamique des micro-arrosages (germination + Premium + ET₀) */}
+            {arrosSemisOk && (
+              arrosSemis.nombre === 0 ? (
+                <div style={{ marginTop:12, background:"rgba(74,222,128,0.1)", border:"1px solid rgba(74,222,128,0.25)", borderRadius:12, padding:"12px 14px", textAlign:"center" }}>
+                  <div style={{ fontSize:14, fontWeight:800, color:"#4ade80" }}>✅ Pas d'arrosage nécessaire aujourd'hui</div>
+                  <div style={{ fontSize:11, color:"#81c784", marginTop:4 }}>
+                    La pluie couvre les besoins ({arrosSemis.precip}mm · ET₀ {arrosSemis.et0}mm).
+                  </div>
+                </div>
+              ) : (
+                <div style={{ marginTop:12, background:"rgba(25,118,210,0.12)", border:"1px solid rgba(100,181,246,0.3)", borderRadius:12, padding:"12px 14px" }}>
+                  <div style={{ fontSize:11, color:"#64b5f6", fontWeight:700, letterSpacing:0.5, marginBottom:6 }}>AUJOURD'HUI (calcul météo)</div>
+                  <div style={{ fontSize:15, fontWeight:800, color:"#e3f2fd" }}>
+                    {arrosSemis.nombre} micro-arrosage{arrosSemis.nombre > 1 ? "s" : ""} × ~{arrosSemis.doseMm}mm ≈ {arrosSemis.minutes}min chacun
+                  </div>
+                  <div style={{ fontSize:11, color:"rgba(100,181,246,0.7)", marginTop:6 }}>
+                    Répartis dans la journée · ET₀ {arrosSemis.et0}mm − pluie {arrosSemis.precip}mm
+                  </div>
+                </div>
+              )
+            )}
+
             <div style={{ fontSize:11, color:"rgba(100,181,246,0.6)", textAlign:"center", marginTop:10 }}>
               Le minuteur d'arrosage classique reprendra en fin de parcours.
             </div>

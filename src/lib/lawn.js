@@ -117,6 +117,64 @@ export function calcArrosage(month, profile, weather, history = [], debitMmH = D
   return { mm, minutes, freq, debitMmH, intervalHeures };
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// ARROSAGE SEMIS (germination) — calcul dynamique basé sur l'ET₀
+// ─────────────────────────────────────────────────────────────────────────────
+// Pendant la germination, la surface doit rester constamment humide : petites
+// doses fréquentes (micro-arrosages), pas un arrosage profond espacé.
+//
+// Logique agronomique (déficit hydrique de surface) :
+//   déficit = (ET₀ − pluie_du_jour) × coef_type
+//     coef : création ×1.2 (sol nu s'assèche plus vite), regarnissage ×1.0
+//   nombre de micro-arrosages selon le déficit (mm) :
+//     ≤ 0 → 0  |  0-2 → 1  |  2-4 → 2  |  4-6 → 3  |  > 6 → 4   (plafond 4)
+//   dose/arrosage = déficit ÷ nombre, bornée entre 2 et 4 mm (petites doses)
+//   durée/arrosage = dose ÷ débit × 60 (minutes)
+//
+// Premium uniquement (nécessite l'ET₀ Open-Meteo). Si ET₀ absente → skip
+// (le front affichera la consigne texte simple pour les gratuits).
+export function calcArrosageSemis({ et0, precip = 0, type = "creation", debitMmH = DEBIT_DEFAULT_MMH }) {
+  // ET₀ indispensable (donnée Premium). Absente → pas de calcul dynamique.
+  if (et0 === null || et0 === undefined || isNaN(et0)) {
+    return { skip: true, raison: "et0_absent" };
+  }
+
+  const coef = type === "regarnissage" ? 1.0 : 1.2;
+  const pluie = (typeof precip === "number" && !isNaN(precip)) ? precip : 0;
+  const deficit = Math.max(0, (et0 - pluie)) * coef;
+
+  // Nombre de micro-arrosages selon le déficit (plafond strict à 4)
+  let nombre;
+  if (deficit <= 0)      nombre = 0;
+  else if (deficit <= 2) nombre = 1;
+  else if (deficit <= 4) nombre = 2;
+  else if (deficit <= 6) nombre = 3;
+  else                   nombre = 4;
+
+  // Déficit couvert par la pluie → aucun arrosage nécessaire aujourd'hui
+  if (nombre === 0) {
+    return { nombre: 0, doseMm: 0, minutes: 0,
+      deficit: Math.round(deficit * 10) / 10, et0, precip: pluie };
+  }
+
+  // Dose par micro-arrosage = déficit ÷ nombre, bornée entre 2 et 4 mm
+  let dose = deficit / nombre;
+  dose = Math.max(2, Math.min(4, dose));
+  dose = Math.round(dose * 10) / 10;
+
+  // Durée par micro-arrosage
+  const minutes = Math.max(1, Math.round((dose / debitMmH) * 60));
+
+  return {
+    nombre,
+    doseMm: dose,
+    minutes,
+    deficit: Math.round(deficit * 10) / 10,
+    et0,
+    precip: pluie,
+  };
+}
+
 export function getWMO(code) {
   if (code === 0) return { label:"Ciel dégagé", icon:"☀️" };
   if (code <= 3)  return { label:"Partiellement nuageux", icon:"⛅" };
