@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWeather } from "../lib/useWeather";
 import { useProfile } from "../lib/useProfile";
+import { useParcours, phaseParcours } from "../lib/useParcours";
 import { useHistory } from "../lib/useHistory";
 import { useAuth } from "@clerk/clerk-react";
 import { useSubscription } from "../lib/useSubscription";
@@ -122,6 +123,8 @@ export default function Today() {
   const { weather, alerts: rawAlerts } = useWeather();
   const alerts = Array.isArray(rawAlerts) ? rawAlerts : [];
   const { profile }         = useProfile();
+  const { parcours }        = useParcours();
+  const phaseP              = phaseParcours(parcours); // { phase, jour, nom } ou null
   const { history, addEntry } = useHistory();
   const { getToken, isLoaded: clerkLoaded } = useAuth();
   const { isPaid, isAdmin, isFree } = useSubscription();
@@ -230,7 +233,27 @@ export default function Today() {
 
   // ── Calcul des statuts (source unique planEntretien.js) ───────────────────
   // Déclaré AVANT fetchAI pour éviter la TDZ (Temporal Dead Zone) en prod Vite
-  const actionStatuses = (buildActions(profile, weather, history, score, month, _arrosRaw) || []);
+  const actionStatusesRaw = (buildActions(profile, weather, history, score, month, _arrosRaw) || []);
+
+  // ── Alignement PARCOURS : si un parcours de semis/regarnissage est actif,
+  // on bloque les actions incompatibles avec la phase (tonte < levée, engrais
+  // < consolidation). Le parcours est la source de vérité ; on adapte l'affichage
+  // sans toucher à la logique d'entretien (buildActions reste intact).
+  const actionStatuses = !phaseP ? actionStatusesRaw : actionStatusesRaw.map((a) => {
+    const id = a?.action?.id;
+    const estTonte   = id === "tonte";
+    const estEngrais = typeof id === "string" && id.startsWith("engrais");
+    if (estTonte && phaseP.phase < 4) {
+      return { ...a, status: "blocked", daysLeft: null,
+        blockedReason: "🌱 Parcours semis — première tonte après la levée (~3 semaines)", parcoursBloque: true };
+    }
+    if (estEngrais && phaseP.phase < 5) {
+      return { ...a, status: "blocked", daysLeft: null,
+        blockedReason: "🌱 Parcours semis — engrais après la consolidation (~6 semaines)", parcoursBloque: true };
+    }
+    return a;
+  });
+
   const jProg = joursProgramme(profile); // null si pas de programme actif
   const isProgramme = profile?.objectif === "creer" || profile?.objectif === "renover";
   const recommended = actionStatuses.filter(a => a?.status === "recommended");
@@ -564,7 +587,26 @@ export default function Today() {
             </span>
           </div>
 
-          {/* ── BANNIÈRE PROGRAMME RÉNOVER/CRÉER ──────────────────────────── */}
+          {/* ── BANDEAU PARCOURS (Semis / Regarnissage en cours) ──────────── */}
+          {phaseP && (
+            <div style={{ background:"linear-gradient(135deg,rgba(76,175,80,0.2),rgba(15,47,31,0.5))", border:"1px solid rgba(102,187,106,0.4)", borderRadius:12, padding:"12px 14px", marginBottom:14, display:"flex", alignItems:"center", gap:12 }}>
+              <span style={{ fontSize:22, flexShrink:0 }}>{parcours?.type === "regarnissage" ? "🌾" : "🌱"}</span>
+              <div style={{ flex:1 }}>
+                <div style={{ fontSize:13, fontWeight:800, color:"#F1F8F2" }}>
+                  {parcours?.type === "regarnissage" ? "Regarnissage" : "Semis"} en cours — {phaseP.nom} · Jour {phaseP.jour}
+                </div>
+                <div style={{ fontSize:11, color:"#a5d6a7", marginTop:2 }}>
+                  Vos actions du jour sont adaptées à votre parcours.
+                </div>
+              </div>
+              <button onClick={() => navigate("/parcours")}
+                style={{ flexShrink:0, padding:"7px 12px", borderRadius:10, background:"rgba(76,175,80,0.25)", border:"1px solid rgba(102,187,106,0.4)", color:"#a5d6a7", fontWeight:700, fontSize:11, cursor:"pointer", fontFamily:"inherit" }}>
+                Suivre →
+              </button>
+            </div>
+          )}
+
+          {/* ── BANNIÈRE PROGRAMME RÉNOVER/CRÉER (ancien système — dormant) ─── */}
           {isProgramme && jProg !== null && (
             <div style={{ background: profile?.objectif === "creer" ? "rgba(103,58,183,0.15)" : "rgba(25,118,210,0.15)", border: `1px solid ${profile?.objectif === "creer" ? "rgba(149,117,205,0.4)" : "rgba(100,181,246,0.4)"}`, borderRadius:12, padding:"12px 14px", marginBottom:14 }}>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
@@ -728,13 +770,12 @@ export default function Today() {
               <div style={{fontSize:13,color:"#81c784",marginBottom:12}}>Fonctionnalité Premium uniquement</div>
               <button onClick={()=>navigate("/subscribe")} style={{background:"linear-gradient(135deg,#F59E0B,#D97706)",color:"#1a1a1a",fontWeight:800,border:"none",borderRadius:10,padding:"10px 24px",fontSize:14,cursor:"pointer",width:"auto"}}>Passer Premium 🌿</button>
             </div>
-          ) : !weather ? (
+          ) : !weather && !aiReco ? (
             <div style={{textAlign:"center",padding:"16px 0"}}>
               <div style={{fontSize:28,marginBottom:8}}>📍</div>
               <div style={{fontSize:13,color:"#81c784",marginBottom:12}}>Activez la géolocalisation pour des recommandations adaptées à votre météo locale.</div>
               <GeolocButton navigate={navigate} />
-              {aiReco && <div style={{marginTop:12,fontSize:13,lineHeight:1.8,whiteSpace:"pre-wrap",textAlign:"left"}}>{aiReco}</div>}
-              {!aiReco && isPaid && (
+              {isPaid && (
                 <div style={{marginTop:8}}>
                   <button onClick={fetchAI} style={{background:"rgba(76,175,80,0.15)",border:"1px solid rgba(76,175,80,0.3)",borderRadius:10,padding:"8px 18px",color:"#a5d6a7",fontSize:12,cursor:"pointer"}}>🤖 Recommandations sans météo</button>
                 </div>

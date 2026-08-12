@@ -12,6 +12,32 @@ import { supabase } from "./supabase";
 
 const STATUTS_ACTIFS = ["actif", "en_attente_fenetre"];
 
+// ── Helper CLIENT : phase courante d'un parcours actif, sans appel serveur ──
+// Mêmes seuils que parcoursEngine.currentPhase (P-3), pour un usage synchrone
+// dans l'UI (ex. Today, pour masquer les actions incompatibles).
+// Retourne { phase (0-5), jour, nom } ou null.
+const PHASES_SEUILS = [
+  { phase: 1, min: -7,  max: 0,   nom: "Préparation" },
+  { phase: 2, min: 0,   max: 0,   nom: "Semis" },
+  { phase: 3, min: 1,   max: 21,  nom: "Germination" },
+  { phase: 4, min: 21,  max: 45,  nom: "Levée" },
+  { phase: 5, min: 45,  max: 60,  nom: "Consolidation" },
+];
+export function phaseParcours(parcours) {
+  if (!parcours || parcours.statut !== "actif" || !parcours.date_semis) return null;
+  const j0 = new Date(parcours.date_semis);
+  if (isNaN(j0.getTime())) return null;
+  const jour = Math.floor((Date.now() - j0.getTime()) / 86400000);
+  if (jour > 60) return { phase: 5, jour, nom: "Terminé", termine: true };
+  if (jour < -7) return { phase: 0, jour, nom: "Fenêtre" };
+  // Chercher la phase (la plus avancée sur chevauchement de bornes)
+  let ph = { phase: 0, nom: "Fenêtre" };
+  for (const p of PHASES_SEUILS) {
+    if (jour >= p.min && jour <= p.max) ph = p;
+  }
+  return { phase: ph.phase, jour, nom: ph.nom };
+}
+
 export function useParcours() {
   const { userId, isSignedIn } = useAuth();
   const [parcours, setParcours] = useState(null);   // le parcours actif courant (ou null)
