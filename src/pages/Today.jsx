@@ -507,8 +507,29 @@ export default function Today() {
         {/* Alertes météo */}
         {isPaid && alerts.map((a,i) => <AlertBanner key={i} alert={a} />)}
 
-        {/* Arrosage détaillé — Premium */}
-        {isPaid && arros && (() => {
+        {/* Arrosage adapté au PARCOURS (germination/levée) — remplace le minuteur d'entretien */}
+        {isPaid && phaseP && phaseP.phase < 5 && phaseP.arrosage && (
+          <div style={{...card(), background:"rgba(25,118,210,0.1)", border:"1px solid rgba(100,181,246,0.25)"}}>
+            <div style={cardTitle}>
+              <span>💧 Arrosage recommandé</span>
+              <span style={{ fontSize:11, color:"#64b5f6", background:"rgba(100,181,246,0.15)", borderRadius:20, padding:"2px 8px" }}>
+                Parcours · {phaseP.nom}
+              </span>
+            </div>
+            <div style={{ display:"flex", alignItems:"flex-start", gap:10, marginTop:6 }}>
+              <span style={{ fontSize:22, flexShrink:0 }}>🌱</span>
+              <div style={{ fontSize:13, color:"#a5d6a7", lineHeight:1.5 }}>
+                {phaseP.arrosage}
+              </div>
+            </div>
+            <div style={{ fontSize:11, color:"rgba(100,181,246,0.6)", textAlign:"center", marginTop:10 }}>
+              Le minuteur d'arrosage classique reprendra en fin de parcours.
+            </div>
+          </div>
+        )}
+
+        {/* Arrosage détaillé — Premium (masqué pendant germination/levée du parcours) */}
+        {isPaid && arros && !(phaseP && phaseP.phase < 5) && (() => {
           const arrosageAFaire = recommended.some(a => a.action.id === "arrosage");
           const arrosageFait   = actionStatuses.some(a => a.action.id === "arrosage" && a.status === "done_today");
           return (

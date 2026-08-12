@@ -17,25 +17,25 @@ const STATUTS_ACTIFS = ["actif", "en_attente_fenetre"];
 // dans l'UI (ex. Today, pour masquer les actions incompatibles).
 // Retourne { phase (0-5), jour, nom } ou null.
 const PHASES_SEUILS = [
-  { phase: 1, min: -7,  max: 0,   nom: "Préparation" },
-  { phase: 2, min: 0,   max: 0,   nom: "Semis" },
-  { phase: 3, min: 1,   max: 21,  nom: "Germination" },
-  { phase: 4, min: 21,  max: 45,  nom: "Levée" },
-  { phase: 5, min: 45,  max: 60,  nom: "Consolidation" },
+  { phase: 1, min: -7,  max: 0,   nom: "Préparation",   arrosage: "Sol prêt, pas encore d'arrosage spécifique." },
+  { phase: 2, min: 0,   max: 0,   nom: "Semis",         arrosage: "Premier arrosage copieux après le semis (contact graine/sol)." },
+  { phase: 3, min: 1,   max: 21,  nom: "Germination",   arrosage: "Quotidien léger — garder le sol humide en surface sans détremper (phase critique)." },
+  { phase: 4, min: 21,  max: 45,  nom: "Levée",         arrosage: "Arrosages progressivement espacés, un peu plus abondants à chaque fois." },
+  { phase: 5, min: 45,  max: 60,  nom: "Consolidation", arrosage: "Retour au cycle d'arrosage normal." },
 ];
 export function phaseParcours(parcours) {
   if (!parcours || parcours.statut !== "actif" || !parcours.date_semis) return null;
   const j0 = new Date(parcours.date_semis);
   if (isNaN(j0.getTime())) return null;
   const jour = Math.floor((Date.now() - j0.getTime()) / 86400000);
-  if (jour > 60) return { phase: 5, jour, nom: "Terminé", termine: true };
-  if (jour < -7) return { phase: 0, jour, nom: "Fenêtre" };
+  if (jour > 60) return { phase: 5, jour, nom: "Terminé", termine: true, arrosage: "Retour au cycle d'arrosage normal." };
+  if (jour < -7) return { phase: 0, jour, nom: "Fenêtre", arrosage: null };
   // Chercher la phase (la plus avancée sur chevauchement de bornes)
-  let ph = { phase: 0, nom: "Fenêtre" };
+  let ph = { phase: 0, nom: "Fenêtre", arrosage: null };
   for (const p of PHASES_SEUILS) {
     if (jour >= p.min && jour <= p.max) ph = p;
   }
-  return { phase: ph.phase, jour, nom: ph.nom };
+  return { phase: ph.phase, jour, nom: ph.nom, arrosage: ph.arrosage };
 }
 
 export function useParcours() {
