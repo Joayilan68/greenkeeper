@@ -25,11 +25,13 @@ export function WeatherProvider({ children, isPaid }) {
 
   // Fetch météo dès qu'une localisation est disponible — TOUS les utilisateurs
   // L'affichage reste Premium (Today.jsx, MyLawn.jsx) mais les données de blocage
-  // (pluie, gel, vent) sont nécessaires pour buildActions() même en Free
+  // (pluie, gel, vent) sont nécessaires pour buildActions() même en Free.
+  // Dépend aussi de isPaid : quand le statut Premium se résout après le 1er render,
+  // on refait le fetch pour récupérer l'ET₀/sol (sinon la 1re requête part en free).
   useEffect(() => {
     if (!location) return; // pas de location = pas de fetch (normal)
     fetchWeather(location);
-  }, [location]); // eslint-disable-line
+  }, [location, isPaid]); // eslint-disable-line
 
   const fetchLocation = () => {
     if (!navigator.geolocation) { setError("Géolocalisation non supportée"); return; }

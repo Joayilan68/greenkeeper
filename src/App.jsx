@@ -23,6 +23,7 @@ import { MentionsLegales, Confidentialite, CGU, CGV, Cookies } from "./pages/Leg
 import Layout from "./components/Layout";
 import { WeatherProvider } from "./lib/WeatherContext";
 import { usePilotage }     from "./lib/usePilotage";
+import { useSubscription } from "./lib/useSubscription"; // ✅ statut Premium → WeatherProvider (ET₀/sol)
 import { useUTMCapture }   from "./lib/useUTMCapture";   // ✅ Bloc 1 — capture UTM dès l'arrivée
 import { useUTMInjection } from "./lib/useUTMInjection"; // ✅ Bloc 1 — injection Clerk metadata first-touch
 
@@ -98,7 +99,8 @@ function AppWithWeather({ children }) {
   usePilotage();
   useUTMCapture();   // capte les UTM dès l'arrivée sur le site
   useUTMInjection(); // ✅ FIX 01/06/2026 — injecte les UTM dans Clerk unsafeMetadata (first-touch)
-  return <WeatherProvider>{children}</WeatherProvider>;
+  const { isPaid } = useSubscription(); // ✅ transmet le statut Premium → active ET₀/sol dans la météo
+  return <WeatherProvider isPaid={isPaid}>{children}</WeatherProvider>;
 }
 
 // ── Écran de chargement pendant la vérification d'accès ──────────────────────
