@@ -167,7 +167,8 @@ export function Confidentialite() {
           • un système de diagnostic photo permettant d'analyser une photo du gazon prise par l'utilisateur pour identifier les problèmes éventuels (maladies, carences, mauvaises herbes) et proposer des actions correctives ;<br/>
           • un système de recommandations personnalisées adapté au profil gazon de l'utilisateur (type de gazon, sol, exposition, historique d'interventions).<br/><br/>
           Ces fonctionnalités fournissent des suggestions et recommandations destinées à faciliter l'entretien du gazon par l'utilisateur. Elles ne se substituent pas à l'appréciation de l'utilisateur et n'emportent aucune décision automatique à l'égard des personnes concernées.<br/><br/>
-          <strong style={{ color:"#fbbf24" }}>Information relative à l'assistant conversationnel :</strong> lorsque vous utilisez l'assistant conversationnel de l'application, vous êtes informé que vous échangez avec un système d'intelligence artificielle et non avec une personne physique.
+          <strong style={{ color:"#fbbf24" }}>Information relative à l'assistant conversationnel :</strong> lorsque vous utilisez l'assistant conversationnel de l'application, vous êtes informé que vous échangez avec un système d'intelligence artificielle et non avec une personne physique.<br/><br/>
+          <strong style={{ color:"#a5d6a7" }}>Utilisation des données par le prestataire d'IA :</strong> les données transmises à Groq Inc. dans le cadre de l'assistant conversationnel « Bob » et de l'analyse des photos de diagnostic sont utilisées uniquement pour générer la réponse demandée. Conformément aux conditions d'utilisation de Groq, ces données ne sont pas utilisées pour entraîner ou améliorer ses modèles d'intelligence artificielle.
         </Section>
 
         <Section title="4. Responsable du traitement">
@@ -365,7 +366,8 @@ export function CGU() {
 
           <SubSection title="c. Fonctionnalités d'intelligence artificielle">
             L'Application intègre des fonctionnalités reposant sur des technologies d'intelligence artificielle. Ces fonctionnalités fournissent des suggestions et recommandations destinées à faciliter l'entretien du gazon par l'Utilisateur. Elles ne se substituent pas à l'appréciation de l'Utilisateur et n'emportent aucune garantie de résultat.<br/><br/>
-            Lorsque l'Utilisateur utilise l'assistant conversationnel, il est informé qu'il échange avec un système d'intelligence artificielle et non avec une personne physique.
+            Lorsque l'Utilisateur utilise l'assistant conversationnel, il est informé qu'il échange avec un système d'intelligence artificielle et non avec une personne physique.<br/><br/>
+            Les données que l'Utilisateur transmet à l'assistant IA « Bob » et au système de diagnostic photo ne sont pas utilisées pour entraîner les modèles d'intelligence artificielle du prestataire technique (Groq Inc.).
           </SubSection>
 
           <SubSection title="d. Recommandations de produits et liens d'affiliation">
