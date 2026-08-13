@@ -175,6 +175,36 @@ export function calcArrosageSemis({ et0, precip = 0, type = "creation", debitMmH
   };
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// VOLUME DE SEMENCES — calcul indicatif selon la surface du profil
+// ─────────────────────────────────────────────────────────────────────────────
+// Doses standard : Création 35 g/m² · Regarnissage 25 g/m².
+// Marge de sécurité +10% (bordures, reprises, pertes).
+// Format lisible : grammes sous 1 kg, kilos au-dessus (1 décimale, virgule FR).
+// Retourne { ok, minTxt, maxTxt, doseGm, surface } ou { ok:false } si surface absente.
+export const DOSE_SEMIS = { creation: 35, regarnissage: 25 }; // g/m²
+
+function formatMasseSemis(grammes) {
+  if (grammes < 1000) return `${Math.round(grammes)} g`;
+  const kg = grammes / 1000;
+  return `${(Math.round(kg * 10) / 10).toString().replace(".", ",")} kg`;
+}
+
+export function calcSemences(surface, type = "creation") {
+  const s = Number(surface);
+  if (!s || isNaN(s) || s <= 0) return { ok: false };
+  const dose = type === "regarnissage" ? DOSE_SEMIS.regarnissage : DOSE_SEMIS.creation;
+  const base = s * dose;          // grammes
+  const avecMarge = base * 1.1;   // +10%
+  return {
+    ok: true,
+    surface: s,
+    doseGm: dose,
+    minTxt: formatMasseSemis(base),
+    maxTxt: formatMasseSemis(avecMarge),
+  };
+}
+
 export function getWMO(code) {
   if (code === 0) return { label:"Ciel dégagé", icon:"☀️" };
   if (code <= 3)  return { label:"Partiellement nuageux", icon:"⛅" };
