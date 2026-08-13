@@ -13,6 +13,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useProfile } from "../lib/useProfile";
 import { useParcours } from "../lib/useParcours";
+import { calcSemences } from "../lib/lawn";
 import { useGreenPoints } from "../lib/useGreenPoints";
 import { appShell, btn } from "../lib/styles";
 
@@ -388,6 +389,43 @@ function EnAttenteParcours({ parcours, profile, analyserFenetre, demarrerParcour
 // SUIVI (C+D) — parcours actif : phase du jour, action, arrosage, timeline 6
 // phases, blocages, et validation des jalons ponctuels.
 // ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// GUIDE DE PRÉPARATION DU SOL (13 étapes) — source : plan agronomique Mongazon360
+// Affiché en modal depuis l'écran de suivi du parcours (bouton permanent).
+// ─────────────────────────────────────────────────────────────────────────────
+const GUIDE_PREPA = {
+  creation: [
+  { n: 1, action: "Nettoyer la parcelle", methode: "Retirer ancien gazon si nécessaire, pierres, racines, débris et adventices.", vigilance: "Éliminer correctement les adventices avant le travail du sol." },
+  { n: 2, action: "Décompacter le sol", methode: "Travailler environ 15 à 20 cm de profondeur pour favoriser enracinement et infiltration.", vigilance: "Aller plus profond uniquement si le sol est très compacté." },
+  { n: 3, action: "Corriger / amender si nécessaire", methode: "Adapter la structure et la fertilité selon le type de sol.", vigilance: "Faire les grosses corrections avant le nivellement." },
+  { n: 4, action: "Nivellement grossier", methode: "Supprimer bosses et creux et prévoir une pente évitant les stagnations d'eau.", vigilance: "Ne pas laisser de cuvettes." },
+  { n: 5, action: "Laisser stabiliser / faux-semis", methode: "Laisser le sol se stabiliser après un travail important. Un faux-semis permet de faire lever puis éliminer des adventices.", vigilance: "Utile sur terrain fortement remanié." },
+  { n: 6, action: "Préparer le lit de semences", methode: "Affiner superficiellement les 2 à 4 premiers cm au râteau.", vigilance: "Obtenir une terre fine sans grosses mottes." },
+  { n: 7, action: "Nivellement fin", methode: "Finaliser la planéité au râteau.", vigilance: "Conserver les pentes d'évacuation prévues." },
+  { n: 8, action: "Raffermir le sol", methode: "Passer légèrement le rouleau.", vigilance: "Le sol doit être ferme sans être compacté." },
+  { n: 9, action: "Griffer la surface", methode: "Griffer très légèrement si la surface est devenue trop lisse.", vigilance: "Ne pas retravailler profondément." },
+  { n: 10, action: "Semer", methode: "Semer à la dose recommandée, idéalement en deux passages croisés.", vigilance: "Répartir les graines de manière homogène." },
+  { n: 11, action: "Recouvrir légèrement", methode: "Incorporer très légèrement les graines, environ 0,5 cm, éventuellement jusqu'à 1 cm.", vigilance: "Ne pas enfouir profondément les graines." },
+  { n: 12, action: "Rouler après semis", methode: "Passage léger du rouleau pour améliorer le contact graine/sol.", vigilance: "Éviter un compactage excessif." },
+  { n: 13, action: "Arrosage de germination", methode: "Arroser immédiatement en pluie fine puis maintenir la surface humide pendant la germination.", vigilance: "Éviter dessèchement, ruissellement et excès d'eau." },
+  ],
+  regarnissage: [
+  { n: 1, action: "Tondre court", methode: "Tondre généralement autour de 2,5 à 4 cm sans scalper.", vigilance: "Adapter à la hauteur du gazon existant." },
+  { n: 2, action: "Ramasser les déchets", methode: "Retirer soigneusement les résidus de tonte.", vigilance: "Libérer l'accès à la surface du sol." },
+  { n: 3, action: "Scarifier / verticuter", methode: "Ouvrir le couvert, retirer une partie du feutre et créer des passages vers le sol.", vigilance: "Des passages croisés sont utiles pour un regarnissage important." },
+  { n: 4, action: "Ramasser le feutre", methode: "Évacuer intégralement les débris issus de la scarification.", vigilance: "La graine doit pouvoir atteindre le sol." },
+  { n: 5, action: "Aérer si nécessaire", methode: "Décompacter un sol tassé ; l'aération à carottes est particulièrement efficace.", vigilance: "Non systématique si le sol n'est pas compacté." },
+  { n: 6, action: "Corriger la surface", methode: "Combler les petits creux et irrégularités avec un apport adapté.", vigilance: "Ne pas recouvrir excessivement le gazon existant." },
+  { n: 7, action: "Terreautage léger éventuel", methode: "Appliquer un top-dressing fin si nécessaire.", vigilance: "Ne jamais ensevelir le gazon existant." },
+  { n: 8, action: "Semer", methode: "Semer les graines de regarnissage, idéalement en deux passages croisés.", vigilance: "Respecter la dose adaptée au mélange utilisé." },
+  { n: 9, action: "Mettre les graines au contact du sol", methode: "Léger râteau, balai à gazon ou matériel adapté pour faire descendre les graines entre les brins.", vigilance: "Éviter que les graines restent suspendues dans le feuillage." },
+  { n: 10, action: "Rouler légèrement", methode: "Améliorer le contact graine/sol.", vigilance: "Passage léger uniquement." },
+  { n: 11, action: "Arroser", methode: "Arroser en pluie fine et maintenir la surface régulièrement humide pendant la germination.", vigilance: "Éviter dessèchement, ruissellement et excès d'eau." },
+  { n: 12, action: "Limiter le piétinement", methode: "Protéger les jeunes graminées pendant leur implantation.", vigilance: "Attendre un enracinement suffisant avant usage normal." },
+  { n: 13, action: "Première tonte", methode: "Tondre avec une lame affûtée lorsque les nouvelles pousses sont suffisamment développées.", vigilance: "Ne pas retirer plus d'environ 1/3 de la hauteur." },
+  ],
+};
+
 const PHASES_LABELS = [
   { n: 0, nom: "Fenêtre" },
   { n: 1, nom: "Préparation" },
@@ -407,9 +445,13 @@ const JALONS_FRONT = [
 
 function SuiviParcours({ parcours, analyserPhase, validerJalon, onRetour }) {
   const { gagnerPoints } = useGreenPoints();
+  const { profile } = useProfile();
+  const semences = calcSemences(profile?.surface, parcours.type); // { ok, minTxt, maxTxt, doseGm } ou { ok:false }
   const [etat, setEtat] = useState(null);   // { phase, nom, jour, action, arrosage, blocages, termine }
   const [busy, setBusy] = useState(false);
   const [erreur, setErreur] = useState(null);
+  const [showGuide, setShowGuide] = useState(false); // modal guide de préparation
+  const [showCalcul, setShowCalcul] = useState(false); // explication du calcul de semences
   const [jalons, setJalons] = useState(() => {
     const ev = parcours.etapes_validees;
     return (ev && typeof ev === "object" && !Array.isArray(ev) && ev.jalons) ? ev.jalons : {};
@@ -527,6 +569,40 @@ function SuiviParcours({ parcours, analyserPhase, validerJalon, onRetour }) {
                 <span style={{ fontSize: 13, color: "#a5d6a7" }}>{etat.arrosage}</span>
               </div>
             )}
+
+            {/* Volume de semences (phase semis) selon la surface du profil */}
+            {etat.phase === 2 && (
+              <div style={{ marginTop: 12, background: "rgba(139,195,74,0.12)", border: "1px solid rgba(139,195,74,0.3)", borderRadius: 12, padding: "12px 14px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                  <span style={{ fontSize: 18 }}>🌾</span>
+                  <span style={{ fontSize: 12, color: "#aed581", fontWeight: 700, letterSpacing: 0.5 }}>QUANTITÉ DE SEMENCES</span>
+                  {semences.ok && (
+                    <button onClick={() => setShowCalcul((v) => !v)}
+                      style={{ marginLeft: "auto", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(165,214,167,0.2)", borderRadius: "50%", width: 22, height: 22, color: "#a5d6a7", fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, flexShrink: 0 }}
+                      title="Comment est calculée cette quantité ?">ℹ️</button>
+                  )}
+                </div>
+                {semences.ok ? (
+                  <>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: "#e8f5e9" }}>
+                      {semences.minTxt} à {semences.maxTxt}
+                    </div>
+                    <div style={{ fontSize: 11, color: "#9ccc65", marginTop: 3 }}>
+                      Pour {semences.surface} m² · {semences.doseGm} g/m² (+10% marge bordures/reprises)
+                    </div>
+                    {showCalcul && (
+                      <div style={{ marginTop: 10, background: "rgba(0,0,0,0.2)", borderRadius: 8, padding: "10px 12px", fontSize: 11.5, color: "#c5e1a5", lineHeight: 1.55 }}>
+                        <b style={{ color: "#e8f5e9" }}>Comment on calcule&nbsp;:</b> {semences.surface} m² × {semences.doseGm} g/m² (dose standard pour un {parcours.type === "regarnissage" ? "regarnissage" : "semis de création"}) = {semences.minTxt}, puis +10&nbsp;% pour les bordures, reprises et pertes → jusqu'à {semences.maxTxt}. Chiffre indicatif : ajustez selon les recommandations de votre mélange de semences.
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div style={{ fontSize: 12, color: "#c5e1a5" }}>
+                    Renseignez la surface de votre terrain dans votre profil pour obtenir la quantité indicative.
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
@@ -586,9 +662,99 @@ function SuiviParcours({ parcours, analyserPhase, validerJalon, onRetour }) {
           <div style={{ background: "rgba(198,40,40,0.15)", border: "1px solid rgba(198,40,40,0.4)", borderRadius: 12, padding: "12px 14px", marginBottom: 16, fontSize: 13, color: "#ef9a9a" }}>{erreur}</div>
         )}
 
+        {/* ── Bouton Guide de préparation (permanent) ── */}
+        <button onClick={() => setShowGuide(true)}
+          style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+            padding: "13px 16px", borderRadius: 14, marginBottom: 12, cursor: "pointer", fontFamily: "inherit",
+            background: "rgba(76,175,80,0.12)", border: "1px solid rgba(102,187,106,0.3)", color: "#a5d6a7", fontWeight: 700, fontSize: 13 }}>
+          📋 Guide de préparation détaillé
+        </button>
+
         <button onClick={onRetour}
           style={{ marginTop: 8, width: "100%", background: "none", border: "none", color: "#4a7c5c", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>
           Retour à Mon Gazon
+        </button>
+      </div>
+
+      {showGuide && (
+        <GuidePreparation type={parcours.type} semences={semences} onClose={() => setShowGuide(false)} />
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MODAL — Guide de préparation du sol détaillé (13 étapes selon le type)
+// ─────────────────────────────────────────────────────────────────────────────
+function GuidePreparation({ type, semences, onClose }) {
+  const estRegarn = type === "regarnissage";
+  const etapes = estRegarn ? GUIDE_PREPA.regarnissage : GUIDE_PREPA.creation;
+  const titre = estRegarn ? "Préparation — Regarnissage" : "Préparation — Création par semis";
+
+  return (
+    <div
+      onClick={onClose}
+      style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.7)",
+        display: "flex", alignItems: "flex-end", justifyContent: "center", padding: 0 }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{ width: "100%", maxWidth: 480, maxHeight: "88vh", overflowY: "auto",
+          background: "linear-gradient(180deg,#12351f,#0c2417)", borderRadius: "24px 24px 0 0",
+          border: "1px solid rgba(102,187,106,0.25)", padding: "20px 18px 40px" }}
+      >
+        {/* Poignée + en-tête */}
+        <div style={{ width: 40, height: 4, background: "rgba(255,255,255,0.2)", borderRadius: 4, margin: "0 auto 16px" }} />
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+          <div style={{ fontSize: 18, fontWeight: 800, color: "#F1F8F2" }}>{titre}</div>
+          <button onClick={onClose}
+            style={{ background: "rgba(255,255,255,0.08)", border: "none", borderRadius: 10, width: 32, height: 32,
+              color: "#a5d6a7", fontSize: 18, cursor: "pointer", flexShrink: 0 }}>×</button>
+        </div>
+        <div style={{ fontSize: 12, color: "#81c784", marginBottom: 18 }}>
+          {etapes.length} étapes, de la préparation au premier arrosage.
+        </div>
+
+        {/* Liste des étapes */}
+        {etapes.map((e) => (
+          <div key={e.n} style={{ display: "flex", gap: 12, marginBottom: 14 }}>
+            <div style={{ flexShrink: 0, width: 28, height: 28, borderRadius: "50%",
+              background: "rgba(76,175,80,0.25)", border: "1px solid rgba(102,187,106,0.4)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 13, fontWeight: 800, color: "#a5d6a7" }}>{e.n}</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#e8f5e9", marginBottom: 3 }}>{e.action}</div>
+              {e.methode && (
+                <div style={{ fontSize: 12.5, color: "#c8e6c9", lineHeight: 1.5, marginBottom: 4 }}>{e.methode}</div>
+              )}
+              {e.vigilance && (
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 6,
+                  background: "rgba(255,193,7,0.08)", border: "1px solid rgba(255,193,7,0.2)",
+                  borderRadius: 8, padding: "6px 9px" }}>
+                  <span style={{ fontSize: 12, flexShrink: 0 }}>⚠️</span>
+                  <span style={{ fontSize: 11.5, color: "#ffe082", lineHeight: 1.4 }}>{e.vigilance}</span>
+                </div>
+              )}
+              {/* Volume de semences indicatif sous l'étape "Semer" */}
+              {e.action === "Semer" && semences && semences.ok && (
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 6, marginTop: 5,
+                  background: "rgba(139,195,74,0.12)", border: "1px solid rgba(139,195,74,0.3)",
+                  borderRadius: 8, padding: "7px 10px" }}>
+                  <span style={{ fontSize: 13, flexShrink: 0 }}>🌾</span>
+                  <span style={{ fontSize: 11.5, color: "#c5e1a5", lineHeight: 1.4 }}>
+                    Pour vos {semences.surface} m² : <b style={{ color: "#e8f5e9" }}>{semences.minTxt} à {semences.maxTxt}</b> ({semences.doseGm} g/m² +10%).
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+
+        <button onClick={onClose}
+          style={{ width: "100%", marginTop: 10, padding: "13px", borderRadius: 14, cursor: "pointer",
+            fontFamily: "inherit", background: "rgba(76,175,80,0.2)", border: "1px solid rgba(102,187,106,0.4)",
+            color: "#a5d6a7", fontWeight: 700, fontSize: 14 }}>
+          Fermer
         </button>
       </div>
     </div>
