@@ -519,6 +519,10 @@ export default function Today() {
               </div>
               <div style={{fontSize:52}}>{w.icon}</div>
             </div>
+            {/* Attribution Open-Meteo — obligation licence CC BY 4.0 */}
+            <div style={{fontSize:10,color:"#81c784",opacity:0.6,marginTop:10,textAlign:"right"}}>
+              Données météo : <a href="https://open-meteo.com" target="_blank" rel="noopener noreferrer" style={{color:"#81c784",textDecoration:"underline"}}>Open-Meteo.com</a> · CC BY 4.0
+            </div>
           </div>
         ); })()}
         {!isPaid && (
