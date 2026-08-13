@@ -104,6 +104,11 @@ export function MentionsLegales() {
           Toute exploitation non autorisée des œuvres ou de l'un quelconque des éléments que le site contient pourra être considérée comme constitutive d'une contrefaçon et poursuivie conformément aux dispositions des articles L.335-2 et suivants du Code de Propriété Intellectuelle.
         </Section>
 
+        <Section title="Sources et attributions">
+          Les données météorologiques affichées dans l'application (température, précipitations, humidité, vent, évapotranspiration, données de sol) sont fournies par <strong>Open-Meteo.com</strong> et sont mises à disposition sous licence <strong>Creative Commons Attribution 4.0 International (CC BY 4.0)</strong>.<br/><br/>
+          Conformément à cette licence, Mongazon360 crédite Open-Meteo comme source de ces données. La licence complète est consultable à l'adresse <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer" style={{ color:"#a5d6a7" }}>creativecommons.org/licenses/by/4.0</a> et les données sont accessibles via <a href="https://open-meteo.com" target="_blank" rel="noopener noreferrer" style={{ color:"#a5d6a7" }}>open-meteo.com</a>.
+        </Section>
+
         <Section title="Obligations des utilisateurs">
           Les utilisateurs s'engagent à utiliser le présent site internet dans les conditions suivantes :<br/><br/>
           • ne pas utiliser le site aux fins d'entraver ou altérer son fonctionnement, notamment en l'encombrant, volontairement ou involontairement, par le transfert intempestif de contenus, en dehors des cas d'utilisation prévus ;<br/>
