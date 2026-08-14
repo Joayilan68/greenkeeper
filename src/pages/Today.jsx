@@ -266,6 +266,7 @@ export default function Today() {
     const estTonte    = id === "tonte";
     const estEngrais  = typeof id === "string" && id.startsWith("engrais");
     const estAgressive = AGRESSIVES_PH5.includes(id);
+    const estArrosage = id === "arrosage";
     // Tonte : bloquée avant la levée (phase 4)
     if (estTonte && phaseP.phase < 4) {
       return { ...a, status: "blocked", daysLeft: null,
@@ -282,6 +283,12 @@ export default function Today() {
     if ((estEngrais || estAgressive) && phaseP.phase < 5) {
       return { ...a, status: "blocked", daysLeft: null,
         blockedReason: "🌱 Parcours semis — action déconseillée sur jeune gazon (après consolidation)", parcoursBloque: true };
+    }
+    // Arrosage pendant le parcours (phase < 5) : l'arrosage est piloté par la carte
+    // "Arrosage recommandé" du parcours ci-dessus. On garde le bouton pour journaliser,
+    // mais on retire le détail d'entretien classique (chiffres contradictoires avec la consigne semis).
+    if (estArrosage && phaseP.phase < 5) {
+      return { ...a, parcoursDetail: "Arrosez selon la consigne de votre parcours, puis journalisez ici." };
     }
     return a;
   });
