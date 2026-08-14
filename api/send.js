@@ -94,18 +94,21 @@ module.exports = async function handler(req, res) {
       );
 
       const { decideNotification, appendNotifLog } = require("./notificationEngine.cjs");
+      // ← nouveau : source de vérité de la phase parcours, partagée avec Today.jsx/phaseParcours()
+      const { currentPhase } = require("./parcoursEngine.cjs");
 
       // Créneau courant (matin par défaut si non précisé)
       const slot = (req.query.slot === "soir") ? "soir" : "matin";
       const today = new Date().toISOString().slice(0, 10);
       const month = new Date().getMonth() + 1;
 
-      // Récupérer rappels + souscriptions + consentements + profils
-      const [{ data: remindersData }, { data: subsData }, { data: consentsData }, { data: profilesData }] = await Promise.all([
+      // Récupérer rappels + souscriptions + consentements + profils + parcours actifs
+      const [{ data: remindersData }, { data: subsData }, { data: consentsData }, { data: profilesData }, { data: parcoursActifsData }] = await Promise.all([
         supabase.from("reminders").select("*"),
         supabase.from("push_subscriptions").select("*"),
         supabase.from("user_consents").select("user_id, notifications, marketing"),
         supabase.from("profiles").select("user_id, data"),
+        supabase.from("parcours").select("*").eq("statut", "actif"),
       ]);
 
       const subMap = {};
@@ -114,6 +117,9 @@ module.exports = async function handler(req, res) {
       (consentsData || []).forEach(c => { consentMap[c.user_id] = c; });
       const profileMap = {};
       (profilesData || []).forEach(p => { profileMap[p.user_id] = p.data || {}; });
+      // ← nouveau : parcours actif par user (un seul actif possible, cf. règle useParcours.js)
+      const parcoursMap = {};
+      (parcoursActifsData || []).forEach(p => { parcoursMap[p.user_id] = p; });
 
       // Cache météo par zone arrondie (1 fetch/zone/exécution → protège le quota)
       const weatherCache = {};
@@ -160,6 +166,13 @@ module.exports = async function handler(req, res) {
           ? await getWeatherForUser(profile)
           : null;
 
+        // ── État réel du parcours actif — MÊME source que Today.jsx (phaseParcours/useParcours) ──
+        const parcoursRow = parcoursMap[user_id];
+        let parcoursState = parcoursRow
+          ? currentPhase({ type: parcoursRow.type, dateSemis: parcoursRow.date_semis, today })
+          : null;
+        if (parcoursState && parcoursState.termine) parcoursState = null; // aligné : phaseParcours() renvoie null si J>60
+
         // Décision UNIQUE du moteur (sert au push ET à l'email)
         const decision = decideNotification({
           profile, weather,
@@ -168,6 +181,7 @@ module.exports = async function handler(req, res) {
           notifLog: notif_log,
           month, slot, today,
           gami: profile.gamification || null,
+          parcours: parcoursState, // ← nouveau
         });
 
         if (!decision) continue;

@@ -87,25 +87,29 @@ function checkUrgenceMeteo(weather) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// NIVEAU 2 — Action parcours actif (semis en cours). Placeholder 2a.
-// Le vrai moteur parcours (table `parcours`) arrive plus tard : ici on gère
-// seulement le cas "objectif créer/rénover" du profil comme proxy simple.
+// NIVEAU 2 — Action parcours actif (semis en cours).
+// Branché sur l'état RÉEL du parcours (table `parcours` via parcoursEngine.currentPhase,
+// calculé par send.js et transmis dans ctx.parcours) — MÊME source de vérité que
+// phaseParcours()/Today.jsx côté front. Ne dépend plus de profile.objectif (ancien
+// système, dormant) : ce champ n'est pas mis à jour par la création d'un parcours.
 // ─────────────────────────────────────────────────────────────────────────────
-function checkParcoursActif(profile, weather, slot) {
-  const obj = profile && profile.objectif;
-  const enCreation = obj === "creer" || obj === "renover";
-  if (!enCreation) return null;
+function checkParcoursActif(parcoursState, weather, slot) {
+  if (!parcoursState) return null;
 
-  // Au créneau soir, l'arrosage de germination prime (piloté par N10 si météo dispo).
+  // Au créneau soir, l'arrosage prime. Phase < 5 : le parcours pilote l'arrosage —
+  // même texte que la carte "Arrosage recommandé" de Today.jsx (phaseP.arrosage).
   if (slot === "soir") {
-    const ars = decideArrosageSoir(weather);
-    if (ars) return { priority: 2, type: "parcours_arrosage", title: ars.title, body: ars.body };
-    return null;
+    if (parcoursState.phase < 5 && parcoursState.arrosage) {
+      return { priority: 2, type: "parcours_arrosage",
+        title: "💧 Arrosage — " + parcoursState.nom,
+        body: parcoursState.arrosage };
+    }
+    return null; // phase 5 (consolidation) : cycle normal, pas de spécificité parcours
   }
-  // Le matin : rappel du programme en cours.
+  // Le matin : rappel de la phase + action du jour — même texte que currentPhase()/le suivi parcours.
   return { priority: 2, type: "parcours_actif",
-    title: obj === "creer" ? "🌱 Création en cours" : "🔧 Rénovation en cours",
-    body: "Suivez votre programme du jour dans l'app pour réussir votre gazon." };
+    title: `🌱 Parcours en cours — ${parcoursState.nom}`,
+    body: parcoursState.action || "Suivez votre programme du jour dans l'app pour réussir votre gazon." };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -241,7 +245,7 @@ function decideNotification(ctx) {
   const {
     profile = {}, weather = null, reminderPrefs = {}, history = [],
     notifLog = null, month = null, slot = "matin", today = null,
-    gami = null,
+    gami = null, parcours: parcoursState = null,
   } = ctx || {};
 
   const sent = sentTodayInfo(notifLog, today);
@@ -265,7 +269,7 @@ function decideNotification(ctx) {
     // déjà envoyé au soir aujourd'hui ?
     if (sent.slots.includes("soir")) return null;
     // parcours actif d'abord (germination), sinon arrosage entretien
-    const parcours = checkParcoursActif(profile, weather, "soir");
+    const parcours = checkParcoursActif(parcoursState, weather, "soir");
     if (parcours) return finalize(parcours, "soir");
     const ars = decideArrosageSoir(weather);
     if (ars) return finalize({ priority: 2, type: "arrosage_soir", title: ars.title, body: ars.body }, "soir");
@@ -276,7 +280,7 @@ function decideNotification(ctx) {
   if (sent.slots.includes("matin")) return null;
 
   const candidates = [
-    checkParcoursActif(profile, weather, "matin"),   // 2
+    checkParcoursActif(parcoursState, weather, "matin"),   // 2
     checkEntretienDu(profile, reminderPrefs, history, month), // 3 (N08)
     checkConseilMeteo(weather),                       // 4
     checkGamification(gami),                          // 5
