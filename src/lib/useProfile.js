@@ -5,7 +5,7 @@
 // Au merge : Supabase est prioritaire, les résidus synthétiques sont purgés
 // ─────────────────────────────────────────────────────────────────────────────
 import { useState, useEffect } from "react";
-import { useAuth } from "@clerk/clerk-react";
+import { useAuth, useUser } from "@clerk/clerk-react";
 import { supabase } from "./supabase";
 
 const KEY_NEW = "mg360_profile_v1";
@@ -83,6 +83,7 @@ async function verifierVilleEnLigne(profile, saveProfile) {
 // ── Hook principal ────────────────────────────────────────────────────────────
 export function useProfile() {
   const { userId, isSignedIn } = useAuth();
+  const { user }               = useUser(); // accès à unsafeMetadata (UTM captées)
   const [profile, setProfile]  = useState(loadLocal); // cache instantané
   const [synced, setSynced]    = useState(false);
 
@@ -166,6 +167,32 @@ export function useProfile() {
     window.addEventListener("online", handleOnline);
     return () => window.removeEventListener("online", handleOnline);
   }, [profile]); // eslint-disable-line
+
+  // ── Persistance UTM (first-touch) : Clerk unsafeMetadata → profiles.data.utm ──
+  // Rend l'attribution requêtable côté Supabase (le brief peut alors dire
+  // "tel créateur a ramené X inscrits"). Idempotent : n'écrit qu'une fois et
+  // ne réécrit jamais une attribution déjà enregistrée (first-touch respecté).
+  // Les users existants sont rattrapés automatiquement au montage (UTM déjà
+  // présente dans Clerk).
+  useEffect(() => {
+    if (!synced || !isSignedIn || !user || !profile) return;
+    if (profile.utm) return;                 // déjà enregistré → ne rien faire
+
+    const md = user.unsafeMetadata || {};
+    if (!md.source) return;                  // rien à copier
+
+    saveProfile({
+      ...profile,
+      utm: {
+        source:      md.source,
+        medium:      md.medium      || "",
+        campaign:    md.campaign    || "",
+        referer:     md.referer     || "",
+        landingPath: md.landingPath || "",
+        capturedAt:  md.utmCapturedAt || null,
+      },
+    });
+  }, [synced, isSignedIn, user, profile?.utm]); // eslint-disable-line
 
   return { profile, saveProfile, synced };
 }
