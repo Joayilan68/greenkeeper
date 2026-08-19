@@ -11,6 +11,9 @@ import { MONTHLY_PLAN, MONTHS_FR, calcArrosage, DEBIT_DEFAULT_MMH, getDebitMmH }
 import { buildActions, zoneClimatique, ZONE_LABELS } from "../lib/planEntretien";
 import { card, cardTitle, btn, scroll, header } from "../lib/styles";
 import ProductCard from "../components/ProductCard";
+import { useStreak } from "../lib/useStreak";
+import { useBadges } from "../lib/useBadges";
+import BadgesGallery from "../components/BadgesGallery";
 
 // Mapping action.id → clé amazonProducts.js
 const ACTION_TO_AMAZON = {
@@ -237,6 +240,11 @@ export default function MyLawn() {
 
   const { score, potential, label, color, issues, strengths, composantes } = calcLawnScore({ weather, profile, history, month, diagnostics });
 
+  // ── Badges collectionnables (détection client, stockage profiles.data.badges) ──
+  const streak = useStreak();
+  const { badges: badgesList, nbUnlocked, total: badgesTotal, justUnlocked, clearJustUnlocked } =
+    useBadges({ profile, saveProfile, score, diagnostics, streak, isPaid });
+
   // ── Conseil du mois ──
   const { recommandationPrincipale } = useRecommandations(profile, score, weather, history);
 
@@ -424,6 +432,15 @@ export default function MyLawn() {
           </div>
           <ShareScore score={score} label={label} profile={profile} />
         </div>
+
+        {/* ── BADGES COLLECTIONNABLES ── */}
+        <BadgesGallery
+          badges={badgesList}
+          nbUnlocked={nbUnlocked}
+          total={badgesTotal}
+          justUnlocked={justUnlocked}
+          clearJustUnlocked={clearJustUnlocked}
+        />
 
         {/* ── 2. CONSEIL DU MOIS ── */}
         {recommandationPrincipale && (
