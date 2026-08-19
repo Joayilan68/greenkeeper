@@ -2,6 +2,12 @@
 // Hook de détection automatique des bugs et envoi d'alertes
 
 import { useEffect, useRef } from "react";
+import { useUser } from "@clerk/clerk-react";
+
+// Email de l'utilisateur connecté, tenu à jour par le hook usePilotage().
+// Les gestionnaires d'erreurs GLOBAUX (window.error / unhandledrejection) tournent
+// hors contexte React → ils lisent cette variable de module au moment de l'alerte.
+let currentUserEmail = null;
 
 const ALERT_KEY    = "gk_pilotage_alerts";
 const COOLDOWN_MS  = 5 * 60 * 1000; // 5 min entre 2 alertes du même type
@@ -97,16 +103,19 @@ async function sendBugAlert(type, message, details = {}, severity = "error") {
 
   if (!shouldSendAlert(type)) return; // cooldown actif
 
+  // Enrichit l'alerte avec l'utilisateur connecté (aide au diagnostic / reproduction).
+  const enriched = { "Utilisateur": currentUserEmail || "non connecté", ...details };
+
   try {
     await fetch("/api/send?type=alert", {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type, message, details, severity })
+      body: JSON.stringify({ type, message, details: enriched, severity })
     });
     markAlertSent(type);
 
     // Log local pour le dashboard Pilotage
-    logAlertLocally({ type, message, details, severity, date: new Date().toISOString() });
+    logAlertLocally({ type, message, details: enriched, severity, date: new Date().toISOString() });
 
   } catch (e) {
     console.warn("Impossible d envoyer l alerte:", e.message);
@@ -123,6 +132,12 @@ function logAlertLocally(alert) {
 // ── Hook principal ──────────────────────────────────────────────────────────
 export function usePilotage() {
   const initialized = useRef(false);
+  const { user } = useUser();
+
+  // Tenir à jour l'email de l'utilisateur connecté (lu par les handlers globaux).
+  useEffect(() => {
+    currentUserEmail = user?.primaryEmailAddress?.emailAddress || null;
+  }, [user]);
 
   useEffect(() => {
     if (initialized.current) return;
