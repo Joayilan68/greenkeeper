@@ -371,12 +371,18 @@ export default function Pilotage() {
         {tab === "activite" && (
           <>
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:4 }}>
-              <KPI icon="👥" label="Total inscrits" value={loadingUsers ? "..." : (users?.total ?? "—")} sub="Hors admins" color="#a5d6a7" />
+              <KPI icon="👥" label="Comptes créés" value={loadingUsers ? "..." : (users?.total ?? "—")} sub="Hors admins · ≠ installs" color="#a5d6a7" />
               <KPI icon="🟢" label="Actifs aujourd'hui" value={loadingUsers ? "..." : dauToday} sub="Connectés ce jour" color="#66BB6A" />
               <KPI icon="🆕" label="Nouveaux aujourd'hui" value={loadingUsers ? "..." : (users?.newToday ?? "—")} sub="Inscriptions du jour" color="#90caf9" />
               <KPI icon="📅" label="Nouveaux cette semaine" value={loadingUsers ? "..." : (users?.newLast7 ?? "—")} sub="7 derniers jours" color="#81d4fa" />
               <KPI icon="🗓️" label="Nouveaux ce mois" value={loadingUsers ? "..." : (users?.newLast30 ?? "—")} sub="30 derniers jours" color="#ffcc80" />
               <KPI icon="📸" label="Diagnostics" value={local?.diagnostics.total ?? "—"} sub={`+${local?.diagnostics.ce7j ?? 0} cette semaine`} color="#ce93d8" />
+            </div>
+
+            {/* Clarification : comptes créés ≠ installations (sources de vérité distinctes) */}
+            <div style={{ fontSize:10, color:"#4a7c5c", padding:"0 4px 10px", lineHeight:1.5 }}>
+              ℹ️ « Comptes créés » = inscriptions dans l'app (hors admins), <b>pas</b> les installations.
+              Installs &amp; opt-in testeurs : <b>Google Play Console</b> (source de vérité distincte).
             </div>
 
             {/* ── Entonnoir de conversion : Préinscrits → Inscrits → Premium ── */}
