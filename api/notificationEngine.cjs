@@ -27,6 +27,17 @@ const LABELS = {
   desherbage: { icon: "🪴", label: "Désherbage" },
 };
 
+// ── Équipement déclaré (profil) — adapte les rappels ──────────────────────────
+// Robot tondeuse → pas de rappel tonte. Arrosage auto/programmateur → on parle
+// de "régler le programmateur" plutôt que "d'arroser".
+function hasRobotTondeuse(p) {
+  return Array.isArray(p?.tondeuse) && p.tondeuse.includes("robot");
+}
+function hasArrosageAuto(p) {
+  return p?.arrosage === "automatique" ||
+    (Array.isArray(p?.materiel) && p.materiel.includes("arroseur"));
+}
+
 // ── Helpers date (parse "DD/MM/YYYY" de l'historique) ────────────────────────
 function daysSinceFr(dateStr) {
   if (!dateStr || typeof dateStr !== "string") return 999;
@@ -118,10 +129,12 @@ function checkParcoursActif(parcoursState, weather, slot) {
 //   >=0.80 → annulé (message positif)   ; 0.20-0.80 → complément ; <0.20 → arrosage
 // Si pas d'ET₀ (free ou météo indispo) → fallback simple sur precip.
 // ─────────────────────────────────────────────────────────────────────────────
-function decideArrosageSoir(weather) {
+function decideArrosageSoir(weather, profile) {
   if (!weather) return null;
   const et0 = weather.et0;      // mm/j (premium)
   const pluie = weather.precip; // mm 24h
+  // Arrosage automatique/programmateur déclaré → on parle de RÉGLER, pas d'arroser.
+  const auto = hasArrosageAuto(profile);
 
   // Cas premium : bilan hydrique quantitatif
   if (typeof et0 === "number" && et0 > 0) {
@@ -133,17 +146,26 @@ function decideArrosageSoir(weather) {
     }
     if (ratio >= 0.20) {
       const manque = Math.max(0, et0 - p);
-      return { title: "💧 Complétez l'arrosage",
-        body: `Pluie partielle (${p.toFixed(1)} mm). Complétez d'environ ${manque.toFixed(1)} mm ce soir.` };
+      return auto
+        ? { title: "💧 Ajustez votre programmateur",
+            body: `Pluie partielle (${p.toFixed(1)} mm). Réglez votre programmateur pour compléter ~${manque.toFixed(1)} mm ce soir.` }
+        : { title: "💧 Complétez l'arrosage",
+            body: `Pluie partielle (${p.toFixed(1)} mm). Complétez d'environ ${manque.toFixed(1)} mm ce soir.` };
     }
-    return { title: "💧 Arrosez ce soir",
-      body: `Besoin du jour ~${et0.toFixed(1)} mm, peu de pluie. Arrosez tôt le soir pour limiter l'évaporation.` };
+    return auto
+      ? { title: "💧 Ajustez votre programmateur",
+          body: `Besoin du jour ~${et0.toFixed(1)} mm, peu de pluie. Réglez votre programmateur pour ce soir (arrosage tôt = moins d'évaporation).` }
+      : { title: "💧 Arrosez ce soir",
+          body: `Besoin du jour ~${et0.toFixed(1)} mm, peu de pluie. Arrosez tôt le soir pour limiter l'évaporation.` };
   }
 
   // Fallback sans ET₀ : logique simple sur la pluie
   if (typeof pluie === "number" && pluie >= 8) return null; // assez plu → pas de notif
-  return { title: "💧 Pensez à arroser",
-    body: "Peu de pluie prévue : un arrosage ce soir aidera votre gazon." };
+  return auto
+    ? { title: "💧 Vérifiez votre programmateur",
+        body: "Peu de pluie prévue : assurez-vous que votre programmateur couvre le besoin de ce soir." }
+    : { title: "💧 Pensez à arroser",
+        body: "Peu de pluie prévue : un arrosage ce soir aidera votre gazon." };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -157,12 +179,17 @@ function checkEntretienDu(profile, reminderPrefs, history, month) {
     if (!r || typeof r !== "object" || !r.enabled) continue;
     // Ne pas rappeler l'arrosage ici (géré au créneau soir avec N10)
     if (id === "arrosage") continue;
+    // Robot déclaré → on ne rappelle pas "tondez" mais une SUPERVISION espacée (14j) :
+    // filet de sécurité si le robot ne tond pas (panne / débranché / non connecté).
+    const robotTonte = id === "tonte" && hasRobotTondeuse(profile);
     const lastSent = r.lastSent ? new Date(r.lastSent) : null;
     const daysSince = lastSent ? Math.floor((Date.now() - lastSent.getTime()) / 86400000) : 999;
-    const interval = INTERVALLES[id] || 7;
+    const interval = robotTonte ? 14 : (INTERVALLES[id] || 7);
     if (daysSince >= interval) {
-      const info = LABELS[id] || { icon: "🌿", label: id };
-      dus.push({ id, ...info });
+      const info = robotTonte
+        ? { id, icon: "🤖", label: "Vérifier le robot", supervision: true }
+        : { id, ...(LABELS[id] || { icon: "🌿", label: id }) };
+      dus.push(info);
     }
   }
 
@@ -171,9 +198,11 @@ function checkEntretienDu(profile, reminderPrefs, history, month) {
   // N08 — regroupement : 1 notif listant jusqu'à 3 actions, sinon "et autres"
   if (dus.length === 1) {
     const a = dus[0];
+    const body = a.supervision
+      ? "Votre robot tondeuse a-t-il bien tondu ? Vérifiez la lame et la hauteur de coupe."
+      : `Il est temps de faire votre ${a.label.toLowerCase()}.`;
     return { priority: 3, type: `entretien_${a.id}`,
-      title: `${a.icon} ${a.label}`,
-      body: `Il est temps de faire votre ${a.label.toLowerCase()}.` };
+      title: `${a.icon} ${a.label}`, body };
   }
   const noms = dus.slice(0, 3).map(a => a.label.toLowerCase());
   const reste = dus.length > 3 ? ` et ${dus.length - 3} autre(s)` : "";
@@ -271,7 +300,7 @@ function decideNotification(ctx) {
     // parcours actif d'abord (germination), sinon arrosage entretien
     const parcours = checkParcoursActif(parcoursState, weather, "soir");
     if (parcours) return finalize(parcours, "soir");
-    const ars = decideArrosageSoir(weather);
+    const ars = decideArrosageSoir(weather, profile);
     if (ars) return finalize({ priority: 2, type: "arrosage_soir", title: ars.title, body: ars.body }, "soir");
     return null; // rien de pertinent le soir → on n'envoie pas pour envoyer
   }

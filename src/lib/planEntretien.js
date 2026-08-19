@@ -8,6 +8,15 @@
 
 import { MONTHLY_PLAN } from "./lawn";
 
+// ── Équipement déclaré (profil) — adapte les recommandations ─────────────────
+// Robot tondeuse → la tonte est gérée par le robot (on retire l'action tonte).
+// Arrosage automatique / programmateur → l'arrosage devient "réglez le programmateur".
+export const hasRobotTondeuse = (p) =>
+  Array.isArray(p?.tondeuse) && p.tondeuse.includes("robot");
+export const hasArrosageAuto = (p) =>
+  p?.arrosage === "automatique" ||
+  (Array.isArray(p?.materiel) && p.materiel.includes("arroseur"));
+
 // ── Zone climatique (GPS → zone) ──────────────────────────────────────────────
 // Identique à useRecommandations.js — centralisé ici comme référence unique
 export function zoneClimatique(profile) {
@@ -176,7 +185,11 @@ export const ACTIONS_PLAN = [
       return { blocked: false };
     },
     keywords:     ["tonte"],
-    detail:       (plan) => plan?.tonte || "Hauteur adaptée à la saison",
+    // Robot déclaré → on transforme en SUPERVISION (filet de sécurité : si le robot
+    // ne tond pas — panne, débranché, non connecté — l'utilisateur est quand même invité à vérifier).
+    detail:       (plan, arros, profile) => hasRobotTondeuse(profile)
+      ? "🤖 Robot : vérifiez que la tonte a bien eu lieu (lame, hauteur)"
+      : (plan?.tonte || "Hauteur adaptée à la saison"),
     needsProduct: false,
     exclusive:    [],
   },
@@ -210,9 +223,13 @@ export const ACTIONS_PLAN = [
       return "standard";
     },
     keywords:      ["arrosage"],
-    detail:        (plan, arros, profile, month, zone) => arros
-      ? `${arros.freq}x/sem · ${arros.mm}mm/session · ${arros.minutes}min · Précipitations déduites`
-      : `${MONTHLY_PLAN[month]?.arrosage_freq || 2}x/semaine recommandé`,
+    detail:        (plan, arros, profile, month, zone) => {
+      // Arrosage automatique déclaré → on ne dit pas "arrosez" mais "réglez le programmateur"
+      const prefix = hasArrosageAuto(profile) ? "Réglez votre programmateur — " : "";
+      return arros
+        ? `${prefix}${arros.freq}x/sem · ${arros.mm}mm/session · ${arros.minutes}min · Précipitations déduites`
+        : `${prefix}${MONTHLY_PLAN[month]?.arrosage_freq || 2}x/semaine recommandé`;
+    },
     weatherDriven: true, // délégué à calcArrosage — s'affiche seulement si arros !== null
     needsProduct:  false,
     exclusive:     [],
@@ -558,10 +575,13 @@ export function buildActions(profile, weather, history, score, month, arros) {
   const sc      = score ?? 70;
   const jProg   = joursProgramme(profile); // null si pas de programme actif
 
-  return ACTIONS_PLAN.map(action => {
+  const statuts = ACTIONS_PLAN.map(action => {
     const mois     = action.getMois(zone, sol, false, profile); // isSynth toujours false — gazon synthétique supprimé
     const since    = daysSince(history, action.keywords);
-    const interval = action.getInterval(month, zone, plan);
+    // Robot déclaré → cadence de supervision de la tonte espacée (14j) au lieu du rythme de tonte manuelle.
+    const interval = (action.id === "tonte" && hasRobotTondeuse(profile))
+      ? 14
+      : action.getInterval(month, zone, plan);
 
     // Données enrichies communes
     const base = { action, since, zone, plan };
@@ -653,4 +673,6 @@ export function buildActions(profile, weather, history, score, month, arros) {
       isManuel: blockResult.isManuel || false,
     };
   });
+
+  return statuts;
 }
