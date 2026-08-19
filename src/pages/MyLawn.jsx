@@ -243,7 +243,7 @@ export default function MyLawn() {
   // ── Badges collectionnables (détection client, stockage profiles.data.badges) ──
   const streak = useStreak();
   const { badges: badgesList, nbUnlocked, total: badgesTotal, justUnlocked, clearJustUnlocked } =
-    useBadges({ profile, saveProfile, score, diagnostics, streak, isPaid });
+    useBadges({ profile, saveProfile, score, diagnostics, streak, history, isPaid });
 
   // ── Conseil du mois ──
   const { recommandationPrincipale } = useRecommandations(profile, score, weather, history);
