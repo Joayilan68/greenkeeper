@@ -100,15 +100,27 @@ export function useProfile() {
           .single();
 
         const local = loadLocal();
+        // ── Cache rattaché au compte (anti-fuite de profil entre comptes) ──
+        // Le cache localStorage n'appartient qu'au userId qui l'a créé.
+        // Pas de propriétaire = onboarding frais (créé avant l'inscription) → OK à réclamer.
+        const cacheOwner = (() => { try { return localStorage.getItem("mg360_profile_owner"); } catch { return null; } })();
+        const cacheMine  = !cacheOwner || cacheOwner === userId;
+        const claimCache = () => { try { localStorage.setItem("mg360_profile_owner", userId); } catch {} };
+        const purgeForeignCache = () => {
+          try {
+            ["mg360_profile_v1","gk_profile","mg360_onboarding_done","gk_onboarding_done",
+             "mg360_location_name","mg360_lat","mg360_lon","mg360_profile_owner"
+            ].forEach(k => localStorage.removeItem(k));
+          } catch {}
+        };
 
         if (!error && data?.data && Object.keys(data.data).length > 0) {
           // ✅ Supabase prioritaire — purger les résidus des deux côtés
           const remote = purgerResidus(data.data);
-          // Seules les coordonnées GPS vérifiées localement sont conservées
-          // car elles peuvent être plus fraîches que Supabase
+          // Coordonnées GPS locales conservées uniquement si le cache est bien à CE compte
           const merged = {
             ...remote,
-            ...(local?.cityVerified && local?.lat && local?.lon
+            ...(cacheMine && local?.cityVerified && local?.lat && local?.lon
               ? { lat: local.lat, lon: local.lon, ville: local.ville, cityVerified: true }
               : {}
             ),
@@ -116,22 +128,28 @@ export function useProfile() {
           const clean = purgerResidus(merged);
           setProfile(clean);
           saveLocal(clean);
-          // Remonter le profil purgé vers Supabase si des résidus existaient
+          claimCache();
           if (JSON.stringify(remote) !== JSON.stringify(data.data)) {
             supabase.from("profiles").upsert(
               { user_id: userId, data: clean, updated_at: new Date().toISOString() },
               { onConflict: "user_id" }
             ).catch(() => {});
           }
-        } else if (local && Object.keys(local).length > 0) {
-          // Supabase vide → migration initiale depuis localStorage (purgé)
+        } else if (cacheMine && local && Object.keys(local).length > 0) {
+          // Supabase vide + cache À CE COMPTE (ou onboarding frais) → migration
           const clean = purgerResidus(local);
           setProfile(clean);
           saveLocal(clean);
+          claimCache();
           supabase.from("profiles").upsert(
             { user_id: userId, data: clean, updated_at: new Date().toISOString() },
             { onConflict: "user_id" }
           ).catch(() => {});
+        } else {
+          // Supabase vide ET (pas de cache OU cache d'un AUTRE compte)
+          // → nouvel utilisateur : profil vide → l'onboarding s'affiche.
+          setProfile(null);
+          if (!cacheMine) purgeForeignCache();
         }
         setSynced(true);
       } catch {
@@ -147,6 +165,7 @@ export function useProfile() {
     saveLocal(clean);
 
     if (isSignedIn && userId) {
+      try { localStorage.setItem("mg360_profile_owner", userId); } catch {}
       supabase.from("profiles").upsert(
         { user_id: userId, data: clean, updated_at: new Date().toISOString() },
         { onConflict: "user_id" }
