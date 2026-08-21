@@ -299,6 +299,9 @@ module.exports = async function handler(req, res) {
         "user_consents",
         "user_access",
         "push_subscriptions",
+        "parcours",            // ajout 21/08 — programme gazon (donnée perso)
+        "classement",          // ajout 21/08 — ligue / classement
+        "daily_active_users",  // ajout 21/08 — journal d'activité
       ];
 
       const tableResults = await Promise.allSettled(
