@@ -12,6 +12,12 @@ const OBJECTIFS_OPTIONS = [
 
 const STEPS = [
   { title:"Votre objectif principal", field:"objectif", options: OBJECTIFS_OPTIONS },
+  { title:"Usage de la pelouse (facultatif)", field:"usages", isMulti:true, options:[
+    { v:"enfants", label:"👶 Enfants" },
+    { v:"animaux", label:"🐕 Chiens / animaux" },
+    { v:"sport",   label:"⚽ Sport / activité intense" },
+    { v:"calme",   label:"🪑 Peu utilisée" },
+  ]},
   { title:"Type de gazon", field:"pelouse", options:[
     { v:"sport",       label:"⚽ Sport / résistant",      desc:"Résistance au piétinement" },
     { v:"ornemental",  label:"🌸 Ornemental",             desc:"Aspect parfait, usage limité" },
@@ -78,7 +84,7 @@ export default function Setup() {
   const [step, setStep] = useState(0);
   const [tmp, setTmp] = useState(profile || {
     objectif:"", pelouse:"", sol:"", exposition:"", surface:"",
-    arrosage:"", tondeuse:[], materiel:[], budget:""
+    arrosage:"", tondeuse:[], materiel:[], budget:"", usages:[]
   });
 
   const stepsActifs = STEPS;
