@@ -205,6 +205,9 @@ module.exports = async function handler(req, res) {
         consentsRes,
         accessRes,
         pushSubRes,
+        parcoursRes,
+        classementRes,
+        dauRes,
         preinscriptionRes,
       ] = await Promise.allSettled([
         supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle(),
@@ -216,6 +219,9 @@ module.exports = async function handler(req, res) {
         supabase.from("user_consents").select("*").eq("user_id", userId).maybeSingle(),
         supabase.from("user_access").select("*").eq("user_id", userId).maybeSingle(),
         supabase.from("push_subscriptions").select("*").eq("user_id", userId).maybeSingle(),
+        supabase.from("parcours").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
+        supabase.from("classement").select("*").eq("user_id", userId).maybeSingle(),
+        supabase.from("daily_active_users").select("*").eq("user_id", userId).order("day", { ascending: false }),
         email
           ? supabase.from("preinscriptions").select("*").eq("email", email).maybeSingle()
           : Promise.resolve({ value: { data: null } }),
@@ -257,6 +263,9 @@ module.exports = async function handler(req, res) {
         rappels_entretien:   getData(remindersRes) || null,
         consentements_rgpd:  getData(consentsRes) || null,
         statut_acces:        getData(accessRes) || null,
+        parcours:            getData(parcoursRes) || [],
+        classement:          getData(classementRes) || null,
+        jours_actifs:        getData(dauRes) || [],
         abonnement_push:     getData(pushSubRes) ? "Présent (détails masqués pour sécurité)" : "Aucun",
         waitlist:            getData(preinscriptionRes) || null,
       });
