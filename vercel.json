@@ -3,21 +3,18 @@
     "api/analyze-lawn.js": {
       "maxDuration": 30
     },
-    "api/weekly-report.js": {
-      "maxDuration": 30
-    },
     "api/send.js": {
       "maxDuration": 30
     }
   },
   "crons": [
     {
-      "path": "/api/weekly-report",
-      "schedule": "0 8 * * 1"
+      "path": "/api/send?slot=matin",
+      "schedule": "0 6 * * *"
     },
     {
-      "path": "/api/send",
-      "schedule": "0 8 * * *"
+      "path": "/api/send?slot=soir",
+      "schedule": "0 15 * * *"
     }
   ],
   "headers": [

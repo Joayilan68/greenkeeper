@@ -8,8 +8,6 @@ const OBJECTIFS_OPTIONS = [
   { v:"gazon_parfait", label:"🏆 Gazon parfait",         desc:"Qualité visuelle maximale, suivi intensif" },
   { v:"fonctionnel",   label:"⚽ Pelouse fonctionnelle", desc:"Résistance et facilité d'entretien" },
   { v:"naturel",       label:"🌿 Gazon naturel",         desc:"Bio uniquement, biodiversité, zéro chimique" },
-  { v:"renover",       label:"🔧 Rénover ma pelouse",    desc:"Programme 6 mois — réhabilitation complète" },
-  { v:"creer",         label:"🌱 Créer une nouvelle pelouse", desc:"Programme 90 jours — création from scratch" },
 ];
 
 const STEPS = [
@@ -109,13 +107,7 @@ export default function Setup() {
     ];
     const p2Done     = p2Fields.filter(Boolean).length;
     const completion = Math.min(90, 40 + Math.round((p2Done / 6) * 50));
-    const extras = (tmp.objectif === "creer" || tmp.objectif === "renover")
-      // Si l'objectif change, on réinitialise date_debut seulement si c'est un changement
-      ? { date_debut_programme: profile?.objectif !== tmp.objectif
-            ? new Date().toISOString()
-            : (profile?.date_debut_programme || new Date().toISOString()) }
-      : {};
-    saveProfile({ ...tmp, profileCompletion: completion, ...extras });
+    saveProfile({ ...tmp, profileCompletion: completion });
     navigate("/");
   };
 

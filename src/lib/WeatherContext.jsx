@@ -25,11 +25,13 @@ export function WeatherProvider({ children, isPaid }) {
 
   // Fetch météo dès qu'une localisation est disponible — TOUS les utilisateurs
   // L'affichage reste Premium (Today.jsx, MyLawn.jsx) mais les données de blocage
-  // (pluie, gel, vent) sont nécessaires pour buildActions() même en Free
+  // (pluie, gel, vent) sont nécessaires pour buildActions() même en Free.
+  // Dépend aussi de isPaid : quand le statut Premium se résout après le 1er render,
+  // on refait le fetch pour récupérer l'ET₀/sol (sinon la 1re requête part en free).
   useEffect(() => {
     if (!location) return; // pas de location = pas de fetch (normal)
     fetchWeather(location);
-  }, [location]); // eslint-disable-line
+  }, [location, isPaid]); // eslint-disable-line
 
   const fetchLocation = () => {
     if (!navigator.geolocation) { setError("Géolocalisation non supportée"); return; }
@@ -57,7 +59,7 @@ export function WeatherProvider({ children, isPaid }) {
     setLoading(true); setError(null);
     const { lat, lon } = loc;
     try {
-      const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode,relative_humidity_2m_mean,windspeed_10m_max&timezone=auto&forecast_days=7`);
+      const r = await fetch(`/api/weather?lat=${lat}&lon=${lon}&premium=${isPaid ? "true" : "false"}`);
       const d = await r.json();
       const daily = d.daily;
       const days = daily.time.map((date, i) => ({
@@ -68,6 +70,10 @@ export function WeatherProvider({ children, isPaid }) {
         code:      daily.weathercode[i],
         humidity:  daily.relative_humidity_2m_mean[i],
         wind:      daily.windspeed_10m_max[i],
+        // Données agronomiques Premium (présentes seulement si premium=true côté API)
+        et0:           daily.et0 ? daily.et0[i] : null,
+        soil_temp:     daily.soil_temp ? daily.soil_temp[i] : null,
+        soil_moisture: daily.soil_moisture ? daily.soil_moisture[i] : null,
       }));
       setWeek(days);
       setWeather(days[0]);

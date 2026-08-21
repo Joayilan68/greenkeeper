@@ -18,10 +18,12 @@ import Free from "./pages/Free";
 import Register from "./pages/Register";
 import Settings from "./pages/Settings";
 import Pilotage from "./pages/Pilotage";
+import Parcours from "./pages/Parcours";
 import { MentionsLegales, Confidentialite, CGU, CGV, Cookies } from "./pages/Legal";
 import Layout from "./components/Layout";
 import { WeatherProvider } from "./lib/WeatherContext";
 import { usePilotage }     from "./lib/usePilotage";
+import { useSubscription } from "./lib/useSubscription"; // ✅ statut Premium → WeatherProvider (ET₀/sol)
 import { useUTMCapture }   from "./lib/useUTMCapture";   // ✅ Bloc 1 — capture UTM dès l'arrivée
 import { useUTMInjection } from "./lib/useUTMInjection"; // ✅ Bloc 1 — injection Clerk metadata first-touch
 
@@ -97,7 +99,8 @@ function AppWithWeather({ children }) {
   usePilotage();
   useUTMCapture();   // capte les UTM dès l'arrivée sur le site
   useUTMInjection(); // ✅ FIX 01/06/2026 — injecte les UTM dans Clerk unsafeMetadata (first-touch)
-  return <WeatherProvider>{children}</WeatherProvider>;
+  const { isPaid } = useSubscription(); // ✅ transmet le statut Premium → active ET₀/sol dans la météo
+  return <WeatherProvider isPaid={isPaid}>{children}</WeatherProvider>;
 }
 
 // ── Écran de chargement pendant la vérification d'accès ──────────────────────
@@ -307,6 +310,7 @@ function AppRoutes() {
       <Route path="/"                  element={<PrivateRoute><Layout><Dashboard /></Layout></PrivateRoute>} />
       <Route path="/diagnostic"        element={<PrivateRoute><Layout><Diagnostic /></Layout></PrivateRoute>} />
       <Route path="/my-lawn"           element={<PrivateRoute><Layout><MyLawn /></Layout></PrivateRoute>} />
+      <Route path="/parcours"          element={<PrivateRoute><Layout><Parcours /></Layout></PrivateRoute>} />
       <Route path="/today"             element={<PrivateRoute><Layout><Today /></Layout></PrivateRoute>} />
       <Route path="/products"          element={<PrivateRoute><Layout><Products /></Layout></PrivateRoute>} />
       <Route path="/history"           element={<PrivateRoute><Layout><History /></Layout></PrivateRoute>} />

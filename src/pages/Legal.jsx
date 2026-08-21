@@ -104,6 +104,11 @@ export function MentionsLegales() {
           Toute exploitation non autorisée des œuvres ou de l'un quelconque des éléments que le site contient pourra être considérée comme constitutive d'une contrefaçon et poursuivie conformément aux dispositions des articles L.335-2 et suivants du Code de Propriété Intellectuelle.
         </Section>
 
+        <Section title="Sources et attributions">
+          Les données météorologiques affichées dans l'application (température, précipitations, humidité, vent, évapotranspiration, données de sol) sont fournies par <strong>Open-Meteo.com</strong> et sont mises à disposition sous licence <strong>Creative Commons Attribution 4.0 International (CC BY 4.0)</strong>.<br/><br/>
+          Conformément à cette licence, Mongazon360 crédite Open-Meteo comme source de ces données. La licence complète est consultable à l'adresse <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer" style={{ color:"#a5d6a7" }}>creativecommons.org/licenses/by/4.0</a> et les données sont accessibles via <a href="https://open-meteo.com" target="_blank" rel="noopener noreferrer" style={{ color:"#a5d6a7" }}>open-meteo.com</a>.
+        </Section>
+
         <Section title="Obligations des utilisateurs">
           Les utilisateurs s'engagent à utiliser le présent site internet dans les conditions suivantes :<br/><br/>
           • ne pas utiliser le site aux fins d'entraver ou altérer son fonctionnement, notamment en l'encombrant, volontairement ou involontairement, par le transfert intempestif de contenus, en dehors des cas d'utilisation prévus ;<br/>
@@ -162,7 +167,8 @@ export function Confidentialite() {
           • un système de diagnostic photo permettant d'analyser une photo du gazon prise par l'utilisateur pour identifier les problèmes éventuels (maladies, carences, mauvaises herbes) et proposer des actions correctives ;<br/>
           • un système de recommandations personnalisées adapté au profil gazon de l'utilisateur (type de gazon, sol, exposition, historique d'interventions).<br/><br/>
           Ces fonctionnalités fournissent des suggestions et recommandations destinées à faciliter l'entretien du gazon par l'utilisateur. Elles ne se substituent pas à l'appréciation de l'utilisateur et n'emportent aucune décision automatique à l'égard des personnes concernées.<br/><br/>
-          <strong style={{ color:"#fbbf24" }}>Information relative à l'assistant conversationnel :</strong> lorsque vous utilisez l'assistant conversationnel de l'application, vous êtes informé que vous échangez avec un système d'intelligence artificielle et non avec une personne physique.
+          <strong style={{ color:"#fbbf24" }}>Information relative à l'assistant conversationnel :</strong> lorsque vous utilisez l'assistant conversationnel de l'application, vous êtes informé que vous échangez avec un système d'intelligence artificielle et non avec une personne physique.<br/><br/>
+          <strong style={{ color:"#a5d6a7" }}>Utilisation des données par le prestataire d'IA :</strong> les données transmises à Groq Inc. dans le cadre de l'assistant conversationnel « Bob » et de l'analyse des photos de diagnostic sont utilisées uniquement pour générer la réponse demandée. Conformément aux conditions d'utilisation de Groq, ces données ne sont pas utilisées pour entraîner ou améliorer ses modèles d'intelligence artificielle.
         </Section>
 
         <Section title="4. Responsable du traitement">
@@ -360,7 +366,8 @@ export function CGU() {
 
           <SubSection title="c. Fonctionnalités d'intelligence artificielle">
             L'Application intègre des fonctionnalités reposant sur des technologies d'intelligence artificielle. Ces fonctionnalités fournissent des suggestions et recommandations destinées à faciliter l'entretien du gazon par l'Utilisateur. Elles ne se substituent pas à l'appréciation de l'Utilisateur et n'emportent aucune garantie de résultat.<br/><br/>
-            Lorsque l'Utilisateur utilise l'assistant conversationnel, il est informé qu'il échange avec un système d'intelligence artificielle et non avec une personne physique.
+            Lorsque l'Utilisateur utilise l'assistant conversationnel, il est informé qu'il échange avec un système d'intelligence artificielle et non avec une personne physique.<br/><br/>
+            Les données que l'Utilisateur transmet à l'assistant IA « Bob » et au système de diagnostic photo ne sont pas utilisées pour entraîner les modèles d'intelligence artificielle du prestataire technique (Groq Inc.).
           </SubSection>
 
           <SubSection title="d. Recommandations de produits et liens d'affiliation">

@@ -2,6 +2,12 @@
 // Hook de détection automatique des bugs et envoi d'alertes
 
 import { useEffect, useRef } from "react";
+import { useUser } from "@clerk/clerk-react";
+
+// Email de l'utilisateur connecté, tenu à jour par le hook usePilotage().
+// Les gestionnaires d'erreurs GLOBAUX (window.error / unhandledrejection) tournent
+// hors contexte React → ils lisent cette variable de module au moment de l'alerte.
+let currentUserEmail = null;
 
 const ALERT_KEY    = "gk_pilotage_alerts";
 const COOLDOWN_MS  = 5 * 60 * 1000; // 5 min entre 2 alertes du même type
@@ -16,6 +22,20 @@ function safeGet(key, fallback = []) {
 
 function safeSet(key, val) {
   try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+}
+
+// ── Filtre BRUIT : ne pas remonter comme alerte critique (roadmap L126 + L167) ──
+// 1. Crawlers / bots (dont le bot Google Play "PlayStore-Google") : ce ne sont pas
+//    de vrais utilisateurs → aucune alerte email.
+// 2. "Script error." nu = erreur d'un script tiers cross-origin, sans détail
+//    exploitable → bruit inutile.
+// Ces cas sont reclassés en "info" (trace locale) mais N'ENVOIENT PAS d'email.
+function isNoise(message) {
+  const ua = (typeof navigator !== "undefined" && navigator.userAgent) ? navigator.userAgent : "";
+  if (/playstore-google|google-play|googlebot|adsbot-google|mediapartners-google/i.test(ua)) return true;
+  const m = (message || "").trim().toLowerCase();
+  if (m === "script error." || m === "script error") return true;
+  return false;
 }
 
 // Vérifie si une alerte du même type a déjà été envoyée récemment
@@ -74,18 +94,28 @@ function attemptChunkReload() {
 
 // Envoi de l'alerte email + push
 async function sendBugAlert(type, message, details = {}, severity = "error") {
+  // ── Filtre bruit : bots (crawler Google Play) + "Script error." cross-origin ──
+  // Reclassé hors critique : trace locale en "info", AUCUN email.
+  if (isNoise(message)) {
+    logAlertLocally({ type, message, details, severity: "info", noise: true, date: new Date().toISOString() });
+    return;
+  }
+
   if (!shouldSendAlert(type)) return; // cooldown actif
+
+  // Enrichit l'alerte avec l'utilisateur connecté (aide au diagnostic / reproduction).
+  const enriched = { "Utilisateur": currentUserEmail || "non connecté", ...details };
 
   try {
     await fetch("/api/send?type=alert", {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type, message, details, severity })
+      body: JSON.stringify({ type, message, details: enriched, severity })
     });
     markAlertSent(type);
 
     // Log local pour le dashboard Pilotage
-    logAlertLocally({ type, message, details, severity, date: new Date().toISOString() });
+    logAlertLocally({ type, message, details: enriched, severity, date: new Date().toISOString() });
 
   } catch (e) {
     console.warn("Impossible d envoyer l alerte:", e.message);
@@ -102,6 +132,12 @@ function logAlertLocally(alert) {
 // ── Hook principal ──────────────────────────────────────────────────────────
 export function usePilotage() {
   const initialized = useRef(false);
+  const { user } = useUser();
+
+  // Tenir à jour l'email de l'utilisateur connecté (lu par les handlers globaux).
+  useEffect(() => {
+    currentUserEmail = user?.primaryEmailAddress?.emailAddress || null;
+  }, [user]);
 
   useEffect(() => {
     if (initialized.current) return;

@@ -275,17 +275,6 @@ export default function Pilotage() {
     setLoadingRevenue(false);
   }
 
-  const sendReportNow = async () => {
-    setSending(true); setSent("");
-    try {
-      const res  = await fetch("/api/weekly-report");
-      const data = await res.json();
-      setSent(data.success ? "✅ Rapport envoyé à mongazon360@gmail.com !" : "❌ Erreur : " + data.error);
-    } catch (e) { setSent("❌ Erreur : " + e.message); }
-    setSending(false);
-    setTimeout(() => setSent(""), 5000);
-  };
-
   const sendTestAlert = async () => {
     setSending(true); setSent("");
     try {
@@ -382,12 +371,18 @@ export default function Pilotage() {
         {tab === "activite" && (
           <>
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:4 }}>
-              <KPI icon="👥" label="Total inscrits" value={loadingUsers ? "..." : (users?.total ?? "—")} sub="Hors admins" color="#a5d6a7" />
+              <KPI icon="👥" label="Comptes créés" value={loadingUsers ? "..." : (users?.total ?? "—")} sub="Hors admins · ≠ installs" color="#a5d6a7" />
               <KPI icon="🟢" label="Actifs aujourd'hui" value={loadingUsers ? "..." : dauToday} sub="Connectés ce jour" color="#66BB6A" />
               <KPI icon="🆕" label="Nouveaux aujourd'hui" value={loadingUsers ? "..." : (users?.newToday ?? "—")} sub="Inscriptions du jour" color="#90caf9" />
               <KPI icon="📅" label="Nouveaux cette semaine" value={loadingUsers ? "..." : (users?.newLast7 ?? "—")} sub="7 derniers jours" color="#81d4fa" />
               <KPI icon="🗓️" label="Nouveaux ce mois" value={loadingUsers ? "..." : (users?.newLast30 ?? "—")} sub="30 derniers jours" color="#ffcc80" />
               <KPI icon="📸" label="Diagnostics" value={local?.diagnostics.total ?? "—"} sub={`+${local?.diagnostics.ce7j ?? 0} cette semaine`} color="#ce93d8" />
+            </div>
+
+            {/* Clarification : comptes créés ≠ installations (sources de vérité distinctes) */}
+            <div style={{ fontSize:10, color:"#4a7c5c", padding:"0 4px 10px", lineHeight:1.5 }}>
+              ℹ️ « Comptes créés » = inscriptions dans l'app (hors admins), <b>pas</b> les installations.
+              Installs &amp; opt-in testeurs : <b>Google Play Console</b> (source de vérité distincte).
             </div>
 
             {/* ── Entonnoir de conversion : Préinscrits → Inscrits → Premium ── */}
@@ -698,15 +693,9 @@ export default function Pilotage() {
                 </div>
               )}
               <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-                <button onClick={sendReportNow} disabled={sending} style={{ ...btn.primary, fontSize:13, padding:"12px", opacity:sending?0.7:1 }}>
-                  {sending ? "⌛ Envoi..." : "📧 Envoyer rapport maintenant"}
-                </button>
                 <button onClick={sendTestAlert} disabled={sending} style={{ ...btn.ghost, fontSize:13, opacity:sending?0.7:1 }}>
                   🧪 Tester l'alerte email
                 </button>
-              </div>
-              <div style={{ fontSize:10, color:"#4a7c5c", marginTop:10, textAlign:"center" }}>
-                📅 Rapport automatique chaque lundi à 8h00 → mongazon360@gmail.com
               </div>
             </div>
           </>

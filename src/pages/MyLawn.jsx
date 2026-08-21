@@ -11,6 +11,9 @@ import { MONTHLY_PLAN, MONTHS_FR, calcArrosage, DEBIT_DEFAULT_MMH, getDebitMmH }
 import { buildActions, zoneClimatique, ZONE_LABELS } from "../lib/planEntretien";
 import { card, cardTitle, btn, scroll, header } from "../lib/styles";
 import ProductCard from "../components/ProductCard";
+import { useStreak } from "../lib/useStreak";
+import { useBadges } from "../lib/useBadges";
+import BadgesGallery from "../components/BadgesGallery";
 
 // Mapping action.id → clé amazonProducts.js
 const ACTION_TO_AMAZON = {
@@ -237,6 +240,11 @@ export default function MyLawn() {
 
   const { score, potential, label, color, issues, strengths, composantes } = calcLawnScore({ weather, profile, history, month, diagnostics });
 
+  // ── Badges collectionnables (détection client, stockage profiles.data.badges) ──
+  const streak = useStreak();
+  const { badges: badgesList, nbUnlocked, total: badgesTotal, justUnlocked, clearJustUnlocked } =
+    useBadges({ profile, saveProfile, score, diagnostics, streak, history, isPaid });
+
   // ── Conseil du mois ──
   const { recommandationPrincipale } = useRecommandations(profile, score, weather, history);
 
@@ -377,7 +385,25 @@ export default function MyLawn() {
             ✏️ {completion < 90 ? "Compléter →" : "Modifier →"}
           </button>
         </div>
-
+{/* ── LANCER UN PARCOURS (Semis / Regarnissage) ────────────────── */}
+        <div style={{ ...card(), border:"1px solid rgba(82,183,136,0.3)", background:"linear-gradient(135deg, rgba(45,106,79,0.25), rgba(15,47,31,0.5))" }}>
+          <div style={{ fontSize:14, fontWeight:800, color:"#F1F8F2", marginBottom:4 }}>🌱 Lancer un parcours</div>
+          <div style={{ fontSize:12, color:"#81c784", marginBottom:12, lineHeight:1.5 }}>
+            Créez une nouvelle pelouse ou densifiez l'existante, guidé étape par étape selon votre zone et la météo.
+          </div>
+          <div style={{ display:"flex", gap:10 }}>
+            <button onClick={() => navigate("/parcours?type=creation")}
+              style={{ flex:1, padding:"12px 8px", borderRadius:12, cursor:"pointer", fontWeight:700, fontSize:13, fontFamily:"inherit",
+                background:"rgba(76,175,80,0.2)", border:"1px solid rgba(76,175,80,0.4)", color:"#a5d6a7" }}>
+              🌱 Créer un gazon
+            </button>
+            <button onClick={() => navigate("/parcours?type=regarnissage")}
+              style={{ flex:1, padding:"12px 8px", borderRadius:12, cursor:"pointer", fontWeight:700, fontSize:13, fontFamily:"inherit",
+                background:"rgba(76,175,80,0.2)", border:"1px solid rgba(76,175,80,0.4)", color:"#a5d6a7" }}>
+              🌾 Regarnir
+            </button>
+          </div>
+        </div>
         {/* ── 1. SCORE HÉRO ── */}
         <div style={{ ...card(), background:`linear-gradient(135deg, rgba(27,94,32,0.5), rgba(13,43,26,0.7))`, border:`2px solid ${color}55`, padding:20 }}>
           <div style={{ fontSize:11, color:"#66BB6A", fontWeight:700, letterSpacing:1.5, marginBottom:12, textAlign:"center" }}>🌿 SCORE SANTÉ</div>
@@ -406,6 +432,15 @@ export default function MyLawn() {
           </div>
           <ShareScore score={score} label={label} profile={profile} />
         </div>
+
+        {/* ── BADGES COLLECTIONNABLES ── */}
+        <BadgesGallery
+          badges={badgesList}
+          nbUnlocked={nbUnlocked}
+          total={badgesTotal}
+          justUnlocked={justUnlocked}
+          clearJustUnlocked={clearJustUnlocked}
+        />
 
         {/* ── 2. CONSEIL DU MOIS ── */}
         {recommandationPrincipale && (
@@ -863,3 +898,4 @@ export default function MyLawn() {
     </div>
   );
 }
+

@@ -2,10 +2,11 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWeather } from "../lib/useWeather";
 import { useProfile } from "../lib/useProfile";
+import { useParcours, phaseParcours } from "../lib/useParcours";
 import { useHistory } from "../lib/useHistory";
 import { useAuth } from "@clerk/clerk-react";
 import { useSubscription } from "../lib/useSubscription";
-import { MONTHLY_PLAN, MONTHS_FR, calcArrosage, getWMO, getDebitMmH } from "../lib/lawn";
+import { MONTHLY_PLAN, MONTHS_FR, calcArrosage, calcArrosageSemis, getWMO, getDebitMmH } from "../lib/lawn";
 import { buildActions, zoneClimatique, ZONE_LABELS, joursProgramme } from "../lib/planEntretien";
 import { calcLawnScore } from "../lib/lawnScore";
 import AlertBanner from "../components/AlertBanner";
@@ -122,6 +123,8 @@ export default function Today() {
   const { weather, alerts: rawAlerts } = useWeather();
   const alerts = Array.isArray(rawAlerts) ? rawAlerts : [];
   const { profile }         = useProfile();
+  const { parcours }        = useParcours();
+  const phaseP              = phaseParcours(parcours); // { phase, jour, nom } ou null
   const { history, addEntry } = useHistory();
   const { getToken, isLoaded: clerkLoaded } = useAuth();
   const { isPaid, isAdmin, isFree } = useSubscription();
@@ -208,6 +211,19 @@ export default function Today() {
   // arrosSkip = raison du skip si arros non disponible
   const arrosSkip = (_arrosRaw?.skip) ? _arrosRaw : null;
 
+  // ── Arrosage SEMIS dynamique (germination, phase 3) — Premium + ET₀ ────────
+  // Calcul basé sur l'ET₀ (déficit hydrique → micro-arrosages). Null si pas en
+  // germination, pas Premium, ou ET₀ absente → le front affiche alors la consigne texte.
+  const arrosSemis = (isPaid && phaseP && phaseP.phase === 3 && weather && weather.et0 != null)
+    ? calcArrosageSemis({
+        et0: weather.et0,
+        precip: weather.precip,
+        type: parcours?.type === "regarnissage" ? "regarnissage" : "creation",
+        debitMmH,
+      })
+    : null;
+  const arrosSemisOk = arrosSemis && !arrosSemis.skip;
+
   // ── Score et zone ─────────────────────────────────────────────────────────
   const score = profile ? calcLawnScore(profile, history, weather) : 70;
   const zone  = zoneClimatique(profile);
@@ -230,7 +246,53 @@ export default function Today() {
 
   // ── Calcul des statuts (source unique planEntretien.js) ───────────────────
   // Déclaré AVANT fetchAI pour éviter la TDZ (Temporal Dead Zone) en prod Vite
-  const actionStatuses = (buildActions(profile, weather, history, score, month, _arrosRaw) || []);
+  const actionStatusesRaw = (buildActions(profile, weather, history, score, month, _arrosRaw) || []);
+
+  // ── Alignement PARCOURS : si un parcours de semis/regarnissage est actif,
+  // on bloque les actions incompatibles avec la phase (matrice agronomique).
+  // Le parcours est la source de vérité ; on adapte l'affichage sans toucher
+  // à la logique d'entretien (buildActions reste intact).
+  //   - Tonte           : bloquée avant la LEVÉE (phase 4)
+  //   - Actions agressives (engrais, désherbage, antimousse, aération,
+  //     scarification, verticut) : bloquées avant la CONSOLIDATION (phase 5)
+  //   - Biostimulant, arrosage, regarnissage : jamais bloqués (bénéfiques/vitaux)
+  const AGRESSIVES_PH5 = ["desherbage", "antimousse", "aeration", "scarification", "verticut"];
+  // Jalon "première tonte" déjà validé ? (pour afficher la consigne adaptée tant qu'elle n'est pas faite)
+  const premiereTonteFaite = !!(parcours?.etapes_validees && typeof parcours.etapes_validees === "object"
+    && !Array.isArray(parcours.etapes_validees) && parcours.etapes_validees.jalons
+    && parcours.etapes_validees.jalons.premiere_tonte);
+  const actionStatuses = !phaseP ? actionStatusesRaw : actionStatusesRaw.map((a) => {
+    const id = a?.action?.id;
+    const estTonte    = id === "tonte";
+    const estEngrais  = typeof id === "string" && id.startsWith("engrais");
+    const estAgressive = AGRESSIVES_PH5.includes(id);
+    const estArrosage = id === "arrosage";
+    // Tonte : bloquée avant la levée (phase 4)
+    if (estTonte && phaseP.phase < 4) {
+      return { ...a, status: "blocked", daysLeft: null,
+        blockedReason: "🌱 Parcours semis — première tonte après la levée (~3 semaines)", parcoursBloque: true };
+    }
+    // Première tonte (phase 4, tant que le jalon n'est pas coché) : consigne adaptée "haute"
+    if (estTonte && phaseP.phase === 4 && !premiereTonteFaite) {
+      return { ...a,
+        parcoursLabel: "Première tonte (haute)",
+        parcoursDetail: "Coupez juste les pointes (~1/3 de la hauteur), lame bien affûtée, gazon sec. Les jeunes plants sont encore fragiles.",
+      };
+    }
+    // Engrais + actions agressives : bloqués avant la consolidation (phase 5)
+    if ((estEngrais || estAgressive) && phaseP.phase < 5) {
+      return { ...a, status: "blocked", daysLeft: null,
+        blockedReason: "🌱 Parcours semis — action déconseillée sur jeune gazon (après consolidation)", parcoursBloque: true };
+    }
+    // Arrosage pendant le parcours (phase < 5) : l'arrosage est piloté par la carte
+    // "Arrosage recommandé" du parcours ci-dessus. On garde le bouton pour journaliser,
+    // mais on retire le détail d'entretien classique (chiffres contradictoires avec la consigne semis).
+    if (estArrosage && phaseP.phase < 5) {
+      return { ...a, parcoursDetail: "Arrosez selon la consigne de votre parcours, puis journalisez ici." };
+    }
+    return a;
+  });
+
   const jProg = joursProgramme(profile); // null si pas de programme actif
   const isProgramme = profile?.objectif === "creer" || profile?.objectif === "renover";
   const recommended = actionStatuses.filter(a => a?.status === "recommended");
@@ -464,6 +526,10 @@ export default function Today() {
               </div>
               <div style={{fontSize:52}}>{w.icon}</div>
             </div>
+            {/* Attribution Open-Meteo — obligation licence CC BY 4.0 */}
+            <div style={{fontSize:10,color:"#81c784",opacity:0.6,marginTop:10,textAlign:"right"}}>
+              Données météo : <a href="https://open-meteo.com" target="_blank" rel="noopener noreferrer" style={{color:"#81c784",textDecoration:"underline"}}>Open-Meteo.com</a> · CC BY 4.0
+            </div>
           </div>
         ); })()}
         {!isPaid && (
@@ -476,8 +542,52 @@ export default function Today() {
         {/* Alertes météo */}
         {isPaid && alerts.map((a,i) => <AlertBanner key={i} alert={a} />)}
 
-        {/* Arrosage détaillé — Premium */}
-        {isPaid && arros && (() => {
+        {/* Arrosage adapté au PARCOURS (germination/levée) — remplace le minuteur d'entretien */}
+        {isPaid && phaseP && phaseP.phase < 5 && phaseP.arrosage && (
+          <div style={{...card(), background:"rgba(25,118,210,0.1)", border:"1px solid rgba(100,181,246,0.25)"}}>
+            <div style={cardTitle}>
+              <span>💧 Arrosage recommandé</span>
+              <span style={{ fontSize:11, color:"#64b5f6", background:"rgba(100,181,246,0.15)", borderRadius:20, padding:"2px 8px" }}>
+                Parcours · {phaseP.nom}
+              </span>
+            </div>
+            <div style={{ display:"flex", alignItems:"flex-start", gap:10, marginTop:6 }}>
+              <span style={{ fontSize:22, flexShrink:0 }}>🌱</span>
+              <div style={{ fontSize:13, color:"#a5d6a7", lineHeight:1.5 }}>
+                {phaseP.arrosage}
+              </div>
+            </div>
+
+            {/* Calcul dynamique des micro-arrosages (germination + Premium + ET₀) */}
+            {arrosSemisOk && (
+              arrosSemis.nombre === 0 ? (
+                <div style={{ marginTop:12, background:"rgba(74,222,128,0.1)", border:"1px solid rgba(74,222,128,0.25)", borderRadius:12, padding:"12px 14px", textAlign:"center" }}>
+                  <div style={{ fontSize:14, fontWeight:800, color:"#4ade80" }}>✅ Pas d'arrosage nécessaire aujourd'hui</div>
+                  <div style={{ fontSize:11, color:"#81c784", marginTop:4 }}>
+                    La pluie couvre les besoins ({arrosSemis.precip}mm · ET₀ {arrosSemis.et0}mm).
+                  </div>
+                </div>
+              ) : (
+                <div style={{ marginTop:12, background:"rgba(25,118,210,0.12)", border:"1px solid rgba(100,181,246,0.3)", borderRadius:12, padding:"12px 14px" }}>
+                  <div style={{ fontSize:11, color:"#64b5f6", fontWeight:700, letterSpacing:0.5, marginBottom:6 }}>AUJOURD'HUI (calcul météo)</div>
+                  <div style={{ fontSize:15, fontWeight:800, color:"#e3f2fd" }}>
+                    {arrosSemis.nombre} micro-arrosage{arrosSemis.nombre > 1 ? "s" : ""} × ~{arrosSemis.doseMm}mm ≈ {arrosSemis.minutes}min chacun
+                  </div>
+                  <div style={{ fontSize:11, color:"rgba(100,181,246,0.7)", marginTop:6 }}>
+                    Répartis dans la journée · ET₀ {arrosSemis.et0}mm − pluie {arrosSemis.precip}mm
+                  </div>
+                </div>
+              )
+            )}
+
+            <div style={{ fontSize:11, color:"rgba(100,181,246,0.6)", textAlign:"center", marginTop:10 }}>
+              Le minuteur d'arrosage classique reprendra en fin de parcours.
+            </div>
+          </div>
+        )}
+
+        {/* Arrosage détaillé — Premium (masqué pendant germination/levée du parcours) */}
+        {isPaid && arros && !(phaseP && phaseP.phase < 5) && (() => {
           const arrosageAFaire = recommended.some(a => a.action.id === "arrosage");
           const arrosageFait   = actionStatuses.some(a => a.action.id === "arrosage" && a.status === "done_today");
           return (
@@ -564,7 +674,26 @@ export default function Today() {
             </span>
           </div>
 
-          {/* ── BANNIÈRE PROGRAMME RÉNOVER/CRÉER ──────────────────────────── */}
+          {/* ── BANDEAU PARCOURS (Semis / Regarnissage en cours) ──────────── */}
+          {phaseP && (
+            <div style={{ background:"linear-gradient(135deg,rgba(76,175,80,0.2),rgba(15,47,31,0.5))", border:"1px solid rgba(102,187,106,0.4)", borderRadius:12, padding:"12px 14px", marginBottom:14, display:"flex", alignItems:"center", gap:12 }}>
+              <span style={{ fontSize:22, flexShrink:0 }}>{parcours?.type === "regarnissage" ? "🌾" : "🌱"}</span>
+              <div style={{ flex:1 }}>
+                <div style={{ fontSize:13, fontWeight:800, color:"#F1F8F2" }}>
+                  {parcours?.type === "regarnissage" ? "Regarnissage" : "Semis"} en cours — {phaseP.nom} · Jour {phaseP.jour}
+                </div>
+                <div style={{ fontSize:11, color:"#a5d6a7", marginTop:2 }}>
+                  Vos actions du jour sont adaptées à votre parcours.
+                </div>
+              </div>
+              <button onClick={() => navigate("/parcours")}
+                style={{ flexShrink:0, padding:"7px 12px", borderRadius:10, background:"rgba(76,175,80,0.25)", border:"1px solid rgba(102,187,106,0.4)", color:"#a5d6a7", fontWeight:700, fontSize:11, cursor:"pointer", fontFamily:"inherit" }}>
+                Suivre →
+              </button>
+            </div>
+          )}
+
+          {/* ── BANNIÈRE PROGRAMME RÉNOVER/CRÉER (ancien système — dormant) ─── */}
           {isProgramme && jProg !== null && (
             <div style={{ background: profile?.objectif === "creer" ? "rgba(103,58,183,0.15)" : "rgba(25,118,210,0.15)", border: `1px solid ${profile?.objectif === "creer" ? "rgba(149,117,205,0.4)" : "rgba(100,181,246,0.4)"}`, borderRadius:12, padding:"12px 14px", marginBottom:14 }}>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
@@ -596,14 +725,14 @@ export default function Today() {
                 <span style={{ width:6, height:6, borderRadius:"50%", background:"#66BB6A", display:"inline-block" }} />
                 À FAIRE AUJOURD'HUI
               </div>
-              {recommended.map(({ action, isManuel }) => {
+              {recommended.map(({ action, isManuel, parcoursLabel, parcoursDetail }) => {
                 const isFlashing    = justLogged.includes(action.id);
                 const detail        = action.detail?.(plan, arros, profile, month, zone);
                 const amazonKey     = ACTION_TO_AMAZON[action.id];
-                const labelDisplay  = isManuel ? "Désherbage Manuel 🌿" : action.label;
-                const detailDisplay = isManuel
+                const labelDisplay  = parcoursLabel ? parcoursLabel : (isManuel ? "Désherbage Manuel 🌿" : action.label);
+                const detailDisplay = parcoursDetail ? parcoursDetail : (isManuel
                   ? "Arrachez les adventices ou utilisez un outil à désherber"
-                  : detail;
+                  : detail);
                 return (
                   <div key={action.id} style={{ marginBottom:8 }}>
                     {/* Ligne action + bouton journaliser */}
@@ -728,13 +857,12 @@ export default function Today() {
               <div style={{fontSize:13,color:"#81c784",marginBottom:12}}>Fonctionnalité Premium uniquement</div>
               <button onClick={()=>navigate("/subscribe")} style={{background:"linear-gradient(135deg,#F59E0B,#D97706)",color:"#1a1a1a",fontWeight:800,border:"none",borderRadius:10,padding:"10px 24px",fontSize:14,cursor:"pointer",width:"auto"}}>Passer Premium 🌿</button>
             </div>
-          ) : !weather ? (
+          ) : !weather && !aiReco ? (
             <div style={{textAlign:"center",padding:"16px 0"}}>
               <div style={{fontSize:28,marginBottom:8}}>📍</div>
               <div style={{fontSize:13,color:"#81c784",marginBottom:12}}>Activez la géolocalisation pour des recommandations adaptées à votre météo locale.</div>
               <GeolocButton navigate={navigate} />
-              {aiReco && <div style={{marginTop:12,fontSize:13,lineHeight:1.8,whiteSpace:"pre-wrap",textAlign:"left"}}>{aiReco}</div>}
-              {!aiReco && isPaid && (
+              {isPaid && (
                 <div style={{marginTop:8}}>
                   <button onClick={fetchAI} style={{background:"rgba(76,175,80,0.15)",border:"1px solid rgba(76,175,80,0.3)",borderRadius:10,padding:"8px 18px",color:"#a5d6a7",fontSize:12,cursor:"pointer"}}>🤖 Recommandations sans météo</button>
                 </div>

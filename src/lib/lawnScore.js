@@ -7,6 +7,13 @@ import { MONTHLY_PLAN } from "./lawn";
 
 const DIAG_MAX_AGE = 7;
 
+// ── Équipement déclaré (profil) — ne pas pénaliser ce que le matériel gère ────
+const hasRobotTondeuse = (p) =>
+  Array.isArray(p?.tondeuse) && p.tondeuse.includes("robot");
+const hasArrosageAuto = (p) =>
+  p?.arrosage === "automatique" ||
+  (Array.isArray(p?.materiel) && p.materiel.includes("arroseur"));
+
 function daysSince(dateStr) {
   const parts = dateStr?.split('/');
   if (!parts || parts.length !== 3) return 999;
@@ -53,12 +60,17 @@ export function calcLawnScore({ weather, profile, history = [], month, diagnosti
   let deductSol        = 0;
 
   // ── 1. TONTE — KB v4 : été=4j, printemps=5j, hiver=14j ─────────────────
-  const tonteFreq     = month >= 5 && month <= 8 ? 4 : month >= 3 && month <= 10 ? 5 : 14;
-  const derniereTonte = lastAction(history, "tonte");
-  if (derniereTonte > tonteFreq * 3)      { deductEntretien += 25; issues.push({ icon:"✂️", label: derniereTonte >= JAMAIS ? "Aucune tonte enregistrée" : `Tonte abandonnée depuis ${derniereTonte}j`, impact:-25 }); }
-  else if (derniereTonte > tonteFreq * 2) { deductEntretien += 18; issues.push({ icon:"✂️", label: derniereTonte >= JAMAIS ? "Aucune tonte enregistrée" : `Tonte très en retard (${derniereTonte}j)`, impact:-18 }); }
-  else if (derniereTonte > tonteFreq + 2) { deductEntretien += 10; issues.push({ icon:"✂️", label:"Tonte en retard", impact:-10 }); }
-  else if (derniereTonte <= tonteFreq)    { strengths.push({ icon:"✂️", label:"Tonte régulière ✓" }); }
+  // Robot tondeuse déclaré → tonte gérée automatiquement : on ne pénalise pas.
+  if (!hasRobotTondeuse(profile)) {
+    const tonteFreq     = month >= 5 && month <= 8 ? 4 : month >= 3 && month <= 10 ? 5 : 14;
+    const derniereTonte = lastAction(history, "tonte");
+    if (derniereTonte > tonteFreq * 3)      { deductEntretien += 25; issues.push({ icon:"✂️", label: derniereTonte >= JAMAIS ? "Aucune tonte enregistrée" : `Tonte abandonnée depuis ${derniereTonte}j`, impact:-25 }); }
+    else if (derniereTonte > tonteFreq * 2) { deductEntretien += 18; issues.push({ icon:"✂️", label: derniereTonte >= JAMAIS ? "Aucune tonte enregistrée" : `Tonte très en retard (${derniereTonte}j)`, impact:-18 }); }
+    else if (derniereTonte > tonteFreq + 2) { deductEntretien += 10; issues.push({ icon:"✂️", label:"Tonte en retard", impact:-10 }); }
+    else if (derniereTonte <= tonteFreq)    { strengths.push({ icon:"✂️", label:"Tonte régulière ✓" }); }
+  } else {
+    strengths.push({ icon:"🤖", label:"Tonte gérée par robot ✓" });
+  }
 
   // ── 2. ENGRAIS — KB v4 : bloqué >90j, alerte >45j ──────────────────────
   if (plan?.engrais) {
@@ -86,8 +98,9 @@ export function calcLawnScore({ weather, profile, history = [], month, diagnosti
 
   // ── 5. ARROSAGE ──────────────────────────────────────────────────────────
   // Ne pas pénaliser si l'utilisateur a déclaré ne pas arroser (choix assumé)
+  // ni s'il a un arrosage automatique/programmateur (géré par le matériel).
   if (plan?.arrosage_base > 0) {
-    const skipArrosage = profile?.arrosage === "aucun" || profile?.arrosage === "rarement";
+    const skipArrosage = profile?.arrosage === "aucun" || profile?.arrosage === "rarement" || hasArrosageAuto(profile);
     if (!skipArrosage) {
       const dernierArrosage = lastAction(history, "arrosage");
       if (dernierArrosage > 10 && (!weather || weather.precip < 5))      { deductEntretien += 12; issues.push({ icon:"💧", label:"Arrosage insuffisant", impact:-12 }); }
@@ -103,7 +116,7 @@ export function calcLawnScore({ weather, profile, history = [], month, diagnosti
     else if (weather.temp_max >= 26) { deductMeteo += 3;  issues.push({ icon:"☀️", label:"Chaleur modérée", impact:-3 }); }
     if (weather.temp_min <= -2)      { deductMeteo += 12; issues.push({ icon:"❄️", label:"Gel — stress racinaire sévère", impact:-12 }); }
     else if (weather.temp_min <= 2)  { deductMeteo += 6;  issues.push({ icon:"🌡️", label:"Risque de gel", impact:-6 }); }
-    if (weather.precip < 1 && weather.temp_max > 20 && lastAction(history, "arrosage") > 4) { deductMeteo += 10; issues.push({ icon:"🌵", label:"Sécheresse sans arrosage", impact:-10 }); }
+    if (weather.precip < 1 && weather.temp_max > 20 && lastAction(history, "arrosage") > 4 && !hasArrosageAuto(profile)) { deductMeteo += 10; issues.push({ icon:"🌵", label:"Sécheresse sans arrosage", impact:-10 }); }
     if (weather.humidity > 80 && weather.temp_max > 18)      { deductMeteo += 10; issues.push({ icon:"🦠", label:"Conditions fongiques critiques", impact:-10 }); }
     else if (weather.humidity > 70 && weather.temp_max > 15) { deductMeteo += 5;  issues.push({ icon:"🦠", label:"Risque fongique modéré", impact:-5 }); }
     if (lastAction(history, "fongicide") <= 14) strengths.push({ icon:"💊", label:"Traitement fongicide récent ✓" });
