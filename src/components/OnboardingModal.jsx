@@ -101,11 +101,11 @@ const STEP_LABELS = {
   6: "Votre compte",
 };
 
-function StepLabel({ current, total }) {
+function StepLabel({ label, current, total }) {
   return (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
       <div style={{ fontSize: 11, color: C.lightGreen, fontWeight: 700 }}>
-        {STEP_LABELS[current] || ""}
+        {label || ""}
       </div>
       <div style={{ fontSize: 11, color: C.textMuted, fontWeight: 600 }}>
         {current} / {total}
@@ -313,7 +313,7 @@ export default function OnboardingModal({ onComplete }) {
     const finalLat  = locLat ?? geoSelected?.lat ?? null;
     const finalLon  = locLon ?? geoSelected?.lon ?? null;
     const profile = {
-      objectif, pelouse: gazon, surface: parseInt(surface),
+      objectif, pelouse: gazon || "inconnu", surface: parseInt(surface),
       ville: finalCity, lat: finalLat, lon: finalLon, usages,
       isCreer,
       cityVerified: locStatus === "success" || geoSelected !== null,
@@ -387,6 +387,15 @@ export default function OnboardingModal({ onComplete }) {
     setAnimKey(k => k + 1);
   };
 
+  // ── Flux adaptatif : onboarding reduit au strict necessaire (entretenir) ──
+  // 1 = Objectif · 3 = Jardin (surface + localisation) · 6 = Compte
+  // (type de gazon, usage et vitrine retires du tunnel — decision produit 21/08)
+  const FLOW      = [1, 3, 6];
+  const flowPos   = Math.max(0, FLOW.indexOf(step));
+  const totalFlow = FLOW.length;
+  const goNext    = () => goToStep(FLOW[Math.min(FLOW.length - 1, flowPos + 1)]);
+  const goPrev    = () => goToStep(FLOW[Math.max(0, flowPos - 1)]);
+
   const gazonLabel = isCreer
     ? `${GAZON_LABEL_MAP[gazon] || GAZONS_CREER.find(g => g.id === gazon)?.label || gazon} (à créer)`
     : GAZON_LABEL_MAP[gazon] || GAZONS_STANDARD.find(g => g.id === gazon)?.label || gazon;
@@ -404,8 +413,8 @@ export default function OnboardingModal({ onComplete }) {
         maxHeight: "94vh", overflowY: "auto",
       }}>
         <div style={{ width: 36, height: 4, background: "rgba(255,255,255,0.18)", borderRadius: 4, margin: "0 auto 20px" }} />
-        <StepLabel current={step} total={TOTAL_STEPS} />
-        <ProgressBar step={step} total={TOTAL_STEPS} />
+        <StepLabel label={STEP_LABELS[step]} current={flowPos + 1} total={totalFlow} />
+        <ProgressBar step={flowPos + 1} total={totalFlow} />
 
         {/* Wrapper animé — se re-monte à chaque changement d'étape */}
         <div key={animKey} style={{ animation: "mg360StepIn 0.25s ease-out" }}>
@@ -422,7 +431,7 @@ export default function OnboardingModal({ onComplete }) {
               <div style={{ fontSize: 22, fontWeight: 900, color: C.lightGreen, marginBottom: 4 }}>Bienvenue sur Mongazon360 !</div>
               <div style={{ fontSize: 11, color: C.textMuted, fontStyle: "italic", marginBottom: 12 }}>Tant qu'il y a gazon, il y a match</div>
               <div style={{ fontSize: 13, color: C.textSoft, lineHeight: 1.7 }}>
-                {TOTAL_STEPS} étapes rapides pour personnaliser votre expérience et calculer votre score de santé pelouse.
+                {totalFlow} étapes rapides pour personnaliser votre expérience et calculer votre score de santé pelouse.
               </div>
             </div>
             <SectionTitle>🎯 Quel est votre objectif principal ?</SectionTitle>
@@ -431,53 +440,9 @@ export default function OnboardingModal({ onComplete }) {
                 <OptionCard key={o.id} selected={objectif === o.id} onClick={() => handleObjectif(o.id)} icon={o.icon} label={o.label} desc={o.desc} />
               ))}
             </div>
-            <button onClick={() => goToStep(2)} disabled={!canNext1} style={{ ...btn.primary, opacity: canNext1 ? 1 : 0.4 }}>
+            <button onClick={() => goNext()} disabled={!canNext1} style={{ ...btn.primary, opacity: canNext1 ? 1 : 0.4 }}>
               Continuer →
             </button>
-          </div>
-        )}
-
-        {/* ══ ÉTAPE 2 — Type de gazon (adaptatif) ═════════════════════════ */}
-        {step === 2 && (
-          <div>
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 20, fontWeight: 900, color: C.lightGreen, marginBottom: 4 }}>
-                {isCreer ? "🌱 Votre futur gazon" : "🌱 Type de gazon"}
-              </div>
-              <div style={{ fontSize: 12, color: C.textSoft, lineHeight: 1.6 }}>
-                {isCreer
-                  ? "Quel type de gazon souhaitez-vous créer ? Bob vous guidera selon votre sol et votre région."
-                  : "Cette information est clé pour calibrer vos conseils d'entretien."}
-              </div>
-            </div>
-
-            <SectionTitle>
-              {isCreer ? "Quel gazon souhaitez-vous planter ?" : "Quel type de gazon avez-vous ?"}
-            </SectionTitle>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
-              {(isCreer ? GAZONS_CREER : GAZONS_STANDARD).filter(g => !g.skip).map(g => (
-                <OptionCard key={g.id} selected={gazon === g.id} onClick={() => setGazon(g.id)} icon={g.icon} label={g.label} desc={g.desc} />
-              ))}
-            </div>
-
-            {isCreer && gazon && gazon !== "mixte" && (
-              <InfoBanner color="green">
-                ✨ Excellent choix ! Nous adapterons votre planning de création : préparation du sol, semis, premier arrosage et premières tontes.
-              </InfoBanner>
-            )}
-            {isCreer && gazon === "mixte" && (
-              <InfoBanner color="blue">
-                🌱 Pas de problème ! Complétez votre profil (sol, exposition, région) et nous vous recommanderons automatiquement la variété idéale pour votre jardin.
-              </InfoBanner>
-            )}
-
-            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-              <button onClick={() => goToStep(1)} style={{ ...btn.ghost, flex: 1 }}>← Retour</button>
-              <button onClick={() => goToStep(3)} disabled={!canNext2} style={{ ...btn.primary, flex: 2, opacity: canNext2 ? 1 : 0.4 }}>
-                Continuer →
-              </button>
-            </div>
           </div>
         )}
 
@@ -602,112 +567,11 @@ export default function OnboardingModal({ onComplete }) {
             </div>
 
             <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-              <button onClick={() => goToStep(2)} style={{ ...btn.ghost, flex: 1 }}>← Retour</button>
-              <button onClick={() => goToStep(4)} disabled={!canNext3} style={{ ...btn.primary, flex: 2, opacity: canNext3 ? 1 : 0.4 }}>
+              <button onClick={() => goPrev()} style={{ ...btn.ghost, flex: 1 }}>← Retour</button>
+              <button onClick={() => goNext()} disabled={!canNext3} style={{ ...btn.primary, flex: 2, opacity: canNext3 ? 1 : 0.4 }}>
                 Continuer →
               </button>
             </div>
-          </div>
-        )}
-
-        {/* ══ ÉTAPE 4 — Usage (multi-select, adaptatif) ════════════════════ */}
-        {step === 4 && (
-          <div>
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 20, fontWeight: 900, color: C.lightGreen, marginBottom: 4 }}>🏡 Usage de votre pelouse</div>
-              <div style={{ fontSize: 12, color: C.textSoft, lineHeight: 1.6 }}>
-                Plusieurs choix possibles — cela adapte les recommandations de résistance et d'entretien.
-              </div>
-            </div>
-
-            {isCreer && (
-              <InfoBanner color="blue">
-                ✨ L'usage prévu nous aide à choisir la variété et le niveau de résistance adaptés dès la création.
-              </InfoBanner>
-            )}
-
-            <SectionTitle>
-              {isCreer ? "Quel usage est prévu pour cette pelouse ?" : "Comment utilisez-vous votre pelouse ?"}
-            </SectionTitle>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
-              {USAGES.map(u => (
-                <OptionCard key={u.id} selected={usages.includes(u.id)} onClick={() => toggleUsage(u.id)} icon={u.icon} label={u.label} multi={true} />
-              ))}
-            </div>
-
-            {usages.length > 0 && (
-              <div style={{ background: "rgba(82,183,136,0.08)", border: `1px solid ${C.border}`, borderRadius: 12, padding: "10px 14px", marginBottom: 16, fontSize: 12, color: C.textSoft }}>
-                ✓ {usages.length} usage{usages.length > 1 ? "s" : ""} sélectionné{usages.length > 1 ? "s" : ""}
-              </div>
-            )}
-
-            <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={() => goToStep(3)} style={{ ...btn.ghost, flex: 1 }}>← Retour</button>
-              <button onClick={() => goToStep(5)} disabled={!canNext4} style={{ ...btn.primary, flex: 2, opacity: canNext4 ? 1 : 0.4 }}>
-                Continuer →
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* ══ ÉTAPE 5 — Présentation des fonctionnalités ══════════════════ */}
-        {step === 5 && (
-          <div>
-            <div style={{ textAlign: "center", marginBottom: 28 }}>
-              <div style={{ fontSize: 20, fontWeight: 900, color: C.lightGreen, marginBottom: 4 }}>🌟 Ce qui vous attend</div>
-              <div style={{ fontSize: 12, color: C.textSoft }}>Fonctionnalité {featureSlide + 1} sur {FEATURES.length}</div>
-            </div>
-
-            <div style={{ background: "rgba(82,183,136,0.1)", border: "1px solid rgba(82,183,136,0.25)", borderRadius: 20, padding: "32px 24px", textAlign: "center", marginBottom: 24, minHeight: 200, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-              <div style={{ fontSize: 52, marginBottom: 16 }}>{FEATURES[featureSlide].icon}</div>
-              <div style={{ fontSize: 18, fontWeight: 900, color: C.lightGreen, marginBottom: 10 }}>
-                {FEATURES[featureSlide].title}
-                {FEATURES[featureSlide].premium && (
-                  <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 800, color: C.orange, background: "rgba(244,162,97,0.15)", border: "1px solid rgba(244,162,97,0.4)", borderRadius: 20, padding: "2px 8px", verticalAlign: "middle" }}>
-                    ⭐ Premium
-                  </span>
-                )}
-              </div>
-              <div style={{ fontSize: 13, color: C.textSoft, lineHeight: 1.7 }}>{FEATURES[featureSlide].desc}</div>
-            </div>
-
-            <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 28 }}>
-              {FEATURES.map((_, i) => (
-                <div key={i} onClick={() => setFeatureSlide(i)} style={{ width: i === featureSlide ? 24 : 8, height: 8, borderRadius: 4, cursor: "pointer", background: i === featureSlide ? C.freshGreen : "rgba(255,255,255,0.15)", transition: "all 0.3s" }} />
-              ))}
-            </div>
-
-            {isLastFeature ? (
-              <button onClick={() => { setFeatureSlide(0); goToStep(6); }} style={btn.primary}>
-                🚀 Créer mon compte →
-              </button>
-            ) : (
-              <div style={{ display: "flex", gap: 8 }}>
-                <button onClick={() => setFeatureSlide(f => Math.max(0, f - 1))} disabled={featureSlide === 0} style={{ ...btn.ghost, flex: 1, opacity: featureSlide === 0 ? 0.4 : 1 }}>←</button>
-                <button onClick={() => setFeatureSlide(f => f + 1)} style={{ ...btn.primary, flex: 3 }}>Suivant →</button>
-              </div>
-            )}
-
-            {!isLastFeature && (
-              <button
-                onClick={() => { setFeatureSlide(0); goToStep(6); }}
-                style={{
-                  background: "rgba(255,255,255,0.07)",
-                  border: `1px solid rgba(255,255,255,0.15)`,
-                  borderRadius: 10, color: C.textSoft,
-                  fontSize: 13, fontWeight: 600,
-                  cursor: "pointer", width: "100%",
-                  marginTop: 10, padding: "10px",
-                  fontFamily: "inherit",
-                }}
-              >
-                Passer les fonctionnalités →
-              </button>
-            )}
-
-            {featureSlide === 0 && (
-              <button onClick={() => goToStep(4)} style={{ ...btn.ghost, width: "100%", marginTop: 8 }}>← Retour</button>
-            )}
           </div>
         )}
 
@@ -726,10 +590,8 @@ export default function OnboardingModal({ onComplete }) {
               <div style={{ fontSize: 12, fontWeight: 800, color: C.lightGreen, marginBottom: 12 }}>📋 Votre profil en cours</div>
               {[
                 ["🎯 Objectif",  OBJECTIFS.find(o => o.id === objectif)?.label || "—"],
-                [isCreer ? "🌱 À créer" : "🌱 Gazon", gazonLabel],
                 ["📐 Surface",   surface ? `${surface} m²` : "—"],
                 ["📍 Ville",     locStatus === "success" ? locName : manualCity || "—"],
-                ["🏡 Usage",     usages.length > 0 ? usages.map(u => USAGES.find(x => x.id === u)?.label).join(", ") : "—"],
               ].map(([label, val]) => (
                 <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", borderBottom: "1px solid rgba(255,255,255,0.05)", fontSize: 12 }}>
                   <span style={{ color: C.textSoft }}>{label}</span>
@@ -763,7 +625,7 @@ export default function OnboardingModal({ onComplete }) {
               </button>
             </div>
 
-            <button onClick={() => goToStep(5)} style={{ ...btn.ghost, width: "100%", marginTop: 8 }}>← Retour</button>
+            <button onClick={() => goPrev()} style={{ ...btn.ghost, width: "100%", marginTop: 8 }}>← Retour</button>
           </div>
         )}
         </div>{/* fin animation wrapper */}
