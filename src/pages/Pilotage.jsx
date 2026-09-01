@@ -301,7 +301,7 @@ export default function Pilotage() {
     setLoadingSocial(true);
     try {
       const token = await getToken();
-      const res   = await fetch("/api/admin-social", { headers: { Authorization: `Bearer ${token}` } });
+      const res   = await fetch("/api/stats?type=social", { headers: { Authorization: `Bearer ${token}` } });
       const data  = await res.json();
       if (data.success) setSocial(data);
     } catch {}
@@ -317,7 +317,7 @@ export default function Pilotage() {
     setSavingSocial(true); setSocialMsg("");
     try {
       const token = await getToken();
-      const res   = await fetch("/api/admin-social", {
+      const res   = await fetch("/api/stats?type=social", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ mois: socialForm.mois, entries }),

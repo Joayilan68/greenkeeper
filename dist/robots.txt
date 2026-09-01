@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+# Pages privées — ne pas indexer
+Disallow: /pilotage
+Disallow: /admin
+Disallow: /coming-soon
+Disallow: /subscribe/success
+Disallow: /api/
+
+Sitemap: https://mongazon360.fr/sitemap.xml

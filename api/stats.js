@@ -9,14 +9,15 @@
 const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
 
 const { createClerkClient } = require("@clerk/backend");
+const { createClient }      = require("@supabase/supabase-js");
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "GET") return res.status(405).end();
+  if (req.method !== "GET" && req.method !== "POST") return res.status(405).end();
 
   // ── AUTH ADMIN — ces stats (MRR, solde Stripe, comptes) sont confidentielles ──
   const authHeader = req.headers.authorization;
@@ -40,11 +41,106 @@ module.exports = async function handler(req, res) {
 
   const { type } = req.query;
 
+  // Réseaux sociaux : lecture (GET ?type=social) + écriture (POST)
+  if (type === "social" || req.method === "POST") return handleSocial(req, res);
   if (type === "revenue") return handleRevenue(req, res);
   if (type === "users")   return handleUsers(req, res);
 
-  return res.status(400).json({ error: 'Paramètre ?type=revenue ou ?type=users requis' });
+  return res.status(400).json({ error: 'Paramètre ?type=revenue|users|social requis' });
 };
+
+// ── Réseaux sociaux (followers — saisie manuelle mensuelle) ───────────────────
+const SB_URL = process.env.SUPABASE_URL;
+const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+
+function toMonthStart(input) {
+  if (!input) return null;
+  const m = String(input).trim().match(/^(\d{4})-(\d{2})/);
+  return m ? `${m[1]}-${m[2]}-01` : null;
+}
+
+async function handleSocial(req, res) {
+  if (!SB_URL || !SB_KEY) return res.status(500).json({ error: "Configuration Supabase manquante" });
+  const supabase = createClient(SB_URL, SB_KEY);
+
+  // ── POST : enregistrer / supprimer ─────────────────────────────────────────
+  if (req.method === "POST") {
+    const body = req.body || {};
+
+    if (body.action === "delete") {
+      if (!body.compte || !body.plateforme) return res.status(400).json({ error: "compte et plateforme requis" });
+      const { error } = await supabase
+        .from("social_followers").delete()
+        .eq("compte", body.compte).eq("plateforme", body.plateforme);
+      if (error) return res.status(500).json({ error: error.message });
+      return res.json({ success: true, deleted: true });
+    }
+
+    const mois    = toMonthStart(body.mois);
+    const entries = Array.isArray(body.entries) ? body.entries : [];
+    if (!mois)           return res.status(400).json({ error: "mois invalide (attendu YYYY-MM)" });
+    if (!entries.length) return res.status(400).json({ error: "aucune entrée à enregistrer" });
+
+    const rows = entries
+      .filter(e => e && e.compte && e.plateforme)
+      .map(e => ({
+        compte:     String(e.compte).trim(),
+        plateforme: String(e.plateforme).trim().toLowerCase(),
+        mois,
+        followers:  Math.max(0, parseInt(e.followers, 10) || 0),
+        updated_at: new Date().toISOString(),
+      }));
+    if (!rows.length) return res.status(400).json({ error: "entrées invalides" });
+
+    const { error } = await supabase
+      .from("social_followers")
+      .upsert(rows, { onConflict: "compte,plateforme,mois" });
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ success: true, saved: rows.length });
+  }
+
+  // ── GET : lecture + agrégation ─────────────────────────────────────────────
+  try {
+    const { data, error } = await supabase
+      .from("social_followers")
+      .select("compte, plateforme, mois, followers")
+      .order("mois", { ascending: true });
+    if (error) throw error;
+
+    const raw = data || [];
+    const accMap = new Map();
+    raw.forEach(r => {
+      const key = `${r.compte}|${r.plateforme}`;
+      const cur = accMap.get(key);
+      if (!cur || r.mois > cur.mois) accMap.set(key, { compte: r.compte, plateforme: r.plateforme, mois: r.mois, followers: r.followers });
+    });
+    const accounts    = [...accMap.values()].sort((a, b) => b.followers - a.followers);
+    const totalLatest = accounts.reduce((s, a) => s + (a.followers || 0), 0);
+
+    const monthsSet = [...new Set(raw.map(r => r.mois))].sort();
+    const byMonth = monthsSet.map(mois => {
+      const rowsM = raw.filter(r => r.mois === mois);
+      const perAccount = {};
+      rowsM.forEach(r => { perAccount[`${r.compte}|${r.plateforme}`] = r.followers; });
+      const total = rowsM.reduce((s, r) => s + (r.followers || 0), 0);
+      const label = new Date(mois).toLocaleDateString("fr-FR", { month: "short", year: "2-digit" });
+      return { mois, label, total, perAccount };
+    });
+
+    let deltaTotal = null, deltaPct = null;
+    if (byMonth.length >= 2) {
+      const last = byMonth[byMonth.length - 1].total;
+      const prev = byMonth[byMonth.length - 2].total;
+      deltaTotal = last - prev;
+      deltaPct   = prev > 0 ? Math.round((deltaTotal / prev) * 1000) / 10 : null;
+    }
+
+    return res.json({ success: true, accounts, totalLatest, byMonth, deltaTotal, deltaPct, hasData: raw.length > 0 });
+  } catch (e) {
+    console.error("[MG360] stats social:", e.message);
+    return res.json({ success: true, accounts: [], totalLatest: 0, byMonth: [], hasData: false });
+  }
+}
 
 // ── Stats financières (Stripe) ────────────────────────────────────────────────
 async function handleRevenue(req, res) {
