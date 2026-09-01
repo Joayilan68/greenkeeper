@@ -117,6 +117,63 @@ function SourceBreakdown({ sources, title }) {
   );
 }
 
+// ── Carte de France (SVG, sans dépendance) — répartition des inscrits ─────────
+// Le contour ET les points utilisent la MÊME projection → alignement garanti.
+const FR_BORDER = [
+  [2.4,51.05],[4.9,50.17],[6.4,49.55],[8.23,48.97],[7.6,47.6],[6.9,47.35],[6.1,46.4],
+  [7.05,45.9],[6.9,44.9],[7.55,43.78],[6.6,43.15],[5.35,43.30],[4.05,43.55],[3.0,42.45],
+  [1.7,42.5],[-0.5,42.8],[-1.79,43.35],[-1.25,44.6],[-1.06,45.57],[-1.15,46.15],
+  [-2.2,47.28],[-4.3,47.8],[-4.77,48.4],[-3.2,48.87],[-1.6,48.65],[-1.9,49.72],
+  [-0.2,49.3],[0.1,49.5],[1.6,50.1],[1.58,50.9],[2.4,51.05],
+];
+const FR_CORSE = [[8.6,43.0],[9.35,42.7],[9.55,41.9],[9.2,41.4],[8.7,41.6],[8.6,42.3],[8.6,43.0]];
+
+function makeProj(W, H, pad) {
+  const latMax = 51.2, latMin = 41.3, lonMin = -5.2, lonMax = 9.6;
+  const cosMid  = Math.cos((46.5 * Math.PI) / 180);
+  const rawXmax = (lonMax - lonMin) * cosMid;
+  const rawYmax = (latMax - latMin);
+  const scale   = Math.min((W - 2 * pad) / rawXmax, (H - 2 * pad) / rawYmax);
+  const offX    = pad + ((W - 2 * pad) - rawXmax * scale) / 2;
+  const offY    = pad + ((H - 2 * pad) - rawYmax * scale) / 2;
+  return (lon, lat) => [offX + (lon - lonMin) * cosMid * scale, offY + (latMax - lat) * scale];
+}
+function borderPath(coords, proj) {
+  return coords.map((c, i) => `${i ? "L" : "M"}${proj(c[0], c[1]).map(n => n.toFixed(1)).join(" ")}`).join(" ") + " Z";
+}
+function FranceMap({ points }) {
+  const W = 300, H = 300, pad = 10;
+  const proj  = makeProj(W, H, pad);
+  const inFR  = p => p.lat >= 41.3 && p.lat <= 51.2 && p.lon >= -5.2 && p.lon <= 9.6;
+  const fr    = (points || []).filter(inFR);
+  const out   = (points || []).filter(p => !inFR(p));
+  const maxC  = Math.max(1, ...fr.map(p => p.count));
+  return (
+    <div style={{ overflowX: "auto" }}>
+      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ maxWidth: "100%", display: "block", margin: "0 auto" }}>
+        <path d={borderPath(FR_BORDER, proj)} fill="rgba(76,175,80,0.10)" stroke="rgba(165,214,167,0.55)" strokeWidth="1.2" strokeLinejoin="round" />
+        <path d={borderPath(FR_CORSE, proj)}  fill="rgba(76,175,80,0.10)" stroke="rgba(165,214,167,0.55)" strokeWidth="1.2" strokeLinejoin="round" />
+        {fr.map((p, i) => {
+          const [x, y] = proj(p.lon, p.lat);
+          const r = 3 + Math.round((p.count / maxC) * 6);
+          return (
+            <g key={i}>
+              <circle cx={x} cy={y} r={r + 3} fill="rgba(102,187,106,0.18)" />
+              <circle cx={x} cy={y} r={r} fill="#66BB6A" stroke="#0b1f12" strokeWidth="0.5" />
+              {p.count > 1 && <text x={x} y={y + 2.6} textAnchor="middle" fontSize="7.5" fontWeight="800" fill="#0b1f12">{p.count}</text>}
+            </g>
+          );
+        })}
+      </svg>
+      {out.length > 0 && (
+        <div style={{ fontSize: 10, color: "#4a7c5c", textAlign: "center", marginTop: 6 }}>
+          + {out.reduce((s, p) => s + p.count, 0)} hors métropole ({out.map(p => p.ville || "?").join(", ")})
+        </div>
+      )}
+    </div>
+  );
+}
+
 const SEV_STYLE = {
   error:   { bg:"rgba(198,40,40,0.2)",  border:"rgba(229,57,53,0.4)",  color:"#ef9a9a" },
   warning: { bg:"rgba(230,81,0,0.2)",   border:"rgba(239,108,0,0.4)",  color:"#ffcc80" },
@@ -471,6 +528,20 @@ export default function Pilotage() {
                 ))}
               </div>
             </div>
+
+            {/* Répartition géographique des inscrits */}
+            {users?.geo?.length > 0 && (
+              <div style={card()}>
+                <div style={cardTitle}>
+                  <span>🗺️ Répartition des inscrits</span>
+                  <span style={{ fontSize:11, color:"#81c784" }}>{users.geo.reduce((s,p)=>s+p.count,0)} localisés</span>
+                </div>
+                <FranceMap points={users.geo} />
+                <div style={{ fontSize:10, color:"#4a7c5c", marginTop:6, lineHeight:1.5 }}>
+                  Basé sur les profils avec ville renseignée. Taille du point = nombre d'inscrits sur la commune.
+                </div>
+              </div>
+            )}
 
             {/* Sources des inscrits Clerk (UTM first-touch) */}
             <SourceBreakdown

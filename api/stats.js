@@ -324,6 +324,7 @@ async function handleUsers(req, res) {
     // Actifs/jour (table daily_active_users via vue) + total waitlist (entonnoir)
     const dauByDay      = await fetchDauByDay();
     const waitlistTotal = await getWaitlistTotal();
+    const geo           = await fetchGeoPoints();
 
     res.json({
       success: true,
@@ -339,6 +340,7 @@ async function handleUsers(req, res) {
       months,
       dauByDay,
       waitlistTotal,
+      geo,
       // Backward compat avec l'ancien champ "sources"
       sources: clerkSources,
       // Nouveaux champs explicites pour Pilotage
@@ -502,5 +504,32 @@ async function getWaitlistTotal() {
   } catch (e) {
     console.warn("stats-users waitlistTotal:", e.message);
     return 0;
+  }
+}
+
+// ── Helper : points géographiques des inscrits (profiles.lat/lon agrégés) ─────
+// Regroupe par coordonnées arrondies (≈ même ville) avec un compteur.
+async function fetchGeoPoints() {
+  try {
+    if (!SB_URL || !SB_KEY) return [];
+    const r = await fetch(`${SB_URL}/rest/v1/profiles?select=data`, {
+      headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+    });
+    if (!r.ok) return [];
+    const rows = await r.json();
+    const map  = new Map();
+    (rows || []).forEach(row => {
+      const d   = row.data || {};
+      const lat = parseFloat(d.lat), lon = parseFloat(d.lon);
+      if (!isFinite(lat) || !isFinite(lon)) return;
+      const key = `${lat.toFixed(2)},${lon.toFixed(2)}`;
+      const cur = map.get(key);
+      if (cur) { cur.count++; }
+      else map.set(key, { ville: String(d.ville || "").split(",")[0].trim(), lat: +lat.toFixed(3), lon: +lon.toFixed(3), count: 1 });
+    });
+    return [...map.values()].sort((a, b) => b.count - a.count);
+  } catch (e) {
+    console.warn("stats-users geo:", e.message);
+    return [];
   }
 }
