@@ -141,6 +141,13 @@ export default function Pilotage() {
   const [purgeResult, setPurgeResult]     = useState(null);
   const [expandedPhases, setExpandedPhases] = useState({});
 
+  // ── Réseaux sociaux (saisie manuelle mensuelle) ─────────────────────────────
+  const [social, setSocial]             = useState(null);
+  const [loadingSocial, setLoadingSocial] = useState(false);
+  const [socialForm, setSocialForm]     = useState(null); // { mois:"YYYY-MM", rows:[{compte,plateforme,followers}] }
+  const [savingSocial, setSavingSocial] = useState(false);
+  const [socialMsg, setSocialMsg]       = useState("");
+
   // ── Roadmap Google Sheets ──────────────────────────────────────────────────
   const SHEETS_EDIT_URL = "https://docs.google.com/spreadsheets/d/1RzCsdKNeBtYjWkAUXPm7X7Xg1nA1dufq6ka2jzhMJBM/edit";
   const [roadmap, setRoadmap]           = useState([]);
@@ -159,9 +166,22 @@ export default function Pilotage() {
     computeLocal();
     fetchUsers();
     fetchRevenue();
+    fetchSocial();
     fetchRoadmap();
     setLastUpdate(new Date().toLocaleTimeString("fr-FR"));
   }
+
+  // Initialise le formulaire de saisie à partir des comptes déjà connus
+  useEffect(() => {
+    if (social && socialForm === null) {
+      setSocialForm({
+        mois: new Date().toISOString().slice(0, 7),
+        rows: (social.accounts || []).map(a => ({
+          compte: a.compte, plateforme: a.plateforme, followers: String(a.followers ?? ""),
+        })),
+      });
+    }
+  }, [social]); // eslint-disable-line
 
   async function fetchRoadmap() {
     setRoadmapLoading(true);
@@ -258,8 +278,9 @@ export default function Pilotage() {
   async function fetchUsers() {
     setLoadingUsers(true);
     try {
-      const res  = await fetch("/api/stats?type=users");
-      const data = await res.json();
+      const token = await getToken();
+      const res   = await fetch("/api/stats?type=users", { headers: { Authorization: `Bearer ${token}` } });
+      const data  = await res.json();
       if (data.success) setUsers(data);
     } catch {}
     setLoadingUsers(false);
@@ -268,11 +289,51 @@ export default function Pilotage() {
   async function fetchRevenue() {
     setLoadingRevenue(true);
     try {
-      const res  = await fetch("/api/stats?type=revenue");
-      const data = await res.json();
+      const token = await getToken();
+      const res   = await fetch("/api/stats?type=revenue", { headers: { Authorization: `Bearer ${token}` } });
+      const data  = await res.json();
       if (data.success) setRevenue(data);
     } catch {}
     setLoadingRevenue(false);
+  }
+
+  async function fetchSocial() {
+    setLoadingSocial(true);
+    try {
+      const token = await getToken();
+      const res   = await fetch("/api/admin-social", { headers: { Authorization: `Bearer ${token}` } });
+      const data  = await res.json();
+      if (data.success) setSocial(data);
+    } catch {}
+    setLoadingSocial(false);
+  }
+
+  async function saveSocial() {
+    if (!socialForm) return;
+    const entries = (socialForm.rows || [])
+      .filter(r => r.compte && r.compte.trim() && r.plateforme)
+      .map(r => ({ compte: r.compte.trim(), plateforme: r.plateforme, followers: parseInt(r.followers, 10) || 0 }));
+    if (!entries.length) { setSocialMsg("❌ Ajoute au moins un compte."); setTimeout(() => setSocialMsg(""), 4000); return; }
+    setSavingSocial(true); setSocialMsg("");
+    try {
+      const token = await getToken();
+      const res   = await fetch("/api/admin-social", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ mois: socialForm.mois, entries }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSocialMsg(`✅ ${data.saved} compte(s) enregistré(s) pour ${socialForm.mois}`);
+        await fetchSocial();
+      } else {
+        setSocialMsg("❌ " + (data.error || "Erreur"));
+      }
+    } catch (e) {
+      setSocialMsg("❌ " + e.message);
+    }
+    setSavingSocial(false);
+    setTimeout(() => setSocialMsg(""), 5000);
   }
 
   const sendTestAlert = async () => {
@@ -301,6 +362,7 @@ export default function Pilotage() {
   const tabs = [
     { id:"activite",        label:"👥 Activité" },
     { id:"finances",        label:"💰 Finances" },
+    { id:"reseaux",         label:"📱 Réseaux" },
     { id:"roadmap",         label:"📊 Roadmap" },
     { id:"services",        label:"⚙️ Services" },
     { id:"bugs",            label:"🐛 Bugs" },
@@ -376,6 +438,7 @@ export default function Pilotage() {
               <KPI icon="🆕" label="Nouveaux aujourd'hui" value={loadingUsers ? "..." : (users?.newToday ?? "—")} sub="Inscriptions du jour" color="#90caf9" />
               <KPI icon="📅" label="Nouveaux cette semaine" value={loadingUsers ? "..." : (users?.newLast7 ?? "—")} sub="7 derniers jours" color="#81d4fa" />
               <KPI icon="🗓️" label="Nouveaux ce mois" value={loadingUsers ? "..." : (users?.newLast30 ?? "—")} sub="30 derniers jours" color="#ffcc80" />
+              <KPI icon="📆" label="Cette année" value={loadingUsers ? "..." : (users?.newThisYear ?? "—")} sub="Depuis le 1ᵉʳ janvier" color="#c5e1a5" />
               <KPI icon="📸" label="Diagnostics" value={local?.diagnostics.total ?? "—"} sub={`+${local?.diagnostics.ce7j ?? 0} cette semaine`} color="#ce93d8" />
             </div>
 
@@ -750,6 +813,98 @@ export default function Pilotage() {
                 })
               )}
             </div>
+          </>
+        )}
+
+        {/* ════════════════ TAB RÉSEAUX ════════════════ */}
+        {tab === "reseaux" && (
+          <>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, marginBottom:4 }}>
+              <KPI icon="👥" label="Followers total" value={loadingSocial ? "..." : (social?.totalLatest ?? "—")} sub="Dernier relevé" color="#a5d6a7" />
+              <KPI icon="📈" label="Évolution"
+                value={social?.deltaTotal != null ? (social.deltaTotal >= 0 ? "+" : "") + social.deltaTotal : "—"}
+                sub={social?.deltaPct != null ? `${social.deltaPct >= 0 ? "+" : ""}${social.deltaPct}% vs M-1` : "vs mois précédent"}
+                color={social?.deltaTotal >= 0 ? "#66BB6A" : "#ef9a9a"} />
+              <KPI icon="📱" label="Comptes suivis" value={loadingSocial ? "..." : (social?.accounts?.length ?? 0)} sub="Tous réseaux" color="#90caf9" />
+            </div>
+
+            {social?.byMonth?.length > 0 && (
+              <div style={card()}>
+                <div style={cardTitle}><span>📈 Followers total — par mois</span></div>
+                <MiniChart data={social.byMonth} valueKey="total" color="#43a047" />
+              </div>
+            )}
+
+            {social?.accounts?.length > 0 && (
+              <div style={card()}>
+                <div style={cardTitle}><span>📊 Par compte</span><span style={{ fontSize:11, color:"#81c784" }}>{social.totalLatest} total</span></div>
+                {social.accounts.map(a => {
+                  const m     = SOURCE_META[a.plateforme] || SOURCE_META.autre;
+                  const key   = `${a.compte}|${a.plateforme}`;
+                  const serie = social.byMonth.map(bm => ({ label: bm.label, count: bm.perAccount[key] || 0 }));
+                  const pct   = social.totalLatest > 0 ? Math.round((a.followers / social.totalLatest) * 100) : 0;
+                  return (
+                    <div key={key} style={{ padding:"8px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
+                      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
+                        <span style={{ fontSize:12, display:"flex", alignItems:"center", gap:6 }}>
+                          <span>{m.icon}</span>
+                          <span style={{ color:"#e8f5e9", fontWeight:600 }}>{a.compte}</span>
+                          <span style={{ fontSize:9, color:"#4a7c5c" }}>{m.label}</span>
+                        </span>
+                        <span style={{ fontSize:12, fontWeight:700, color:m.color }}>{a.followers} <span style={{ fontSize:9, color:"#81c784" }}>({pct}%)</span></span>
+                      </div>
+                      {serie.length > 1 && <MiniChart data={serie} valueKey="count" color={m.color} />}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Saisie mensuelle */}
+            <div style={{ ...card(), border:"1px solid rgba(102,187,106,0.3)" }}>
+              <div style={cardTitle}><span>✍️ Saisir un relevé mensuel</span></div>
+              <div style={{ fontSize:11, color:"#81c784", marginBottom:10, lineHeight:1.5 }}>
+                Une fois par mois, renseigne le nombre de followers de chaque compte. Les valeurs du dernier relevé sont pré-remplies — tu n'as qu'à les mettre à jour.
+              </div>
+              <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:12 }}>
+                <span style={{ fontSize:12, color:"#81c784" }}>Mois :</span>
+                <input type="month" value={socialForm?.mois || ""} onChange={e => setSocialForm(f => ({ ...(f||{rows:[]}), mois: e.target.value }))}
+                  style={{ background:"rgba(255,255,255,0.08)", border:"1px solid rgba(165,214,167,0.3)", borderRadius:8, padding:"6px 10px", color:"#e8f5e9", fontSize:12, fontFamily:"inherit" }} />
+              </div>
+              {(socialForm?.rows || []).map((r, i) => (
+                <div key={i} style={{ display:"flex", gap:6, alignItems:"center", marginBottom:8 }}>
+                  <select value={r.plateforme} onChange={e => setSocialForm(f => { const rows=[...f.rows]; rows[i]={...rows[i],plateforme:e.target.value}; return {...f,rows}; })}
+                    style={{ background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:8, padding:"7px 6px", color:"#e8f5e9", fontSize:12, fontFamily:"inherit" }}>
+                    {["instagram","tiktok","facebook","youtube","twitter","linkedin","autre"].map(p => {
+                      const pm = SOURCE_META[p] || SOURCE_META.autre;
+                      return <option key={p} value={p}>{pm.icon} {pm.label}</option>;
+                    })}
+                  </select>
+                  <input placeholder="Nom du compte" value={r.compte} onChange={e => setSocialForm(f => { const rows=[...f.rows]; rows[i]={...rows[i],compte:e.target.value}; return {...f,rows}; })}
+                    style={{ flex:1, minWidth:0, background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:8, padding:"7px 8px", color:"#e8f5e9", fontSize:12, fontFamily:"inherit" }} />
+                  <input type="number" min={0} placeholder="0" value={r.followers} onChange={e => setSocialForm(f => { const rows=[...f.rows]; rows[i]={...rows[i],followers:e.target.value}; return {...f,rows}; })}
+                    style={{ width:80, background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:8, padding:"7px 8px", color:"#e8f5e9", fontSize:12, fontFamily:"inherit", textAlign:"right" }} />
+                  <button onClick={() => setSocialForm(f => ({ ...f, rows: f.rows.filter((_,j)=>j!==i) }))}
+                    style={{ background:"rgba(198,40,40,0.15)", border:"none", borderRadius:8, padding:"7px 9px", color:"#ef9a9a", fontSize:12, cursor:"pointer" }}>✕</button>
+                </div>
+              ))}
+              <button onClick={() => setSocialForm(f => ({ mois: (f?.mois || new Date().toISOString().slice(0,7)), rows:[...((f&&f.rows)||[]), { compte:"", plateforme:"instagram", followers:"" }] }))}
+                style={{ width:"100%", background:"rgba(255,255,255,0.06)", border:"1px dashed rgba(165,214,167,0.4)", borderRadius:8, padding:"8px", color:"#81c784", fontSize:12, cursor:"pointer", marginBottom:10 }}>
+                ➕ Ajouter un compte
+              </button>
+              <button onClick={saveSocial} disabled={savingSocial} style={{ ...btn.primary, fontSize:13, opacity:savingSocial?0.6:1 }}>
+                {savingSocial ? "Enregistrement..." : "💾 Enregistrer le relevé"}
+              </button>
+              {socialMsg && (
+                <div style={{ marginTop:10, fontSize:12, textAlign:"center", color: socialMsg.startsWith("✅") ? "#a5d6a7" : "#ef9a9a" }}>{socialMsg}</div>
+              )}
+            </div>
+
+            {!social?.hasData && !loadingSocial && (
+              <div style={{ fontSize:11, color:"#4a7c5c", textAlign:"center", padding:"8px 4px", lineHeight:1.5 }}>
+                Aucun relevé encore. Saisis ton premier mois ci-dessus — l'évolution se tracera ensuite automatiquement, mois après mois.
+              </div>
+            )}
           </>
         )}
 
