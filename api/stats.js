@@ -8,12 +8,35 @@
 // Emails admin — exclus de TOUTES les stats (règle "admins exclus de tout")
 const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
 
+const { createClerkClient } = require("@clerk/backend");
+const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
+
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "GET") return res.status(405).end();
+
+  // ── AUTH ADMIN — ces stats (MRR, solde Stripe, comptes) sont confidentielles ──
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Authentification requise" });
+  }
+  try {
+    const token   = authHeader.replace("Bearer ", "");
+    const parts   = token.split(".");
+    if (parts.length !== 3) throw new Error("JWT malformé");
+    const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8"));
+    const uid     = payload.sub || payload.user_id;
+    if (!uid) throw new Error("sub manquant");
+    const user    = await clerk.users.getUser(uid);
+    const email   = (user.emailAddresses?.[0]?.emailAddress || "").toLowerCase();
+    const isAdmin = ADMIN_EMAILS.includes(email) || user.publicMetadata?.role === "admin";
+    if (!isAdmin) return res.status(403).json({ error: "Accès réservé à l'administrateur" });
+  } catch {
+    return res.status(401).json({ error: "Token invalide" });
+  }
 
   const { type } = req.query;
 
@@ -148,9 +171,11 @@ async function handleUsers(req, res) {
     const day7   = now - 7  * 24 * 60 * 60 * 1000;
     const day30  = now - 30 * 24 * 60 * 60 * 1000;
 
-    const total      = allUsers.length;
-    const newLast7   = allUsers.filter(u => u.created_at > day7).length;
-    const newLast30  = allUsers.filter(u => u.created_at > day30).length;
+    const total       = allUsers.length;
+    const newLast7    = allUsers.filter(u => u.created_at > day7).length;
+    const newLast30   = allUsers.filter(u => u.created_at > day30).length;
+    const startYear   = new Date(new Date().getFullYear(), 0, 1).getTime();
+    const newThisYear = allUsers.filter(u => u.created_at >= startYear).length;
     const activeL30  = allUsers.filter(u => u.last_active_at && u.last_active_at > day30).length;
     // Actifs aujourd'hui = last_active_at dans les dernières 24h
     const day1       = now - 24 * 60 * 60 * 1000;
@@ -210,6 +235,7 @@ async function handleUsers(req, res) {
       newToday,
       newLast7,
       newLast30,
+      newThisYear,
       activeL30,
       activeToday,
       days,
