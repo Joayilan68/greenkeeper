@@ -300,7 +300,7 @@ Si la photo ne montre pas du gazon, retourne score_visuel à 0 et explique dans 
         "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
       },
       body: JSON.stringify({
-        model:       "qwen/qwen3.6-27b",
+        model:       "qwen/qwen3.8-27b",   // migré depuis qwen3.6-27b (déprécié Groq, décommissionné le 14/09) — 3.8 = remplacement 1:1, multimodal + mêmes params reasoning/JSON
         max_tokens:  1500,
         temperature: 0.2,
         // qwen est un modèle "thinking" : sans ces réglages, il enrobe sa réponse
