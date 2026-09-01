@@ -293,35 +293,52 @@ Problèmes à détecter selon le type de gazon :
 - Bermuda : dormance vs maladie, pythium en été
 Si la photo ne montre pas du gazon, retourne score_visuel à 0 et explique dans resume.`;
 
-    const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    const groqBody = JSON.stringify({
+      model:       "qwen/qwen3.8-27b",   // migré depuis qwen3.6-27b (déprécié Groq, décommissionné le 14/09) — 3.8 = remplacement 1:1, multimodal + mêmes params reasoning/JSON
+      max_tokens:  1500,
+      temperature: 0.2,
+      // qwen est un modèle "thinking" : sans ces réglages, il enrobe sa réponse
+      // de raisonnement et le JSON.parse échoue (→ fallback "Analyse incomplète").
+      reasoning_effort: "none",                  // désactive le raisonnement (qwen3)
+      reasoning_format: "hidden",                // requis avec le JSON mode
+      response_format:  { type: "json_object" }, // force une sortie JSON valide
+      messages: [{
+        role: "user",
+        content: [
+          { type: "image_url", image_url: { url: imageUrl } },
+          { type: "text", text: prompt }
+        ]
+      }]
+    });
+
+    const callGroq = () => fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type":  "application/json",
         "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
       },
-      body: JSON.stringify({
-        model:       "qwen/qwen3.8-27b",   // migré depuis qwen3.6-27b (déprécié Groq, décommissionné le 14/09) — 3.8 = remplacement 1:1, multimodal + mêmes params reasoning/JSON
-        max_tokens:  1500,
-        temperature: 0.2,
-        // qwen est un modèle "thinking" : sans ces réglages, il enrobe sa réponse
-        // de raisonnement et le JSON.parse échoue (→ fallback "Analyse incomplète").
-        reasoning_effort: "none",                  // désactive le raisonnement (qwen3)
-        reasoning_format: "hidden",                // requis avec le JSON mode
-        response_format:  { type: "json_object" }, // force une sortie JSON valide
-        messages: [{
-          role: "user",
-          content: [
-            { type: "image_url", image_url: { url: imageUrl } },
-            { type: "text", text: prompt }
-          ]
-        }]
-      })
+      body: groqBody
     });
+
+    // ── Appel Groq avec retry auto sur rate limit (429) ──────────────────
+    // Le diagnostic photo pèse ~4600 tokens (l'image = 2048). Le palier Groq
+    // plafonne à 8000 tokens/minute : deux diagnostics rapprochés dépassent la
+    // fenêtre → 429 « try again in ~2s ». On attend le délai indiqué et on
+    // réessaie UNE fois, silencieusement, au lieu d'afficher une erreur.
+    let groqRes     = await callGroq();
+    let groqRawText = await groqRes.text();
+    if (groqRes.status === 429) {
+      const m      = groqRawText.match(/try again in ([\d.]+)s/i);
+      const waitMs = Math.min(4000, Math.round((m ? parseFloat(m[1]) : 3) * 1000) + 300);
+      console.warn(`[MG360] Groq rate limit — retry dans ${waitMs}ms`);
+      await new Promise(r => setTimeout(r, waitMs));
+      groqRes     = await callGroq();
+      groqRawText = await groqRes.text();
+    }
 
     // ── Gestion robuste de la réponse Groq ───────────────────────────────
     // Lire le texte brut AVANT de tenter JSON.parse
     // Évite "Unexpected token 'R'" quand Groq renvoie une erreur HTTP en texte
-    const groqRawText = await groqRes.text();
     let groqData;
     try {
       groqData = JSON.parse(groqRawText);
@@ -332,7 +349,15 @@ Si la photo ne montre pas du gazon, retourne score_visuel à 0 et explique dans 
     }
 
     if (groqData.error) {
-      throw new Error("Groq: " + (groqData.error.message || JSON.stringify(groqData.error)));
+      // On journalise le détail complet côté serveur, mais on ne montre JAMAIS
+      // le texte brut de Groq à l'utilisateur (fuite d'infos internes / facturation).
+      console.error("[MG360] Groq error:", groqData.error.message || groqData.error);
+      const isRate = groqRes.status === 429 ||
+                     groqData.error.code === "rate_limit_exceeded" ||
+                     /rate.?limit/i.test(groqData.error.message || "");
+      throw new Error(isRate
+        ? "Un peu trop de diagnostics à la suite 🙂 Patiente quelques secondes et relance l'analyse."
+        : "Service IA temporairement indisponible. Réessaie dans quelques secondes.");
     }
 
     const rawText = groqData.choices?.[0]?.message?.content || "";
