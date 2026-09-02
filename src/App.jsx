@@ -11,6 +11,7 @@ import Products from "./pages/Products";
 import History from "./pages/History";
 import Setup from "./pages/Setup";
 import Login from "./pages/Login";
+import Landing from "./pages/Landing";
 import Subscribe from "./pages/Subscribe";
 import SubscribeSuccess from "./pages/SubscribeSuccess";
 import Admin from "./pages/Admin";
@@ -307,7 +308,7 @@ function AppRoutes() {
       <Route path="/parametres"        element={<PrivateRoute><Layout><Settings /></Layout></PrivateRoute>} />
       <Route path="/pilotage"          element={<AdminRoute><Layout><Pilotage /></Layout></AdminRoute>} />
 
-      <Route path="/"                  element={<PrivateRoute><Layout><Dashboard /></Layout></PrivateRoute>} />
+      <Route path="/"                  element={<><SignedIn><Layout><Dashboard /></Layout></SignedIn><SignedOut><Landing /></SignedOut></>} />
       <Route path="/diagnostic"        element={<PrivateRoute><Layout><Diagnostic /></Layout></PrivateRoute>} />
       <Route path="/my-lawn"           element={<PrivateRoute><Layout><MyLawn /></Layout></PrivateRoute>} />
       <Route path="/parcours"          element={<PrivateRoute><Layout><Parcours /></Layout></PrivateRoute>} />
