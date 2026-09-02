@@ -97,10 +97,29 @@ async function pingPresence(userId) {
   } catch { /* non bloquant */ }
 }
 
+// ── Compteur de visites du site (anonyme, 1 par navigateur/jour) ──────────────
+// Écrit directement en base via la clé anon (pas d'endpoint → reste sous le
+// plafond des 12 fonctions Vercel). Garde localStorage = 1 visite/jour/appareil.
+// Compte TOUS les visiteurs, y compris non connectés (landing) → vraie "visite".
+function pingVisit() {
+  try {
+    const today = new Date().toLocaleDateString("fr-CA"); // YYYY-MM-DD
+    const key   = `mg360_visit_${today}`;
+    if (localStorage.getItem(key)) return;
+    localStorage.setItem(key, "1"); // pose le garde AVANT l'insert (anti double-comptage)
+    import("./lib/supabase").then(({ supabase }) => {
+      supabase.from("site_visits")
+        .insert({ path: typeof location !== "undefined" ? location.pathname : null })
+        .then(() => {}, () => {});
+    }).catch(() => {});
+  } catch { /* non bloquant */ }
+}
+
 function AppWithWeather({ children }) {
   usePilotage();
   useUTMCapture();   // capte les UTM dès l'arrivée sur le site
   useUTMInjection(); // ✅ FIX 01/06/2026 — injecte les UTM dans Clerk unsafeMetadata (first-touch)
+  useEffect(() => { pingVisit(); }, []); // compteur de visites (tous visiteurs)
   const { isPaid } = useSubscription(); // ✅ transmet le statut Premium → active ET₀/sol dans la météo
   return <WeatherProvider isPaid={isPaid}>{children}</WeatherProvider>;
 }
