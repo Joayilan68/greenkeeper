@@ -71,13 +71,13 @@ export default function Landing() {
         <section style={{ paddingTop:22, textAlign:"center" }}>
           <div style={{ display:"inline-block", fontSize:12, fontWeight:700, letterSpacing:0.5, color:G.accent,
             background:"rgba(76,175,80,0.14)", border:"1px solid rgba(102,187,106,0.3)", borderRadius:999, padding:"5px 14px" }}>
-            🌱 Votre expert gazon intelligent
+            🌱 Bob, ton expert gazon
           </div>
           <h1 style={{ fontSize:32, lineHeight:1.12, fontWeight:900, margin:"18px 0 12px", letterSpacing:"-0.01em" }}>
             Un gazon magnifique,<br/><span style={{ color:G.accent }}>sans prise de tête.</span>
           </h1>
           <p style={{ fontSize:16, color:G.muted, lineHeight:1.55, margin:"0 auto 22px", maxWidth:400 }}>
-            Prends ta pelouse en photo : l'IA détecte les problèmes et te construit un <b style={{ color:G.text }}>plan d'entretien personnalisé</b> selon ta météo, ton sol et tes objectifs.
+            Prends ta pelouse en photo : <b style={{ color:G.text }}>Bob</b>, ton expert gazon, repère ce qui cloche et te construit un <b style={{ color:G.text }}>plan d'entretien personnalisé</b> selon ta météo, ton sol et tes objectifs.
           </p>
 
           {/* Avant / Après */}
@@ -100,7 +100,7 @@ export default function Landing() {
           <h2 style={{ fontSize:20, fontWeight:800, textAlign:"center", margin:"0 0 20px" }}>Comment ça marche</h2>
           <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
             <Step n="1" icon="📸" title="Photographie ta pelouse" desc="Une simple photo depuis ton téléphone suffit." />
-            <Step n="2" icon="🤖" title="L'IA diagnostique en 10 secondes" desc="Maladies, manque d'eau, mousse, carences : elle identifie ce qui cloche." />
+            <Step n="2" icon="🔍" title="Bob analyse ta photo en 10 secondes" desc="Maladies, manque d'eau, mousse, carences : il repère ce qui cloche." />
             <Step n="3" icon="📅" title="Reçois ton plan sur-mesure" desc="Un calendrier d'entretien adapté à ta météo locale, ton sol et ton objectif." />
           </div>
         </section>
@@ -109,7 +109,7 @@ export default function Landing() {
         <section style={{ marginTop:44 }}>
           <h2 style={{ fontSize:20, fontWeight:800, textAlign:"center", margin:"0 0 18px" }}>Tout pour une belle pelouse</h2>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
-            <Feature icon="🔬" title="Diagnostic photo IA" desc="Identifie les problèmes de ton gazon à partir d'une simple photo." />
+            <Feature icon="🔬" title="Le diagnostic de Bob" desc="Il analyse ta photo et identifie les problèmes de ton gazon." />
             <Feature icon="🌦️" title="Arrosage intelligent" desc="Les bonnes doses au bon moment, calculées avec ta météo réelle." />
             <Feature icon="🏆" title="GreenPoints & ligues" desc="L'entretien devient un jeu : badges, séries, classement." />
             <Feature icon="🌱" title="Gratuit pour démarrer" desc="Ton score, ton planning et tes conseils, sans rien payer." />
