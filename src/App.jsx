@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { SignedIn, SignedOut, RedirectToSignIn, useUser } from "@clerk/clerk-react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Analytics } from "@vercel/analytics/react";
 import Dashboard from "./pages/Dashboard";
 import Diagnostic from "./pages/Diagnostic";
 import Classement from "./pages/Classement";
@@ -328,6 +329,7 @@ export default function App() {
       <AppWithWeather>
         <AppRoutes />
       </AppWithWeather>
+      <Analytics />
     </BrowserRouter>
   );
 }
