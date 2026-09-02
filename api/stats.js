@@ -325,6 +325,7 @@ async function handleUsers(req, res) {
     const dauByDay      = await fetchDauByDay();
     const waitlistTotal = await getWaitlistTotal();
     const geo           = await fetchGeoPoints();
+    const siteVisits    = await fetchSiteVisits();
 
     res.json({
       success: true,
@@ -341,6 +342,7 @@ async function handleUsers(req, res) {
       dauByDay,
       waitlistTotal,
       geo,
+      siteVisits,
       // Backward compat avec l'ancien champ "sources"
       sources: clerkSources,
       // Nouveaux champs explicites pour Pilotage
@@ -531,5 +533,32 @@ async function fetchGeoPoints() {
   } catch (e) {
     console.warn("stats-users geo:", e.message);
     return [];
+  }
+}
+
+// ── Helper : visites du site (table site_visits, 1 par visiteur/jour) ─────────
+// Renvoie { byDay:[{label,count}], today, total30 } sur 30 jours.
+async function fetchSiteVisits() {
+  const empty = { byDay: [], today: 0, total30: 0 };
+  try {
+    if (!SB_URL || !SB_KEY) return empty;
+    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const r = await fetch(
+      `${SB_URL}/rest/v1/site_visits_by_day?day=gte.${since}&order=day.asc`,
+      { headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` } }
+    );
+    if (!r.ok) return empty;
+    const rows     = await r.json();
+    const todayStr = new Date().toLocaleDateString("fr-CA");
+    const byDay    = (rows || []).map(x => ({
+      label: new Date(x.day).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" }),
+      count: parseInt(x.count) || 0,
+    }));
+    const today   = parseInt((rows || []).find(x => x.day === todayStr)?.count) || 0;
+    const total30 = byDay.reduce((s, d) => s + d.count, 0);
+    return { byDay, today, total30 };
+  } catch (e) {
+    console.warn("stats-users siteVisits:", e.message);
+    return empty;
   }
 }
