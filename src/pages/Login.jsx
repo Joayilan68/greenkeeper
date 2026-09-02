@@ -1,7 +1,14 @@
 import { SignIn } from "@clerk/clerk-react";
 import { appShell } from "../lib/styles";
+import { isInAppBrowser } from "../lib/inapp";
+import OpenInBrowser from "../components/OpenInBrowser";
 
 export default function Login() {
+  // Navigateur in-app (Instagram, TikTok…) : l'auth Clerk y est bloquée.
+  // On invite à ouvrir dans un vrai navigateur — mais seulement ICI, à l'étape
+  // compte, pas à l'arrivée (la landing, elle, s'affiche bien dans l'in-app).
+  if (isInAppBrowser()) return <OpenInBrowser />;
+
   return (
     <div style={{ ...appShell, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 16px" }}>
       <div style={{ textAlign: "center", marginBottom: 32 }}>
