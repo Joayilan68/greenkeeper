@@ -161,22 +161,18 @@ if ("serviceWorker" in navigator) {
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────
-// Si in-app browser détecté → afficher la bannière de redirection
-// sinon → app normale
-const isInApp = detectInAppBrowser();
-
+// L'app (dont la landing publique) s'affiche PARTOUT, y compris dans les
+// navigateurs in-app (Instagram, TikTok…). Le garde-fou "ouvre dans ton
+// navigateur" ne s'affiche plus qu'à l'étape de connexion (voir Login.jsx),
+// pour ne plus tuer la conversion du trafic social/pub dès l'arrivée.
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <ErrorBoundary>
-      {isInApp ? (
-        <InAppBrowserBanner />
-      ) : (
-        <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/login">
-          <ErrorBoundary>
-            <App />
-          </ErrorBoundary>
-        </ClerkProvider>
-      )}
+      <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/login">
+        <ErrorBoundary>
+          <App />
+        </ErrorBoundary>
+      </ClerkProvider>
     </ErrorBoundary>
   </React.StrictMode>
 );
