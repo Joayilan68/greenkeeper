@@ -492,7 +492,7 @@ export default function Pilotage() {
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:4 }}>
               <KPI icon="👥" label="Comptes créés" value={loadingUsers ? "..." : (users?.total ?? "—")} sub="Hors admins · ≠ installs" color="#a5d6a7" />
               <KPI icon="🟢" label="Actifs aujourd'hui" value={loadingUsers ? "..." : dauToday} sub="Connectés ce jour" color="#66BB6A" />
-              <KPI icon="🌐" label="Visiteurs site (auj.)" value={loadingUsers ? "..." : (users?.siteVisits?.today ?? "—")} sub="Uniques/jour · dont non connectés" color="#4FC3F7" />
+              <KPI icon="🌐" label="Visiteurs site (auj.)" value={loadingUsers ? "..." : (users?.siteVisits?.today ?? "—")} sub="Prospects landing · non connectés" color="#4FC3F7" />
               <KPI icon="🆕" label="Nouveaux aujourd'hui" value={loadingUsers ? "..." : (users?.newToday ?? "—")} sub="Inscriptions du jour" color="#90caf9" />
               <KPI icon="📅" label="Nouveaux cette semaine" value={loadingUsers ? "..." : (users?.newLast7 ?? "—")} sub="7 derniers jours" color="#81d4fa" />
               <KPI icon="🗓️" label="Nouveaux ce mois" value={loadingUsers ? "..." : (users?.newLast30 ?? "—")} sub="30 derniers jours" color="#ffcc80" />
@@ -570,7 +570,7 @@ export default function Pilotage() {
                 <div style={cardTitle}><span>🌐 Visiteurs du site — 30 j</span><span style={{ fontSize:11, color:"#81c784" }}>{users.siteVisits.total30} sur 30 j</span></div>
                 <MiniChart data={users.siteVisits.byDay} valueKey="count" color="#4FC3F7" />
                 <div style={{ fontSize:10, color:"#4a7c5c", marginTop:6, lineHeight:1.5 }}>
-                  Visiteurs uniques par jour, tous confondus (y compris non connectés). Le comptage démarre aujourd'hui.
+                  Prospects : visiteurs non connectés arrivés sur la landing (les connectés sont dans « Actifs »). Le comptage démarre aujourd'hui.
                 </div>
               </div>
             )}

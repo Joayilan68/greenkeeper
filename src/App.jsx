@@ -120,15 +120,14 @@ function AppWithWeather({ children }) {
   useUTMCapture();   // capte les UTM dès l'arrivée sur le site
   useUTMInjection(); // ✅ FIX 01/06/2026 — injecte les UTM dans Clerk unsafeMetadata (first-touch)
 
-  // Compteur de visites : tous les visiteurs (dont non connectés) SAUF l'admin,
-  // pour ne pas gonfler le chiffre avec les tests (cohérent avec les autres stats).
+  // Compteur de visites = haut d'entonnoir : UNIQUEMENT les visiteurs NON connectés
+  // (les prospects qui arrivent sur la landing). Les connectés sont déjà comptés
+  // dans "Actifs aujourd'hui" → on ne les compte pas deux fois.
   const { user: visitUser, isLoaded: visitLoaded } = useUser();
   useEffect(() => {
-    if (!visitLoaded) return; // attendre Clerk : sinon on compterait l'admin avant de le connaître
-    const email = visitUser?.primaryEmailAddress?.emailAddress || "";
-    const isAdmin = ADMIN_EMAILS.includes(email) || visitUser?.publicMetadata?.role === "admin";
-    if (isAdmin) return;
-    pingVisit();
+    if (!visitLoaded) return; // attendre Clerk pour connaître l'état de connexion
+    if (visitUser) return;    // connecté → c'est un "actif", pas un prospect
+    pingVisit();              // visiteur anonyme = prospect arrivé sur la landing
   }, [visitLoaded, visitUser]);
 
   const { isPaid } = useSubscription(); // ✅ transmet le statut Premium → active ET₀/sol dans la météo
