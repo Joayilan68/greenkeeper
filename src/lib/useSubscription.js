@@ -129,6 +129,8 @@ export function useSubscription() {
   const trialDaysLeft  = trialStartedAt
     ? Math.max(0, Math.ceil((Number(trialStartedAt) + TRIAL_MS - Date.now()) / 86400000))
     : 0;
+  const trialEnded     = tier === "free" && !!trialStartedAt
+                      && Date.now() >= Number(trialStartedAt) + TRIAL_MS;
 
   return {
     tier,
@@ -138,6 +140,7 @@ export function useSubscription() {
     isSubscribed: tier === "paid" || tier === "admin",
     isTrial,
     trialDaysLeft,
+    trialEnded,
     isLoading,
     refresh,
   };
