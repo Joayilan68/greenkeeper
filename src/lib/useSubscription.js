@@ -80,6 +80,21 @@ export function useSubscription() {
       }
     } catch { /* réseau indisponible — on retombe sur free */ }
 
+    // 4. Essai Premium 7 jours — OFFERT au 1er login (sans carte, sans friction).
+    //    Marqué une seule fois dans unsafeMetadata.trialStartedAt. Pendant la
+    //    fenêtre → tier "paid" (Premium complet). Ensuite → free + upsell.
+    //    (Sécurisé : l'utilisateur est authentifié → rate-limit diagnostic actif.)
+    try {
+      const TRIAL_MS = 7 * 24 * 60 * 60 * 1000;
+      const md = user.unsafeMetadata || {};
+      let trialStart = md.trialStartedAt;
+      if (!trialStart) {
+        trialStart = Date.now();
+        try { await user.update({ unsafeMetadata: { ...md, trialStartedAt: trialStart } }); } catch {}
+      }
+      if (trialStart && Date.now() < Number(trialStart) + TRIAL_MS) return "paid";
+    } catch { /* non bloquant */ }
+
     return "free";
   }, [isSignedIn, user, getToken]);
 
@@ -102,12 +117,27 @@ export function useSubscription() {
     return t;
   }, [computeTier]);
 
+  // ── Infos essai Premium (pour bannière / compte à rebours) ────────────────
+  const TRIAL_MS       = 7 * 24 * 60 * 60 * 1000;
+  const trialStartedAt = user?.unsafeMetadata?.trialStartedAt;
+  const realPremium    = user?.publicMetadata?.isSubscribed === true
+                      || user?.publicMetadata?.subscriptionStatus === "active"
+                      || user?.publicMetadata?.subscriptionStatus === "trialing"
+                      || user?.publicMetadata?.guestAccess === true;
+  const isTrial        = tier === "paid" && !realPremium && !!trialStartedAt
+                      && Date.now() < Number(trialStartedAt) + TRIAL_MS;
+  const trialDaysLeft  = trialStartedAt
+    ? Math.max(0, Math.ceil((Number(trialStartedAt) + TRIAL_MS - Date.now()) / 86400000))
+    : 0;
+
   return {
     tier,
     isAdmin:      tier === "admin",
     isPaid:       tier === "paid" || tier === "admin",
     isFree:       tier === "free",
     isSubscribed: tier === "paid" || tier === "admin",
+    isTrial,
+    trialDaysLeft,
     isLoading,
     refresh,
   };

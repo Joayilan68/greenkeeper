@@ -91,8 +91,9 @@ export default function Landing() {
             ))}
           </div>
 
-          <CtaPrimary onClick={go}>📸 Diagnostiquer mon gazon — gratuit</CtaPrimary>
-          <div style={{ fontSize:12, color:G.faint, marginTop:10 }}>Gratuit · sans carte bancaire · prêt en 2 minutes</div>
+          <CtaPrimary onClick={go}>📸 Diagnostiquer mon gazon</CtaPrimary>
+          <div style={{ fontSize:12.5, color:G.accent, marginTop:10, fontWeight:700 }}>🎁 7 jours de Premium offerts</div>
+          <div style={{ fontSize:11.5, color:G.faint, marginTop:3 }}>Sans carte bancaire · sans engagement · en 1 clic avec Google</div>
         </section>
 
         {/* ── Comment ça marche ── */}
@@ -131,7 +132,7 @@ export default function Landing() {
         {/* ── CTA final ── */}
         <section style={{ marginTop:36, textAlign:"center" }}>
           <h2 style={{ fontSize:22, fontWeight:900, margin:"0 0 6px" }}>Prêt à voir ton gazon changer ?</h2>
-          <p style={{ fontSize:14, color:G.soft, margin:"0 0 18px" }}>Commence par un diagnostic gratuit, aujourd'hui.</p>
+          <p style={{ fontSize:14, color:G.soft, margin:"0 0 18px" }}>7 jours de Premium offerts — sans carte bancaire.</p>
           <CtaPrimary onClick={go}>Commencer gratuitement</CtaPrimary>
           <div style={{ fontSize:13, color:G.soft, marginTop:14 }}>
             Déjà un compte ? <button onClick={go} style={{ background:"none", border:"none", color:G.accent, fontWeight:800, cursor:"pointer", fontSize:13, fontFamily:"inherit", padding:0 }}>Se connecter</button>
