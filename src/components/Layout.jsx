@@ -1,5 +1,6 @@
 import BottomNav from "./BottomNav";
 import AIAssistant from "./AIAssistant";
+import TrialBanner from "./TrialBanner";
 import { appShell } from "../lib/styles";
 
 // ✅ Footer discret intégrant la marque Mongazon360™
@@ -28,6 +29,7 @@ function BrandFooter() {
 export default function Layout({ children }) {
   return (
     <div style={appShell}>
+      <TrialBanner />
       {children}
       <BrandFooter />
       <BottomNav />
