@@ -67,6 +67,57 @@ function buildReminderHtml(reminders, userName, profile) {
 </body></html>`;
 }
 
+// Email de relance fin d'essai Premium (transactionnel — service en cours)
+function buildTrialEmailHtml(prenom, when) {
+  const year = new Date().getFullYear();
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"/></head>
+<body style="font-family:Arial,sans-serif;background:#f5f5f5;margin:0;padding:20px;">
+<div style="max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 20px rgba(0,0,0,0.1);">
+  <div style="background:#1a4731;padding:24px 28px;">
+    <div style="color:#a5d6a7;font-size:18px;font-weight:800;">Mongazon360<sup style="font-size:10px;">™</sup></div>
+    <div style="color:#4a7c5c;font-size:11px;font-style:italic;">Tant qu'il y a gazon, il y a match</div>
+  </div>
+  <div style="padding:24px 28px;">
+    <div style="font-size:20px;font-weight:800;color:#1a4731;margin-bottom:10px;">⭐ Ton essai Premium se termine ${when}, ${prenom}</div>
+    <div style="font-size:14px;color:#555;line-height:1.7;margin-bottom:8px;">
+      Ces 7 jours t'ont donné accès au <b>diagnostic photo de Bob</b>, à l'<b>arrosage précis</b> et à tous les conseils personnalisés pour ton gazon.
+    </div>
+    <div style="font-size:14px;color:#555;line-height:1.7;margin-bottom:20px;">
+      Pour garder ton gazon sur la bonne voie sans interruption, passe Premium — <b>4,99 €/mois</b>, sans engagement, résiliable à tout moment.
+    </div>
+    <div style="text-align:center;margin:24px 0;">
+      <a href="https://mongazon360.fr/subscribe" style="background:#43a047;color:#fff;text-decoration:none;padding:15px 34px;border-radius:12px;font-size:15px;font-weight:800;display:inline-block;">Garder mon Premium →</a>
+    </div>
+    <div style="font-size:12px;color:#888;line-height:1.6;">Sans action de ta part, ton compte repasse simplement en version gratuite — tu gardes ton profil et ton score. 🌿</div>
+  </div>
+  <div style="background:#f9fbe7;padding:14px 28px;border-top:1px solid #e8f5e9;text-align:center;">
+    <div style="color:#81c784;font-size:9px;">© ${year} Mongazon360<sup style="font-size:7px;">™</sup> — Marque déposée à l'EUIPO · <a href="https://mongazon360.fr/mentions-legales" style="color:#52b788;">Mentions légales</a></div>
+  </div>
+</div></body></html>`;
+}
+
+// Socle quotidien : conseils gazon utiles (voix de Bob), rotation par jour
+const CONSEILS_QUOTIDIENS = [
+  { title:"✂️ Le conseil de Bob",     body:"Ne tonds jamais plus d'un tiers de la hauteur d'un coup : ton gazon reste dense et résiste mieux." },
+  { title:"💧 Astuce arrosage",       body:"Arrose tôt le matin plutôt que le soir : moins d'évaporation, moins de maladies." },
+  { title:"🌱 Bob te souffle",         body:"Une lame de tonte bien affûtée coupe net ; une lame émoussée déchire et jaunit les pointes." },
+  { title:"☀️ Le saviez-vous",         body:"En période chaude, remonte la hauteur de tonte : une herbe plus haute garde le sol frais." },
+  { title:"🍂 Conseil du jour",        body:"Ramasse les feuilles mortes : sous un tapis de feuilles, le gazon s'asphyxie et la mousse s'installe." },
+  { title:"🌿 Bob rappelle",           body:"Laisse parfois les tontes fines sur place (mulching) : elles nourrissent ton sol gratuitement." },
+  { title:"💪 Astuce racines",         body:"Arrose moins souvent mais plus abondamment : les racines plongent et ton gazon devient plus résistant." },
+  { title:"🔍 L'œil de Bob",           body:"Des taches jaunes qui s'étendent ? Prends-les en photo dans l'app, je te dis ce que c'est." },
+  { title:"🌾 Conseil semis",          body:"Un sol bien griffé avant de semer, c'est deux fois plus de graines qui lèvent." },
+  { title:"🪱 Bob t'explique",         body:"Des vers de terre, c'est bon signe : ils aèrent ton sol mieux qu'aucun outil." },
+  { title:"🌡️ Astuce saison",         body:"Le gazon pousse surtout quand le sol est entre 10 et 25 °C : c'est là qu'il faut le chouchouter." },
+  { title:"🚫 Erreur fréquente",       body:"Trop d'engrais brûle le gazon. Mieux vaut peu, mais au bon moment." },
+  { title:"🌧️ Bob observe le ciel",   body:"Pluie annoncée ? Reporte l'arrosage : inutile de doubler ce que fait la nature." },
+  { title:"🏆 Motivation du jour",     body:"Un beau gazon, c'est de la régularité, pas de l'effort intense. Un petit geste vaut mieux qu'un grand coup." },
+  { title:"🌱 Conseil densité",        body:"Un gazon dense étouffe les mauvaises herbes tout seul : vise l'épaisseur avant tout." },
+  { title:"✂️ Bob insiste",           body:"Varie le sens de tonte à chaque passage : l'herbe se redresse mieux et pousse plus droite." },
+  { title:"💚 Astuce couleur",         body:"Un gazon qui vire au bleu-gris a soif : c'est le tout premier signe, avant le jaune." },
+  { title:"🌍 Le mot de Bob",          body:"Un gazon en bonne santé, c'est aussi de la fraîcheur, de l'oxygène et de la biodiversité chez toi." },
+];
+
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
@@ -154,6 +205,7 @@ module.exports = async function handler(req, res) {
       }
 
       let pushSent = 0, emailSent = 0, skipped = 0;
+      const pushedToday = new Set(); // users déjà notifiés ce jour (anti-doublon socle/relance)
 
       for (const row of (remindersData || [])) {
         const { user_id, email, preferences, notif_log } = row;
@@ -203,6 +255,7 @@ module.exports = async function handler(req, res) {
               date: today, priority: decision.priority, type: decision.type, slot,
             });
             pushSent++;
+            pushedToday.add(user_id);
           } catch (e) {
             console.error("cron push:", user_id, e.message);
             skipped++;
@@ -358,8 +411,108 @@ module.exports = async function handler(req, res) {
         }
       }
 
-      console.log(`[CRON ${slot}] reminders:`, remindersData?.length || 0, "pushSent:", pushSent, "emailSent:", emailSent, "skipped:", skipped, "parcoursSent:", parcoursSent, "parcoursTermines:", parcoursTermines);
-      return res.json({ success: true, date: today, slot, pushSent, emailSent, skipped, parcoursSent, parcoursTermines, reminders: remindersData?.length || 0 });
+      // ── RELANCE FIN D'ESSAI PREMIUM (email + push) — créneau MATIN ─────────
+      // Lit l'état d'essai depuis Clerk (unsafe_metadata.trialStartedAt), relance
+      // à J-2, J-1 et J-0 les comptes non abonnés, une seule fois par jalon.
+      let trialRelances = 0;
+      if (slot === "matin") {
+        try {
+          const TRIAL_MS = 7 * 24 * 60 * 60 * 1000;
+          const clerkKey = process.env.CLERK_SECRET_KEY;
+          const clerkUsers = [];
+          for (let page = 0, offset = 0; page < 20; page++, offset += 100) {
+            const r = await fetch(`https://api.clerk.com/v1/users?limit=100&offset=${offset}&order_by=-created_at`,
+              { headers: { Authorization: `Bearer ${clerkKey}`, "Content-Type": "application/json" } });
+            if (!r.ok) break;
+            const j = await r.json();
+            const batch = Array.isArray(j) ? j : (j.data || []);
+            if (!batch.length) break;
+            clerkUsers.push(...batch);
+            if (batch.length < 100) break;
+          }
+
+          for (const u of clerkUsers) {
+            const um = u.unsafe_metadata || {};
+            const pm = u.public_metadata || {};
+            const trialStart = um.trialStartedAt;
+            if (!trialStart) continue;
+            if (pm.isSubscribed === true || pm.subscriptionStatus === "active"
+                || pm.subscriptionStatus === "trialing" || pm.guestAccess === true) continue;
+
+            const daysLeft = Math.ceil((Number(trialStart) + TRIAL_MS - Date.now()) / 86400000);
+            let flagKey = null, when = null;
+            if      (daysLeft === 2 && !um.trialRemindedJ2) { flagKey = "trialRemindedJ2"; when = "dans 2 jours"; }
+            else if (daysLeft === 1 && !um.trialRemindedJ1) { flagKey = "trialRemindedJ1"; when = "demain"; }
+            else if (daysLeft <= 0 && !um.trialRemindedJ0)  { flagKey = "trialRemindedJ0"; when = "aujourd'hui"; }
+            if (!flagKey) continue;
+
+            const email  = u.email_addresses?.find(e => e.id === u.primary_email_address_id)?.email_address
+                        || u.email_addresses?.[0]?.email_address || null;
+            const sub    = subMap[u.id];
+            const consent = consentMap[u.id] || {};
+            const prenom = u.first_name || "Jardinier";
+
+            if (consent.notifications && sub) {
+              try {
+                await webpush.sendNotification(sub, JSON.stringify({
+                  title: `⭐ Ton essai Premium se termine ${when}`,
+                  body:  "Garde le diagnostic de Bob et l'arrosage précis — passe Premium en un clic.",
+                  icon: "/icon-192.png", tag: "mg360-trial-end", url: "/subscribe", actionRoute: "/subscribe",
+                }));
+                pushedToday.add(u.id);
+              } catch (e) { console.error("cron trial push:", u.id, e.message); }
+            }
+            if (email) {
+              try {
+                await fetch("https://api.resend.com/emails", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
+                  body: JSON.stringify({
+                    from: "Mongazon360 <bonjour@mongazon360.fr>",
+                    to: [email],
+                    subject: `⭐ Ton essai Premium Mongazon360 se termine ${when}`,
+                    html: buildTrialEmailHtml(prenom, when),
+                  }),
+                });
+              } catch (e) { console.error("cron trial email:", e.message); }
+            }
+            try {
+              await fetch(`https://api.clerk.com/v1/users/${u.id}/metadata`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${clerkKey}` },
+                body: JSON.stringify({ unsafe_metadata: { [flagKey]: true } }),
+              });
+            } catch (e) { console.error("cron trial flag:", u.id, e.message); }
+            trialRelances++;
+          }
+        } catch (e) { console.error("cron trial relances:", e.message); }
+      }
+
+      // ── SOCLE QUOTIDIEN — 1 conseil gazon utile/jour — créneau MATIN ───────
+      // Garantit au moins une notification/jour aux comptes consentants qui
+      // n'ont pas déjà reçu de push (moteur intelligent ou relance essai).
+      let baselineSent = 0;
+      if (slot === "matin") {
+        const doy = Math.floor((Date.now() - Date.UTC(new Date().getUTCFullYear(), 0, 0)) / 86400000);
+        const tip = CONSEILS_QUOTIDIENS[((doy % CONSEILS_QUOTIDIENS.length) + CONSEILS_QUOTIDIENS.length) % CONSEILS_QUOTIDIENS.length];
+        for (const s of (subsData || [])) {
+          const uid = s.user_id;
+          if (pushedToday.has(uid)) continue;
+          const consent = consentMap[uid] || {};
+          if (!consent.notifications) continue;
+          try {
+            await webpush.sendNotification(s.subscription, JSON.stringify({
+              title: tip.title, body: tip.body, icon: "/icon-192.png",
+              tag: "mg360-conseil-jour", url: "/today", actionRoute: "/today",
+            }));
+            pushedToday.add(uid);
+            baselineSent++;
+          } catch (e) { console.error("cron baseline:", uid, e.message); }
+        }
+      }
+
+      console.log(`[CRON ${slot}] reminders:`, remindersData?.length || 0, "pushSent:", pushSent, "emailSent:", emailSent, "skipped:", skipped, "parcoursSent:", parcoursSent, "parcoursTermines:", parcoursTermines, "trialRelances:", trialRelances, "baselineSent:", baselineSent);
+      return res.json({ success: true, date: today, slot, pushSent, emailSent, skipped, parcoursSent, parcoursTermines, trialRelances, baselineSent, reminders: remindersData?.length || 0 });
     } catch (e) {
       console.error("cron:", e.message);
       return res.status(500).json({ error: e.message });
