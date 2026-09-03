@@ -91,9 +91,55 @@ export default function Landing() {
             ))}
           </div>
 
+          {/* Offre 7 jours — bien visible (or sur fond vert = fort contraste) */}
+          <div style={{
+            background:"linear-gradient(135deg,#F9A825,#F57F17)", color:"#1a1200",
+            borderRadius:16, padding:"13px 16px", margin:"0 0 12px",
+            boxShadow:"0 6px 20px rgba(245,127,23,0.4)",
+          }}>
+            <div style={{ fontSize:16.5, fontWeight:900, letterSpacing:0.2 }}>🎁 7 jours de Premium offerts</div>
+            <div style={{ fontSize:12.5, fontWeight:700, marginTop:3, color:"#3a2a00" }}>
+              Puis l'app reste <b>gratuite</b> — tu ne perds rien, ni ton profil ni ton suivi.
+            </div>
+          </div>
+
           <CtaPrimary onClick={go}>📸 Diagnostiquer mon gazon</CtaPrimary>
-          <div style={{ fontSize:12.5, color:G.accent, marginTop:10, fontWeight:700 }}>🎁 7 jours de Premium offerts</div>
-          <div style={{ fontSize:11.5, color:G.faint, marginTop:3 }}>Sans carte bancaire · sans engagement · en 1 clic avec Google</div>
+          <div style={{ fontSize:11.5, color:G.faint, marginTop:10 }}>Sans carte bancaire · sans engagement · inscription en 1 clic avec Google</div>
+        </section>
+
+        {/* ── Aperçu : l'avis de Bob (preuve concrète) ── */}
+        <section style={{ marginTop:42 }}>
+          <h2 style={{ fontSize:20, fontWeight:800, textAlign:"center", margin:"0 0 4px" }}>Ce que Bob voit sur ta pelouse</h2>
+          <p style={{ fontSize:13, color:G.soft, textAlign:"center", margin:"0 0 18px" }}>Un diagnostic clair, en 10 secondes.</p>
+
+          <div style={{ background:G.card, border:G.border, borderRadius:20, padding:18, backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)" }}>
+            {/* En-tête : score */}
+            <div style={{ display:"flex", alignItems:"center", gap:14, paddingBottom:14, borderBottom:"1px solid rgba(255,255,255,0.08)" }}>
+              <div style={{ flexShrink:0, width:66, height:66, borderRadius:"50%",
+                background:"conic-gradient(#66BB6A 0% 68%, rgba(255,255,255,0.10) 68% 100%)",
+                display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <div style={{ width:52, height:52, borderRadius:"50%", background:"#0f2a1c", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center" }}>
+                  <span style={{ fontSize:19, fontWeight:900, color:G.accent, lineHeight:1 }}>68</span>
+                  <span style={{ fontSize:8, color:G.soft }}>/ 100</span>
+                </div>
+              </div>
+              <div style={{ textAlign:"left" }}>
+                <div style={{ fontSize:15, fontWeight:800 }}>😐 Gazon à surveiller</div>
+                <div style={{ fontSize:12, color:G.soft, marginTop:2 }}>Bon potentiel, quelques réglages à faire.</div>
+              </div>
+            </div>
+            {/* Problème détecté + conseil de Bob */}
+            <div style={{ display:"flex", gap:10, alignItems:"flex-start", paddingTop:14 }}>
+              <span style={{ fontSize:18, lineHeight:1.3 }}>🔍</span>
+              <div style={{ textAlign:"left" }}>
+                <div style={{ fontSize:13.5, fontWeight:800, color:"#ffcc80" }}>Léger manque d'eau détecté</div>
+                <div style={{ fontSize:12.5, color:G.soft, marginTop:3, lineHeight:1.55 }}>
+                  <b style={{ color:G.text }}>Bob :</b> « Arrose 15 min tôt le matin, 2 fois cette semaine. La pluie de jeudi fait le reste — inutile d'arroser ce jour-là. »
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style={{ fontSize:11, color:G.faint, textAlign:"center", marginTop:8 }}>Exemple — ton diagnostic sera personnalisé selon ta photo et ta météo.</div>
         </section>
 
         {/* ── Comment ça marche ── */}
@@ -113,7 +159,7 @@ export default function Landing() {
             <Feature icon="🔬" title="Le diagnostic de Bob" desc="Il analyse ta photo et identifie les problèmes de ton gazon." />
             <Feature icon="🌦️" title="Arrosage intelligent" desc="Les bonnes doses au bon moment, calculées avec ta météo réelle." />
             <Feature icon="🏆" title="GreenPoints & ligues" desc="L'entretien devient un jeu : badges, séries, classement." />
-            <Feature icon="🌱" title="Gratuit pour démarrer" desc="Ton score, ton planning et tes conseils, sans rien payer." />
+            <Feature icon="🌱" title="Gratuit, pour de vrai" desc="Après tes 7 jours d'essai, tu gardes une version gratuite : score, planning et conseils. Sans carte, sans piège." />
           </div>
         </section>
 
@@ -132,7 +178,7 @@ export default function Landing() {
         {/* ── CTA final ── */}
         <section style={{ marginTop:36, textAlign:"center" }}>
           <h2 style={{ fontSize:22, fontWeight:900, margin:"0 0 6px" }}>Prêt à voir ton gazon changer ?</h2>
-          <p style={{ fontSize:14, color:G.soft, margin:"0 0 18px" }}>7 jours de Premium offerts — sans carte bancaire.</p>
+          <p style={{ fontSize:14, color:G.soft, margin:"0 0 18px" }}>7 jours de Premium offerts, puis gratuit à vie — sans carte bancaire.</p>
           <CtaPrimary onClick={go}>Commencer gratuitement</CtaPrimary>
           <div style={{ fontSize:13, color:G.soft, marginTop:14 }}>
             Déjà un compte ? <button onClick={go} style={{ background:"none", border:"none", color:G.accent, fontWeight:800, cursor:"pointer", fontSize:13, fontFamily:"inherit", padding:0 }}>Se connecter</button>
