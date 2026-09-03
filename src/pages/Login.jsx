@@ -22,6 +22,9 @@ export default function Login() {
           Mongazon360<sup style={{ fontSize: 12, fontWeight: 600, marginLeft: 2, color: "#81c784" }}>™</sup>
         </div>
         <div style={{ fontSize: 13, color: "#81c784", marginTop: 4 }}>Tant qu'il y a gazon, il y a match</div>
+        <div style={{ display:"inline-block", marginTop:14, fontSize:12.5, fontWeight:700, color:"#0b1f12", background:"linear-gradient(135deg,#66BB6A,#43A047)", borderRadius:999, padding:"6px 16px" }}>
+          🎁 7 jours de Premium offerts
+        </div>
       </div>
       <SignIn
         routing="hash"
