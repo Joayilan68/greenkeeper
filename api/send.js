@@ -148,6 +148,16 @@ module.exports = async function handler(req, res) {
       // ← nouveau : source de vérité de la phase parcours, partagée avec Today.jsx/phaseParcours()
       const { currentPhase } = require("./parcoursEngine.cjs");
 
+      // Purge d'un abonnement périmé : FCM renvoie 404/410 quand l'endpoint est mort.
+      // On le supprime pour que la table reste propre et que 'skipped' soit fiable.
+      const pruneSub = async (err, uid) => {
+        const code = err && err.statusCode;
+        if (code === 404 || code === 410) {
+          try { await supabase.from("push_subscriptions").delete().eq("user_id", uid); }
+          catch (e) { console.error("prune sub:", uid, e.message); }
+        }
+      };
+
       // Créneau courant (matin par défaut si non précisé)
       const slot = (req.query.slot === "soir") ? "soir" : "matin";
       const today = new Date().toISOString().slice(0, 10);
@@ -258,6 +268,7 @@ module.exports = async function handler(req, res) {
             pushedToday.add(user_id);
           } catch (e) {
             console.error("cron push:", user_id, e.message);
+            await pruneSub(e, user_id);
             skipped++;
           }
         }
@@ -378,6 +389,7 @@ module.exports = async function handler(req, res) {
                 parcoursSent++;
               } catch (e) {
                 console.error("cron parcours:", p.user_id, e.message);
+                await pruneSub(e, p.user_id);
               }
             }
           }
@@ -460,7 +472,7 @@ module.exports = async function handler(req, res) {
                   icon: "/icon-192.png", tag: "mg360-trial-end", url: "/subscribe", actionRoute: "/subscribe",
                 }));
                 pushedToday.add(u.id);
-              } catch (e) { console.error("cron trial push:", u.id, e.message); }
+              } catch (e) { console.error("cron trial push:", u.id, e.message); await pruneSub(e, u.id); }
             }
             if (email) {
               try {
@@ -507,7 +519,7 @@ module.exports = async function handler(req, res) {
             }));
             pushedToday.add(uid);
             baselineSent++;
-          } catch (e) { console.error("cron baseline:", uid, e.message); }
+          } catch (e) { console.error("cron baseline:", uid, e.message); await pruneSub(e, uid); }
         }
       }
 

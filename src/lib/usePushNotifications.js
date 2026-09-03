@@ -53,15 +53,52 @@ export function usePushNotifications(userId) {
   const [loading, setLoading]           = useState(false);
   const [error, setError]               = useState(null);
 
-  // ── Enregistrement SW au montage — uniquement si supporté ────────────────────
+  // ── Enregistrement SW + RAFRAÎCHISSEMENT de l'abonnement au montage ──────────
+  // Anti-péremption : si la permission est accordée, on ré-enregistre l'abonnement
+  // en base À CHAQUE OUVERTURE. Ainsi l'endpoint reste toujours frais (les endpoints
+  // FCM expirent après quelques semaines → sinon l'utilisateur cesse de recevoir
+  // ses notifications sans le savoir). Si l'abonnement a disparu mais la permission
+  // reste accordée, on en recrée un automatiquement.
   useEffect(() => {
     if (!isSWSupported() || !isPushSupported()) return;
+    let cancelled = false;
 
-    navigator.serviceWorker.register("/sw.js")
-      .then(reg => reg.pushManager.getSubscription())
-      .then(sub => { if (sub) setSubscription(sub); })
-      .catch(err => console.warn("[MG360] SW init:", err.message));
-  }, []);
+    (async () => {
+      try {
+        const reg = await navigator.serviceWorker.register("/sw.js");
+        let sub = await reg.pushManager.getSubscription();
+
+        // Permission accordée mais plus d'abonnement → on le recrée
+        if (!sub && isNotificationSupported() && Notification.permission === "granted" && VAPID_PUBLIC_KEY) {
+          try {
+            sub = await reg.pushManager.subscribe({
+              userVisibleOnly:      true,
+              applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+            });
+          } catch { /* recréation impossible — on ne bloque pas */ }
+        }
+
+        if (cancelled || !sub) return;
+        setSubscription(sub);
+        safeLocalStorage.set("gk_push_sub", JSON.stringify(sub.toJSON()));
+
+        // Ré-enregistrement en base (upsert) → updated_at + endpoint rafraîchis
+        if (userId && isNotificationSupported() && Notification.permission === "granted") {
+          try {
+            await fetch("/api/send?type=save-sub", {
+              method:  "POST",
+              headers: { "Content-Type": "application/json" },
+              body:    JSON.stringify({ subscription: sub.toJSON(), userId }),
+            });
+          } catch { /* réseau indisponible — non bloquant */ }
+        }
+      } catch (err) {
+        console.warn("[MG360] SW init/refresh:", err.message);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [userId]);
 
   // ── Demander permission + s'abonner ──────────────────────────────────────────
   const subscribe = async () => {
