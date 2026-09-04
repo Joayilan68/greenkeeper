@@ -31,7 +31,7 @@ self.addEventListener('push', (e) => {
   const options = {
     body:     data.body || 'Nouvelle alerte pour votre gazon',
     icon:     '/icon-192.png',
-    badge:    '/icon-192.png',
+    badge:    '/badge-mono.png',
     vibrate:  [200, 100, 200],
     tag:      data.tag || 'mg360-notif',
     renotify: true,
