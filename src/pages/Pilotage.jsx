@@ -574,6 +574,45 @@ export default function Pilotage() {
                 </div>
               </div>
             )}
+            {users?.funnel && (
+              <div style={card()}>
+                <div style={cardTitle}>
+                  <span>🎯 Entonnoir de conversion — 30 j</span>
+                  <span style={{ fontSize:11, color:"#81c784" }}>
+                    {users.funnel.rateGlobal != null ? `${users.funnel.rateGlobal}% visite→inscrit` : "en attente"}
+                  </span>
+                </div>
+                {(() => {
+                  const f = users.funnel;
+                  const steps = [
+                    { key:"landing_view",     label:"Visite landing",      icon:"👀", color:"#4FC3F7", rate:null,          rateLabel:null },
+                    { key:"cta_click",        label:"Clic sur un bouton",  icon:"👆", color:"#66BB6A", rate:f.rateClick,   rateLabel:"cliquent" },
+                    { key:"auth_screen_view", label:"Écran inscription",   icon:"📝", color:"#43A047", rate:f.rateAuth,    rateLabel:"y arrivent" },
+                    { key:"signup_completed", label:"Inscription validée", icon:"✅", color:"#2E7D32", rate:f.rateSignup,  rateLabel:"s'inscrivent" },
+                  ];
+                  const max = Math.max(1, f.landing_view || 0);
+                  return steps.map((s, i) => (
+                    <div key={s.key} style={{ marginBottom: i < steps.length-1 ? 3 : 0 }}>
+                      {i > 0 && (
+                        <div style={{ fontSize:10, color: (s.rate != null && s.rate < 20) ? "#ef9a9a" : "#81c784", margin:"1px 0 2px 128px" }}>
+                          ↳ {s.rate != null ? `${s.rate}% ${s.rateLabel}` : "—"}
+                        </div>
+                      )}
+                      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                        <div style={{ width:120, fontSize:11.5, color:"#cfe8d4", fontWeight:600 }}>{s.icon} {s.label}</div>
+                        <div style={{ flex:1, background:"rgba(255,255,255,0.06)", borderRadius:8, height:22, overflow:"hidden" }}>
+                          <div style={{ width:`${Math.max(4, ((f[s.key]||0)/max)*100)}%`, height:"100%", background:s.color, borderRadius:8 }} />
+                        </div>
+                        <div style={{ width:30, textAlign:"right", fontSize:13, fontWeight:800, color:"#e8f5e9" }}>{f[s.key] ?? 0}</div>
+                      </div>
+                    </div>
+                  ));
+                })()}
+                <div style={{ fontSize:10, color:"#4a7c5c", marginTop:8, lineHeight:1.5 }}>
+                  Le plus gros écart entre deux barres = ton point de blocage. Comptage démarré aujourd'hui — laisse quelques jours pour un signal fiable.
+                </div>
+              </div>
+            )}
             {users?.weeks && (
               <div style={card()}>
                 <div style={cardTitle}><span>📈 Inscriptions — 8 semaines</span></div>

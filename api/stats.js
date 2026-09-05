@@ -326,6 +326,7 @@ async function handleUsers(req, res) {
     const waitlistTotal = await getWaitlistTotal();
     const geo           = await fetchGeoPoints();
     const siteVisits    = await fetchSiteVisits();
+    const funnel        = await fetchFunnel();
 
     res.json({
       success: true,
@@ -343,6 +344,7 @@ async function handleUsers(req, res) {
       waitlistTotal,
       geo,
       siteVisits,
+      funnel,
       // Backward compat avec l'ancien champ "sources"
       sources: clerkSources,
       // Nouveaux champs explicites pour Pilotage
@@ -533,6 +535,41 @@ async function fetchGeoPoints() {
   } catch (e) {
     console.warn("stats-users geo:", e.message);
     return [];
+  }
+}
+
+// ── Helper : entonnoir de conversion (table funnel_events, 30 jours) ──────────
+// Étapes : landing_view → cta_click → auth_screen_view → signup_completed.
+// Renvoie les compteurs + taux de passage entre chaque étape.
+async function fetchFunnel() {
+  const empty = {
+    landing_view: 0, cta_click: 0, auth_screen_view: 0, signup_completed: 0,
+    rateClick: null, rateAuth: null, rateSignup: null, rateGlobal: null,
+    hasData: false,
+  };
+  try {
+    if (!SB_URL || !SB_KEY) return empty;
+    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const r = await fetch(
+      `${SB_URL}/rest/v1/funnel_events_by_day?day=gte.${since}`,
+      { headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` } }
+    );
+    if (!r.ok) return empty;
+    const rows = await r.json();
+    const c = { landing_view: 0, cta_click: 0, auth_screen_view: 0, signup_completed: 0 };
+    (rows || []).forEach(x => { if (c[x.step] !== undefined) c[x.step] += parseInt(x.count) || 0; });
+    const pct = (a, b) => (b > 0 ? Math.round((a / b) * 1000) / 10 : null);
+    return {
+      ...c,
+      rateClick:  pct(c.cta_click,        c.landing_view),     // landing → clic
+      rateAuth:   pct(c.auth_screen_view, c.cta_click),        // clic → écran compte
+      rateSignup: pct(c.signup_completed, c.auth_screen_view), // écran compte → inscrit
+      rateGlobal: pct(c.signup_completed, c.landing_view),     // visite → inscrit (global)
+      hasData: (rows || []).length > 0,
+    };
+  } catch (e) {
+    console.warn("stats-users funnel:", e.message);
+    return empty;
   }
 }
 
