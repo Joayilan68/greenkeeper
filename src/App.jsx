@@ -28,6 +28,7 @@ import { usePilotage }     from "./lib/usePilotage";
 import { useSubscription } from "./lib/useSubscription"; // ✅ statut Premium → WeatherProvider (ET₀/sol)
 import { useUTMCapture }   from "./lib/useUTMCapture";   // ✅ Bloc 1 — capture UTM dès l'arrivée
 import { useUTMInjection } from "./lib/useUTMInjection"; // ✅ Bloc 1 — injection Clerk metadata first-touch
+import { trackFunnel }     from "./lib/funnel";          // ✅ suivi d'entonnoir (conversion)
 
 // ── Emails admin — accès permanent garanti ────────────────────────────────────
 const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
@@ -128,6 +129,22 @@ function AppWithWeather({ children }) {
     if (!visitLoaded) return; // attendre Clerk pour connaître l'état de connexion
     if (visitUser) return;    // connecté → c'est un "actif", pas un prospect
     pingVisit();              // visiteur anonyme = prospect arrivé sur la landing
+  }, [visitLoaded, visitUser]);
+
+  // Suivi d'entonnoir : bas de tunnel — l'inscription vient d'aboutir.
+  // On détecte un compte "tout neuf" (créé il y a < 10 min) une seule fois.
+  useEffect(() => {
+    if (!visitLoaded || !visitUser) return;
+    try {
+      const key = `mg360_signup_tracked_${visitUser.id}`;
+      if (localStorage.getItem(key)) return;
+      const createdMs = visitUser.createdAt ? new Date(visitUser.createdAt).getTime() : 0;
+      const isFresh = createdMs && (Date.now() - createdMs) < 10 * 60 * 1000;
+      if (isFresh) {
+        trackFunnel("signup_completed");
+        localStorage.setItem(key, "1");
+      }
+    } catch { /* non bloquant */ }
   }, [visitLoaded, visitUser]);
 
   const { isPaid } = useSubscription(); // ✅ transmet le statut Premium → active ET₀/sol dans la météo
@@ -321,7 +338,8 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/login"             element={<Login />} />
+      <Route path="/login"             element={<Login mode="signin" />} />
+      <Route path="/signup"            element={<Login mode="signup" />} />
       <Route path="/admin"             element={<Admin />} />
       <Route path="/register"          element={<PrivateRoute><Register /></PrivateRoute>} />
 
