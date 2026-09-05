@@ -1,7 +1,9 @@
 // src/pages/Landing.jsx
 // Page d'accueil PUBLIQUE (visiteur non connecté) — vend la valeur AVANT l'inscription.
 // Remplace l'ancien comportement « mur d'inscription » à l'arrivée sur mongazon360.fr.
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { trackFunnel, trackFunnelOncePerSession } from "../lib/funnel";
 
 const G = {
   bg:      "linear-gradient(165deg,#0F2F1F 0%,#164a2b 45%,#0d2519 100%)",
@@ -49,7 +51,20 @@ function Feature({ icon, title, desc }) {
 
 export default function Landing() {
   const navigate = useNavigate();
-  const go = () => navigate("/login");
+
+  // Haut d'entonnoir : le prospect (non connecté) voit la page de présentation.
+  useEffect(() => { trackFunnelOncePerSession("landing_view"); }, []);
+
+  // CTA d'action → INSCRIPTION (création de compte), pas connexion.
+  const goSignup = (source) => {
+    trackFunnel("cta_click", { source, dest: "signup" });
+    navigate("/signup");
+  };
+  // Lien discret pour ceux qui ont déjà un compte → CONNEXION.
+  const goSignin = (source) => {
+    trackFunnel("cta_click", { source, dest: "signin" });
+    navigate("/login");
+  };
 
   return (
     <div style={{ background:G.bg, minHeight:"100vh", color:G.text, fontFamily:"'Nunito','Segoe UI',sans-serif" }}>
@@ -61,7 +76,7 @@ export default function Landing() {
             <img src="/mg360-mascot-transparent.png" alt="" style={{ width:38, height:38, objectFit:"contain" }} />
             <span style={{ fontSize:19, fontWeight:800, color:G.muted }}>Mongazon360<sup style={{ fontSize:9, marginLeft:1, color:G.soft }}>™</sup></span>
           </div>
-          <button onClick={go} style={{ background:"rgba(255,255,255,0.08)", border:"1px solid rgba(165,214,167,0.25)",
+          <button onClick={() => goSignin("header")} style={{ background:"rgba(255,255,255,0.08)", border:"1px solid rgba(165,214,167,0.25)",
             color:"#e8f5e9", borderRadius:10, padding:"8px 14px", fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}>
             Se connecter
           </button>
@@ -103,7 +118,7 @@ export default function Landing() {
             </div>
           </div>
 
-          <CtaPrimary onClick={go}>📸 Diagnostiquer mon gazon</CtaPrimary>
+          <CtaPrimary onClick={() => goSignup("hero")}>📸 Diagnostiquer mon gazon</CtaPrimary>
           <div style={{ fontSize:11.5, color:G.faint, marginTop:10 }}>Sans carte bancaire · sans engagement · inscription en 1 clic avec Google</div>
         </section>
 
@@ -179,9 +194,9 @@ export default function Landing() {
         <section style={{ marginTop:36, textAlign:"center" }}>
           <h2 style={{ fontSize:22, fontWeight:900, margin:"0 0 6px" }}>Prêt à voir ton gazon changer ?</h2>
           <p style={{ fontSize:14, color:G.soft, margin:"0 0 18px" }}>7 jours de Premium offerts, puis gratuit à vie — sans carte bancaire.</p>
-          <CtaPrimary onClick={go}>Commencer gratuitement</CtaPrimary>
+          <CtaPrimary onClick={() => goSignup("final")}>Commencer gratuitement</CtaPrimary>
           <div style={{ fontSize:13, color:G.soft, marginTop:14 }}>
-            Déjà un compte ? <button onClick={go} style={{ background:"none", border:"none", color:G.accent, fontWeight:800, cursor:"pointer", fontSize:13, fontFamily:"inherit", padding:0 }}>Se connecter</button>
+            Déjà un compte ? <button onClick={() => goSignin("final_link")} style={{ background:"none", border:"none", color:G.accent, fontWeight:800, cursor:"pointer", fontSize:13, fontFamily:"inherit", padding:0 }}>Se connecter</button>
           </div>
           <div style={{ fontSize:13, color:G.soft, marginTop:8 }}>Tant qu'il y a gazon, il y a match. 🌿</div>
         </section>
