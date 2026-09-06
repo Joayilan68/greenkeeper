@@ -54,10 +54,17 @@ module.exports = async function handler(req, res) {
     const clerkUser    = await clerk.users.getUser(clerkUserId);
     const userEmail    = clerkUser.emailAddresses?.[0]?.emailAddress || "";
     const isAdmin      = ADMIN_EMAILS.includes(userEmail) || clerkUser.publicMetadata?.role === "admin";
+    // Essai gratuit 7 jours (unsafeMetadata.trialStartedAt, posé côté client)
+    const TRIAL_MS   = 7 * 24 * 60 * 60 * 1000;
+    const trialMeta  = clerkUser.unsafeMetadata || clerkUser.unsafe_metadata || {};
+    const trialStart = Number(trialMeta.trialStartedAt) || 0;
+    const isTrial    = trialStart > 0 && Date.now() < trialStart + TRIAL_MS;
     const isPremium    = clerkUser.publicMetadata?.isSubscribed === true ||
-                         clerkUser.publicMetadata?.subscriptionStatus === "active";
+                         clerkUser.publicMetadata?.subscriptionStatus === "active" ||
+                         clerkUser.publicMetadata?.subscriptionStatus === "trialing" ||
+                         isTrial;
 
-    // Free : 5 messages/jour — Premium : 20 messages/jour
+    // Free : 5 messages/jour — Premium (dont essai) : 20 messages/jour
     const dailyLimit = isAdmin ? 9999 : isPremium ? 20 : 5;
 
     if (currentCount >= dailyLimit) {

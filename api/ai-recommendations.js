@@ -130,12 +130,18 @@ module.exports = async function handler(req, res) {
         const email = user.emailAddresses?.[0]?.emailAddress || "";
 
         const isAdmin   = user.publicMetadata?.role === "admin" || ADMIN_EMAILS.includes(email);
+        // Essai gratuit 7 jours (unsafeMetadata.trialStartedAt, posé côté client)
+        const TRIAL_MS   = 7 * 24 * 60 * 60 * 1000;
+        const trialMeta  = user.unsafeMetadata || user.unsafe_metadata || {};
+        const trialStart = Number(trialMeta.trialStartedAt) || 0;
+        const isTrial    = trialStart > 0 && Date.now() < trialStart + TRIAL_MS;
         const isPremium = user.publicMetadata?.isSubscribed === true ||
-                          user.publicMetadata?.subscriptionStatus === "active";
+                          user.publicMetadata?.subscriptionStatus === "active" ||
+                          user.publicMetadata?.subscriptionStatus === "trialing";
 
         if (isAdmin) {
           tier = "admin";
-        } else if (isPremium) {
+        } else if (isPremium || isTrial) {
           tier = "paid";
         } else {
           // Premium invité — vérité serveur : user_access.status === "guest"

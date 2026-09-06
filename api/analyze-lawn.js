@@ -102,7 +102,16 @@ module.exports = async function handler(req, res) {
   const userEmail    = clerkUser.emailAddresses?.[0]?.emailAddress || "";
   const isAdmin      = ADMIN_EMAILS.includes(userEmail) || clerkUser.publicMetadata?.role === "admin";
   const isPremium    = clerkUser.publicMetadata?.isSubscribed === true ||
-                       clerkUser.publicMetadata?.subscriptionStatus === "active";
+                       clerkUser.publicMetadata?.subscriptionStatus === "active" ||
+                       clerkUser.publicMetadata?.subscriptionStatus === "trialing";
+
+  // ✅ Essai gratuit 7 jours : posé côté client dans unsafeMetadata.trialStartedAt.
+  // Le serveur DOIT le reconnaître, sinon un nouvel inscrit en essai reçoit un 403
+  // « réservé aux membres Premium » et ne peut PAS faire son 1er diagnostic.
+  const TRIAL_MS   = 7 * 24 * 60 * 60 * 1000;
+  const trialMeta  = clerkUser.unsafeMetadata || clerkUser.unsafe_metadata || {};
+  const trialStart = Number(trialMeta.trialStartedAt) || 0;
+  const isTrial    = trialStart > 0 && Date.now() < trialStart + TRIAL_MS;
 
   // Premium invité — vérité serveur : user_access.status === "guest"
   // (le Premium d'un guest n'est PAS dans Clerk, il vit dans Supabase)
@@ -122,7 +131,7 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  if (!isAdmin && !isPremium && !isGuest) {
+  if (!isAdmin && !isPremium && !isGuest && !isTrial) {
     return res.status(403).json({ error: "Fonctionnalité réservée aux membres Premium" });
   }
 
