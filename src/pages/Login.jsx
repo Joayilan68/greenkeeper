@@ -4,6 +4,7 @@ import { appShell } from "../lib/styles";
 import { isInAppBrowser } from "../lib/inapp";
 import OpenInBrowser from "../components/OpenInBrowser";
 import { trackFunnelOncePerSession } from "../lib/funnel";
+import { pixelTrack } from "../lib/metaPixel";
 
 // mode = "signup" (création de compte, parcours d'acquisition par défaut)
 //      | "signin" (connexion, pour ceux qui ont déjà un compte)
@@ -11,6 +12,7 @@ export default function Login({ mode = "signin" }) {
   // Suivi d'entonnoir : le prospect est arrivé sur l'écran compte.
   useEffect(() => {
     trackFunnelOncePerSession("auth_screen_view", { mode });
+    if (mode === "signup") pixelTrack("Lead"); // signal d'intention → Meta (si pixel chargé)
   }, [mode]);
 
   // Navigateur in-app (Instagram, TikTok…) : l'auth Clerk y est bloquée.
