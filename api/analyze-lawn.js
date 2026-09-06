@@ -204,7 +204,7 @@ module.exports = async function handler(req, res) {
     // l'historique et le partage. c_limit ne réduit que si l'image est plus grande.
     const groqImageUrl = imageUrl.replace(
       "/image/upload/",
-      "/image/upload/w_1024,c_limit,q_auto/"
+      "/image/upload/w_768,c_limit,q_auto/"
     );
 
     // ── 2. ANALYSE GROQ VISION ────────────────────────────────────────────
@@ -265,56 +265,19 @@ Réponds UNIQUEMENT avec ce JSON valide (sans balises markdown) :
   "actions_prochaines": ["Action entretien synthétique uniquement"]
 }
 Problèmes synthétique à détecter : granulats tassés, drainage obstrué, décoloration UV, saleté, moisissures, dégradation fibres.`
-      : `Tu es un expert agronome spécialisé en gazon et pelouses pour Mongazon360.
-Analyse cette photo de gazon et fournis un diagnostic complet.
+      : `Expert agronome gazon pour Mongazon360. Analyse cette photo et fournis un diagnostic.
 Contexte: ${profileCtx}. ${weatherCtx}. Score actuel: ${score}/100.
 ${reglesProfil ? `RÈGLES KB OBLIGATOIRES: ${reglesProfil}` : ""}
-
-BARÈME DE NOTATION (score_visuel) — ÉCHELLE EXIGEANTE, À RESPECTER STRICTEMENT :
-- 90-100 (exceptionnel) : qualité green de golf — densité parfaite, vert parfaitement uniforme, AUCUN défaut visible, coupe nette. TRÈS RARE, réservé à l'excellence absolue.
-- 75-89 (excellent) : très beau gazon, dense et homogène, seulement des défauts mineurs. Réservé aux pelouses vraiment exemplaires.
-- 60-74 (bon) : gazon sain et correct avec quelques imperfections visibles (densité moyenne, légères irrégularités, petites zones plus claires). C'EST ICI QUE SE SITUE UN BEAU GAZON ORDINAIRE BIEN ENTRETENU.
-- 45-59 (moyen) : défauts nets et visibles — zones clairsemées, jaunissements localisés, signes de stress marqués.
-- 30-44 (mauvais) : problèmes importants — zones mortes, maladie active, envahissement de mauvaises herbes.
-- 0-29 (critique) : gazon très dégradé, malade ou quasi inexistant.
-
-RÈGLES DE CALIBRAGE OBLIGATOIRES :
-1. Les notes >= 80 sont RARES et réservées aux gazons réellement exceptionnels. Un beau gazon vert et dense "normal" se situe entre 60 et 74, PAS à 90.
-2. Ne pénalise QUE les défauts réellement et clairement VISIBLES sur la photo. N'invente jamais un défaut supposé (compactage, maladie, etc.) qui ne se voit pas distinctement.
-3. La météo (chaleur, sécheresse, pluie) n'est PAS un défaut du gazon : signale-la en conseil/action si pertinent, mais ne fais PAS chuter le score_visuel à cause des conditions climatiques.
-4. Sois exigeant mais juste : un gazon correct ne mérite ni 33 (trop sévère) ni 90 (trop généreux).
-
-Réponds UNIQUEMENT avec ce JSON valide (sans balises markdown, sans texte avant ou après) :
-{
-  "etat_general": "excellent|bon|moyen|mauvais|critique",
-  "score_visuel": <0-100>,
-  "emoji": "😊|😐|😟|😰|💀",
-  "resume": "2 phrases maximum adaptées au type de gazon et objectif",
-  "problemes": [
-    {
-      "id": "slug_unique",
-      "nom": "Nom du problème",
-      "description": "Description courte et claire",
-      "severite": "faible|moyenne|elevee|critique",
-      "impact_score": <-30 à 0>,
-      "solution": "Action concrète adaptée au profil (bio si objectif naturel)"
-    }
-  ],
-  "points_positifs": ["Point 1", "Point 2"],
-  "actions_urgentes": ["Action urgente adaptée au profil"],
-  "actions_prochaines": ["Action prochaine adaptée au profil"]
-}
-
-Problèmes à détecter selon le type de gazon :
-- Universel/Sport/Ornement : oïdium, helminthosporiose, fusariose, anthracnose, mousse, mauvaises herbes, zones mortes, manque eau, brûlures azote, sol compacté, tallage excessif, hauteur tonte incorrecte
-- Ombre : oïdium prioritaire, mousse, tallage faible
-- Rustique : envahissement espèces indésirables, zones sèches
-- Bermuda : dormance vs maladie, pythium en été
-Si la photo ne montre pas du gazon, retourne score_visuel à 0 et explique dans resume.`;
+BARÈME score_visuel (échelle EXIGEANTE, à respecter strictement) : 90-100 exceptionnel (green de golf, aucun défaut visible, TRÈS RARE) · 75-89 excellent (dense et homogène, défauts mineurs seulement) · 60-74 bon (sain avec imperfections visibles = un BEAU GAZON ORDINAIRE bien entretenu) · 45-59 moyen (zones clairsemées, jaunissements, stress marqué) · 30-44 mauvais (zones mortes, maladie, mauvaises herbes) · 0-29 critique (très dégradé ou quasi inexistant).
+CALIBRAGE OBLIGATOIRE : (1) note ≥80 = RARE ; un beau gazon vert et dense "normal" est 60-74, PAS 90. (2) Ne pénalise QUE les défauts clairement VISIBLES sur la photo — n'invente jamais un défaut supposé. (3) La météo (chaleur, sécheresse, pluie) n'est PAS un défaut du gazon. (4) Exigeant mais juste : ni trop sévère ni trop généreux.
+Réponds UNIQUEMENT en JSON valide (sans markdown, sans texte autour), 3 problèmes MAXIMUM, descriptions courtes :
+{"etat_general":"excellent|bon|moyen|mauvais|critique","score_visuel":<0-100>,"emoji":"😊|😐|😟|😰|💀","resume":"2 phrases max adaptées au type et objectif","problemes":[{"id":"slug","nom":"Nom","description":"courte","severite":"faible|moyenne|elevee|critique","impact_score":<-30 à 0>,"solution":"action concrète adaptée au profil (bio si objectif naturel)"}],"points_positifs":["..."],"actions_urgentes":["..."],"actions_prochaines":["..."]}
+Problèmes à détecter selon le type : Universel/Sport/Ornement = oïdium, helminthosporiose, fusariose, anthracnose, mousse, mauvaises herbes, zones mortes, manque eau, brûlures azote, sol compacté, tallage excessif, tonte incorrecte · Ombre = oïdium (prioritaire), mousse, tallage faible · Rustique = espèces indésirables, zones sèches · Bermuda = dormance vs maladie, pythium en été.
+Si la photo ne montre pas de gazon : score_visuel 0 et explique dans resume.`;
 
     const groqBody = JSON.stringify({
       model:       "qwen/qwen3.8-27b",   // migré depuis qwen3.6-27b (déprécié Groq, décommissionné le 14/09) — 3.8 = remplacement 1:1, multimodal + mêmes params reasoning/JSON
-      max_tokens:  1500,
+      max_tokens:  1000,                  // réduit de 1500 → moins de tokens de sortie (marge palier gratuit Groq)
       temperature: 0.2,
       // qwen est un modèle "thinking" : sans ces réglages, il enrobe sa réponse
       // de raisonnement et le JSON.parse échoue (→ fallback "Analyse incomplète").
