@@ -188,6 +188,16 @@ module.exports = async function handler(req, res) {
     const imageUrl = uploadData.secure_url;
     const publicId = uploadData.public_id;
 
+    // Version RÉDUITE de l'image, uniquement pour l'appel Groq : moins de pixels
+    // = moins de tokens "vision" = on reste plus facilement sous la limite Groq
+    // (8000 tokens/min) → beaucoup moins de 429. N'affecte NI le stockage NI
+    // l'affichage : l'image pleine résolution (imageUrl) reste intacte pour
+    // l'historique et le partage. c_limit ne réduit que si l'image est plus grande.
+    const groqImageUrl = imageUrl.replace(
+      "/image/upload/",
+      "/image/upload/w_1024,c_limit,q_auto/"
+    );
+
     // ── 2. ANALYSE GROQ VISION ────────────────────────────────────────────
     const isSynth   = profile?.isSynthetique || profile?.pelouse === "synthetique" ||
       (Array.isArray(profile?.gazons) && profile.gazons.includes("synthetique"));
@@ -305,7 +315,7 @@ Si la photo ne montre pas du gazon, retourne score_visuel à 0 et explique dans 
       messages: [{
         role: "user",
         content: [
-          { type: "image_url", image_url: { url: imageUrl } },
+          { type: "image_url", image_url: { url: groqImageUrl } },
           { type: "text", text: prompt }
         ]
       }]
@@ -320,21 +330,27 @@ Si la photo ne montre pas du gazon, retourne score_visuel à 0 et explique dans 
       body: groqBody
     });
 
-    // ── Appel Groq avec retry auto sur rate limit (429) ──────────────────
-    // Le diagnostic photo pèse ~4600 tokens (l'image = 2048). Le palier Groq
-    // plafonne à 8000 tokens/minute : deux diagnostics rapprochés dépassent la
-    // fenêtre → 429 « try again in ~2s ». On attend le délai indiqué et on
-    // réessaie UNE fois, silencieusement, au lieu d'afficher une erreur.
-    let groqRes     = await callGroq();
-    let groqRawText = await groqRes.text();
-    if (groqRes.status === 429) {
-      const m      = groqRawText.match(/try again in ([\d.]+)s/i);
-      const waitMs = Math.min(4000, Math.round((m ? parseFloat(m[1]) : 3) * 1000) + 300);
-      console.warn(`[MG360] Groq rate limit — retry dans ${waitMs}ms`);
-      await new Promise(r => setTimeout(r, waitMs));
-      groqRes     = await callGroq();
-      groqRawText = await groqRes.text();
+    // ── Appel Groq avec ré-essais sur rate limit (429) ───────────────────
+    // Le palier Groq plafonne à 8000 tokens/minute (partagé entre TOUS les
+    // utilisateurs). Une analyse rapprochée d'une autre → 429 « try again in Xs ».
+    // On respecte le délai indiqué et on réessaie jusqu'à 3 fois, silencieusement,
+    // en restant sous la maxDuration (30s) de la fonction. L'utilisateur ne voit
+    // le message d'attente que si les 3 tentatives échouent.
+    async function callGroqWithRetry(maxAttempts = 3) {
+      let res, raw;
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        res = await callGroq();
+        raw = await res.text();
+        if (res.status !== 429) return { res, raw };
+        if (attempt === maxAttempts) break;
+        const m      = raw.match(/try again in ([\d.]+)s/i);
+        const waitMs = Math.min(6000, Math.round((m ? parseFloat(m[1]) : 3) * 1000) + 400);
+        console.warn(`[MG360] Groq 429 — tentative ${attempt}/${maxAttempts}, retry dans ${waitMs}ms`);
+        await new Promise(r => setTimeout(r, waitMs));
+      }
+      return { res, raw };
     }
+    let { res: groqRes, raw: groqRawText } = await callGroqWithRetry();
 
     // ── Gestion robuste de la réponse Groq ───────────────────────────────
     // Lire le texte brut AVANT de tenter JSON.parse
@@ -356,7 +372,7 @@ Si la photo ne montre pas du gazon, retourne score_visuel à 0 et explique dans 
                      groqData.error.code === "rate_limit_exceeded" ||
                      /rate.?limit/i.test(groqData.error.message || "");
       throw new Error(isRate
-        ? "Un peu trop de diagnostics à la suite 🙂 Patiente quelques secondes et relance l'analyse."
+        ? "Nos serveurs d'analyse sont très sollicités en ce moment 😅 Patiente quelques secondes et relance — ce n'est pas lié à toi."
         : "Service IA temporairement indisponible. Réessaie dans quelques secondes.");
     }
 
