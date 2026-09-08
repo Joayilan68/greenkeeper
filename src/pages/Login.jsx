@@ -21,6 +21,12 @@ export default function Login({ mode = "signin" }) {
   if (isInAppBrowser()) return <OpenInBrowser />;
 
   const appearance = {
+    // Met les boutons 1-clic (Google/Facebook) EN HAUT et en gros : c'est le
+    // chemin sans mot de passe ni code email → là où la conversion se joue.
+    layout: {
+      socialButtonsPlacement: "top",
+      socialButtonsVariant: "blockButton",
+    },
     variables: {
       colorPrimary: "#43a047",
       colorBackground: "#1a4731",
