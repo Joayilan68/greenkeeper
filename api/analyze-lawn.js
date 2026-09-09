@@ -145,28 +145,27 @@ module.exports = async function handler(req, res) {
   }
 
   // ✅ RATE LIMITING — max 3 diagnostics par jour par user
+  // Table rate_limits réelle : { user_id, endpoint, count, window_start }.
+  // On compte les lignes de la journée (une ligne = un diagnostic) puis on insère.
   try {
     const { createClient } = require("@supabase/supabase-js");
-    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
-    const today    = new Date().toISOString().split("T")[0];
-    const rateKey  = `diag_${clerkUserId}_${today}`;
+    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY);
+    const startOfDay = new Date(); startOfDay.setUTCHours(0, 0, 0, 0);
 
-    const { data: rateData } = await supabase
+    const { count } = await supabase
       .from("rate_limits")
-      .select("count")
-      .eq("key", rateKey)
-      .maybeSingle();
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", clerkUserId)
+      .eq("endpoint", "diag")
+      .gte("window_start", startOfDay.toISOString());
 
-    const currentCount = rateData?.count || 0;
-    if (!isAdmin && currentCount >= 3) {
+    if (!isAdmin && (count || 0) >= 3) {
       return res.status(429).json({ error: "Limite atteinte — 3 diagnostics maximum par jour. Revenez demain !" });
     }
 
-    // Incrémenter le compteur
-    await supabase.from("rate_limits").upsert(
-      { key: rateKey, count: currentCount + 1, updated_at: new Date().toISOString() },
-      { onConflict: "key" }
-    );
+    await supabase.from("rate_limits").insert({
+      user_id: clerkUserId, endpoint: "diag", count: 1, window_start: new Date().toISOString(),
+    });
   } catch (e) {
     console.warn("[MG360] rate_limit check failed (non bloquant):", e.message);
     // Non bloquant — on continue si la table rate_limits est indisponible
@@ -531,29 +530,39 @@ async function handleAnonymousDiagnostic(req, res) {
   if (!anonId || String(anonId).length < 8) return res.status(400).json({ error: "Session invalide" });
 
   const ip = String(req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "unknown";
-  const today = new Date().toISOString().split("T")[0];
-  const deviceKey = `anondev_${anonId}`;
-  const ipKey = `anonip_${ip}_${today}`;
+  const startOfDay = new Date(); startOfDay.setUTCHours(0, 0, 0, 0);
+
+  // ── Anti-abus : 1 diagnostic / appareil (anonId), 2 / jour / IP ──
+  // Table rate_limits réelle : { user_id, endpoint, count, window_start }.
   try {
     const supabase = sbClientAnon();
-    const { data: dev } = await supabase.from("rate_limits").select("count").eq("key", deviceKey).maybeSingle();
-    if ((dev?.count || 0) >= 1) {
+    const dev = await supabase.from("rate_limits")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", anonId).eq("endpoint", "anon_device");
+    if ((dev.count || 0) >= 1) {
       return res.status(429).json({ error: "trial_used", message: "Tu as déjà utilisé ton diagnostic gratuit 🌱 Crée ton compte pour continuer — 7 jours Premium offerts !" });
     }
-    const { data: ipd } = await supabase.from("rate_limits").select("count").eq("key", ipKey).maybeSingle();
-    if ((ipd?.count || 0) >= 2) {
+    const ipc = await supabase.from("rate_limits")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", ip).eq("endpoint", "anon_ip")
+      .gte("window_start", startOfDay.toISOString());
+    if ((ipc.count || 0) >= 2) {
       return res.status(429).json({ error: "ip_limit", message: "Trop de diagnostics gratuits depuis ce réseau aujourd'hui. Crée ton compte pour continuer." });
     }
-    await supabase.from("rate_limits").upsert({ key: deviceKey, count: (dev?.count || 0) + 1, updated_at: new Date().toISOString() }, { onConflict: "key" });
-    await supabase.from("rate_limits").upsert({ key: ipKey, count: (ipd?.count || 0) + 1, updated_at: new Date().toISOString() }, { onConflict: "key" });
   } catch (e) {
-    console.warn("[MG360] anon rate_limit (non bloquant):", e.message);
+    console.warn("[MG360] anon rate_limit check (non bloquant):", e.message);
   }
 
   try {
     const { imageUrl, publicId, analysis } = await runAnonDiagnostic({ imageBase64, mimeType, weather, score });
     try {
       const supabase = sbClientAnon();
+      // On ne consomme le quota qu'en cas de succès (diagnostic réellement rendu).
+      const nowIso = new Date().toISOString();
+      await supabase.from("rate_limits").insert([
+        { user_id: anonId, endpoint: "anon_device", count: 1, window_start: nowIso },
+        { user_id: ip,     endpoint: "anon_ip",     count: 1, window_start: nowIso },
+      ]);
       await supabase.from("diagnostics_anon").insert({
         anon_id: anonId, image_url: imageUrl, public_id: publicId,
         etat_general: analysis.etat_general || null, score_visuel: analysis.score_visuel || null,
