@@ -223,6 +223,7 @@ export default function EssaiDiagnostic() {
             </div>
             <button onClick={() => goSignup("result")} style={{ ...btnPrimary, width:"auto", padding:"14px 26px" }}>Créer mon compte gratuit →</button>
             <div style={{ fontSize:11, color:G.soft, marginTop:12 }}>Sans carte bancaire · 1 clic avec Google</div>
+            <button onClick={() => navigate("/demo")} style={{ background:"none", border:"none", color:G.muted, fontSize:12.5, textDecoration:"underline", cursor:"pointer", marginTop:14, fontFamily:"inherit" }}>Ou explorer l'app en démo →</button>
           </div>
         </div>
 
@@ -242,6 +243,7 @@ export default function EssaiDiagnostic() {
         </div>
         <button onClick={() => goSignup("wall")} style={{ ...btnPrimary, width:"auto", padding:"14px 26px" }}>Créer mon compte gratuit →</button>
         <div style={{ fontSize:12, color:G.soft, marginTop:14 }}>Déjà un compte ? <button onClick={() => navigate("/login")} style={{ background:"none", border:"none", color:G.accent, fontWeight:800, cursor:"pointer", fontSize:12, fontFamily:"inherit" }}>Se connecter</button></div>
+        <button onClick={() => navigate("/demo")} style={{ background:"none", border:"none", color:G.muted, fontSize:12.5, textDecoration:"underline", cursor:"pointer", marginTop:14, fontFamily:"inherit" }}>Explorer l'app en démo →</button>
       </div>
     </Shell>
   );
