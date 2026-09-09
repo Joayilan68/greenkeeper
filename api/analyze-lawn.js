@@ -74,6 +74,15 @@ module.exports = async function handler(req, res) {
     }
   }
 
+  // ── Diagnostic ANONYME (sans compte) — parcours « valeur d'abord » ──────────
+  // Un visiteur non connecté fait UN diagnostic gratuit, voit son score + un
+  // aperçu, puis s'inscrit pour débloquer l'analyse complète. Pas de JWT requis,
+  // mais plafonné (1/appareil, 2/jour/IP). Voir bas de fichier.
+  if (req.body?.anon === true) return handleAnonymousDiagnostic(req, res);
+
+  // ── Rattachement d'un diagnostic anonyme au compte fraîchement créé ─────────
+  if (req.body?.action === "claim-anon") return handleClaimAnon(req, res);
+
   // ── Route principale : diagnostic photo ────────────────────────────────────
 
   // ✅ AUTH + PREMIUM CHECK — obligatoire avant tout appel Groq/Cloudinary
@@ -408,3 +417,192 @@ Si la photo ne montre pas de gazon : score_visuel 0 et explique dans resume.`;
     res.status(500).json({ error: e.message });
   }
 };
+
+// ════════════════════════════════════════════════════════════════════════════
+// DIAGNOSTIC ANONYME (sans inscription) — « valeur d'abord »
+// Un visiteur fait 1 diagnostic sans compte, voit son score + un aperçu, puis
+// s'inscrit pour débloquer l'analyse complète (rattachée au compte via claim).
+// Anti-abus : 1 / appareil (anonId) + 2 / jour / IP. Stockage service_role.
+// ════════════════════════════════════════════════════════════════════════════
+const SB_URL_A = process.env.SUPABASE_URL;
+const SB_KEY_A = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+
+function sbClientAnon() {
+  const { createClient } = require("@supabase/supabase-js");
+  return createClient(SB_URL_A, SB_KEY_A);
+}
+
+async function uploadToCloudinaryAnon(imageBase64, mimeType) {
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+  const apiKey    = process.env.CLOUDINARY_API_KEY;
+  const apiSecret = process.env.CLOUDINARY_API_SECRET;
+  const timestamp = Math.floor(Date.now() / 1000);
+  const folder    = "mg360-diagnostics";
+  const uploadDate = new Date().toISOString().split("T")[0];
+  const tags       = `mg360,anon,diag-${uploadDate}`;
+  const signString = `folder=${folder}&tags=${tags}&timestamp=${timestamp}${apiSecret}`;
+  const signature  = crypto.createHash("sha1").update(signString).digest("hex");
+  const formData = new URLSearchParams();
+  formData.append("file", `data:${mimeType};base64,${imageBase64}`);
+  formData.append("api_key", apiKey);
+  formData.append("timestamp", timestamp);
+  formData.append("signature", signature);
+  formData.append("folder", folder);
+  formData.append("tags", tags);
+  const r = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, { method: "POST", body: formData });
+  const d = await r.json();
+  if (d.error) throw new Error("Cloudinary: " + d.error.message);
+  return { imageUrl: d.secure_url, publicId: d.public_id };
+}
+
+async function groqChatWithRetryAnon(groqBody, maxAttempts = 3) {
+  const call = () => fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${process.env.GROQ_API_KEY}` },
+    body: groqBody,
+  });
+  let res, raw;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    res = await call();
+    raw = await res.text();
+    if (res.status !== 429) return { res, raw };
+    if (attempt === maxAttempts) break;
+    const m = raw.match(/try again in ([\d.]+)s/i);
+    const waitMs = Math.min(6000, Math.round((m ? parseFloat(m[1]) : 3) * 1000) + 400);
+    await new Promise(r => setTimeout(r, waitMs));
+  }
+  return { res, raw };
+}
+
+// Analyse générique (sans profil — le visiteur anonyme n'en a pas encore).
+async function runAnonDiagnostic({ imageBase64, mimeType = "image/jpeg", weather = {}, score = 0 }) {
+  const { imageUrl, publicId } = await uploadToCloudinaryAnon(imageBase64, mimeType);
+  const groqImageUrl = imageUrl.replace("/image/upload/", "/image/upload/w_768,c_limit,q_auto/");
+  const weatherCtx = weather && weather.temp_max
+    ? `Temp: ${Math.round(weather.temp_max)}°C, Pluie: ${weather.precip || 0}mm`
+    : "Météo indisponible";
+  const prompt = `Expert agronome gazon pour Mongazon360. Analyse cette photo et fournis un diagnostic.
+${weatherCtx}. Score de référence: ${score}/100.
+BARÈME score_visuel (échelle EXIGEANTE) : 90-100 exceptionnel (green de golf, aucun défaut, TRÈS RARE) · 75-89 excellent (dense, homogène, défauts mineurs) · 60-74 bon (sain avec imperfections = un beau gazon ordinaire bien entretenu) · 45-59 moyen (zones clairsemées, jaunissements, stress) · 30-44 mauvais (zones mortes, maladie, herbes) · 0-29 critique.
+CALIBRAGE : (1) note ≥80 = RARE ; un beau gazon normal est 60-74, pas 90. (2) Ne pénalise QUE les défauts clairement visibles, n'invente rien. (3) La météo n'est PAS un défaut du gazon. (4) Exigeant mais juste.
+Réponds UNIQUEMENT en JSON valide (sans markdown), 3 problèmes MAXIMUM, descriptions courtes :
+{"etat_general":"excellent|bon|moyen|mauvais|critique","score_visuel":<0-100>,"emoji":"😊|😐|😟|😰|💀","resume":"2 phrases max","problemes":[{"id":"slug","nom":"Nom","description":"courte","severite":"faible|moyenne|elevee|critique","impact_score":<-30 à 0>,"solution":"action concrète"}],"points_positifs":["..."],"actions_urgentes":["..."],"actions_prochaines":["..."]}
+Si la photo ne montre pas de gazon : score_visuel 0 et explique dans resume.`;
+  const groqBody = JSON.stringify({
+    model: "qwen/qwen3.8-27b",
+    max_tokens: 1000,
+    temperature: 0.2,
+    reasoning_effort: "none",
+    reasoning_format: "hidden",
+    response_format: { type: "json_object" },
+    messages: [{ role: "user", content: [
+      { type: "image_url", image_url: { url: groqImageUrl } },
+      { type: "text", text: prompt },
+    ] }],
+  });
+  const { res: groqRes, raw: groqRaw } = await groqChatWithRetryAnon(groqBody);
+  let groqData;
+  try { groqData = JSON.parse(groqRaw); }
+  catch { throw new Error("Service IA temporairement indisponible. Réessaie dans quelques secondes."); }
+  if (groqData.error) {
+    const isRate = groqRes.status === 429 || /rate.?limit/i.test(groqData.error.message || "");
+    throw new Error(isRate
+      ? "Nos serveurs d'analyse sont très sollicités 😅 Patiente quelques secondes et relance."
+      : "Service IA temporairement indisponible. Réessaie dans quelques secondes.");
+  }
+  const rawText = groqData.choices?.[0]?.message?.content || "";
+  let analysis;
+  try {
+    const cleaned = rawText.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+    const s = cleaned.indexOf("{"), e = cleaned.lastIndexOf("}");
+    if (s === -1 || e === -1) throw new Error("no json");
+    analysis = JSON.parse(cleaned.slice(s, e + 1));
+  } catch {
+    analysis = { etat_general: "moyen", score_visuel: 50, emoji: "😐",
+      resume: "Analyse incomplète. Prends une photo plus nette en pleine lumière.",
+      problemes: [], points_positifs: [], actions_urgentes: ["Relancer avec une meilleure photo"], actions_prochaines: [] };
+  }
+  return { imageUrl, publicId, analysis };
+}
+
+async function handleAnonymousDiagnostic(req, res) {
+  const { imageBase64, mimeType = "image/jpeg", weather = {}, score = 0, anonId } = req.body || {};
+  if (!imageBase64) return res.status(400).json({ error: "Image manquante" });
+  if (!anonId || String(anonId).length < 8) return res.status(400).json({ error: "Session invalide" });
+
+  const ip = String(req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "unknown";
+  const today = new Date().toISOString().split("T")[0];
+  const deviceKey = `anondev_${anonId}`;
+  const ipKey = `anonip_${ip}_${today}`;
+  try {
+    const supabase = sbClientAnon();
+    const { data: dev } = await supabase.from("rate_limits").select("count").eq("key", deviceKey).maybeSingle();
+    if ((dev?.count || 0) >= 1) {
+      return res.status(429).json({ error: "trial_used", message: "Tu as déjà utilisé ton diagnostic gratuit 🌱 Crée ton compte pour continuer — 7 jours Premium offerts !" });
+    }
+    const { data: ipd } = await supabase.from("rate_limits").select("count").eq("key", ipKey).maybeSingle();
+    if ((ipd?.count || 0) >= 2) {
+      return res.status(429).json({ error: "ip_limit", message: "Trop de diagnostics gratuits depuis ce réseau aujourd'hui. Crée ton compte pour continuer." });
+    }
+    await supabase.from("rate_limits").upsert({ key: deviceKey, count: (dev?.count || 0) + 1, updated_at: new Date().toISOString() }, { onConflict: "key" });
+    await supabase.from("rate_limits").upsert({ key: ipKey, count: (ipd?.count || 0) + 1, updated_at: new Date().toISOString() }, { onConflict: "key" });
+  } catch (e) {
+    console.warn("[MG360] anon rate_limit (non bloquant):", e.message);
+  }
+
+  try {
+    const { imageUrl, publicId, analysis } = await runAnonDiagnostic({ imageBase64, mimeType, weather, score });
+    try {
+      const supabase = sbClientAnon();
+      await supabase.from("diagnostics_anon").insert({
+        anon_id: anonId, image_url: imageUrl, public_id: publicId,
+        etat_general: analysis.etat_general || null, score_visuel: analysis.score_visuel || null,
+        resume: analysis.resume || null, problemes: analysis.problemes || [],
+        points_positifs: analysis.points_positifs || [], actions_urgentes: analysis.actions_urgentes || [],
+        actions_prochaines: analysis.actions_prochaines || [],
+      });
+    } catch (e) { console.error("[MG360] anon save:", e.message); }
+    return res.json({ success: true, imageUrl, analysis, date: new Date().toISOString() });
+  } catch (e) {
+    console.error("[MG360] anon analyze:", e.message);
+    return res.status(500).json({ error: e.message });
+  }
+}
+
+// Rattache le dernier diagnostic anonyme au compte fraîchement créé (Clerk requis).
+async function handleClaimAnon(req, res) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith("Bearer ")) return res.status(401).json({ error: "Token manquant" });
+  let uid;
+  try {
+    const parts = authHeader.replace("Bearer ", "").split(".");
+    if (parts.length !== 3) throw new Error("JWT");
+    const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8"));
+    uid = payload.sub || payload.user_id;
+    if (!uid) throw new Error("sub");
+    await clerk.users.getUser(uid);
+  } catch { return res.status(401).json({ error: "Token invalide" }); }
+
+  const anonId = req.body?.anonId;
+  if (!anonId) return res.status(400).json({ error: "anonId manquant" });
+
+  try {
+    const supabase = sbClientAnon();
+    const { data: rows } = await supabase.from("diagnostics_anon")
+      .select("*").eq("anon_id", anonId).order("created_at", { ascending: false }).limit(1);
+    const row = rows && rows[0];
+    if (!row) return res.json({ success: true, claimed: false });
+
+    await supabase.from("diagnostics").insert({
+      user_id: uid, image_url: row.image_url, public_id: row.public_id,
+      etat_general: row.etat_general, score_visuel: row.score_visuel, resume: row.resume,
+      problemes: row.problemes || [], points_positifs: row.points_positifs || [],
+      actions_urgentes: row.actions_urgentes || [],
+    });
+    await supabase.from("diagnostics_anon").delete().eq("anon_id", anonId);
+    return res.json({ success: true, claimed: true });
+  } catch (e) {
+    console.error("[MG360] claim-anon:", e.message);
+    return res.status(500).json({ error: e.message });
+  }
+}

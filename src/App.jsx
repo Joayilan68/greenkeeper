@@ -1,6 +1,6 @@
 // src/App.jsx
 import { useEffect, useState } from "react";
-import { SignedIn, SignedOut, RedirectToSignIn, useUser } from "@clerk/clerk-react";
+import { SignedIn, SignedOut, RedirectToSignIn, useUser, useAuth } from "@clerk/clerk-react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Analytics } from "@vercel/analytics/react";
 import Dashboard from "./pages/Dashboard";
@@ -13,6 +13,7 @@ import History from "./pages/History";
 import Setup from "./pages/Setup";
 import Login from "./pages/Login";
 import Landing from "./pages/Landing";
+import EssaiDiagnostic from "./pages/EssaiDiagnostic";
 import Subscribe from "./pages/Subscribe";
 import SubscribeSuccess from "./pages/SubscribeSuccess";
 import Admin from "./pages/Admin";
@@ -29,6 +30,7 @@ import { useSubscription } from "./lib/useSubscription"; // ✅ statut Premium �
 import { useUTMCapture }   from "./lib/useUTMCapture";   // ✅ Bloc 1 — capture UTM dès l'arrivée
 import { useUTMInjection } from "./lib/useUTMInjection"; // ✅ Bloc 1 — injection Clerk metadata first-touch
 import { trackFunnel }     from "./lib/funnel";          // ✅ suivi d'entonnoir (conversion)
+import { isAnonPending, getAnonIdIfAny, setAnonPending } from "./lib/anonId"; // ✅ rattachement diagnostic anonyme
 import CookieBanner        from "./components/CookieBanner"; // ✅ consentement cookies (RGPD)
 import { getCookieConsent } from "./lib/cookieConsent";
 import { loadMetaPixel, pixelTrack } from "./lib/metaPixel"; // ✅ Meta Pixel (après consentement)
@@ -131,6 +133,7 @@ function AppWithWeather({ children }) {
   // (les prospects qui arrivent sur la landing). Les connectés sont déjà comptés
   // dans "Actifs aujourd'hui" → on ne les compte pas deux fois.
   const { user: visitUser, isLoaded: visitLoaded } = useUser();
+  const { getToken } = useAuth();
   useEffect(() => {
     if (!visitLoaded) return; // attendre Clerk pour connaître l'état de connexion
     if (visitUser) return;    // connecté → c'est un "actif", pas un prospect
@@ -152,6 +155,27 @@ function AppWithWeather({ children }) {
         localStorage.setItem(key, "1");
       }
     } catch { /* non bloquant */ }
+  }, [visitLoaded, visitUser]);
+
+  // Rattachement : si un diagnostic anonyme attend (fait avant inscription),
+  // on le rattache au compte fraîchement connecté — sans lui refaire la photo.
+  useEffect(() => {
+    if (!visitLoaded || !visitUser) return;
+    if (!isAnonPending()) return;
+    (async () => {
+      try {
+        const anonId = getAnonIdIfAny();
+        if (!anonId) { setAnonPending(false); return; }
+        const token = await getToken();
+        if (!token) return; // on retentera au prochain chargement
+        await fetch("/api/analyze-lawn", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          body: JSON.stringify({ action: "claim-anon", anonId }),
+        });
+        setAnonPending(false);
+      } catch { /* non bloquant — retenté au prochain chargement */ }
+    })();
   }, [visitLoaded, visitUser]);
 
   const { isPaid } = useSubscription(); // ✅ transmet le statut Premium → active ET₀/sol dans la météo
@@ -347,6 +371,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/login"             element={<Login mode="signin" />} />
       <Route path="/signup"            element={<Login mode="signup" />} />
+      <Route path="/essai"             element={<EssaiDiagnostic />} />
       <Route path="/admin"             element={<Admin />} />
       <Route path="/register"          element={<PrivateRoute><Register /></PrivateRoute>} />
 

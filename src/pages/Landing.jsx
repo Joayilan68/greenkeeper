@@ -55,7 +55,12 @@ export default function Landing() {
   // Haut d'entonnoir : le prospect (non connecté) voit la page de présentation.
   useEffect(() => { trackFunnelOncePerSession("landing_view"); }, []);
 
-  // CTA d'action → INSCRIPTION (création de compte), pas connexion.
+  // CTA d'action → DIAGNOSTIC GRATUIT sans inscription (valeur d'abord).
+  const goEssai = (source) => {
+    trackFunnel("cta_click", { source, dest: "essai" });
+    navigate("/essai");
+  };
+  // Conservé pour compat éventuelle : inscription directe.
   const goSignup = (source) => {
     trackFunnel("cta_click", { source, dest: "signup" });
     navigate("/signup");
@@ -118,8 +123,8 @@ export default function Landing() {
             </div>
           </div>
 
-          <CtaPrimary onClick={() => goSignup("hero")}>📸 Diagnostiquer mon gazon</CtaPrimary>
-          <div style={{ fontSize:11.5, color:G.faint, marginTop:10 }}>Sans carte bancaire · sans engagement · inscription en 1 clic avec Google</div>
+          <CtaPrimary onClick={() => goEssai("hero")}>📸 Diagnostiquer mon gazon — gratuit</CtaPrimary>
+          <div style={{ fontSize:11.5, color:G.faint, marginTop:10 }}>Sans inscription · sans carte bancaire · résultat immédiat</div>
         </section>
 
         {/* ── Aperçu : l'avis de Bob (preuve concrète) ── */}
@@ -194,7 +199,7 @@ export default function Landing() {
         <section style={{ marginTop:36, textAlign:"center" }}>
           <h2 style={{ fontSize:22, fontWeight:900, margin:"0 0 6px" }}>Prêt à voir ton gazon changer ?</h2>
           <p style={{ fontSize:14, color:G.soft, margin:"0 0 18px" }}>7 jours de Premium offerts, puis gratuit à vie — sans carte bancaire.</p>
-          <CtaPrimary onClick={() => goSignup("final")}>Commencer gratuitement</CtaPrimary>
+          <CtaPrimary onClick={() => goEssai("final")}>Diagnostiquer ma pelouse — gratuit</CtaPrimary>
           <div style={{ fontSize:13, color:G.soft, marginTop:14 }}>
             Déjà un compte ? <button onClick={() => goSignin("final_link")} style={{ background:"none", border:"none", color:G.accent, fontWeight:800, cursor:"pointer", fontSize:13, fontFamily:"inherit", padding:0 }}>Se connecter</button>
           </div>
