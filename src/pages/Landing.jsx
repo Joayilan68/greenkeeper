@@ -142,7 +142,10 @@ export default function Landing() {
           <h2 style={{ fontSize:20, fontWeight:800, textAlign:"center", margin:"0 0 4px" }}>Ce que Bob voit sur ta pelouse</h2>
           <p style={{ fontSize:13, color:G.soft, textAlign:"center", margin:"0 0 18px" }}>Un diagnostic clair, en 10 secondes.</p>
 
-          <div style={{ background:G.card, border:G.border, borderRadius:20, padding:18, backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)" }}>
+          <div onClick={() => goEssai("preview_card")} role="button" tabIndex={0}
+            onKeyDown={(e)=>{ if(e.key==="Enter"||e.key===" ") goEssai("preview_card"); }}
+            style={{ background:G.card, border:G.border, borderRadius:20, padding:18, cursor:"pointer",
+            backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)" }}>
             {/* En-tête : score */}
             <div style={{ display:"flex", alignItems:"center", gap:14, paddingBottom:14, borderBottom:"1px solid rgba(255,255,255,0.08)" }}>
               <div style={{ flexShrink:0, width:66, height:66, borderRadius:"50%",
@@ -169,7 +172,7 @@ export default function Landing() {
               </div>
             </div>
           </div>
-          <div style={{ fontSize:11, color:G.faint, textAlign:"center", marginTop:8 }}>Exemple — ton diagnostic sera personnalisé selon ta photo et ta météo.</div>
+          <div style={{ fontSize:11, color:G.accent, textAlign:"center", marginTop:8, fontWeight:700 }}>Exemple — touche pour faire le tien, gratuitement →</div>
         </section>
 
         {/* ── Comment ça marche ── */}
