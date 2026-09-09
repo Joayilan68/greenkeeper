@@ -14,6 +14,7 @@ import Setup from "./pages/Setup";
 import Login from "./pages/Login";
 import Landing from "./pages/Landing";
 import EssaiDiagnostic from "./pages/EssaiDiagnostic";
+import DemoApp from "./pages/DemoApp";
 import Subscribe from "./pages/Subscribe";
 import SubscribeSuccess from "./pages/SubscribeSuccess";
 import Admin from "./pages/Admin";
@@ -372,6 +373,7 @@ function AppRoutes() {
       <Route path="/login"             element={<Login mode="signin" />} />
       <Route path="/signup"            element={<Login mode="signup" />} />
       <Route path="/essai"             element={<EssaiDiagnostic />} />
+      <Route path="/demo"              element={<DemoApp />} />
       <Route path="/admin"             element={<Admin />} />
       <Route path="/register"          element={<PrivateRoute><Register /></PrivateRoute>} />
 
