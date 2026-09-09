@@ -577,81 +577,47 @@ export default function Pilotage() {
             {users?.funnel && (
               <div style={card()}>
                 <div style={cardTitle}>
-                  <span>🎯 Entonnoir de conversion — 30 j</span>
+                  <span>🎯 Parcours d'acquisition — 30 j</span>
                   <span style={{ fontSize:11, color:"#81c784" }}>
                     {users.funnel.rateGlobal != null ? `${users.funnel.rateGlobal}% visite→inscrit` : "en attente"}
                   </span>
                 </div>
                 {(() => {
                   const f = users.funnel;
+                  const premium = revenue?.totalPremium ?? null;
                   const steps = [
-                    { key:"landing_view",     label:"Visite landing",      icon:"👀", color:"#4FC3F7", rate:null,          rateLabel:null },
-                    { key:"cta_click",        label:"Clic sur un bouton",  icon:"👆", color:"#66BB6A", rate:f.rateClick,   rateLabel:"cliquent" },
-                    { key:"auth_screen_view", label:"Écran inscription",   icon:"📝", color:"#43A047", rate:f.rateAuth,    rateLabel:"y arrivent" },
-                    { key:"signup_completed", label:"Inscription validée", icon:"✅", color:"#2E7D32", rate:f.rateSignup,  rateLabel:"s'inscrivent" },
+                    { label:"Visite landing",        icon:"👀", color:"#4FC3F7", val: f.landing_view || 0,       note:null },
+                    { label:"Diagnostic lancé",      icon:"🔬", color:"#66BB6A", val: f.anon_diag_started || 0,  note:"essai" },
+                    { label:"Visite app (démo)",     icon:"🧭", color:"#26A69A", val: f.demo_view || 0,          note:"essai" },
+                    { label:"Clic inscription",      icon:"✍️", color:"#43A047", val: f.signup_from_teaser || 0, note:null },
+                    { label:"Inscription validée",   icon:"✅", color:"#2E7D32", val: f.signup_completed || 0,   note:null },
+                    { label:"Premium payant activé", icon:"💳", color:"#F9A825", val: premium ?? 0, missing: premium == null, note:"total" },
                   ];
-                  const max = Math.max(1, f.landing_view || 0);
-                  return steps.map((s, i) => (
-                    <div key={s.key} style={{ marginBottom: i < steps.length-1 ? 3 : 0 }}>
-                      {i > 0 && (
-                        <div style={{ fontSize:10, color: (s.rate != null && s.rate < 20) ? "#ef9a9a" : "#81c784", margin:"1px 0 2px 128px" }}>
-                          ↳ {s.rate != null ? `${s.rate}% ${s.rateLabel}` : "—"}
-                        </div>
-                      )}
-                      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                        <div style={{ width:120, fontSize:11.5, color:"#cfe8d4", fontWeight:600 }}>{s.icon} {s.label}</div>
-                        <div style={{ flex:1, background:"rgba(255,255,255,0.06)", borderRadius:8, height:22, overflow:"hidden" }}>
-                          <div style={{ width:`${Math.max(4, ((f[s.key]||0)/max)*100)}%`, height:"100%", background:s.color, borderRadius:8 }} />
-                        </div>
-                        <div style={{ width:30, textAlign:"right", fontSize:13, fontWeight:800, color:"#e8f5e9" }}>{f[s.key] ?? 0}</div>
+                  const max = Math.max(1, ...steps.map(s => s.val));
+                  return steps.map((s) => (
+                    <div key={s.label} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:7 }}>
+                      <div style={{ width:150, fontSize:11.5, color:"#cfe8d4", fontWeight:600 }}>
+                        {s.icon} {s.label}{s.note ? <span style={{ color:"#4a7c5c", fontWeight:500 }}> · {s.note}</span> : null}
                       </div>
+                      <div style={{ flex:1, background:"rgba(255,255,255,0.06)", borderRadius:8, height:22, overflow:"hidden" }}>
+                        <div style={{ width:`${Math.max(4, (s.val / max) * 100)}%`, height:"100%", background:s.color, borderRadius:8 }} />
+                      </div>
+                      <div style={{ width:32, textAlign:"right", fontSize:13, fontWeight:800, color:"#e8f5e9" }}>{s.missing ? "—" : s.val}</div>
                     </div>
                   ));
                 })()}
+                <div style={{ display:"flex", gap:8, marginTop:12 }}>
+                  <div style={{ flex:1, background:"rgba(76,175,80,0.1)", border:"1px solid rgba(102,187,106,0.25)", borderRadius:10, padding:"8px 10px", textAlign:"center" }}>
+                    <div style={{ fontSize:10.5, color:"#81c784" }}>Visite → inscription</div>
+                    <div style={{ fontSize:18, fontWeight:800, color:"#8BE28F" }}>{users.funnel.rateGlobal != null ? `${users.funnel.rateGlobal}%` : "—"}</div>
+                  </div>
+                  <div style={{ flex:1, background:"rgba(249,168,37,0.1)", border:"1px solid rgba(249,168,37,0.28)", borderRadius:10, padding:"8px 10px", textAlign:"center" }}>
+                    <div style={{ fontSize:10.5, color:"#f0d68a" }}>Aha → inscription</div>
+                    <div style={{ fontSize:18, fontWeight:800, color:"#f9a825" }}>{users.funnel.rateTeaserSignup != null ? `${users.funnel.rateTeaserSignup}%` : "—"}</div>
+                  </div>
+                </div>
                 <div style={{ fontSize:10, color:"#4a7c5c", marginTop:8, lineHeight:1.5 }}>
-                  Le plus gros écart entre deux barres = ton point de blocage. Comptage démarré aujourd'hui — laisse quelques jours pour un signal fiable.
-                </div>
-              </div>
-            )}
-            {users?.funnel && (
-              <div style={card()}>
-                <div style={cardTitle}>
-                  <span>🌱 Parcours « valeur d'abord » — 30 j</span>
-                  <span style={{ fontSize:11, color:"#81c784" }}>
-                    {users.funnel.rateTeaserSignup != null ? `${users.funnel.rateTeaserSignup}% aha→inscription` : "en attente"}
-                  </span>
-                </div>
-                {(() => {
-                  const f = users.funnel;
-                  const steps = [
-                    { key:"anon_diag_started",  label:"Diagnostic lancé",   icon:"🔬", color:"#66BB6A", rate:null,               rateLabel:null },
-                    { key:"anon_diag_result",   label:"Résultat vu (aha)",  icon:"📊", color:"#43A047", rate:f.rateDiagResult,   rateLabel:"voient leur score" },
-                    { key:"signup_from_teaser", label:"Clic inscription",   icon:"✍️", color:"#2E7D32", rate:f.rateTeaserSignup, rateLabel:"cliquent pour s'inscrire" },
-                  ];
-                  const max = Math.max(1, f.anon_diag_started || 0);
-                  return steps.map((s, i) => (
-                    <div key={s.key} style={{ marginBottom: i < steps.length-1 ? 3 : 0 }}>
-                      {i > 0 && (
-                        <div style={{ fontSize:10, color: (s.rate != null && s.rate < 20) ? "#ef9a9a" : "#81c784", margin:"1px 0 2px 128px" }}>
-                          ↳ {s.rate != null ? `${s.rate}% ${s.rateLabel}` : "—"}
-                        </div>
-                      )}
-                      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                        <div style={{ width:120, fontSize:11.5, color:"#cfe8d4", fontWeight:600 }}>{s.icon} {s.label}</div>
-                        <div style={{ flex:1, background:"rgba(255,255,255,0.06)", borderRadius:8, height:22, overflow:"hidden" }}>
-                          <div style={{ width:`${Math.max(4, ((f[s.key]||0)/max)*100)}%`, height:"100%", background:s.color, borderRadius:8 }} />
-                        </div>
-                        <div style={{ width:30, textAlign:"right", fontSize:13, fontWeight:800, color:"#e8f5e9" }}>{f[s.key] ?? 0}</div>
-                      </div>
-                    </div>
-                  ));
-                })()}
-                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:10, padding:"8px 10px", background:"rgba(79,195,247,0.08)", border:"1px solid rgba(79,195,247,0.22)", borderRadius:10 }}>
-                  <span style={{ fontSize:12, color:"#81c784" }}>👀 Vues de la démo <span style={{ color:"#4a7c5c" }}>(parcours parallèle)</span></span>
-                  <span style={{ fontSize:16, fontWeight:800, color:"#4FC3F7" }}>{users.funnel.demo_view ?? 0}</span>
-                </div>
-                <div style={{ fontSize:10.5, color:"#4a7c5c", marginTop:8, lineHeight:1.5 }}>
-                  Taux clé : « aha → inscription ». Les inscriptions finalisées (toutes voies confondues) sont dans l'entonnoir ci-dessus. Comptage démarré aujourd'hui.
+                  « Diagnostic lancé » et « Visite app » sont deux façons parallèles d'essayer (compare les volumes, pas une cascade). « Premium payant » = abonnés actifs actuels (Stripe). Comptage démarré aujourd'hui.
                 </div>
               </div>
             )}
