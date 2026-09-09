@@ -116,17 +116,21 @@ export default function Landing() {
             ))}
           </div>
 
-          {/* Offre 7 jours — bien visible (or sur fond vert = fort contraste) */}
-          <div style={{
+          {/* Offre 7 jours — bien visible ET cliquable (mène au diagnostic gratuit) */}
+          <button onClick={() => goEssai("premium_badge")} style={{
+            display:"block", width:"100%", textAlign:"left", cursor:"pointer",
+            border:"none", fontFamily:"inherit",
             background:"linear-gradient(135deg,#F9A825,#F57F17)", color:"#1a1200",
             borderRadius:16, padding:"13px 16px", margin:"0 0 12px",
             boxShadow:"0 6px 20px rgba(245,127,23,0.4)",
           }}>
-            <div style={{ fontSize:16.5, fontWeight:900, letterSpacing:0.2 }}>🎁 7 jours de Premium offerts</div>
+            <div style={{ fontSize:16.5, fontWeight:900, letterSpacing:0.2, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <span>🎁 7 jours de Premium offerts</span><span style={{ fontSize:20 }}>→</span>
+            </div>
             <div style={{ fontSize:12.5, fontWeight:700, marginTop:3, color:"#3a2a00" }}>
               Puis l'app reste <b>gratuite</b> — tu ne perds rien, ni ton profil ni ton suivi.
             </div>
-          </div>
+          </button>
 
           <CtaPrimary onClick={() => goEssai("hero")}>📸 Diagnostiquer mon gazon — gratuit</CtaPrimary>
           <button onClick={() => goDemo("hero")} style={{ marginTop:10, width:"100%", background:"rgba(255,255,255,0.07)", border:"1px solid rgba(165,214,167,0.28)", color:"#e8f5e9", borderRadius:14, padding:"13px 20px", fontSize:14.5, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}>👀 Voir l'app en démo</button>
