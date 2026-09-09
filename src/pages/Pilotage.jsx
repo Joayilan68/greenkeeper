@@ -613,6 +613,33 @@ export default function Pilotage() {
                 </div>
               </div>
             )}
+            {users?.funnel && (
+              <div style={card()}>
+                <div style={cardTitle}>
+                  <span>🌱 Parcours « valeur d'abord » — 30 j</span>
+                  <span style={{ fontSize:11, color:"#81c784" }}>
+                    {users.funnel.rateTeaserSignup != null ? `${users.funnel.rateTeaserSignup}% → inscription` : "en attente"}
+                  </span>
+                </div>
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:8 }}>
+                  {[
+                    ["🔬","Diags gratuits lancés", users.funnel.anon_diag_started, "#66BB6A"],
+                    ["📊","Résultats vus (aha)",    users.funnel.anon_diag_result,  "#43A047"],
+                    ["👀","Vues de la démo",         users.funnel.demo_view,         "#4FC3F7"],
+                    ["✍️","Clics inscription",       users.funnel.signup_from_teaser,"#f9a825"],
+                  ].map(([ic,lbl,val,col]) => (
+                    <div key={lbl} style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:10, padding:"10px 12px" }}>
+                      <div style={{ fontSize:11, color:"#81c784" }}>{ic} {lbl}</div>
+                      <div style={{ fontSize:22, fontWeight:800, color:col, marginTop:2 }}>{val ?? 0}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ fontSize:10.5, color:"#4a7c5c", lineHeight:1.5 }}>
+                  Taux clé : parmi ceux qui voient leur score (« aha »), combien cliquent pour s'inscrire.
+                  {users.funnel.rateDiagResult != null && ` · Diag lancé → résultat : ${users.funnel.rateDiagResult}%.`}
+                </div>
+              </div>
+            )}
             {users?.weeks && (
               <div style={card()}>
                 <div style={cardTitle}><span>📈 Inscriptions — 8 semaines</span></div>

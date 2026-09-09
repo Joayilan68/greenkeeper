@@ -70,6 +70,11 @@ export default function Landing() {
     trackFunnel("cta_click", { source, dest: "signin" });
     navigate("/login");
   };
+  // Aperçu navigable de l'app (mode découverte).
+  const goDemo = (source) => {
+    trackFunnel("cta_click", { source, dest: "demo" });
+    navigate("/demo");
+  };
 
   return (
     <div style={{ background:G.bg, minHeight:"100vh", color:G.text, fontFamily:"'Nunito','Segoe UI',sans-serif" }}>
@@ -124,6 +129,7 @@ export default function Landing() {
           </div>
 
           <CtaPrimary onClick={() => goEssai("hero")}>📸 Diagnostiquer mon gazon — gratuit</CtaPrimary>
+          <button onClick={() => goDemo("hero")} style={{ marginTop:10, width:"100%", background:"rgba(255,255,255,0.07)", border:"1px solid rgba(165,214,167,0.28)", color:"#e8f5e9", borderRadius:14, padding:"13px 20px", fontSize:14.5, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}>👀 Voir l'app en démo</button>
           <div style={{ fontSize:11.5, color:G.faint, marginTop:10 }}>Sans inscription · sans carte bancaire · résultat immédiat</div>
         </section>
 
