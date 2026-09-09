@@ -544,7 +544,9 @@ async function fetchGeoPoints() {
 async function fetchFunnel() {
   const empty = {
     landing_view: 0, cta_click: 0, auth_screen_view: 0, signup_completed: 0,
+    anon_diag_started: 0, anon_diag_result: 0, demo_view: 0, signup_from_teaser: 0,
     rateClick: null, rateAuth: null, rateSignup: null, rateGlobal: null,
+    rateDiagResult: null, rateTeaserSignup: null,
     hasData: false,
   };
   try {
@@ -556,7 +558,10 @@ async function fetchFunnel() {
     );
     if (!r.ok) return empty;
     const rows = await r.json();
-    const c = { landing_view: 0, cta_click: 0, auth_screen_view: 0, signup_completed: 0 };
+    const c = {
+      landing_view: 0, cta_click: 0, auth_screen_view: 0, signup_completed: 0,
+      anon_diag_started: 0, anon_diag_result: 0, demo_view: 0, signup_from_teaser: 0,
+    };
     (rows || []).forEach(x => { if (c[x.step] !== undefined) c[x.step] += parseInt(x.count) || 0; });
     const pct = (a, b) => (b > 0 ? Math.round((a / b) * 1000) / 10 : null);
     return {
@@ -565,6 +570,8 @@ async function fetchFunnel() {
       rateAuth:   pct(c.auth_screen_view, c.cta_click),        // clic → écran compte
       rateSignup: pct(c.signup_completed, c.auth_screen_view), // écran compte → inscrit
       rateGlobal: pct(c.signup_completed, c.landing_view),     // visite → inscrit (global)
+      rateDiagResult:   pct(c.anon_diag_result, c.anon_diag_started),  // diag lancé → résultat vu
+      rateTeaserSignup: pct(c.signup_from_teaser, c.anon_diag_result), // résultat vu → clic inscription
       hasData: (rows || []).length > 0,
     };
   } catch (e) {

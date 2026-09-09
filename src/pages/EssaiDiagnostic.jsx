@@ -223,7 +223,7 @@ export default function EssaiDiagnostic() {
             </div>
             <button onClick={() => goSignup("result")} style={{ ...btnPrimary, width:"auto", padding:"14px 26px" }}>Créer mon compte gratuit →</button>
             <div style={{ fontSize:11, color:G.soft, marginTop:12 }}>Sans carte bancaire · 1 clic avec Google</div>
-            <button onClick={() => navigate("/demo")} style={{ background:"none", border:"none", color:G.muted, fontSize:12.5, textDecoration:"underline", cursor:"pointer", marginTop:14, fontFamily:"inherit" }}>Ou explorer l'app en démo →</button>
+            <button onClick={() => navigate("/demo")} style={{ background:"rgba(255,255,255,0.1)", border:"1px solid rgba(165,214,167,0.35)", color:"#e8f5e9", borderRadius:12, padding:"12px 18px", fontSize:13.5, fontWeight:700, cursor:"pointer", marginTop:14, fontFamily:"inherit", width:"auto" }}>👀 Explorer l'app en démo</button>
           </div>
         </div>
 
