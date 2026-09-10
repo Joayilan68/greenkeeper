@@ -116,8 +116,8 @@ export default function Landing() {
             ))}
           </div>
 
-          {/* Offre 7 jours — bien visible ET cliquable (mène au diagnostic gratuit) */}
-          <button onClick={() => goEssai("premium_badge")} style={{
+          {/* Offre 7 jours — bien visible ET cliquable (mène à l'INSCRIPTION directe) */}
+          <button onClick={() => goSignup("premium_badge")} style={{
             display:"block", width:"100%", textAlign:"left", cursor:"pointer",
             border:"none", fontFamily:"inherit",
             background:"linear-gradient(135deg,#F9A825,#F57F17)", color:"#1a1200",
