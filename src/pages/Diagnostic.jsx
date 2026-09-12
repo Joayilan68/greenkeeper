@@ -64,7 +64,7 @@ export default function Diagnostic() {
   const { getToken } = useAuth();
   const { profile }  = useProfile();
   const { weather }  = useWeather() || {};
-  const { isPaid, isAdmin } = useSubscription() || {};
+  const { isPaid, isAdmin, isLoading: subLoading } = useSubscription() || {};
   const { history = [] } = useHistory();
   const { diagnostics, save } = useDiagnostic();
 
@@ -187,6 +187,30 @@ export default function Diagnostic() {
   );
 
   // ── VUE ACCUEIL ──────────────────────────────────────────────────────────
+  // Anti-flicker : tant que l'abonnement n'est pas résolu, on n'affiche NI le
+  // comparatif (état "free" par défaut) NI la page photo. Sinon la page montre
+  // d'abord le comparatif puis "saute" vers la page photo une fois le tier
+  // résolu (admin / essai / premium) — c'est le bug remonté.
+  if (view === "home" && subLoading) return (
+    <div>
+      <div style={{ padding:"48px 20px 16px" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <img src="/mg360-mascot-transparent.png" alt="MG360" style={{ width:40, height:40, objectFit:"contain" }} />
+          <div>
+            <div style={{ fontSize:20, fontWeight:800, color:"#F1F8F2" }}>Diagnostic Photo</div>
+            <div style={{ fontSize:12, color:"#66BB6A", marginTop:2 }}>Analyse IA de votre gazon</div>
+          </div>
+        </div>
+      </div>
+      <div style={scroll}>
+        <div style={{ textAlign:"center", padding:"48px 20px", color:"#81c784" }}>
+          <div style={{ fontSize:28, marginBottom:10 }}>🌿</div>
+          <div style={{ fontSize:13 }}>Chargement…</div>
+        </div>
+      </div>
+    </div>
+  );
+
   if (view === "home") return (
     <div>
       <div style={{ padding:"48px 20px 16px" }}>
