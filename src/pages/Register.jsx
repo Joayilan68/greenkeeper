@@ -127,7 +127,7 @@ export default function Register() {
     <div style={{ minHeight:"100vh", background:"linear-gradient(160deg, #0d2b1a, #1a4731)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:20 }}>
       <img src="/mg360-mascot-transparent.png" alt="Mongazon360" style={{ width:72, height:72, objectFit:"contain", marginBottom:16 }} />
       <div style={{ fontSize:22, fontWeight:800, color:"#a5d6a7", marginBottom:4 }}>
-        Mongazon360<sup style={{ fontSize:11 }}>™</sup>
+        Mongazon360<sup style={{ fontSize:11 }}>®</sup>
       </div>
       <div style={{ fontSize:13, color:"#81c784", marginBottom:24, textAlign:"center" }}>
         Dernière étape avant de commencer !
@@ -153,7 +153,7 @@ export default function Register() {
                 </span>{" "}et les{" "}
                 <span onClick={() => navigate("/cgv")} style={{ color:"#a5d6a7", textDecoration:"underline", cursor:"pointer" }}>
                   Conditions Générales de Vente
-                </span>{" "}de Mongazon360<sup style={{ fontSize:8 }}>™</sup>.
+                </span>{" "}de Mongazon360<sup style={{ fontSize:8 }}>®</sup>.
               </div>
             </div>
           </label>
@@ -175,7 +175,7 @@ export default function Register() {
                 <span onClick={() => navigate("/confidentialite")} style={{ color:"#a5d6a7", textDecoration:"underline", cursor:"pointer" }}>
                   Politique de confidentialité
                 </span>{" "}
-                et j'accepte le traitement de mes données pour la fourniture du service Mongazon360<sup style={{ fontSize:8 }}>™</sup>.
+                et j'accepte le traitement de mes données pour la fourniture du service Mongazon360<sup style={{ fontSize:8 }}>®</sup>.
               </div>
             </div>
           </label>
@@ -216,7 +216,7 @@ export default function Register() {
                 📊 Partager mes données anonymisées <span style={{ color:"#81c784", fontSize:11 }}>(optionnel)</span>
               </div>
               <div style={{ fontSize:11, color:"#81c784", marginTop:4, lineHeight:1.5 }}>
-                J'accepte que Mongazon360<sup style={{ fontSize:8 }}>™</sup> partage mes données d'utilisation <strong>anonymisées</strong> (type de gazon, historique d'entretien, zone géographique approximative) avec des partenaires du secteur jardinage, à des fins d'études de marché.{" "}
+                J'accepte que Mongazon360<sup style={{ fontSize:8 }}>®</sup> partage mes données d'utilisation <strong>anonymisées</strong> (type de gazon, historique d'entretien, zone géographique approximative) avec des partenaires du secteur jardinage, à des fins d'études de marché.{" "}
                 <strong style={{ color:"#f9a825" }}>Ces données ne contiennent jamais mon nom ni mon email.</strong>{" "}
                 Je peux retirer ce consentement à tout moment dans Paramètres.
               </div>
@@ -233,10 +233,10 @@ export default function Register() {
               style={{ marginTop:3, width:18, height:18, cursor:"pointer", flexShrink:0 }} />
             <div>
               <div style={{ fontSize:13, fontWeight:700, color:"#e8f5e9" }}>
-                📧 Recevoir des emails de prospection commerciale Mongazon360<sup style={{ fontSize:8 }}>™</sup> <span style={{ color:"#81c784", fontSize:11 }}>(optionnel)</span>
+                📧 Recevoir des emails de prospection commerciale Mongazon360<sup style={{ fontSize:8 }}>®</sup> <span style={{ color:"#81c784", fontSize:11 }}>(optionnel)</span>
               </div>
               <div style={{ fontSize:11, color:"#81c784", marginTop:4, lineHeight:1.5 }}>
-                Conseils saisonniers, nouveautés et offres de partenaires jardinage. <strong style={{ color:"#a5d6a7" }}>En l'absence de consentement, Mongazon360<sup style={{ fontSize:8 }}>™</sup> ne peut pas vous solliciter à des fins commerciales.</strong> Vous pouvez retirer ce consentement à tout moment dans Paramètres.
+                Conseils saisonniers, nouveautés et offres de partenaires jardinage. <strong style={{ color:"#a5d6a7" }}>En l'absence de consentement, Mongazon360<sup style={{ fontSize:8 }}>®</sup> ne peut pas vous solliciter à des fins commerciales.</strong> Vous pouvez retirer ce consentement à tout moment dans Paramètres.
               </div>
             </div>
           </label>
@@ -261,7 +261,7 @@ export default function Register() {
         >
           {loading
             ? "⏳ Enregistrement..."
-            : <>✅ Commencer avec Mongazon360<sup style={{ fontSize:8 }}>™</sup></>
+            : <>✅ Commencer avec Mongazon360<sup style={{ fontSize:8 }}>®</sup></>
           }
         </button>
 
@@ -271,7 +271,7 @@ export default function Register() {
 
         {/* ── Mention marque déposée EUIPO (cohérence avec reste de l'app) ─ */}
         <div style={{ fontSize:9, color:"#3a5c44", textAlign:"center", marginTop:18, lineHeight:1.6 }}>
-          © {new Date().getFullYear()} Mongazon360<sup style={{ fontSize:7 }}>™</sup> — Marque déposée à l'EUIPO<br/>
+          © {new Date().getFullYear()} Mongazon360<sup style={{ fontSize:7 }}>®</sup> — Marque déposée et enregistrée à l'EUIPO<br/>
           Édité par un auto-entrepreneur immatriculé en France
         </div>
 

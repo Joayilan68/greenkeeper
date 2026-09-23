@@ -111,7 +111,7 @@ export default function Classement() {
           <div style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
             <span style={{ fontSize:18, flexShrink:0 }}>🤖</span>
             <div style={{ fontSize:11, color:"#90caf9", lineHeight:1.5 }}>
-              <strong>Joueurs simulés actifs.</strong> Tant que Mongazon360<sup style={{ fontSize:7 }}>™</sup> compte moins de 100 utilisateurs actifs, les ligues sont complétées par des joueurs simulés pour rendre le classement vivant. Ces joueurs sont signalés par l'icône <strong>🤖</strong> à côté de leur nom.
+              <strong>Joueurs simulés actifs.</strong> Tant que Mongazon360<sup style={{ fontSize:7 }}>®</sup> compte moins de 100 utilisateurs actifs, les ligues sont complétées par des joueurs simulés pour rendre le classement vivant. Ces joueurs sont signalés par l'icône <strong>🤖</strong> à côté de leur nom.
             </div>
           </div>
         </div>

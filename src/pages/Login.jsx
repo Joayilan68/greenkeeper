@@ -60,9 +60,9 @@ export default function Login({ mode = "signin" }) {
           alt="Mongazon360"
           style={{ width: 72, height: 72, objectFit: "contain", display: "block", margin: "0 auto 8px" }}
         />
-        {/* ✅ Marque déposée EUIPO 30/05/2026 — afficher ™ jusqu'à enregistrement définitif (nov 2026) */}
+        {/* ✅ Marque EUIPO déposée le 30/05/2026 et enregistrée le 22/09/2026 — ® justifié */}
         <div style={{ fontSize: 26, fontWeight: 800, color: "#a5d6a7" }}>
-          Mongazon360<sup style={{ fontSize: 12, fontWeight: 600, marginLeft: 2, color: "#81c784" }}>™</sup>
+          Mongazon360<sup style={{ fontSize: 12, fontWeight: 600, marginLeft: 2, color: "#81c784" }}>®</sup>
         </div>
         <div style={{ fontSize: 13, color: "#81c784", marginTop: 4 }}>
           {isSignup ? "Crée ton compte — c'est immédiat" : "Content de te revoir"}
@@ -119,7 +119,7 @@ export default function Login({ mode = "signin" }) {
 
       {/* ✅ Mention légale discrète marque déposée */}
       <div style={{ marginTop: 20, fontSize: 10, color: "#4a7c5c", textAlign: "center", maxWidth: 360, lineHeight: 1.6 }}>
-        Mongazon360™ est une marque déposée à l'EUIPO — protégée dans les 27 pays de l'Union européenne.
+        Mongazon360® est une marque déposée et enregistrée à l'EUIPO — protégée dans les 27 pays de l'Union européenne.
       </div>
     </div>
   );

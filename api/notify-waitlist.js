@@ -31,7 +31,7 @@ function buildLaunchHtml() {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mongazon360™ est ouvert !</title>
+  <title>Mongazon360® est ouvert !</title>
 </head>
 <body style="margin:0;padding:0;background:#0f2419;font-family:'Nunito',Arial,sans-serif;-webkit-text-size-adjust:100%;">
 
@@ -60,7 +60,7 @@ function buildLaunchHtml() {
               </div>
 
               <h1 style="color:#ffffff;font-size:32px;font-weight:800;line-height:1.2;margin:0 0 12px;letter-spacing:-0.5px;">
-                Mongazon360<sup style="font-size:14px;">™</sup><br>
+                Mongazon360<sup style="font-size:14px;">®</sup><br>
                 <span style="color:#95d5b2;">est ouvert !</span>
               </h1>
 
@@ -81,7 +81,7 @@ function buildLaunchHtml() {
               </p>
               <p style="color:#e8f5e9;font-size:15px;line-height:1.7;margin:0 0 28px;">
                 Vous étiez sur notre liste d'attente — <strong style="color:#95d5b2;">le moment est venu.</strong>
-                Mongazon360<sup style="font-size:10px;">™</sup> est officiellement ouvert. Créez votre compte
+                Mongazon360<sup style="font-size:10px;">®</sup> est officiellement ouvert. Créez votre compte
                 et laissez l'IA s'occuper de votre gazon.
               </p>
 
@@ -203,7 +203,7 @@ function buildLaunchHtml() {
           <tr>
             <td style="padding:24px 32px 8px;background:#0f2419;border-top:1px solid rgba(82,183,136,0.15);text-align:center;">
               <p style="color:#52b788;font-size:13px;font-weight:600;margin:0 0 6px;">
-                L'équipe Mongazon360<sup style="font-size:9px;">™</sup>
+                L'équipe Mongazon360<sup style="font-size:9px;">®</sup>
               </p>
               <p style="color:#4a7c5c;font-size:11px;font-style:italic;margin:0 0 10px;">
                 Tant qu'il y a gazon, il y a match
@@ -239,7 +239,7 @@ function buildLaunchHtml() {
               </p>
 
               <p style="color:#3a5c44;font-size:9px;margin:0;line-height:1.6;">
-                © ${year} Mongazon360<sup style="font-size:7px;">™</sup> — Marque déposée à l'EUIPO (Classes 9, 42, 44)<br>
+                © ${year} Mongazon360<sup style="font-size:7px;">®</sup> — Marque déposée et enregistrée à l'EUIPO (Classes 9, 42, 44)<br>
                 Édité par un auto-entrepreneur immatriculé en France · SIRET disponible dans les Mentions légales<br>
                 Tous droits réservés
               </p>
@@ -291,7 +291,7 @@ export default async function handler(req, res) {
           from:    'Mongazon360 <bonjour@mongazon360.fr>',
           replyTo: 'contact@mongazon360.fr',
           to:      inscrit.email,
-          subject: '🚀 Mongazon360™ est ouvert — Votre expert gazon intelligent est prêt',
+          subject: '🚀 Mongazon360® est ouvert — Votre expert gazon intelligent est prêt',
           html:    launchHtml,
         });
 

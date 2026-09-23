@@ -111,12 +111,12 @@ export default function GreenScoreModal({ onClose }) {
 
           {/* Section 4 — Disclaimer */}
           <div style={{ background:"rgba(245,158,11,0.08)", border:"1px solid rgba(245,158,11,0.25)", borderRadius:10, padding:"12px 14px", fontSize:11, color:"#fde68a", lineHeight:1.6 }}>
-            <strong style={{ color:"#fbbf24" }}>⚠️ Important :</strong> Le GreenScore Mongazon360<sup style={{ fontSize:7 }}>™</sup> est un <strong>indicateur indicatif et ludique</strong> basé sur les données que vous renseignez et la météo locale. Il ne constitue pas un diagnostic agronomique professionnel. Pour des conseils experts, consultez un jardinier professionnel ou un service agronomique agréé.
+            <strong style={{ color:"#fbbf24" }}>⚠️ Important :</strong> Le GreenScore Mongazon360<sup style={{ fontSize:7 }}>®</sup> est un <strong>indicateur indicatif et ludique</strong> basé sur les données que vous renseignez et la météo locale. Il ne constitue pas un diagnostic agronomique professionnel. Pour des conseils experts, consultez un jardinier professionnel ou un service agronomique agréé.
           </div>
 
           {/* Footer marque déposée */}
           <div style={{ textAlign:"center", marginTop:18, fontSize:10, color:"#3a5c44" }}>
-            GreenScore — Mongazon360<sup style={{ fontSize:7 }}>™</sup> — Marque déposée à l'EUIPO
+            GreenScore — Mongazon360<sup style={{ fontSize:7 }}>®</sup> — Marque déposée et enregistrée à l'EUIPO
           </div>
         </div>
 

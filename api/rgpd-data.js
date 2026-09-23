@@ -1,6 +1,6 @@
 // api/rgpd-data.js
 // ════════════════════════════════════════════════════════════════════════════
-// MONGAZON360™ — Conformité RGPD complète
+// MONGAZON360® — Conformité RGPD complète
 // ════════════════════════════════════════════════════════════════════════════
 //
 // GET    /api/rgpd-data → Export complet des données (RGPD Art. 20 — Portabilité)
@@ -235,9 +235,9 @@ module.exports = async function handler(req, res) {
           export_date:    new Date().toISOString(),
           droits_rgpd:    "Données exportées conformément au RGPD — Article 20 (droit à la portabilité)",
           format:         "JSON v1",
-          responsable:    "Mongazon360™ — auto-entrepreneur immatriculé en France",
+          responsable:    "Mongazon360® — auto-entrepreneur immatriculé en France",
           contact_dpo:    "contact@mongazon360.fr",
-          marque_deposee: "Mongazon360™ — Marque déposée à l'EUIPO (30/05/2026) — Classes 9, 42, 44 — 27 pays UE",
+          marque_deposee: "Mongazon360® — Marque de l'Union européenne n° 019373252, déposée le 30/05/2026 et enregistrée le 22/09/2026 à l'EUIPO — Classes 9, 42, 44 — 27 pays UE",
           user_id:        userId,
           email:          email || "non récupéré",
         },

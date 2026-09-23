@@ -111,7 +111,7 @@ function ShareScore({ score, label, profile }) {
   const emoji          = score >= 85 ? "🏆" : score >= 70 ? "😊" : score >= 55 ? "😐" : score >= 40 ? "😟" : "😰";
   const gazon          = profile?.pelouse ? ` Mon ${profile.pelouse}` : " Mon gazon";
   const surface        = profile?.surface ? ` (${profile.surface}m²)` : "";
-  const message        = `${emoji} Mon gazon a un score santé de ${score}/100 sur Mongazon360™ !\n🌿 "${label}"\n\nSuivez votre gazon en temps réel :\n${appUrl}`;
+  const message        = `${emoji} Mon gazon a un score santé de ${score}/100 sur Mongazon360® !\n🌿 "${label}"\n\nSuivez votre gazon en temps réel :\n${appUrl}`;
   const messageEncoded = encodeURIComponent(message);
   const urlEncoded     = encodeURIComponent(appUrl);
   const SHARE_OPTIONS  = [

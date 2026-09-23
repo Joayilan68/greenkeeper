@@ -49,7 +49,7 @@ export default function LiguesModal({ onClose }) {
             📅 Quand le classement est-il actif ?
           </div>
           <div style={{ marginBottom:16 }}>
-            Le classement Mongazon360<sup style={{ fontSize:7 }}>™</sup> est actif <strong>de février à octobre</strong>, en cohérence avec la saison d'entretien du gazon. De novembre à janvier, le classement est en pause hivernale (ton streak est conservé).
+            Le classement Mongazon360<sup style={{ fontSize:7 }}>®</sup> est actif <strong>de février à octobre</strong>, en cohérence avec la saison d'entretien du gazon. De novembre à janvier, le classement est en pause hivernale (ton streak est conservé).
           </div>
 
           {/* Section 2 — Calcul du score */}
@@ -117,7 +117,7 @@ export default function LiguesModal({ onClose }) {
             🤖 Joueurs simulés (bots)
           </div>
           <div style={{ background:"rgba(33,150,243,0.06)", border:"1px solid rgba(33,150,243,0.2)", borderRadius:10, padding:"12px 14px", marginBottom:14, fontSize:12, color:"#e8f5e9", lineHeight:1.7 }}>
-            Tant que Mongazon360<sup style={{ fontSize:7 }}>™</sup> compte <strong style={{ color:"#90caf9" }}>moins de 100 utilisateurs actifs</strong>, les ligues sont complétées par des joueurs simulés (bots). Ils permettent de garder le classement vivant et motivant.
+            Tant que Mongazon360<sup style={{ fontSize:7 }}>®</sup> compte <strong style={{ color:"#90caf9" }}>moins de 100 utilisateurs actifs</strong>, les ligues sont complétées par des joueurs simulés (bots). Ils permettent de garder le classement vivant et motivant.
             <br/><br/>
             Les bots sont toujours <strong style={{ color:"#90caf9" }}>signalés par l'icône 🤖</strong> à côté de leur nom. Tu peux donc les distinguer des vrais utilisateurs à tout moment.
             <br/><br/>
@@ -128,12 +128,12 @@ export default function LiguesModal({ onClose }) {
 
           {/* Section 6 — Disclaimer */}
           <div style={{ background:"rgba(245,158,11,0.08)", border:"1px solid rgba(245,158,11,0.25)", borderRadius:10, padding:"12px 14px", fontSize:11, color:"#fde68a", lineHeight:1.6 }}>
-            <strong style={{ color:"#fbbf24" }}>⚠️ À noter :</strong> Le classement Mongazon360<sup style={{ fontSize:7 }}>™</sup> est un système ludique de gamification. Il n'offre aucune récompense monétaire ni avantage commercial. Son seul but est de rendre l'entretien de votre pelouse plus motivant.
+            <strong style={{ color:"#fbbf24" }}>⚠️ À noter :</strong> Le classement Mongazon360<sup style={{ fontSize:7 }}>®</sup> est un système ludique de gamification. Il n'offre aucune récompense monétaire ni avantage commercial. Son seul but est de rendre l'entretien de votre pelouse plus motivant.
           </div>
 
           {/* Footer marque déposée */}
           <div style={{ textAlign:"center", marginTop:18, fontSize:10, color:"#3a5c44" }}>
-            Mongazon360<sup style={{ fontSize:7 }}>™</sup> — Marque déposée à l'EUIPO
+            Mongazon360<sup style={{ fontSize:7 }}>®</sup> — Marque déposée et enregistrée à l'EUIPO
           </div>
         </div>
 

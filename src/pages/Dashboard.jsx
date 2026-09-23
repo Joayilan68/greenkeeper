@@ -153,9 +153,9 @@ export default function Dashboard() {
             <button onClick={() => navigate("/parametres")} style={{ background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:10, padding:"8px 10px", color:"#A5D6A7", fontSize:14, cursor:"pointer" }}>⚙️</button>
           </div>
         </div>
-        {/* ✅ Branding Mongazon360™ — visible discret sous le bonjour */}
+        {/* ✅ Branding Mongazon360® — visible discret sous le bonjour */}
         <div style={{ fontSize:11, color:"#81c784", fontStyle:"italic", opacity:0.8 }}>
-          🌿 Prêt à prendre soin de ton gazon avec Mongazon360<sup style={{ fontSize:7 }}>™</sup> aujourd'hui ?
+          🌿 Prêt à prendre soin de ton gazon avec Mongazon360<sup style={{ fontSize:7 }}>®</sup> aujourd'hui ?
         </div>
         {isAdmin && <div style={{ fontSize:11, color:"#f9a825", marginTop:4, textAlign:"center" }}>👑 Mode Admin</div>}
       </div>
@@ -449,13 +449,13 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* ✅ Signature finale avec ™ + slogan + mention déposée (préparation ® nov 2026) */}
+        {/* ✅ Signature finale avec ® + slogan + mention marque (enregistrée EUIPO le 22/09/2026) */}
         <div style={{ textAlign:"center", padding:"8px 0 24px" }}>
           <div style={{ fontSize:10, color:"#2d4a35", fontStyle:"italic" }}>
-            🌿 Mongazon360<sup style={{ fontSize:7 }}>™</sup> — Tant qu'il y a gazon, il y a match
+            🌿 Mongazon360<sup style={{ fontSize:7 }}>®</sup> — Tant qu'il y a gazon, il y a match
           </div>
           <div style={{ fontSize:9, color:"#1f3326", marginTop:2 }}>
-            Marque déposée à l'EUIPO
+            Marque déposée et enregistrée à l'EUIPO
           </div>
         </div>
 

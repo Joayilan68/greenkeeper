@@ -100,7 +100,7 @@ export default function Subscribe() {
         <div style={{ textAlign:"center", marginBottom:24 }}>
           <img src="/mg360-mascot-transparent.png" alt="Mongazon360" style={{ width:72, height:72, objectFit:"contain", marginBottom:4 }} />
           <div style={{ fontSize:22, fontWeight:800, color:"#a5d6a7", marginTop:8 }}>
-            Mongazon360<sup style={{ fontSize:8 }}>™</sup> Premium
+            Mongazon360<sup style={{ fontSize:8 }}>®</sup> Premium
           </div>
         </div>
 
@@ -136,7 +136,7 @@ export default function Subscribe() {
           Choisissez votre accès
         </div>
         <div style={{ fontSize:11, color:"#81c784", marginTop:4 }}>
-          Mongazon360<sup style={{ fontSize:7 }}>™</sup>
+          Mongazon360<sup style={{ fontSize:7 }}>®</sup>
         </div>
       </div>
 
@@ -173,7 +173,7 @@ export default function Subscribe() {
 
         {/* Récap de la commande */}
         <div style={{ background:"rgba(0,0,0,0.2)", borderRadius:10, padding:"10px 12px", marginBottom:14, fontSize:12, color:"#e8f5e9" }}>
-          Vous allez souscrire à <strong style={{ color:"#a5d6a7" }}>Mongazon360<sup style={{ fontSize:7 }}>™</sup> Premium {selectedPlan.label}</strong> au prix de <strong style={{ color:"#a5d6a7" }}>{selectedPlan.price}{selectedPlan.period}</strong>.
+          Vous allez souscrire à <strong style={{ color:"#a5d6a7" }}>Mongazon360<sup style={{ fontSize:7 }}>®</sup> Premium {selectedPlan.label}</strong> au prix de <strong style={{ color:"#a5d6a7" }}>{selectedPlan.price}{selectedPlan.period}</strong>.
           {selected === "monthly" ? " Renouvellement automatique chaque mois." : " Renouvellement automatique chaque année."} Résiliable à tout moment.
         </div>
 
@@ -190,7 +190,7 @@ export default function Subscribe() {
                 J'ai lu et j'accepte les{" "}
                 <span onClick={(e) => { e.preventDefault(); navigate("/cgv"); }} style={{ color:"#a5d6a7", textDecoration:"underline", cursor:"pointer" }}>
                   Conditions Générales de Vente
-                </span>{" "}de Mongazon360<sup style={{ fontSize:7 }}>™</sup>.
+                </span>{" "}de Mongazon360<sup style={{ fontSize:7 }}>®</sup>.
               </div>
             </div>
           </label>
@@ -206,7 +206,7 @@ export default function Subscribe() {
                 ⚖️ Je renonce au droit de rétractation de 14 jours <span style={{ color:"#ef9a9a" }}>*</span>
               </div>
               <div style={{ fontSize:11, color:"#81c784", marginTop:3, lineHeight:1.5 }}>
-                Je demande expressément la fourniture immédiate de Mongazon360<sup style={{ fontSize:7 }}>™</sup> Premium dès le paiement, et reconnais que cette demande entraîne la <strong style={{ color:"#fbbf24" }}>perte de mon droit de rétractation de 14 jours</strong> prévu à l'article L.221-28 du Code de la consommation.
+                Je demande expressément la fourniture immédiate de Mongazon360<sup style={{ fontSize:7 }}>®</sup> Premium dès le paiement, et reconnais que cette demande entraîne la <strong style={{ color:"#fbbf24" }}>perte de mon droit de rétractation de 14 jours</strong> prévu à l'article L.221-28 du Code de la consommation.
                 <br/><br/>
                 <span style={{ color:"#81c784", fontStyle:"italic" }}>
                   Sans cette renonciation, l'abonnement ne peut pas démarrer immédiatement.
@@ -255,7 +255,7 @@ export default function Subscribe() {
 
       {/* ── Mention marque déposée EUIPO ───────────────────────────────────── */}
       <div style={{ fontSize:9, color:"#3a5c44", textAlign:"center", marginTop:20, lineHeight:1.6 }}>
-        © {new Date().getFullYear()} Mongazon360<sup style={{ fontSize:7 }}>™</sup> — Marque déposée à l'EUIPO
+        © {new Date().getFullYear()} Mongazon360<sup style={{ fontSize:7 }}>®</sup> — Marque déposée et enregistrée à l'EUIPO
       </div>
     </div>
   );
