@@ -3,8 +3,8 @@ import AIAssistant from "./AIAssistant";
 import TrialBanner from "./TrialBanner";
 import { appShell } from "../lib/styles";
 
-// ✅ Footer discret intégrant la marque Mongazon360™
-// Marque déposée à l'EUIPO le 30/05/2026 — afficher ™ jusqu'à enregistrement définitif (nov 2026)
+// ✅ Footer discret intégrant la marque Mongazon360®
+// Marque EUIPO déposée le 30/05/2026 et enregistrée le 22/09/2026 — ® justifié depuis l'enregistrement
 function BrandFooter() {
   const year = new Date().getFullYear();
   return (
@@ -17,10 +17,10 @@ function BrandFooter() {
       opacity:    0.7,
     }}>
       <div style={{ fontWeight: 600 }}>
-        © {year} Mongazon360<sup style={{ fontSize: 8 }}>™</sup>
+        © {year} Mongazon360<sup style={{ fontSize: 8 }}>®</sup>
       </div>
       <div style={{ fontSize: 9, marginTop: 2 }}>
-        Marque déposée à l'EUIPO — Tous droits réservés
+        Marque déposée et enregistrée à l'EUIPO — Tous droits réservés
       </div>
     </div>
   );

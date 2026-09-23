@@ -21,7 +21,7 @@ function buildReminderHtml(reminders, userName, profile) {
     <div style="display:flex;align-items:center;gap:12px;">
       <span style="font-size:32px;">🌿</span>
       <div>
-        <div style="color:#a5d6a7;font-size:18px;font-weight:800;">Mongazon360<sup style="font-size:10px;">™</sup></div>
+        <div style="color:#a5d6a7;font-size:18px;font-weight:800;">Mongazon360<sup style="font-size:10px;">®</sup></div>
         <div style="color:#4a7c5c;font-size:11px;font-style:italic;">Tant qu'il y a gazon, il y a match</div>
       </div>
     </div>
@@ -49,14 +49,14 @@ function buildReminderHtml(reminders, userName, profile) {
     </div>
     <div style="text-align:center;padding:16px 0 8px;border-top:1px solid #e8f5e9;margin-top:8px;">
       <p style="color:#52b788;font-size:12px;font-weight:600;margin:0 0 4px;">
-        L'équipe Mongazon360<sup style="font-size:8px;">™</sup>
+        L'équipe Mongazon360<sup style="font-size:8px;">®</sup>
       </p>
     </div>
   </div>
   <div style="background:#f9fbe7;padding:14px 28px;border-top:1px solid #e8f5e9;text-align:center;">
-    <div style="color:#4a7c5c;font-size:10px;">Mongazon360<sup style="font-size:7px;">™</sup> — Rappels personnalisés</div>
+    <div style="color:#4a7c5c;font-size:10px;">Mongazon360<sup style="font-size:7px;">®</sup> — Rappels personnalisés</div>
     <div style="color:#81c784;font-size:9px;margin-top:4px;">
-      © ${year} Mongazon360<sup style="font-size:7px;">™</sup> — Marque déposée à l'EUIPO ·
+      © ${year} Mongazon360<sup style="font-size:7px;">®</sup> — Marque déposée et enregistrée à l'EUIPO ·
       <a href="https://mongazon360.fr/mentions-legales" style="color:#52b788;">Mentions légales</a>
     </div>
     <div style="color:#9e9e9e;font-size:8px;line-height:1.5;text-align:left;margin-top:10px;padding-top:10px;border-top:1px solid #e8f5e9;">
@@ -74,7 +74,7 @@ function buildTrialEmailHtml(prenom, when) {
 <body style="font-family:Arial,sans-serif;background:#f5f5f5;margin:0;padding:20px;">
 <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 20px rgba(0,0,0,0.1);">
   <div style="background:#1a4731;padding:24px 28px;">
-    <div style="color:#a5d6a7;font-size:18px;font-weight:800;">Mongazon360<sup style="font-size:10px;">™</sup></div>
+    <div style="color:#a5d6a7;font-size:18px;font-weight:800;">Mongazon360<sup style="font-size:10px;">®</sup></div>
     <div style="color:#4a7c5c;font-size:11px;font-style:italic;">Tant qu'il y a gazon, il y a match</div>
   </div>
   <div style="padding:24px 28px;">
@@ -91,7 +91,7 @@ function buildTrialEmailHtml(prenom, when) {
     <div style="font-size:12px;color:#888;line-height:1.6;">Sans action de ta part, ton compte repasse simplement en version gratuite — tu gardes ton profil et ton score. 🌿</div>
   </div>
   <div style="background:#f9fbe7;padding:14px 28px;border-top:1px solid #e8f5e9;text-align:center;">
-    <div style="color:#81c784;font-size:9px;">© ${year} Mongazon360<sup style="font-size:7px;">™</sup> — Marque déposée à l'EUIPO · <a href="https://mongazon360.fr/mentions-legales" style="color:#52b788;">Mentions légales</a></div>
+    <div style="color:#81c784;font-size:9px;">© ${year} Mongazon360<sup style="font-size:7px;">®</sup> — Marque déposée et enregistrée à l'EUIPO · <a href="https://mongazon360.fr/mentions-legales" style="color:#52b788;">Mentions légales</a></div>
   </div>
 </div></body></html>`;
 }
@@ -287,7 +287,7 @@ module.exports = async function handler(req, res) {
                 body: JSON.stringify({
                   from:    "Mongazon360 <bonjour@mongazon360.fr>",
                   to:      [email],
-                  subject: `🌿 [Mongazon360™] ${decision.title}`,
+                  subject: `🌿 [Mongazon360®] ${decision.title}`,
                   html:    buildReminderHtml(
                              [{ icon: "⚠️", label: decision.title, desc: decision.body }],
                              "Jardinier", profile
@@ -1036,7 +1036,7 @@ module.exports = async function handler(req, res) {
     <div style="display:flex;align-items:center;gap:12px;">
       <span style="font-size:32px;">🌿</span>
       <div>
-        <div style="color:#a5d6a7;font-size:18px;font-weight:800;">Mongazon360<sup style="font-size:10px;">™</sup></div>
+        <div style="color:#a5d6a7;font-size:18px;font-weight:800;">Mongazon360<sup style="font-size:10px;">®</sup></div>
         <div style="color:#81c784;font-size:12px;">Alerte automatique — Système de pilotage</div>
       </div>
     </div>
@@ -1069,9 +1069,9 @@ module.exports = async function handler(req, res) {
     </div>
   </div>
   <div style="background:#0d2b1a;padding:16px 24px;text-align:center;border-top:1px solid #2d7d52;">
-    <div style="color:#4a7c5c;font-size:11px;">Mongazon360<sup style="font-size:8px;">™</sup> — Système d'alerte automatique</div>
+    <div style="color:#4a7c5c;font-size:11px;">Mongazon360<sup style="font-size:8px;">®</sup> — Système d'alerte automatique</div>
     <div style="color:#4a7c5c;font-size:9px;margin-top:4px;">
-      © ${year} Mongazon360<sup style="font-size:7px;">™</sup> — Marque déposée à l'EUIPO
+      © ${year} Mongazon360<sup style="font-size:7px;">®</sup> — Marque déposée et enregistrée à l'EUIPO
     </div>
   </div>
 </div>
@@ -1083,7 +1083,7 @@ module.exports = async function handler(req, res) {
         body: JSON.stringify({
           from:    "Mongazon360 Pilotage <bonjour@mongazon360.fr>",
           to:      ["mongazon360@gmail.com"],
-          subject: `${severityEmoji} [MG360™] ${severityLabel} — ${alertType}`,
+          subject: `${severityEmoji} [MG360®] ${severityLabel} — ${alertType}`,
           html,
         }),
       });
@@ -1143,7 +1143,7 @@ module.exports = async function handler(req, res) {
         body: JSON.stringify({
           from:    "Mongazon360 <bonjour@mongazon360.fr>",
           to:      [userEmail],
-          subject: `🌿 [Mongazon360™] Rappel : ${reminders.map(r => r.label).join(", ")}`,
+          subject: `🌿 [Mongazon360®] Rappel : ${reminders.map(r => r.label).join(", ")}`,
           html:    buildReminderHtml(reminders, userName, profile),
         }),
       });

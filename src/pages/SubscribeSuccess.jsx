@@ -14,7 +14,7 @@ export default function SubscribeSuccess() {
       <div style={{ fontSize:72, marginBottom:16 }}>🎉</div>
 
       <div style={{ fontSize:24, fontWeight:800, color:"#a5d6a7", marginBottom:8 }}>
-        Bienvenue dans Mongazon360<sup style={{ fontSize:12 }}>™</sup> Premium !
+        Bienvenue dans Mongazon360<sup style={{ fontSize:12 }}>®</sup> Premium !
       </div>
 
       <div style={{ fontSize:14, color:"#81c784", lineHeight:1.7, marginBottom:24, maxWidth:380 }}>
@@ -48,7 +48,7 @@ export default function SubscribeSuccess() {
 
       {/* Mention marque déposée EUIPO */}
       <div style={{ fontSize:9, color:"#3a5c44", marginTop:32, lineHeight:1.6 }}>
-        © {new Date().getFullYear()} Mongazon360<sup style={{ fontSize:7 }}>™</sup> — Marque déposée à l'EUIPO
+        © {new Date().getFullYear()} Mongazon360<sup style={{ fontSize:7 }}>®</sup> — Marque déposée et enregistrée à l'EUIPO
       </div>
     </div>
   );

@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { card, scroll, btn } from "../lib/styles";
 
 // ════════════════════════════════════════════════════════════════════════════
-// DOCUMENTS JURIDIQUES MONGAZON360™
+// DOCUMENTS JURIDIQUES MONGAZON360®
 // ════════════════════════════════════════════════════════════════════════════
 // Source : documents validés par Cabinet Numetik Avocats (juin 2026)
 //   - CGU__CGV_-_V27_05_26.docx     → CGU + CGV (article unifié)
@@ -67,7 +67,7 @@ function BackToSettings() {
 export function MentionsLegales() {
   return (
     <div>
-      <PageHeader emoji="📋" title="Mentions Légales" subtitle="Mise à jour : juin 2026" />
+      <PageHeader emoji="📋" title="Mentions Légales" subtitle="Mise à jour : 23 septembre 2026" />
       <div style={scroll}>
 
         <Section title="Identité de l'éditeur du site internet">
@@ -77,11 +77,11 @@ export function MentionsLegales() {
           Adresse officielle de l'entreprise : 55 rue Pierre Pflimlin, 68510 Sierentz, France<br/>
           Email de contact : contact@mongazon360.fr<br/><br/>
           L'éditeur du site n'est pas assujetti à la TVA (article 293B du Code général des impôts).<br/><br/>
-          Mongazon360<sup style={{ fontSize:8 }}>™</sup> est une marque déposée à l'EUIPO (European Union Intellectual Property Office) le 30 mai 2026 — Classes 9, 42, 44 — protection sur 27 pays de l'Union européenne.
+          Mongazon360<sup style={{ fontSize:8 }}>®</sup> est une marque de l'Union européenne n° 019373252, déposée le 30 mai 2026 et enregistrée le 22 septembre 2026 à l'EUIPO (European Union Intellectual Property Office) — Classes 9, 42, 44 — protection sur 27 pays de l'Union européenne.
         </Section>
 
         <Section title="Activités exercées">
-          L'éditeur du site internet exerce les activités suivantes : développement de l'application web et mobile progressive Mongazon360<sup style={{ fontSize:7 }}>™</sup>.<br/><br/>
+          L'éditeur du site internet exerce les activités suivantes : développement de l'application web et mobile progressive Mongazon360<sup style={{ fontSize:7 }}>®</sup>.<br/><br/>
           Mongazon360 permet aux utilisateurs de suivre et d'optimiser l'entretien de leur gazon (ci-après l'« Application »). L'Application intègre un assistant conversationnel alimenté par intelligence artificielle et un système de diagnostic photo par IA.<br/><br/>
           L'Application s'adresse à toute personne physique agissant à titre non professionnel, qu'elle dispose d'un compte gratuit ou d'un compte payant par abonnement.
         </Section>
@@ -152,7 +152,7 @@ export function Confidentialite() {
       <div style={scroll}>
 
         <Section title="1. Préambule">
-          Mongazon360<sup style={{ fontSize:8 }}>™</sup> est une application web (PWA), accessible sur mobile et sur navigateur, qui permet aux utilisateurs de suivre et d'optimiser l'entretien de leur gazon. L'application intègre un assistant conversationnel alimenté par intelligence artificielle et un système de diagnostic photo par IA.<br/><br/>
+          Mongazon360<sup style={{ fontSize:8 }}>®</sup> est une application web (PWA), accessible sur mobile et sur navigateur, qui permet aux utilisateurs de suivre et d'optimiser l'entretien de leur gazon. L'application intègre un assistant conversationnel alimenté par intelligence artificielle et un système de diagnostic photo par IA.<br/><br/>
           Dans le cadre de l'exploitation de l'application, Mongazon360 traite des données personnelles en qualité de responsable de traitement.<br/><br/>
           Cette politique de protection des données personnelles est rédigée conformément à la loi n°78-17 du 6 janvier 1978 (dite « Loi informatique et libertés » ou « LIL ») et au Règlement Général sur la protection des Données Personnelles (« RGPD ») n°2016/679.
         </Section>
@@ -173,7 +173,7 @@ export function Confidentialite() {
 
         <Section title="4. Responsable du traitement">
           Le responsable du traitement est, au sens du RGPD, la personne qui détermine les moyens et les finalités du traitement.<br/><br/>
-          <strong style={{ color:"#a5d6a7" }}>Mongazon360<sup style={{ fontSize:8 }}>™</sup></strong> est le responsable du traitement.<br/>
+          <strong style={{ color:"#a5d6a7" }}>Mongazon360<sup style={{ fontSize:8 }}>®</sup></strong> est le responsable du traitement.<br/>
           Siège : 55 rue Pierre Pflimlin, 68510 Sierentz, France<br/>
           SIRET : 442 546 594<br/>
           Email de contact : contact@mongazon360.fr
@@ -304,7 +304,7 @@ export function CGU() {
   const navigate = useNavigate();
   return (
     <div>
-      <PageHeader emoji="📜" title="Conditions Générales d'Utilisation" subtitle="Mise à jour : 17 juillet 2026" />
+      <PageHeader emoji="📜" title="Conditions Générales d'Utilisation" subtitle="Mise à jour : 23 septembre 2026" />
       <div style={scroll}>
 
         <div style={{ ...card(), background:"rgba(33,150,243,0.06)", border:"1px solid rgba(33,150,243,0.2)" }}>
@@ -314,8 +314,8 @@ export function CGU() {
           </div>
         </div>
 
-        <Section title="1. Présentation de l'Application Mongazon360™">
-          Mongazon360<sup style={{ fontSize:8 }}>™</sup> est une application web (PWA), accessible sur mobile et sur navigateur, qui permet aux utilisateurs de suivre et d'optimiser l'entretien de leur gazon (ci-après l'« Application »). L'Application intègre un assistant conversationnel alimenté par intelligence artificielle et un système de diagnostic photo par IA.<br/><br/>
+        <Section title="1. Présentation de l'Application Mongazon360®">
+          Mongazon360<sup style={{ fontSize:8 }}>®</sup> est une application web (PWA), accessible sur mobile et sur navigateur, qui permet aux utilisateurs de suivre et d'optimiser l'entretien de leur gazon (ci-après l'« Application »). L'Application intègre un assistant conversationnel alimenté par intelligence artificielle et un système de diagnostic photo par IA.<br/><br/>
           L'Application s'adresse à toute personne physique agissant à titre non professionnel (ci-après l'« Utilisateur »), qu'elle dispose d'un compte gratuit (ci-après « Compte Free ») ou d'un compte payant par abonnement (ci-après « Compte Premium »).
         </Section>
 
@@ -429,7 +429,7 @@ export function CGU() {
 
         <Section title="12. Propriété intellectuelle">
           L'Application Mongazon360, ses composants logiciels, son interface graphique, ses contenus rédactionnels, ses bases de données ainsi que l'ensemble des éléments qui la composent sont protégés par les dispositions du Code de la propriété intellectuelle et par toute législation applicable en matière de propriété intellectuelle.<br/><br/>
-          Mongazon360<sup style={{ fontSize:8 }}>™</sup> est par ailleurs une marque déposée à l'EUIPO (30 mai 2026 — Classes 9, 42, 44) protégée sur 27 pays de l'Union européenne.<br/><br/>
+          Mongazon360<sup style={{ fontSize:8 }}>®</sup> est par ailleurs une marque de l'Union européenne n° 019373252, déposée le 30 mai 2026 et enregistrée le 22 septembre 2026 à l'EUIPO (Classes 9, 42, 44), protégée sur 27 pays de l'Union européenne.<br/><br/>
           L'Utilisateur reconnaît que les présentes CGU/CGV ne lui confèrent aucun droit de propriété intellectuelle sur l'Application. La mise à disposition de l'Application dans les conditions prévues aux présentes ne saurait être analysée comme la cession d'un quelconque droit de propriété intellectuelle, au sens du Code de la propriété intellectuelle.<br/><br/>
           L'Utilisateur s'engage à ne pas reproduire, copier, modifier, adapter, distribuer, représenter ou exploiter de quelque manière que ce soit tout ou partie de l'Application, de ses contenus ou de ses fonctionnalités, sans l'autorisation préalable et écrite de Mongazon360.<br/><br/>
           L'Utilisateur demeure titulaire des droits sur les contenus qu'il met en ligne sur l'Application (photos de gazon, informations de profil). Aucune disposition des présentes ne le prive des droits que l'Utilisateur détient sur son propre contenu.<br/><br/>
@@ -505,7 +505,7 @@ export function CGV() {
 
         <div style={{ ...card(), background:"rgba(33,150,243,0.06)", border:"1px solid rgba(33,150,243,0.2)" }}>
           <div style={{ fontSize:12, color:"#90caf9", lineHeight:1.6 }}>
-            ℹ️ Les présentes CGV s'appliquent à la souscription d'un abonnement Premium à l'application Mongazon360<sup style={{ fontSize:7 }}>™</sup>. Elles complètent les{" "}
+            ℹ️ Les présentes CGV s'appliquent à la souscription d'un abonnement Premium à l'application Mongazon360<sup style={{ fontSize:7 }}>®</sup>. Elles complètent les{" "}
             <span onClick={() => navigate("/cgu")} style={{ color:"#a5d6a7", textDecoration:"underline", cursor:"pointer" }}>
               Conditions Générales d'Utilisation
             </span>{" "}qui restent applicables.
@@ -659,10 +659,10 @@ export function Cookies() {
 
         <Section title="Qu'est-ce qu'un cookie ?">
           Un cookie est un petit fichier texte déposé sur votre terminal (ordinateur, téléphone, tablette) lors de votre visite sur un site web ou d'une utilisation d'une application. Il permet au site ou à l'application de mémoriser des informations relatives à votre navigation.<br/><br/>
-          L'application Mongazon360<sup style={{ fontSize:8 }}>™</sup> n'utilise pas de cookies au sens strict, mais utilise des <strong>technologies similaires</strong> stockées localement sur votre appareil (<em>localStorage</em>, <em>sessionStorage</em>) pour permettre son fonctionnement.
+          L'application Mongazon360<sup style={{ fontSize:8 }}>®</sup> n'utilise pas de cookies au sens strict, mais utilise des <strong>technologies similaires</strong> stockées localement sur votre appareil (<em>localStorage</em>, <em>sessionStorage</em>) pour permettre son fonctionnement.
         </Section>
 
-        <Section title="Technologies utilisées par Mongazon360™">
+        <Section title="Technologies utilisées par Mongazon360®">
 
           <SubSection title="🔒 Technologies strictement nécessaires (sans consentement)">
             Ces technologies sont indispensables au fonctionnement de l'application et ne nécessitent pas votre consentement :<br/><br/>
@@ -676,7 +676,7 @@ export function Cookies() {
             • <strong>Notifications push</strong> : envoi d'alertes météo, rappels d'entretien, notifications de gamification ;<br/>
             • <strong>Géolocalisation</strong> : utilisation de votre position GPS pour fournir une météo précise ;<br/>
             • <strong>Partage de données anonymisées</strong> : partage avec des partenaires jardinage de données agrégées (jamais nominatives) à des fins d'études de marché ;<br/>
-            • <strong>Prospection commerciale</strong> : envoi d'emails de conseils saisonniers et nouveautés Mongazon360<sup style={{ fontSize:7 }}>™</sup>.
+            • <strong>Prospection commerciale</strong> : envoi d'emails de conseils saisonniers et nouveautés Mongazon360<sup style={{ fontSize:7 }}>®</sup>.
           </SubSection>
 
           <SubSection title="📊 Cookies tiers (Amazon)">

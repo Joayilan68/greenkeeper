@@ -201,7 +201,7 @@ export default function DemoApp() {
         {/* En-tête */}
         <div style={{ display:"flex", alignItems:"center", gap:9, marginBottom:16 }}>
           <img src="/mg360-mascot-transparent.png" alt="" style={{ width:32, height:32, objectFit:"contain" }} />
-          <span style={{ fontSize:16, fontWeight:800, color:G.muted }}>Mongazon360<sup style={{ fontSize:8, color:G.soft }}>™</sup></span>
+          <span style={{ fontSize:16, fontWeight:800, color:G.muted }}>Mongazon360<sup style={{ fontSize:8, color:G.soft }}>®</sup></span>
         </div>
         {screens[tab]}
         <div style={{ fontSize:11, color:G.faint, textAlign:"center", marginTop:16 }}>

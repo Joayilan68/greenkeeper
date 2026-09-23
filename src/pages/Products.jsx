@@ -110,7 +110,7 @@ export default function Products() {
           <div>
             <div style={{ fontSize:20, fontWeight:800, color:"#F1F8F2" }}>Produits</div>
             <div style={{ fontSize:12, color:"#66BB6A", marginTop:2 }}>
-              Mongazon360<sup style={{ fontSize:7 }}>™</sup> · Sélection adaptée · Recherche Amazon en direct
+              Mongazon360<sup style={{ fontSize:7 }}>®</sup> · Sélection adaptée · Recherche Amazon en direct
             </div>
           </div>
         </div>
@@ -131,7 +131,7 @@ export default function Products() {
             <span style={{ fontSize:18, flexShrink:0 }}>ℹ️</span>
             <div style={{ fontSize:11, color:"#fde68a", lineHeight:1.6 }}>
               <strong style={{ color:"#fbbf24" }}>Liens partenaires Amazon.</strong>{" "}
-              En tant que Partenaire Amazon, Mongazon360<sup style={{ fontSize:7 }}>™</sup> perçoit une commission sur les achats éligibles, sans surcoût pour vous. Prix et disponibilités gérés par Amazon.
+              En tant que Partenaire Amazon, Mongazon360<sup style={{ fontSize:7 }}>®</sup> perçoit une commission sur les achats éligibles, sans surcoût pour vous. Prix et disponibilités gérés par Amazon.
             </div>
           </div>
         </div>
@@ -205,7 +205,7 @@ export default function Products() {
                     <li>Respectez les délais avant récolte si proche d'un potager</li>
                   </ul>
                   <div style={{ marginTop:8, fontSize:10, fontStyle:"italic", color:"#fca5a5" }}>
-                    Mongazon360<sup style={{ fontSize:7 }}>™</sup> n'est pas responsable d'une mauvaise utilisation. En cas de doute, consultez un professionnel ou les fiches{" "}
+                    Mongazon360<sup style={{ fontSize:7 }}>®</sup> n'est pas responsable d'une mauvaise utilisation. En cas de doute, consultez un professionnel ou les fiches{" "}
                     <a href="https://ephy.anses.fr/" target="_blank" rel="noopener noreferrer" style={{ color:"#fbbf24" }}>
                       e-Phy de l'ANSES
                     </a>.
@@ -231,10 +231,10 @@ export default function Products() {
         <div style={{ ...card(), textAlign:"center", padding:16, background:"rgba(255,255,255,0.03)" }}>
           <div style={{ fontSize:12, color:"#81c784", marginBottom:4 }}>💡 Produits sélectionnés selon votre profil</div>
           <div style={{ fontSize:11, color:"#81c784", opacity:0.7, lineHeight:1.5 }}>
-            En tant que Partenaire Amazon, Mongazon360<sup style={{ fontSize:7 }}>™</sup> perçoit une commission sur les achats éligibles · Prix et disponibilités gérés par Amazon
+            En tant que Partenaire Amazon, Mongazon360<sup style={{ fontSize:7 }}>®</sup> perçoit une commission sur les achats éligibles · Prix et disponibilités gérés par Amazon
           </div>
           <div style={{ fontSize:9, color:"#3a5c44", marginTop:10, lineHeight:1.6 }}>
-            © {new Date().getFullYear()} Mongazon360<sup style={{ fontSize:7 }}>™</sup> — Marque déposée à l'EUIPO
+            © {new Date().getFullYear()} Mongazon360<sup style={{ fontSize:7 }}>®</sup> — Marque déposée et enregistrée à l'EUIPO
           </div>
         </div>
 

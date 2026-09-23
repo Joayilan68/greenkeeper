@@ -465,7 +465,7 @@ export default function Pilotage() {
       <div style={header}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", width:"100%" }}>
           <div>
-            {/* ✅ Le ™ ne s'applique qu'à "Mongazon360" (marque déposée EUIPO), pas aux noms d'écrans génériques */}
+            {/* ✅ Le ® ne s'applique qu'à "Mongazon360" (marque déposée EUIPO), pas aux noms d'écrans génériques */}
             <div style={{ fontSize:18, fontWeight:800, color:"#f9a825" }}>📊 Pilotage</div>
             <div style={{ fontSize:10, color:"#81c784", marginTop:2 }}>Mis à jour : {lastUpdate}</div>
           </div>

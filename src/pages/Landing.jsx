@@ -84,7 +84,7 @@ export default function Landing() {
         <header style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"20px 2px 8px" }}>
           <div style={{ display:"flex", alignItems:"center", gap:9 }}>
             <img src="/mg360-mascot-transparent.png" alt="" style={{ width:38, height:38, objectFit:"contain" }} />
-            <span style={{ fontSize:19, fontWeight:800, color:G.muted }}>Mongazon360<sup style={{ fontSize:9, marginLeft:1, color:G.soft }}>™</sup></span>
+            <span style={{ fontSize:19, fontWeight:800, color:G.muted }}>Mongazon360<sup style={{ fontSize:9, marginLeft:1, color:G.soft }}>®</sup></span>
           </div>
           <button onClick={() => goSignin("header")} style={{ background:"rgba(255,255,255,0.08)", border:"1px solid rgba(165,214,167,0.25)",
             color:"#e8f5e9", borderRadius:10, padding:"8px 14px", fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}>
@@ -227,7 +227,7 @@ export default function Landing() {
             <a href="/cgu" style={{ color:G.soft, textDecoration:"none" }}>CGU</a>
           </div>
           <div style={{ fontSize:10.5, color:G.faint, marginTop:14, lineHeight:1.6, maxWidth:360, margin:"14px auto 0" }}>
-            Mongazon360™ est une marque déposée à l'EUIPO — protégée dans les 27 pays de l'Union européenne.
+            Mongazon360® est une marque déposée et enregistrée à l'EUIPO — protégée dans les 27 pays de l'Union européenne.
           </div>
         </footer>
 

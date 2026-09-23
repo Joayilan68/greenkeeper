@@ -115,7 +115,7 @@ export default function EssaiDiagnostic() {
         <header style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20 }}>
           <div style={{ display:"flex", alignItems:"center", gap:9 }}>
             <img src="/mg360-mascot-transparent.png" alt="" style={{ width:34, height:34, objectFit:"contain" }} />
-            <span style={{ fontSize:17, fontWeight:800, color:G.muted }}>Mongazon360<sup style={{ fontSize:8, color:G.soft }}>™</sup></span>
+            <span style={{ fontSize:17, fontWeight:800, color:G.muted }}>Mongazon360<sup style={{ fontSize:8, color:G.soft }}>®</sup></span>
           </div>
           <button onClick={() => navigate("/login")} style={{ ...btnGhost, width:"auto", padding:"7px 13px", fontSize:12.5 }}>Se connecter</button>
         </header>

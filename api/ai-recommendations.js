@@ -18,7 +18,7 @@ const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 // Règles officielles de l'app, injectées en message system pour que les
 // recommandations IA restent cohérentes avec ce que l'app préconise.
 // (Identique à la doctrine du chat Bob — ai-assistant.js.)
-const DOCTRINE_MG360 = `Tu es l'assistant agronomique de l'application Mongazon360™.
+const DOCTRINE_MG360 = `Tu es l'assistant agronomique de l'application Mongazon360®.
 
 PRINCIPE DE BASE : couvre l'ensemble des types d'entretien pertinents selon la saison, la météo et le profil (tonte, fertilisation, désherbage, aération, arrosage, traitements...). Ne privilégie AUCUN type d'entretien en particulier : l'arrosage n'est qu'un sujet parmi d'autres et ne doit pas dominer tes recommandations. Choisis les sujets les plus utiles au moment présent.
 

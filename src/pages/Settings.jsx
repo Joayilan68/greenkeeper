@@ -307,7 +307,7 @@ export default function Settings() {
 
   return (
     <div>
-      {/* Header avec mention Mongazon360™ */}
+      {/* Header avec mention Mongazon360® */}
       <div style={{ padding:"48px 20px 16px" }}>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
           <img src="/mg360-mascot-transparent.png" alt="Mongazon360" style={{ width:40, height:40, objectFit:"contain" }} />
@@ -316,7 +316,7 @@ export default function Settings() {
               Mes données &amp; Paramètres
             </div>
             <div style={{ fontSize:12, color:"#66BB6A", marginTop:2 }}>
-              Mongazon360<sup style={{ fontSize:7 }}>™</sup> — RGPD — Gestion de vos consentements
+              Mongazon360<sup style={{ fontSize:7 }}>®</sup> — RGPD — Gestion de vos consentements
             </div>
           </div>
         </div>
@@ -535,7 +535,7 @@ export default function Settings() {
           <div style={{ ...card(), background:"rgba(33,150,243,0.04)", border:"1px solid rgba(33,150,243,0.2)" }}>
             <div style={cardTitle}><span>💳 Mon abonnement Premium</span></div>
             <div style={{ fontSize:12, color:"#81c784", marginBottom:12, lineHeight:1.6 }}>
-              Gérez votre abonnement Mongazon360<sup style={{ fontSize:7 }}>™</sup> Premium en toute autonomie via le portail sécurisé Stripe :
+              Gérez votre abonnement Mongazon360<sup style={{ fontSize:7 }}>®</sup> Premium en toute autonomie via le portail sécurisé Stripe :
             </div>
             <div style={{ fontSize:11, color:"#e8f5e9", marginBottom:14, lineHeight:1.8, paddingLeft:8 }}>
               • Voir et télécharger vos factures<br/>
@@ -654,12 +654,12 @@ export default function Settings() {
           )}
         </div>
 
-        {/* ── Section À PROPOS — Marque déposée Mongazon360™ ── */}
+        {/* ── Section À PROPOS — Marque déposée Mongazon360® ── */}
         <div style={{ ...card(), background:"rgba(76,175,80,0.04)", border:"1px solid rgba(76,175,80,0.15)" }}>
-          <div style={cardTitle}><span>ℹ️ À propos de Mongazon360<sup style={{ fontSize:8 }}>™</sup></span></div>
+          <div style={cardTitle}><span>ℹ️ À propos de Mongazon360<sup style={{ fontSize:8 }}>®</sup></span></div>
           <div style={{ fontSize:12, color:"#e8f5e9", lineHeight:1.8 }}>
             <div style={{ marginBottom:8 }}>
-              <strong style={{ color:"#a5d6a7" }}>Mongazon360<sup style={{ fontSize:8 }}>™</sup></strong> est une marque déposée à l'EUIPO (European Union Intellectual Property Office) le 30 mai 2026.
+              <strong style={{ color:"#a5d6a7" }}>Mongazon360<sup style={{ fontSize:8 }}>®</sup></strong> est une marque de l'Union européenne n° 019373252, déposée le 30 mai 2026 et enregistrée le 22 septembre 2026 à l'EUIPO (European Union Intellectual Property Office).
             </div>
             <div style={{ fontSize:11, color:"#81c784", lineHeight:1.7, marginBottom:8 }}>
               <strong>Protection :</strong> 27 pays de l'Union européenne — 10 ans renouvelables<br/>
@@ -667,7 +667,7 @@ export default function Settings() {
               <strong>Slogan :</strong> "Tant qu'il y a gazon, il y a match"
             </div>
             <div style={{ marginTop:12, padding:"8px 10px", background:"rgba(76,175,80,0.08)", borderRadius:8, fontSize:11, color:"#a5d6a7" }}>
-              © {new Date().getFullYear()} Mongazon360<sup style={{ fontSize:7 }}>™</sup> — Tous droits réservés<br/>
+              © {new Date().getFullYear()} Mongazon360<sup style={{ fontSize:7 }}>®</sup> — Tous droits réservés<br/>
               Édité par un auto-entrepreneur immatriculé en France (SIRET disponible dans les Mentions légales)
             </div>
           </div>
