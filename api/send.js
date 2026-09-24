@@ -532,6 +532,18 @@ module.exports = async function handler(req, res) {
         } catch (e) { await require("./alerting.cjs").reportServerError("Tâche planifiée — purge photos (RGPD 90 j)", e); }
       }
 
+      // ── Contrôle Groq — créneau MATIN : les modèles utilisés existent-ils encore ? ──
+      if (slot === "matin") {
+        try {
+          const { VISION_MODEL, TEXT_MODEL } = require("./aiModels.cjs");
+          const r = await fetch("https://api.groq.com/openai/v1/models", { headers: { Authorization: `Bearer ${process.env.GROQ_API_KEY}` } });
+          if (!r.ok) throw new Error(`Clé Groq refusée (HTTP ${r.status})`);
+          const ids = new Set(((await r.json()).data || []).map(m => m.id));
+          const missing = [VISION_MODEL, TEXT_MODEL].filter(m => !ids.has(m));
+          if (missing.length) throw new Error(`Modèle(s) retiré(s) par Groq : ${missing.join(", ")} — mettre à jour api/aiModels.cjs`);
+        } catch (e) { await require("./alerting.cjs").reportServerError("IA Groq indisponible", e); }
+      }
+
       // ── Signal de vie + contrôle : le soir, vérifier que la tâche du matin a tourné ──
       const alerting = require("./alerting.cjs");
       if (slot === "soir") {

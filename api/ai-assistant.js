@@ -127,7 +127,7 @@ RÈGLES :
         "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
       },
       body: JSON.stringify({
-        model:                 "openai/gpt-oss-20b",
+        model:                 require("./aiModels.cjs").TEXT_MODEL,
         max_completion_tokens: 600,
         temperature:           0.7,
         // gpt-oss est un modèle de raisonnement : sans ces réglages, il peut
