@@ -7,6 +7,10 @@
   qui peut alors être en avance sur la PROD jusqu'à sa validation et son passage en prod.
 - Après chaque passage en prod, vérifier l'alignement : `git diff --quiet origin/main origin/Staging`.
 - Toute modification de schéma Supabase s'applique aux **deux** projets.
+- **Google Play** : l'app Android est une TWA (`fr.mongazon360.app`) qui charge mongazon360.fr en direct
+  (service worker sans cache, `index.html` en no-store) → tout déploiement de `main` met à jour l'app
+  Play Store au prochain lancement. Un nouvel `.aab` n'est nécessaire que si le paquet Android change
+  (nom/icône du lanceur, `assetlinks.json`, version `targetSdk` exigée par Google).
 
 ## Propreté du code
 - Code et fichiers les plus propres possible, en PROD comme en STA : pas de code mort, de fichiers
