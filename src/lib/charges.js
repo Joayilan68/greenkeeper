@@ -9,7 +9,8 @@ export const USD_EUR = 0.86; // taux indicatif — à ajuster si l'écart devien
 export const CHARGES_ACTIVES = [
   { name: "Open-Meteo",  role: "Météo, sol, ET₀ — licence commerciale Standard", amount: 29, currency: "USD", period: "mois" },
   { name: "OVH",         role: "Domaines mongazon360.fr + .com",                 amount: 17, currency: "EUR", period: "an" },
-  { name: "Shine",       role: "Compte bancaire professionnel",                  amount: 0,  currency: "EUR", period: "mois", note: "à confirmer selon l'offre (0 à 9 €/mois)" },
+  { name: "Claude Pro",  role: "Assistant IA — développement et pilotage",       amount: 21.60, currency: "EUR", period: "mois", note: "18 € HT + TVA, non récupérable — à vérifier sur la facture" },
+  { name: "Shine",       role: "Compte bancaire professionnel",                  amount: 0,  currency: "EUR", period: "mois", note: "offre gratuite" },
   { name: "Vercel",      role: "Hébergement + mesure d'audience",                amount: 0,  currency: "EUR", period: "mois", note: "palier gratuit (Hobby)" },
   { name: "Supabase",    role: "Base de données",                                amount: 0,  currency: "EUR", period: "mois", note: "palier gratuit (500 Mo)" },
   { name: "Clerk",       role: "Authentification",                               amount: 0,  currency: "EUR", period: "mois", note: "palier gratuit" },
@@ -20,7 +21,7 @@ export const CHARGES_ACTIVES = [
 
 // Charges proportionnelles au chiffre d'affaires
 export const STRIPE_FEES   = { pct: 0.015, fixed: 0.25 }; // par paiement (cartes UE)
-export const URSSAF_RATE   = 0.221;                       // micro-entrepreneur, APE 6201Z (suivi de projet)
+export const URSSAF_RATE   = 0.221;                       // micro-entrepreneur, APE 6201Z, sans versement libératoire
 
 // Charges prévues (NON incluses dans le résultat — affichées pour anticiper)
 export const CHARGES_PREVUES = [
