@@ -3,7 +3,7 @@
 //
 // Usage :
 //   GET /api/stats?type=revenue  → stats Stripe
-//   GET /api/stats?type=users    → stats Clerk + sources UTM (Clerk + Supabase waitlist)
+//   GET /api/stats?type=users    → stats Clerk + sources UTM des inscrits
 
 // Emails admin — exclus de TOUTES les stats (règle "admins exclus de tout")
 const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
@@ -317,13 +317,11 @@ async function handleUsers(req, res) {
     const startToday = new Date(); startToday.setHours(0, 0, 0, 0);
     const newToday   = allUsers.filter(u => u.created_at >= startToday.getTime()).length;
 
-    // ✅ Sources UTM séparées : Clerk (inscrits convertis) vs Waitlist (prospects pré-inscrits)
-    const clerkSources    = aggregateClerkSources(allUsers);
-    const waitlistSources = await aggregateWaitlistSources();
+    // Sources UTM des inscrits (first-touch, unsafe_metadata Clerk)
+    const clerkSources = aggregateClerkSources(allUsers);
 
-    // Actifs/jour (table daily_active_users via vue) + total waitlist (entonnoir)
+    // Actifs/jour (table daily_active_users via vue)
     const dauByDay      = await fetchDauByDay();
-    const waitlistTotal = await getWaitlistTotal();
     const geo           = await fetchGeoPoints();
     const siteVisits    = await fetchSiteVisits();
     const funnel        = await fetchFunnel();
@@ -341,15 +339,10 @@ async function handleUsers(req, res) {
       weeks,
       months,
       dauByDay,
-      waitlistTotal,
       geo,
       siteVisits,
       funnel,
-      // Backward compat avec l'ancien champ "sources"
-      sources: clerkSources,
-      // Nouveaux champs explicites pour Pilotage
       clerkSources,
-      waitlistSources,
     });
 
   } catch (e) {
@@ -405,49 +398,6 @@ function aggregateClerkSources(clerkUsers) {
   return counts;
 }
 
-// ── Helper : agrégation sources pré-inscrits (table preinscriptions Supabase) ──
-// Lit la vue preinscriptions_by_source créée dans migration_bloc1.sql
-async function aggregateWaitlistSources() {
-  const counts = {
-    direct: 0, instagram: 0, tiktok: 0, facebook: 0,
-    twitter: 0, youtube: 0, google: 0, email: 0,
-    linkedin: 0, autre: 0,
-  };
-
-  try {
-    const supaUrl = process.env.SUPABASE_URL;
-    const supaKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    if (!supaUrl || !supaKey) {
-      console.warn("stats-users: Supabase env vars manquantes pour waitlistSources");
-      return counts;
-    }
-
-    const r = await fetch(`${supaUrl}/rest/v1/preinscriptions_by_source`, {
-      headers: {
-        "apikey":        supaKey,
-        "Authorization": `Bearer ${supaKey}`,
-      }
-    });
-
-    if (!r.ok) {
-      console.warn("stats-users waitlistSources HTTP:", r.status);
-      return counts;
-    }
-
-    const rows = await r.json();
-    rows.forEach(row => {
-      const src = (row.source || "direct").toLowerCase();
-      const cnt = parseInt(row.count) || 0;
-      if (counts[src] !== undefined) counts[src] += cnt;
-      else counts.autre += cnt;
-    });
-  } catch (e) {
-    console.warn("stats-users waitlistSources:", e.message);
-  }
-
-  return counts;
-}
 // ── Helper : actifs/jour depuis la vue dau_by_day (service_role) ──────────────
 // Renvoie [{ label:"JJ/MM", count }] sur les 30 derniers jours.
 async function fetchDauByDay() {
@@ -478,36 +428,6 @@ async function fetchDauByDay() {
   } catch (e) {
     console.warn("stats-users dauByDay:", e.message);
     return [];
-  }
-}
-
-// ── Helper : total préinscrits (hors admins) pour l'entonnoir ────────────────
-async function getWaitlistTotal() {
-  try {
-    const supaUrl = process.env.SUPABASE_URL;
-    const supaKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!supaUrl || !supaKey) return 0;
-
-    const admins = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
-    const filter = encodeURIComponent(`not.in.(${admins.join(",")})`);
-    const r = await fetch(
-      `${supaUrl}/rest/v1/preinscriptions?select=email&email=${filter}`,
-      {
-        headers: {
-          "apikey":        supaKey,
-          "Authorization": `Bearer ${supaKey}`,
-          "Prefer":        "count=exact",
-          "Range":         "0-0",
-        }
-      }
-    );
-
-    const cr    = r.headers.get("content-range") || "";
-    const total = parseInt(cr.split("/")[1] || "0", 10);
-    return isNaN(total) ? 0 : total;
-  } catch (e) {
-    console.warn("stats-users waitlistTotal:", e.message);
-    return 0;
   }
 }
 

@@ -365,9 +365,7 @@ export default function Pilotage() {
   const todayLabel  = new Date().toLocaleDateString("fr-FR", { day:"2-digit", month:"2-digit" });
   const dauToday    = users?.dauByDay?.find(d => d.label === todayLabel)?.count ?? 0;
   const inscrits    = users?.total ?? null;
-  const waitlist    = users?.waitlistTotal ?? null;
   const premiumTot  = revenue?.totalPremium ?? null;
-  const pctInscrits = (waitlist && inscrits != null)   ? Math.round((inscrits / waitlist) * 100)   : null;
   const pctPremium  = (inscrits && premiumTot != null) ? Math.round((premiumTot / inscrits) * 100) : null;
 
   return (
@@ -416,13 +414,12 @@ export default function Pilotage() {
               Installs &amp; opt-in testeurs : <b>Google Play Console</b> (source de vérité distincte).
             </div>
 
-            {/* ── Entonnoir de conversion : Préinscrits → Inscrits → Premium ── */}
+            {/* ── Entonnoir de conversion : Inscrits → Premium ── */}
             <div style={card()}>
               <div style={cardTitle}><span>🔻 Entonnoir de conversion</span></div>
               <div style={{ display:"flex", alignItems:"stretch", gap:6, marginTop:4 }}>
                 {[
-                  { label:"Préinscrits", value: waitlist,   color:"#bcaaa4" },
-                  { label:"Inscrits",    value: inscrits,   color:"#90caf9", pct: pctInscrits, pctLabel:"des préinscrits" },
+                  { label:"Inscrits",    value: inscrits,   color:"#90caf9" },
                   { label:"Premium",     value: premiumTot, color:"#f9a825", pct: pctPremium,  pctLabel:"des inscrits" },
                 ].map((s, i) => (
                   <div key={s.label} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center" }}>
@@ -640,7 +637,7 @@ export default function Pilotage() {
                 { name:"Open-Meteo",     status:"✅", ok:true,  detail:"Météo temps réel — Gratuit" },
                 { name:"Clerk",          status:"✅", ok:true,  detail:"Authentification — Mode production" },
                 { name:"Resend",         status:"✅", ok:true,  detail:"Emails alertes actifs" },
-                { name:"Supabase",       status:"✅", ok:true,  detail:"Pré-inscrits + Rate limiting actifs" },
+                { name:"Supabase",       status:"✅", ok:true,  detail:"Base de données + Rate limiting actifs" },
                 { name:"Anthropic",      status:"⚠️", ok:false, detail:"Crédits à recharger" },
                 { name:"Gemini",         status:"⚠️", ok:false, detail:"Quota limité" },
               ].map(s => (
