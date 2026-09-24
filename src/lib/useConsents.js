@@ -18,6 +18,7 @@ const DEFAULT_CONSENTS = {
   marketing:       false,
   data_resale:     false,
   cookies:         false,
+  geolocation:     false,
   push_active:     false, // au moins 1 rappel avec Push actif
   email_active:    false, // au moins 1 rappel avec Email actif
 };
@@ -69,6 +70,7 @@ export function useConsents() {
             marketing:       data.marketing        ?? false,
             data_resale:     data.data_resale      ?? false,
             cookies:         data.cookies          ?? false,
+            geolocation:     data.geolocation      ?? false,
             push_active:     data.push_active      ?? false,
             email_active:    data.email_active     ?? false,
           };
@@ -78,7 +80,9 @@ export function useConsents() {
           // Pas encore de ligne → migrer depuis localStorage si possible
           const local = loadLocal();
           if (local) {
-            const migrated = { ...DEFAULT_CONSENTS, ...local };
+            // Uniquement les colonnes connues (le cache peut contenir d'anciens noms de clés)
+            const migrated = { ...DEFAULT_CONSENTS };
+            Object.keys(DEFAULT_CONSENTS).forEach(k => { if (typeof local[k] === "boolean") migrated[k] = local[k]; });
             setConsents(migrated);
             await supabase.from("user_consents").upsert(
               { user_id: userId, ...migrated, updated_at: new Date().toISOString() },
@@ -99,10 +103,11 @@ export function useConsents() {
 
     if (!isSignedIn || !userId) return;
     try {
-      await supabase.from("user_consents").upsert(
+      const { error } = await supabase.from("user_consents").upsert(
         { user_id: userId, [key]: value, updated_at: new Date().toISOString() },
         { onConflict: "user_id" }
       );
+      if (error) console.warn(`[MG360] Consentement « ${key} » non enregistré :`, error.message);
     } catch {}
   }, [consents, isSignedIn, userId]);
 
@@ -114,10 +119,11 @@ export function useConsents() {
 
     if (!isSignedIn || !userId) return;
     try {
-      await supabase.from("user_consents").upsert(
+      const { error } = await supabase.from("user_consents").upsert(
         { user_id: userId, ...patch, updated_at: new Date().toISOString() },
         { onConflict: "user_id" }
       );
+      if (error) console.warn("[MG360] Consentements non enregistrés :", error.message);
     } catch {}
   }, [consents, isSignedIn, userId]);
 

@@ -428,7 +428,7 @@ export default function Settings() {
 
           {[
             { key:"notifications", label:"🔔 Notifications push", desc:"Alertes téléphone — rappels d'entretien et météo" },
-            { key:"dataResale",    label:"📊 Données anonymisées", desc:"Partage avec partenaires jardinage — jamais nom/email" },
+            { key:"data_resale",   label:"📊 Données anonymisées", desc:"Partage avec partenaires jardinage — jamais nom/email" },
             { key:"marketing",     label:"📧 Emails Mongazon360", desc:"Conseils saisonniers et nouveautés" },
             { key:"cookies",       label:"🍪 Cookies de mesure (Meta)", desc:"Mesure de l'efficacité de nos publicités — sur cet appareil" },
           ].map(({ key, label, desc }) => {
