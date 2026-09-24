@@ -212,6 +212,8 @@ export function Confidentialite() {
             • <strong>Données de facturation :</strong> 10 ans (obligation comptable)<br/>
             • <strong>Données de prospection commerciale :</strong> 3 ans à compter du dernier contact<br/>
             • <strong>Logs techniques :</strong> 1 an<br/>
+            • <strong>Photos de diagnostic :</strong> 90 jours, puis suppression automatique (le résultat de l'analyse reste attaché au compte)<br/>
+            • <strong>Statistiques de mesure d'audience (anonymes) :</strong> 25 mois<br/>
             • <strong>Cookies et choix de consentement :</strong> cookies Meta 90 jours maximum, choix concernant les cookies de mesure 6 mois (cf. Politique de cookies)
           </SubSection>
 
@@ -226,7 +228,7 @@ export function Confidentialite() {
 
           <SubSection title="6.1 Sous-traitants">
             Mongazon360 fait appel aux prestataires techniques suivants, qui traitent des données personnelles pour son compte et sur ses instructions, en qualité de sous-traitants au sens de l'article 28 du RGPD :<br/><br/>
-            • <strong>Supabase Inc.</strong> (base de données — UE Frankfurt)<br/>
+            • <strong>Supabase Inc.</strong> (base de données — UE, Irlande)<br/>
             • <strong>Clerk Inc.</strong> (authentification)<br/>
             • <strong>Stripe Inc.</strong> (traitement des paiements)<br/>
             • <strong>Groq Inc.</strong> (inférence IA : assistant conversationnel, analyse des photos de diagnostic, génération des recommandations personnalisées)<br/>
@@ -254,9 +256,9 @@ export function Confidentialite() {
         </Section>
 
         <Section title="7. Transferts de données hors Union européenne">
-          Les données personnelles des Utilisateurs sont stockées en Union européenne (Supabase, Frankfurt).<br/><br/>
+          Les données personnelles des Utilisateurs sont stockées en Union européenne (Supabase, Irlande).<br/><br/>
           Des transferts de données personnelles en dehors de l'Union européenne ne peuvent cependant être totalement exclus dans le cadre de l'utilisation de l'application, par l'intermédiaire des sous-traitants suivants notamment : <strong>Clerk Inc.</strong> (authentification), <strong>Stripe LLC</strong> (paiement), <strong>Groq Inc.</strong> (inférence IA : assistant conversationnel, analyse des photos de diagnostic, recommandations personnalisées), <strong>Cloudinary Ltd</strong> (traitement d'images), <strong>Plus Five Five, Inc./Resend</strong> (envoi d'emails), <strong>Vercel Inc.</strong> (hébergement frontend et mesure d'audience), <strong>Google LLC/Gmail</strong> (support email) et, si vous y avez consenti, <strong>Meta Platforms, Inc.</strong> (mesure publicitaire, via Meta Platforms Ireland Limited). Des données personnelles pourraient alors être stockées et/ou des transferts de données pourraient intervenir en dehors de l'Union européenne, notamment aux États-Unis.<br/><br/>
-          De plus, <strong>Supabase Inc.</strong> est une société de droit américain. Bien que les données soient hébergées en Union européenne (Frankfurt), un accès distant depuis les États-Unis ou Singapour ne peut être exclu (support, maintenance).<br/><br/>
+          De plus, <strong>Supabase Inc.</strong> est une société de droit américain. Bien que les données soient hébergées en Union européenne (Irlande), un accès distant depuis les États-Unis ou Singapour ne peut être exclu (support, maintenance).<br/><br/>
           Le responsable de traitement s'engage à ce que ces transferts soient réalisés :<br/>
           • vers des pays présentant un niveau de protection dit adéquat au sens des autorités européennes de protection des données, ou<br/>
           • avec des garanties appropriées en application de l'article 46 du RGPD (notamment des clauses contractuelles types adoptées par la Commission européenne), ou<br/>
@@ -724,6 +726,7 @@ export function Cookies() {
         <Section title="Durée de conservation">
           • <strong>Cookies Meta</strong> (<em>_fbp</em>, <em>_fbc</em>) : 90 jours maximum, supprimés dès le retrait de votre consentement ;<br/>
           • <strong>Choix concernant les cookies de mesure</strong> : 6 mois ;<br/>
+          • <strong>Statistiques anonymes des compteurs internes</strong> : 25 mois ;<br/>
           • <strong>Autres données stockées localement</strong> sur votre appareil : jusqu'à leur suppression par vos soins depuis les Paramètres, la suppression du cache de votre navigateur, la désinstallation de l'application ou la suppression de votre compte (cf. Politique de confidentialité, article 5.3).
         </Section>
 

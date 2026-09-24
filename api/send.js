@@ -523,8 +523,17 @@ module.exports = async function handler(req, res) {
         }
       }
 
-      console.log(`[CRON ${slot}] reminders:`, remindersData?.length || 0, "pushSent:", pushSent, "emailSent:", emailSent, "skipped:", skipped, "parcoursSent:", parcoursSent, "parcoursTermines:", parcoursTermines, "trialRelances:", trialRelances, "baselineSent:", baselineSent);
-      return res.json({ success: true, date: today, slot, pushSent, emailSent, skipped, parcoursSent, parcoursTermines, trialRelances, baselineSent, reminders: remindersData?.length || 0 });
+      // ── RÉTENTION RGPD — photos de diagnostic > 90 jours — créneau MATIN ──
+      let photosPurgees = 0;
+      if (slot === "matin") {
+        try {
+          const { purgeOldDiagnosticPhotos } = require("./photoRetention.cjs");
+          photosPurgees = (await purgeOldDiagnosticPhotos()).deleted;
+        } catch (e) { console.error("cron purge photos:", e.message); }
+      }
+
+      console.log(`[CRON ${slot}] reminders:`, remindersData?.length || 0, "pushSent:", pushSent, "emailSent:", emailSent, "skipped:", skipped, "parcoursSent:", parcoursSent, "parcoursTermines:", parcoursTermines, "trialRelances:", trialRelances, "baselineSent:", baselineSent, "photosPurgees:", photosPurgees);
+      return res.json({ success: true, date: today, slot, pushSent, emailSent, skipped, parcoursSent, parcoursTermines, trialRelances, baselineSent, photosPurgees, reminders: remindersData?.length || 0 });
     } catch (e) {
       console.error("cron:", e.message);
       return res.status(500).json({ error: e.message });
