@@ -4,7 +4,6 @@ Allow: /
 # Pages privées — ne pas indexer
 Disallow: /pilotage
 Disallow: /admin
-Disallow: /coming-soon
 Disallow: /subscribe/success
 Disallow: /api/
 
