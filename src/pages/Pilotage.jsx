@@ -681,9 +681,12 @@ export default function Pilotage() {
                     {CHARGES_ACTIVES.map(c => line(c.name, eur(montant(c, periode)),
                       [c.role, c.currency === "USD" ? `${c.amount} $/${c.period}` : null, c.note].filter(Boolean).join(" · "), "#ef9a9a"))}
 
+                    {section("Marketing")}
+                    {line("Budget publicitaire", "à définir", "Montant 2027 à déterminer (étude à venir) — non inclus", "#ffcc80")}
+
                     {section("Charges variables")}
                     {line("Frais Stripe", eur(stripe), `${STRIPE_FEES.pct * 100} % + ${STRIPE_FEES.fixed.toFixed(2).replace(".", ",")} € par paiement`, "#ef9a9a")}
-                    {line("Cotisations URSSAF", eur(urssaf), `${(URSSAF_RATE * 100).toFixed(1).replace(".", ",")} % du chiffre d'affaires`, "#ef9a9a")}
+                    {line("Cotisations URSSAF", eur(urssaf), `${(URSSAF_RATE * 100).toFixed(1).replace(".", ",")} % du chiffre d'affaires (sans versement libératoire)`, "#ef9a9a")}
                     {line("Total charges", eur(charges), null, "#ef9a9a", true)}
 
                     <div style={{ marginTop:10, padding:"10px 12px", borderRadius:10, background: resultat >= 0 ? "rgba(67,160,71,0.15)" : "rgba(198,40,40,0.15)", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
