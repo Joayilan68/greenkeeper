@@ -342,7 +342,6 @@ export default function OnboardingModal({ onComplete }) {
 
   const handleClerkSignUp = () => {
     saveProfile();
-    try { localStorage.setItem("mg360_waitlist", "true"); } catch {}
     window.location.href = "/register";
   };
 
