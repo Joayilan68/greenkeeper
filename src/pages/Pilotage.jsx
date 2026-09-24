@@ -7,13 +7,6 @@ import { card, cardTitle, btn, scroll, header, appShell } from "../lib/styles";
 import RoadmapTab from "../components/RoadmapTab";
 import { CHARGES_ACTIVES, CHARGES_PREVUES, STRIPE_FEES, URSSAF_RATE, montant } from "../lib/charges";
 
-function safeGet(key, fallback = null) {
-  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch { return fallback; }
-}
-function daysSince(isoStr) {
-  if (!isoStr) return 999;
-  return Math.floor((Date.now() - new Date(isoStr).getTime()) / 86400000);
-}
 function eur(n) { return (Math.round((n||0)*100)/100).toFixed(2) + "€"; }
 
 function Bar({ value, max = 100, color = "#43a047" }) {
@@ -188,7 +181,6 @@ export default function Pilotage() {
   const { isAdmin }           = useSubscription() || {};
   const [users, setUsers]     = useState(null);
   const [revenue, setRevenue] = useState(null);
-  const [local, setLocal]     = useState(null);
   const [errorsData, setErrorsData] = useState(null);
   const [servicesData, setServicesData] = useState(null);
   const [periode, setPeriode] = useState("mois"); // Finances : vue mensuelle ou annuelle
@@ -218,7 +210,6 @@ export default function Pilotage() {
   }, [isAdmin]);
 
   async function fetchAll() {
-    computeLocal();
     fetchUsers();
     fetchRevenue();
     fetchSocial();
@@ -254,21 +245,6 @@ export default function Pilotage() {
       setPurgeResult("Erreur : " + e.message);
     }
     setPurging(false);
-  }
-
-  function computeLocal() {
-    const diagnostics = safeGet("gk_diagnostics", []);
-    const history     = safeGet("gk_history", []);
-    const diagScores  = diagnostics.map(d => d.analysis?.score_visuel).filter(Boolean);
-    const diagAvg     = diagScores.length ? Math.round(diagScores.reduce((a,b)=>a+b,0)/diagScores.length) : 0;
-    const diagProbs   = diagnostics.flatMap(d => d.analysis?.problemes || []);
-    const probCount   = {};
-    diagProbs.forEach(p => { probCount[p.nom] = (probCount[p.nom]||0)+1; });
-    const topProbs    = Object.entries(probCount).sort((a,b)=>b[1]-a[1]).slice(0,5);
-    const hist7j      = history.filter(h => {
-      try { const [d,m,y]=h.date.split("/"); return daysSince(new Date(y,m-1,d).toISOString())<=7; } catch { return false; }
-    }).length;
-    setLocal({ diagnostics:{ total:diagnostics.length, ce7j:diagnostics.filter(d=>daysSince(d.date)<=7).length, avg:diagAvg, topProbs }, history:{ total:history.length, ce7j:hist7j } });
   }
 
   async function fetchErrors() {
@@ -374,7 +350,7 @@ export default function Pilotage() {
       <div style={{ fontSize:52, marginBottom:16 }}>🔒</div>
       <div style={{ fontSize:18, fontWeight:800, color:"#ef9a9a", marginBottom:8 }}>Accès restreint</div>
       <div style={{ fontSize:13, color:"#81c784", marginBottom:24 }}>Ce dashboard est réservé à l'administrateur.</div>
-      <button onClick={() => navigate("/admin")} style={{ ...btn.primary, width:"auto", padding:"10px 24px" }}>🔐 Se connecter Admin</button>
+      <button onClick={() => navigate("/")} style={{ ...btn.primary, width:"auto", padding:"10px 24px" }}>🏠 Retour à l'accueil</button>
     </div>
   );
 
@@ -432,7 +408,7 @@ export default function Pilotage() {
               <KPI icon="📅" label="Nouveaux cette semaine" value={loadingUsers ? "..." : (users?.newLast7 ?? "—")} sub="7 derniers jours" color="#81d4fa" />
               <KPI icon="🗓️" label="Nouveaux ce mois" value={loadingUsers ? "..." : (users?.newLast30 ?? "—")} sub="30 derniers jours" color="#ffcc80" />
               <KPI icon="📆" label="Cette année" value={loadingUsers ? "..." : (users?.newThisYear ?? "—")} sub="Depuis le 1ᵉʳ janvier" color="#c5e1a5" />
-              <KPI icon="📸" label="Diagnostics" value={local?.diagnostics.total ?? "—"} sub={`+${local?.diagnostics.ce7j ?? 0} cette semaine`} color="#ce93d8" />
+              <KPI icon="📸" label="Diagnostics" value={loadingUsers ? "..." : (users?.diagnostics?.total ?? "—")} sub={`+${users?.diagnostics?.last7 ?? 0} cette semaine · ${users?.diagnostics?.users ?? 0} util.`} color="#ce93d8" />
             </div>
 
             {/* Clarification : comptes créés ≠ installations (sources de vérité distinctes) */}
@@ -567,10 +543,10 @@ export default function Pilotage() {
                 <MiniChart data={users.months} valueKey="count" color="#1565c0" />
               </div>
             )}
-            {local?.diagnostics.topProbs?.length > 0 && (
+            {users?.diagnostics?.topProblems?.length > 0 && (
               <div style={card()}>
-                <div style={cardTitle}><span>🔬 Top problèmes détectés</span></div>
-                {local.diagnostics.topProbs.map(([nom, count]) => (
+                <div style={cardTitle}><span>🔬 Top problèmes détectés</span>{users.diagnostics.avgScore != null && <span style={{ fontSize:11, color:"#81c784", textTransform:"none", letterSpacing:0 }}>score visuel moyen {users.diagnostics.avgScore}/100</span>}</div>
+                {users.diagnostics.topProblems.map(([nom, count]) => (
                   <div key={nom} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"5px 0", borderBottom:"1px solid rgba(255,255,255,0.05)", fontSize:12 }}>
                     <span>{nom}</span>
                     <span style={{ background:"rgba(239,83,80,0.2)", color:"#ef9a9a", borderRadius:20, padding:"2px 8px", fontSize:10 }}>{count}x</span>

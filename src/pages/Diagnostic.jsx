@@ -373,7 +373,7 @@ export default function Diagnostic() {
             <div style={{ fontSize:14, fontWeight:700, color:"#a5d6a7", marginBottom:8 }}>Analyse en cours...</div>
             <div style={{ fontSize:12, color:"#81c784", lineHeight:1.8 }}>
               1. Upload de la photo sur le serveur<br/>
-              2. Analyse par Gemini Vision IA<br/>
+              2. Analyse de la photo par Bob, notre IA<br/>
               3. Génération du rapport
             </div>
           </div>
