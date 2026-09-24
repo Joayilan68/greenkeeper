@@ -668,7 +668,7 @@ export default function Pilotage() {
                   <div key={s.name} style={{ padding:"8px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
                     <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:8 }}>
                       <span style={{ fontSize:12, fontWeight:700 }}>{icon} {s.name}</span>
-                      <span style={{ fontSize:9, color:"#4a7c5c", textAlign:"right" }}>{s.cost}</span>
+                      <span style={{ fontSize:10, color:"#c8e6c9", textAlign:"right" }}>{s.cost}</span>
                     </div>
                     <div style={{ fontSize:10, color:"#81c784", marginTop:2 }}>{s.role}</div>
                     <div style={{ fontSize:10, color, marginTop:2 }}>{s.detail}</div>
@@ -678,13 +678,13 @@ export default function Pilotage() {
               <div style={{ padding:"8px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:8 }}>
                   <span style={{ fontSize:12, fontWeight:700 }}>{__API_FUNCTIONS__ >= 12 ? "⚠️" : "✅"} Vercel</span>
-                  <span style={{ fontSize:9, color:"#4a7c5c" }}>Hobby — gratuit</span>
+                  <span style={{ fontSize:10, color:"#c8e6c9" }}>Hobby — gratuit</span>
                 </div>
                 <div style={{ fontSize:10, color:"#81c784", marginTop:2 }}>Hébergement + mesure d'audience</div>
                 <div style={{ fontSize:10, color: __API_FUNCTIONS__ >= 12 ? "#ffcc80" : "#81c784", marginTop:2 }}>{__API_FUNCTIONS__}/12 fonctions serveur</div>
               </div>
               {servicesData?.checkedAt && (
-                <div style={{ fontSize:9, color:"#4a7c5c", marginTop:8 }}>Vérifié à {new Date(servicesData.checkedAt).toLocaleTimeString("fr-FR")}</div>
+                <div style={{ fontSize:10, color:"#c8e6c9", marginTop:8 }}>Vérifié à {new Date(servicesData.checkedAt).toLocaleTimeString("fr-FR")}</div>
               )}
             </div>
 
@@ -695,7 +695,7 @@ export default function Pilotage() {
                   <div key={s.name} style={{ padding:"7px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
                     <div style={{ display:"flex", justifyContent:"space-between", gap:8 }}>
                       <span style={{ fontSize:12, fontWeight:700 }}>{s.name}</span>
-                      <span style={{ fontSize:9, color:"#4a7c5c" }}>{s.cost}</span>
+                      <span style={{ fontSize:10, color:"#c8e6c9" }}>{s.cost}</span>
                     </div>
                     <div style={{ fontSize:10, color:"#81c784", marginTop:2 }}>{s.role} — {s.detail}</div>
                   </div>
