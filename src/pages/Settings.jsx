@@ -611,7 +611,7 @@ export default function Settings() {
             • GreenPoints, streak, classements<br/>
             • Photos stockées (Cloudinary)<br/>
             • Compte d'authentification (Clerk)<br/>
-            • Liste d'attente, préférences, consentements
+            • Préférences, rappels, consentements
           </div>
 
           {!showAccountDeleteConfirm && !deleteReport ? (

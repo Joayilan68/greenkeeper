@@ -148,7 +148,7 @@ export function MentionsLegales() {
 export function Confidentialite() {
   return (
     <div>
-      <PageHeader emoji="🔒" title="Politique de confidentialité" subtitle="Mise à jour : 16 juillet 2026" />
+      <PageHeader emoji="🔒" title="Politique de confidentialité" subtitle="Mise à jour : 24 septembre 2026" />
       <div style={scroll}>
 
         <Section title="1. Préambule">
@@ -158,7 +158,7 @@ export function Confidentialite() {
         </Section>
 
         <Section title="2. À qui s'adresse cette politique ?">
-          Cette politique s'adresse aux Utilisateurs de l'application : toute personne physique ayant créé un compte sur l'application Mongazon360 (gratuit ou payant) et bénéficiant de droits sur l'application conformément aux Conditions Générales d'Utilisation ; ainsi qu'aux personnes pré-inscrites via le formulaire de liste d'attente.
+          Cette politique s'adresse aux Utilisateurs de l'application : toute personne physique ayant créé un compte sur l'application Mongazon360 (gratuit ou payant) et bénéficiant de droits sur l'application conformément aux Conditions Générales d'Utilisation.
         </Section>
 
         <Section title="3. Fonctionnalités d'intelligence artificielle">
