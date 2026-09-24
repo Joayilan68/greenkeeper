@@ -66,7 +66,7 @@ export default function Register() {
 
     // ── Payload Supabase : UNIQUEMENT les colonnes réelles de user_consents ──
     // La table user_consents contient : cgu, confidentialite, notifications,
-    // marketing, data_resale, cookies, push_active, email_active, updated_at.
+    // marketing, data_resale, cookies, geolocation, push_active, email_active, updated_at.
     // L'UI utilise cgu_cgv (case CGU+CGV) et dataResale → on les mappe ici sur
     // les vrais noms de colonnes. Les champs date/version n'existent PAS en base
     // et provoquaient l'échec total de l'upsert (PGRST204) → on les retire.
