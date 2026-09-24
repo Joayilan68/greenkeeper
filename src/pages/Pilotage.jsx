@@ -189,6 +189,8 @@ export default function Pilotage() {
   const [revenue, setRevenue] = useState(null);
   const [local, setLocal]     = useState(null);
   const [errorsData, setErrorsData] = useState(null);
+  const [servicesData, setServicesData] = useState(null);
+  const [loadingServices, setLoadingServices] = useState(false);
   const [openProblem, setOpenProblem] = useState(null);
   const [sending, setSending] = useState(false);
   const [sent, setSent]       = useState("");
@@ -275,6 +277,19 @@ export default function Pilotage() {
       if (data.success) setErrorsData(data);
     } catch {}
   }
+
+  // Vérification en direct des services (appelée à l'ouverture de l'onglet, pas toutes les 60 s)
+  async function fetchServices() {
+    setLoadingServices(true);
+    try {
+      const token = await getToken();
+      const res   = await fetch("/api/stats?type=services", { headers: { Authorization: `Bearer ${token}` } });
+      const data  = await res.json();
+      if (data.success) setServicesData(data);
+    } catch {}
+    setLoadingServices(false);
+  }
+  useEffect(() => { if (isAdmin && tab === "services" && !servicesData) fetchServices(); }, [isAdmin, tab]); // eslint-disable-line
 
   async function fetchUsers() {
     setLoadingUsers(true);
@@ -638,28 +653,55 @@ export default function Pilotage() {
         {tab === "services" && (
           <>
             <div style={card()}>
-              <div style={cardTitle}><span>⚙️ Statut des services</span></div>
-              {[
-                { name:"Vercel",         status:"✅", ok:true,  detail:"Déployé — mongazon360.fr" },
-                { name:"Groq Vision IA", status:"✅", ok:true,  detail:"Llama 4 Scout 17B — Gratuit" },
-                { name:"Cloudinary",     status:"✅", ok:true,  detail:"Stockage photos 25GB gratuit" },
-                { name:"Stripe",         status:"✅", ok:true,  detail:"Paiements actifs" },
-                { name:"Open-Meteo",     status:"✅", ok:true,  detail:"Météo temps réel — Gratuit" },
-                { name:"Clerk",          status:"✅", ok:true,  detail:"Authentification — Mode production" },
-                { name:"Resend",         status:"✅", ok:true,  detail:"Emails alertes actifs" },
-                { name:"Supabase",       status:"✅", ok:true,  detail:"Base de données + Rate limiting actifs" },
-                { name:"Anthropic",      status:"⚠️", ok:false, detail:"Crédits à recharger" },
-                { name:"Gemini",         status:"⚠️", ok:false, detail:"Quota limité" },
-              ].map(s => (
-                <div key={s.name} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"7px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
-                  <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                    <span>{s.status}</span>
-                    <span style={{ fontSize:12, fontWeight:700 }}>{s.name}</span>
+              <div style={cardTitle}>
+                <span>⚙️ Statut des services — vérifié en direct</span>
+                <button onClick={fetchServices} disabled={loadingServices} style={{ background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.15)", borderRadius:8, padding:"3px 8px", color:"#81c784", fontSize:10, cursor:"pointer", textTransform:"none", letterSpacing:0 }}>
+                  {loadingServices ? "…" : "↻ Revérifier"}
+                </button>
+              </div>
+              {!servicesData ? (
+                <div style={{ textAlign:"center", fontSize:12, color:"#81c784", padding:"12px 0" }}>{loadingServices ? "Vérification en cours…" : "—"}</div>
+              ) : servicesData.services.map(s => {
+                const icon  = { ok:"✅", warn:"⚠️", ko:"🔴", info:"ℹ️" }[s.status] || "ℹ️";
+                const color = { ok:"#81c784", warn:"#ffcc80", ko:"#ef9a9a", info:"#90caf9" }[s.status] || "#81c784";
+                return (
+                  <div key={s.name} style={{ padding:"8px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:8 }}>
+                      <span style={{ fontSize:12, fontWeight:700 }}>{icon} {s.name}</span>
+                      <span style={{ fontSize:9, color:"#4a7c5c", textAlign:"right" }}>{s.cost}</span>
+                    </div>
+                    <div style={{ fontSize:10, color:"#81c784", marginTop:2 }}>{s.role}</div>
+                    <div style={{ fontSize:10, color, marginTop:2 }}>{s.detail}</div>
                   </div>
-                  <span style={{ fontSize:10, color: s.ok ? "#81c784" : "#ffcc80", maxWidth:180, textAlign:"right" }}>{s.detail}</span>
+                );
+              })}
+              <div style={{ padding:"8px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:8 }}>
+                  <span style={{ fontSize:12, fontWeight:700 }}>{__API_FUNCTIONS__ >= 12 ? "⚠️" : "✅"} Vercel</span>
+                  <span style={{ fontSize:9, color:"#4a7c5c" }}>Hobby — gratuit</span>
                 </div>
-              ))}
+                <div style={{ fontSize:10, color:"#81c784", marginTop:2 }}>Hébergement + mesure d'audience</div>
+                <div style={{ fontSize:10, color: __API_FUNCTIONS__ >= 12 ? "#ffcc80" : "#81c784", marginTop:2 }}>{__API_FUNCTIONS__}/12 fonctions serveur</div>
+              </div>
+              {servicesData?.checkedAt && (
+                <div style={{ fontSize:9, color:"#4a7c5c", marginTop:8 }}>Vérifié à {new Date(servicesData.checkedAt).toLocaleTimeString("fr-FR")}</div>
+              )}
             </div>
+
+            {servicesData?.manual?.length > 0 && (
+              <div style={card()}>
+                <div style={cardTitle}><span>🔗 Autres services (suivi manuel)</span></div>
+                {servicesData.manual.map(s => (
+                  <div key={s.name} style={{ padding:"7px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", gap:8 }}>
+                      <span style={{ fontSize:12, fontWeight:700 }}>{s.name}</span>
+                      <span style={{ fontSize:9, color:"#4a7c5c" }}>{s.cost}</span>
+                    </div>
+                    <div style={{ fontSize:10, color:"#81c784", marginTop:2 }}>{s.role} — {s.detail}</div>
+                  </div>
+                ))}
+              </div>
+            )}
 
             <div style={card()}>
               <div style={cardTitle}><span>🗑️ Purge Cloudinary</span></div>

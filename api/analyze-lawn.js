@@ -262,7 +262,7 @@ Problèmes à détecter selon le type : Universel/Sport/Ornement = oïdium, helm
 Si la photo ne montre pas de gazon : score_visuel 0 et explique dans resume.`;
 
     const groqBody = JSON.stringify({
-      model:       "qwen/qwen3.8-27b",   // migré depuis qwen3.6-27b (déprécié Groq, décommissionné le 14/09) — 3.8 = remplacement 1:1, multimodal + mêmes params reasoning/JSON
+      model:       require("./aiModels.cjs").VISION_MODEL, // qwen3.8 depuis le 14/09 (qwen3.6 décommissionné) — multimodal, params reasoning/JSON
       max_tokens:  1000,                  // réduit de 1500 → moins de tokens de sortie (marge palier gratuit Groq)
       temperature: 0.2,
       // qwen est un modèle "thinking" : sans ces réglages, il enrobe sa réponse
@@ -473,7 +473,7 @@ Réponds UNIQUEMENT en JSON valide (sans markdown), 3 problèmes MAXIMUM, descri
 {"etat_general":"excellent|bon|moyen|mauvais|critique","score_visuel":<0-100>,"emoji":"😊|😐|😟|😰|💀","resume":"2 phrases max","problemes":[{"id":"slug","nom":"Nom","description":"courte","severite":"faible|moyenne|elevee|critique","impact_score":<-30 à 0>,"solution":"action concrète"}],"points_positifs":["..."],"actions_urgentes":["..."],"actions_prochaines":["..."]}
 Si la photo ne montre pas de gazon : score_visuel 0 et explique dans resume.`;
   const groqBody = JSON.stringify({
-    model: "qwen/qwen3.8-27b",
+    model: require("./aiModels.cjs").VISION_MODEL,
     max_tokens: 1000,
     temperature: 0.2,
     reasoning_effort: "none",

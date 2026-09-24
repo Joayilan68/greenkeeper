@@ -196,7 +196,7 @@ module.exports = async function handler(req, res) {
           "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
         },
         body: JSON.stringify({
-          model:                 "openai/gpt-oss-20b",
+          model:                 require("./aiModels.cjs").TEXT_MODEL,
           max_completion_tokens: 800,
           temperature:           0.7,
           // gpt-oss est un modèle de raisonnement : on désactive le raisonnement

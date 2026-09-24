@@ -5,6 +5,7 @@
 //   GET /api/stats?type=revenue  → stats Stripe
 //   GET /api/stats?type=users    → stats Clerk + sources UTM des inscrits
 //   GET /api/stats?type=errors   → erreurs (error_events) regroupées par problème + état des tâches planifiées
+//   GET /api/stats?type=services → vérification en direct des services externes (Pilotage → Services)
 
 // Emails admin — exclus de TOUTES les stats (règle "admins exclus de tout")
 const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
@@ -46,9 +47,10 @@ module.exports = async function handler(req, res) {
   if (type === "social" || req.method === "POST") return handleSocial(req, res);
   if (type === "revenue") return handleRevenue(req, res);
   if (type === "users")   return handleUsers(req, res);
-  if (type === "errors")  return handleErrors(req, res);
+  if (type === "errors")   return handleErrors(req, res);
+  if (type === "services") return handleServices(req, res);
 
-  return res.status(400).json({ error: 'Paramètre ?type=revenue|users|social|errors requis' });
+  return res.status(400).json({ error: 'Paramètre ?type=revenue|users|social|errors|services requis' });
 };
 
 // ── Réseaux sociaux (followers — saisie manuelle mensuelle) ───────────────────
@@ -580,4 +582,100 @@ async function handleErrors(req, res) {
     console.error("[MG360] stats errors:", e.message);
     res.status(500).json({ error: e.message });
   }
+}
+
+// ── Services externes — vérification en direct (Pilotage → Services) ─────────
+// Chaque contrôle : { name, role, status: "ok"|"warn"|"ko"|"info", detail, cost }.
+// Aucun contrôle ne consomme de quota significatif (appels de lecture légers).
+async function handleServices(req, res) {
+  const timed = (p, ms = 8000) => Promise.race([p, new Promise((_, r) => setTimeout(() => r(new Error("délai dépassé")), ms))]);
+  const check = async (base, fn) => {
+    try { return { ...base, ...(await timed(fn())) }; }
+    catch (e) { return { ...base, status: "ko", detail: e.message }; }
+  };
+  const envOk = (...keys) => keys.every(k => !!process.env[k]);
+
+  const checks = await Promise.all([
+    check({ name: "Groq (IA)", role: "Diagnostic photo, Bob, recommandations", cost: "Palier gratuit" }, async () => {
+      if (!envOk("GROQ_API_KEY")) return { status: "ko", detail: "Clé GROQ_API_KEY absente" };
+      const { VISION_MODEL, TEXT_MODEL } = require("./aiModels.cjs");
+      const r = await fetch("https://api.groq.com/openai/v1/models", { headers: { Authorization: `Bearer ${process.env.GROQ_API_KEY}` } });
+      if (!r.ok) return { status: "ko", detail: `Clé refusée (HTTP ${r.status})` };
+      const ids = new Set(((await r.json()).data || []).map(m => m.id));
+      const missing = [VISION_MODEL, TEXT_MODEL].filter(m => !ids.has(m));
+      return missing.length
+        ? { status: "ko", detail: `Modèle(s) indisponible(s) chez Groq : ${missing.join(", ")} — l'IA ne fonctionne plus` }
+        : { status: "ok", detail: `Photo : ${VISION_MODEL} · Texte : ${TEXT_MODEL}` };
+    }),
+    check({ name: "Supabase", role: "Base de données (Irlande, UE)", cost: "Palier gratuit (500 Mo)" }, async () => {
+      const sb = createClient(SB_URL, SB_KEY);
+      const { data, error } = await sb.rpc("db_size_bytes");
+      if (error) return { status: "ko", detail: error.message };
+      const mo = Math.round(Number(data) / 1048576);
+      return { status: mo > 400 ? "warn" : "ok", detail: `Base : ${mo} Mo / 500 Mo (${Math.round(mo / 5)} %)` };
+    }),
+    check({ name: "Cloudinary", role: "Photos de diagnostic", cost: "Palier gratuit (25 crédits/mois)" }, async () => {
+      if (!envOk("CLOUDINARY_CLOUD_NAME", "CLOUDINARY_API_KEY", "CLOUDINARY_API_SECRET")) return { status: "ko", detail: "Variables Cloudinary absentes" };
+      const auth = Buffer.from(`${process.env.CLOUDINARY_API_KEY}:${process.env.CLOUDINARY_API_SECRET}`).toString("base64");
+      const r = await fetch(`https://api.cloudinary.com/v1_1/${process.env.CLOUDINARY_CLOUD_NAME}/usage`, { headers: { Authorization: `Basic ${auth}` } });
+      if (!r.ok) return { status: "ko", detail: `HTTP ${r.status}` };
+      const u = await r.json();
+      const pct = u.credits?.used_percent ?? null;
+      const stock = u.storage?.usage != null ? `${(u.storage.usage / 1048576).toFixed(0)} Mo stockés` : "";
+      return { status: pct != null && pct > 80 ? "warn" : "ok", detail: [pct != null ? `${Math.round(pct)} % des crédits du mois` : null, stock].filter(Boolean).join(" · ") };
+    }),
+    check({ name: "Stripe", role: "Paiements Premium", cost: "1,5 % + 0,25 € par paiement (UE)" }, async () => {
+      if (!envOk("STRIPE_SECRET_KEY")) return { status: "ko", detail: "Clé STRIPE_SECRET_KEY absente" };
+      const r = await fetch("https://api.stripe.com/v1/balance", { headers: { Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}` } });
+      if (!r.ok) return { status: "ko", detail: `Clé refusée (HTTP ${r.status})` };
+      const live = process.env.STRIPE_SECRET_KEY.startsWith("sk_live");
+      const webhook = envOk("STRIPE_WEBHOOK_SECRET");
+      return { status: live && webhook ? "ok" : "warn", detail: `${live ? "Mode production" : "Mode TEST"} · webhook ${webhook ? "configuré" : "NON configuré"}` };
+    }),
+    check({ name: "Resend", role: "Emails (rappels, alertes)", cost: "Palier gratuit (3 000/mois, 100/jour)" }, async () => {
+      if (!envOk("RESEND_API_KEY")) return { status: "ko", detail: "Clé RESEND_API_KEY absente" };
+      const r = await fetch("https://api.resend.com/domains", { headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}` } });
+      if (r.status === 401 || r.status === 403) return { status: "info", detail: "Clé d'envoi uniquement (statut du domaine non consultable) — envoi testable via « Tester l'alerte email »" };
+      if (!r.ok) return { status: "ko", detail: `HTTP ${r.status}` };
+      const doms = (await r.json()).data || [];
+      const d = doms.find(x => /mongazon360/.test(x.name));
+      return d ? { status: d.status === "verified" ? "ok" : "warn", detail: `Domaine ${d.name} : ${d.status}` } : { status: "warn", detail: "Domaine mongazon360.fr introuvable" };
+    }),
+    check({ name: "Open-Meteo", role: "Météo, sol, ET₀", cost: "Standard — 29 $/mois" }, async () => {
+      if (!envOk("OPENMETEO_KEY")) return { status: "ko", detail: "Clé OPENMETEO_KEY absente" };
+      const r = await fetch(`https://customer-api.open-meteo.com/v1/forecast?latitude=48.58&longitude=7.75&current=temperature_2m&apikey=${process.env.OPENMETEO_KEY}`);
+      return r.ok ? { status: "ok", detail: "Licence commerciale active" } : { status: "ko", detail: `HTTP ${r.status} — clé ou abonnement à vérifier` };
+    }),
+    check({ name: "Clerk", role: "Authentification", cost: "Palier gratuit (10 000 utilisateurs actifs/mois)" }, async () => {
+      const r = await fetch("https://api.clerk.com/v1/users/count", { headers: { Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}` } });
+      if (!r.ok) return { status: "ko", detail: `HTTP ${r.status}` };
+      const live = (process.env.CLERK_SECRET_KEY || "").startsWith("sk_live");
+      return { status: live ? "ok" : "warn", detail: `${live ? "Production" : "Mode TEST"} · ${(await r.json()).total_count} comptes` };
+    }),
+    check({ name: "Notifications push", role: "Alertes sur téléphone (VAPID)", cost: "Gratuit" }, async () => (
+      envOk("VAPID_PUBLIC_KEY", "VAPID_PRIVATE_KEY")
+        ? { status: "ok", detail: "Clés configurées" }
+        : { status: "ko", detail: "Clés VAPID absentes — aucune notification ne part" }
+    )),
+    check({ name: "Tâches planifiées", role: "Notifications, purges RGPD", cost: "Inclus Vercel" }, async () => {
+      const sb = createClient(SB_URL, SB_KEY);
+      const { data } = await sb.from("system_status").select("key, value, updated_at").in("key", ["cron_matin", "cron_soir"]);
+      const m = (data || []).find(x => x.key === "cron_matin");
+      if (!m) return { status: "info", detail: "Premier relevé demain matin" };
+      const h = Math.round((Date.now() - new Date(m.updated_at).getTime()) / 3600e3);
+      return { status: h > 26 ? "ko" : "ok", detail: `Dernière tâche du matin il y a ${h} h` };
+    }),
+  ]);
+
+  res.json({
+    success: true,
+    checkedAt: new Date().toISOString(),
+    services: checks,
+    manual: [
+      { name: "Meta Pixel", role: "Mesure publicitaire (après consentement)", cost: "Gratuit", detail: "Suivi : Gestionnaire d'événements Meta" },
+      { name: "Google Play", role: "App Android (TWA)", cost: "25 $ (une fois)", detail: "Mise à jour automatique à chaque déploiement" },
+      { name: "Google Sheets", role: "Roadmap du Pilotage", cost: "Gratuit", detail: "Lu en direct par l'onglet Roadmap" },
+      { name: "OVH", role: "Domaines + email contact@", cost: "≈ 17 €/an", detail: "Renouvellement des domaines à surveiller" },
+    ],
+  });
 }
