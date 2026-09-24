@@ -5,13 +5,9 @@ import { useAuth, useUser } from "@clerk/clerk-react";
 // Emails admin — seule source d'accès admin (vérifiée par Clerk, infalsifiable côté client)
 const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
 
-// ── Flags localStorage pour un accès admin (cache d'affichage, pas une preuve) ──
+// ── Flag localStorage pour un compte admin (cache d'affichage, pas une preuve) ──
 function setAdminFlags() {
-  try {
-    localStorage.setItem("mg360_approved",       "true");
-    localStorage.setItem("mg360_onboarding_done", "true");
-    localStorage.removeItem("mg360_waitlist");
-  } catch {}
+  try { localStorage.setItem("mg360_onboarding_done", "true"); } catch {}
 }
 
 export function useSubscription() {
@@ -31,10 +27,7 @@ export function useSubscription() {
 
       // Mode test (réservé aux emails admin) : simuler un compte Free
       if (isAdminEmail && forceFreeTest) {
-        try {
-          localStorage.setItem("mg360_approved", "true");
-          localStorage.setItem("mg360_onboarding_done", "true");
-        } catch {}
+        setAdminFlags();
         return "free";
       }
 

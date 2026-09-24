@@ -213,7 +213,7 @@ export default function Settings() {
       "mg360_guest_code", "mg360_approved", "mg360_onboarding_done", "mg360_profile_owner",
       "mg360_waitlist", "mg360_ai_reco_today", "mg360_debit_mmh",
       "mg360_amazon_clicks", "mg360_budget_spent", "mg360_greenpoints",
-      "mg360_notif_banner_seen", "gk_streak",
+      "mg360_notif_banner_seen", "gk_streak", "mg360_access_cache",
     ].forEach(k => localStorage.removeItem(k));
 
     setDeleteLoading(false);
@@ -250,7 +250,7 @@ export default function Settings() {
         "mg360_guest_code", "mg360_approved", "mg360_onboarding_done", "mg360_profile_owner",
         "mg360_waitlist", "mg360_ai_reco_today", "mg360_debit_mmh",
         "mg360_amazon_clicks", "mg360_budget_spent", "mg360_greenpoints",
-        "mg360_notif_banner_seen", "gk_streak",
+        "mg360_notif_banner_seen", "gk_streak", "mg360_access_cache",
       ].forEach(k => localStorage.removeItem(k));
 
       // 3. Déconnexion immédiate (le compte Clerk a été supprimé côté serveur)

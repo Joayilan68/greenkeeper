@@ -1,5 +1,5 @@
 // src/App.jsx
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { SignedIn, SignedOut, RedirectToSignIn, useUser, useAuth } from "@clerk/clerk-react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Analytics } from "@vercel/analytics/react";
@@ -38,53 +38,6 @@ import { loadMetaPixel, pixelTrack } from "./lib/metaPixel"; // ✅ Meta Pixel (
 
 // ── Emails admin — accès permanent garanti ────────────────────────────────────
 const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
-
-// localStorage = cache court terme UNIQUEMENT (évite un flash au rechargement)
-// Source de vérité = Supabase. Durée de cache : 1h max.
-const ACCESS_CACHE_KEY = "mg360_access_cache";
-const ACCESS_CACHE_TTL = 60 * 60 * 1000; // 1h en ms
-
-function getAccessCache() {
-  try {
-    const raw = localStorage.getItem(ACCESS_CACHE_KEY);
-    if (!raw) return null;
-    const { status, ts } = JSON.parse(raw);
-    if (Date.now() - ts > ACCESS_CACHE_TTL) {
-      localStorage.removeItem(ACCESS_CACHE_KEY);
-      return null;
-    }
-    return status; // "approved" | "waitlist" | "admin"
-  } catch { return null; }
-}
-
-function setAccessCache(status) {
-  try {
-    localStorage.setItem(ACCESS_CACHE_KEY, JSON.stringify({ status, ts: Date.now() }));
-  } catch {}
-}
-
-function clearAccessCache() {
-  try { localStorage.removeItem(ACCESS_CACHE_KEY); } catch {}
-}
-
-function setAdminFlags() {
-  setAccessCache("admin");
-  // Rétrocompat — certains composants lisent encore ces clés
-  try {
-    localStorage.setItem("mg360_approved",       "true");
-    localStorage.setItem("mg360_onboarding_done", "true");
-    localStorage.removeItem("mg360_waitlist");
-  } catch {}
-}
-
-function setUserFlags() {
-  setAccessCache("approved");
-  try {
-    localStorage.setItem("mg360_approved",       "true");
-    localStorage.setItem("mg360_onboarding_done", "true");
-    localStorage.removeItem("mg360_waitlist");
-  } catch {}
-}
 
 // ── Présence quotidienne (DAU) ───────────────────────────────────────────────
 // Enregistre 1 ligne par utilisateur par jour dans daily_active_users.
@@ -183,7 +136,7 @@ function AppWithWeather({ children }) {
   return <WeatherProvider isPaid={isPaid}>{children}</WeatherProvider>;
 }
 
-// ── Écran de chargement pendant la vérification d'accès ──────────────────────
+// ── Écran de chargement pendant l'initialisation de Clerk ──────────────────────
 function LoadingScreen() {
   return (
     <div style={{
@@ -203,140 +156,20 @@ function LoadingScreen() {
   );
 }
 
-// ── Hook qui vérifie l'accès — SOURCE DE VÉRITÉ = SUPABASE ──────────────────
-// localStorage = cache 1h uniquement pour éviter le flash au rechargement.
-// Sur nouveau device, Safari iOS (efface localStorage après 7j), ou cache expiré :
-// on retombe systématiquement sur Supabase → aucun user ne se retrouve bloqué.
-function useAccessCheck() {
+// ── Attente du chargement Clerk + présence quotidienne ──────────────────────
+// Écran de chargement tant que Clerk n'a pas déterminé l'état de connexion.
+// Tout utilisateur connecté a accès à l'app (plus de liste d'attente depuis l'ouverture).
+function useAuthReady() {
   const { user, isLoaded } = useUser();
-  const [checking,  setChecking]  = useState(true);
-  const [accessStatus, setAccessStatus] = useState(null); // "approved"|"waitlist"|"admin"|null
 
   useEffect(() => {
-    if (!isLoaded) return;
-
-    if (!user) {
-      setChecking(false);
-      return;
-    }
-
+    if (!isLoaded || !user) return;
     const email   = user.primaryEmailAddress?.emailAddress || "";
     const isAdmin = ADMIN_EMAILS.includes(email) || user.publicMetadata?.role === "admin";
+    if (!isAdmin) pingPresence(user.id); // DAU — compter l'utilisateur (hors admin) une fois par jour
+  }, [isLoaded, user]);
 
-    // DAU — compter l'utilisateur (hors admin) une fois par jour, sans bloquer l'accès
-    if (!isAdmin) pingPresence(user.id);
-
-    // Admin → toujours approuvé, pas besoin de Supabase
-    if (isAdmin) {
-      setAdminFlags();
-      setAccessStatus("admin");
-      setChecking(false);
-      return;
-    }
-
-    // Cache valide (< 1h) → on évite le round-trip Supabase pour le rechargement
-    const cached = getAccessCache();
-    if (cached) {
-      setAccessStatus(cached);
-      setChecking(false);
-      // Revalide en arrière-plan sans bloquer l'UI
-      (async () => {
-        try {
-          const { supabase } = await import("./lib/supabase");
-          const { data: profileData } = await supabase
-            .from("profiles")
-            .select("user_id")
-            .eq("user_id", user.id)
-            .maybeSingle();
-          if (profileData) {
-            setUserFlags();
-            setAccessStatus("approved");
-          } else {
-            // Pas de profil → vérifier user_access avant de mettre en waitlist
-            const { data: accessData } = await supabase
-              .from("user_access")
-              .select("status")
-              .eq("user_id", user.id)
-              .maybeSingle();
-            if (accessData?.status === "approved" || accessData?.status === "guest") {
-              setUserFlags();
-              setAccessStatus("approved");
-            } else {
-              clearAccessCache();
-              try { localStorage.setItem("mg360_waitlist", "true"); } catch {}
-              setAccessStatus("waitlist");
-            }
-          }
-        } catch { /* réseau offline — on garde le cache */ }
-      })();
-      return;
-    }
-
-    // Pas de cache ou cache expiré → vérification Supabase obligatoire
-    (async () => {
-      try {
-        const { supabase } = await import("./lib/supabase");
-        // 1. Vérifier profiles (user a terminé l'onboarding)
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("user_id")
-          .eq("user_id", user.id)
-          .maybeSingle();
-
-        if (profileData) {
-          setUserFlags();
-          setAccessStatus("approved");
-          return;
-        }
-
-        // 2. Pas de profil → vérifier user_access (guest ou approved sans profil)
-        // Couvre : guest code, code admin, préinscrit qui n'a pas fini l'onboarding
-        const { data: accessData } = await supabase
-          .from("user_access")
-          .select("status")
-          .eq("user_id", user.id)
-          .maybeSingle();
-
-        if (accessData?.status === "approved" || accessData?.status === "guest") {
-          setUserFlags();
-          setAccessStatus("approved");
-        } else {
-          clearAccessCache();
-          try {
-            localStorage.setItem("mg360_waitlist", "true");
-            localStorage.removeItem("mg360_approved");
-          } catch {}
-          setAccessStatus("waitlist");
-        }
-      } catch {
-        // Erreur réseau — fallback sur l'ancien localStorage pour ne pas bloquer
-        try {
-          const legacy = localStorage.getItem("mg360_approved");
-          if (legacy === "true") {
-            setAccessStatus("approved");
-          } else {
-            setAccessStatus("waitlist");
-          }
-        } catch {
-          setAccessStatus("waitlist");
-        }
-      } finally {
-        setChecking(false);
-      }
-    })();
-  }, [isLoaded, user]); // eslint-disable-line
-
-  return { checking, accessStatus };
-}
-
-function isOnWaitlist(accessStatus) {
-  // Priorité sur accessStatus (state React) si disponible
-  if (accessStatus !== null) return accessStatus === "waitlist";
-  // Fallback localStorage (rétrocompat)
-  try {
-    return localStorage.getItem("mg360_waitlist") === "true" &&
-           localStorage.getItem("mg360_approved") !== "true";
-  } catch { return false; }
+  return isLoaded;
 }
 
 function PrivateRoute({ children }) {
@@ -364,9 +197,9 @@ function AdminRoute({ children }) {
 }
 
 function AppRoutes() {
-  const { checking, accessStatus } = useAccessCheck();
+  const authReady = useAuthReady();
 
-  if (checking) return <LoadingScreen />;
+  if (!authReady) return <LoadingScreen />;
 
   return (
     <Routes>
