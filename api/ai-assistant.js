@@ -149,7 +149,7 @@ RÈGLES :
     res.json({ success:true, reply });
 
   } catch (e) {
-    console.error("ai-assistant:", e.message);
+    await require("./alerting.cjs").reportServerError("Assistant IA Bob en échec", e);
     res.status(500).json({ error: e.message });
   }
 };

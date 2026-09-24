@@ -1,16 +1,18 @@
 // src/lib/usePilotage.js
-// Hook de détection automatique des bugs et envoi d'alertes
+// Détection automatique des bugs côté application → /api/send?type=alert
+// (stockage en base error_events + email dédoublonné côté serveur, cf. api/alerting.cjs).
 
 import { useEffect, useRef } from "react";
 import { useUser } from "@clerk/clerk-react";
 
-// Email de l'utilisateur connecté, tenu à jour par le hook usePilotage().
+// Utilisateur connecté, tenu à jour par le hook usePilotage().
 // Les gestionnaires d'erreurs GLOBAUX (window.error / unhandledrejection) tournent
-// hors contexte React → ils lisent cette variable de module au moment de l'alerte.
+// hors contexte React → ils lisent ces variables de module au moment de l'alerte.
 let currentUserEmail = null;
+let currentUserId    = null;
 
 const ALERT_KEY    = "gk_pilotage_alerts";
-const COOLDOWN_MS  = 5 * 60 * 1000; // 5 min entre 2 alertes du même type
+const COOLDOWN_MS  = 5 * 60 * 1000; // 5 min entre 2 envois du même type depuis cet appareil
 
 // ✅ FIX 29/05/2026 — clé pour tracker les tentatives de reload (éviter boucle infinie)
 const RELOAD_KEY      = "gk_chunk_reload_attempt";
@@ -92,41 +94,30 @@ function attemptChunkReload() {
   }
 }
 
-// Envoi de l'alerte email + push
+// Envoi de l'erreur au serveur (stockage + email dédoublonné)
 async function sendBugAlert(type, message, details = {}, severity = "error") {
-  // ── Filtre bruit : bots (crawler Google Play) + "Script error." cross-origin ──
-  // Reclassé hors critique : trace locale en "info", AUCUN email.
-  if (isNoise(message)) {
-    logAlertLocally({ type, message, details, severity: "info", noise: true, date: new Date().toISOString() });
-    return;
-  }
-
-  if (!shouldSendAlert(type)) return; // cooldown actif
-
-  // Enrichit l'alerte avec l'utilisateur connecté (aide au diagnostic / reproduction).
-  const enriched = { "Utilisateur": currentUserEmail || "non connecté", ...details };
+  // Filtre bruit : bots (crawler Google Play) + "Script error." cross-origin → ignoré
+  if (isNoise(message)) return;
+  if (!shouldSendAlert(type)) return; // cooldown actif sur cet appareil
 
   try {
     await fetch("/api/send?type=alert", {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type, message, details: enriched, severity })
+      body: JSON.stringify({
+        kind:      type,
+        message,
+        severity,
+        path:      typeof window !== "undefined" ? window.location.pathname : null,
+        userId:    currentUserId,
+        userAgent: typeof navigator !== "undefined" ? navigator.userAgent : null,
+        details:   { "Utilisateur": currentUserEmail || "non connecté", ...details },
+      }),
     });
     markAlertSent(type);
-
-    // Log local pour le dashboard Pilotage
-    logAlertLocally({ type, message, details: enriched, severity, date: new Date().toISOString() });
-
   } catch (e) {
-    console.warn("Impossible d envoyer l alerte:", e.message);
+    console.warn("[MG360] Alerte non envoyée :", e.message);
   }
-}
-
-// Sauvegarde l'alerte dans localStorage pour affichage dans le dashboard
-function logAlertLocally(alert) {
-  const logs = safeGet("gk_pilotage_logs", []);
-  logs.unshift(alert);
-  safeSet("gk_pilotage_logs", logs.slice(0, 50)); // max 50 entrées
 }
 
 // ── Hook principal ──────────────────────────────────────────────────────────
@@ -137,6 +128,7 @@ export function usePilotage() {
   // Tenir à jour l'email de l'utilisateur connecté (lu par les handlers globaux).
   useEffect(() => {
     currentUserEmail = user?.primaryEmailAddress?.emailAddress || null;
+    currentUserId    = user?.id || null;
   }, [user]);
 
   useEffect(() => {
@@ -167,9 +159,7 @@ export function usePilotage() {
         "Fichier":     event.filename || "inconnu",
         "Ligne":       event.lineno || "?",
         "Colonne":     event.colno || "?",
-        "URL":         window.location.pathname,
-        // user-agent complet + plateforme pour identifier iOS/Android/Desktop
-        "User-Agent":  navigator.userAgent,
+        "Stack":       stack.substring(0, 500),
         "Plateforme":  navigator.platform || "inconnue",
         "Langue":      navigator.language || "inconnue",
       };
@@ -190,10 +180,7 @@ export function usePilotage() {
 
       const details = {
         "Type":        "Promise rejection",
-        "URL":         window.location.pathname,
-        "Raison":      message.substring(0, 200),
         "Stack":       stack.substring(0, 500),
-        "User-Agent":  navigator.userAgent,
         "Plateforme":  navigator.platform || "inconnue",
       };
       sendBugAlert("Promesse rejetée", message, details, "error");
@@ -207,44 +194,7 @@ export function usePilotage() {
       window.removeEventListener("unhandledrejection", handleUnhandledRejection);
     };
   }, []);
-
-  // Fonction manuelle pour signaler un bug depuis n'importe quel composant
-  const reportBug = (type, message, details = {}, severity = "error") => {
-    sendBugAlert(type, message, details, severity);
-  };
-
-  // Fonction pour signaler une erreur API
-  const reportAPIError = (apiName, errorMessage, details = {}) => {
-    sendBugAlert(
-      `Erreur API — ${apiName}`,
-      `L'API ${apiName} a retourné une erreur : ${errorMessage}`,
-      { "API": apiName, "Erreur": errorMessage, ...details },
-      "error"
-    );
-  };
-
-  // Fonction pour signaler un diagnostic échoué
-  const reportDiagnosticError = (errorMessage) => {
-    sendBugAlert(
-      "Diagnostic photo échoué",
-      `Le diagnostic IA a échoué : ${errorMessage}`,
-      { "Service": "Groq Vision / Cloudinary", "Erreur": errorMessage },
-      "error"
-    );
-  };
-
-  // Fonction pour signaler un paiement échoué
-  const reportPaymentError = (errorMessage) => {
-    sendBugAlert(
-      "Paiement échoué",
-      `Un paiement Stripe a échoué : ${errorMessage}`,
-      { "Service": "Stripe", "Erreur": errorMessage },
-      "error"
-    );
-  };
-
-  return { reportBug, reportAPIError, reportDiagnosticError, reportPaymentError };
 }
 
-// Export des fonctions utilitaires pour les composants qui n'utilisent pas le hook
-export { sendBugAlert, logAlertLocally };
+// Utilisé hors hook (ErrorBoundary de main.jsx)
+export { sendBugAlert };

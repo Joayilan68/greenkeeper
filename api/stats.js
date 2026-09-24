@@ -4,6 +4,7 @@
 // Usage :
 //   GET /api/stats?type=revenue  → stats Stripe
 //   GET /api/stats?type=users    → stats Clerk + sources UTM des inscrits
+//   GET /api/stats?type=errors   → erreurs (error_events) regroupées par problème + état des tâches planifiées
 
 // Emails admin — exclus de TOUTES les stats (règle "admins exclus de tout")
 const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
@@ -45,8 +46,9 @@ module.exports = async function handler(req, res) {
   if (type === "social" || req.method === "POST") return handleSocial(req, res);
   if (type === "revenue") return handleRevenue(req, res);
   if (type === "users")   return handleUsers(req, res);
+  if (type === "errors")  return handleErrors(req, res);
 
-  return res.status(400).json({ error: 'Paramètre ?type=revenue|users|social requis' });
+  return res.status(400).json({ error: 'Paramètre ?type=revenue|users|social|errors requis' });
 };
 
 // ── Réseaux sociaux (followers — saisie manuelle mensuelle) ───────────────────
@@ -524,5 +526,58 @@ async function fetchSiteVisits() {
   } catch (e) {
     console.warn("stats-users siteVisits:", e.message);
     return empty;
+  }
+}
+
+// ── Erreurs applicatives (table error_events) — onglet Pilotage → Bugs ────────
+// Regroupe par empreinte (même problème) sur 30 jours + état des tâches planifiées.
+async function handleErrors(req, res) {
+  try {
+    const sb    = createClient(SB_URL, SB_KEY);
+    const since = new Date(Date.now() - 30 * 86400e3).toISOString();
+    const d7    = Date.now() - 7 * 86400e3;
+
+    const [{ data: rows, error }, { data: status }] = await Promise.all([
+      sb.from("error_events")
+        .select("created_at, source, severity, kind, message, fingerprint, path, user_id, user_agent, details, emailed")
+        .gte("created_at", since).order("created_at", { ascending: false }).limit(2000),
+      sb.from("system_status").select("key, value, updated_at"),
+    ]);
+    if (error) throw new Error(error.message);
+
+    const groups = new Map();
+    for (const r of rows || []) {
+      let g = groups.get(r.fingerprint);
+      if (!g) {
+        g = { fingerprint: r.fingerprint, kind: r.kind, message: r.message, severity: r.severity, source: r.source,
+              count: 0, count7: 0, users: new Set(), firstSeen: r.created_at, lastSeen: r.created_at,
+              lastPath: r.path, lastUserAgent: r.user_agent, lastDetails: r.details, emailed: false };
+        groups.set(r.fingerprint, g);
+      }
+      g.count++;
+      if (new Date(r.created_at).getTime() >= d7) g.count7++;
+      if (r.user_id) g.users.add(r.user_id);
+      if (r.emailed) g.emailed = true;
+      g.firstSeen = r.created_at; // tri décroissant → la dernière ligne vue est la plus ancienne
+    }
+    const problems = [...groups.values()]
+      .map(g => ({ ...g, users: g.users.size }))
+      .sort((a, b) => new Date(b.lastSeen) - new Date(a.lastSeen));
+
+    const recent = (rows || []).filter(r => new Date(r.created_at).getTime() >= d7);
+    res.json({
+      success: true,
+      kpi: {
+        events7:   recent.filter(r => r.severity !== "info").length,
+        problems7: new Set(recent.filter(r => r.severity !== "info").map(r => r.fingerprint)).size,
+        users7:    new Set(recent.filter(r => r.user_id).map(r => r.user_id)).size,
+        server7:   recent.filter(r => r.source === "server" && r.severity !== "info").length,
+      },
+      problems,
+      status: Object.fromEntries((status || []).map(s => [s.key, { ...s.value, updated_at: s.updated_at }])),
+    });
+  } catch (e) {
+    console.error("[MG360] stats errors:", e.message);
+    res.status(500).json({ error: e.message });
   }
 }

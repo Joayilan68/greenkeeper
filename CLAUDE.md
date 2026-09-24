@@ -18,6 +18,13 @@
 - Avant toute suppression, vérifier qu'il n'existe aucune dépendance (imports, routes, appels d'API,
   vercel.json, robots.txt ; en base : clés étrangères, vues, fonctions, triggers, cron).
 
+## Monitoring des erreurs
+- Toute erreur est stockée dans `error_events` (serveur uniquement) et alertée par email via `api/alerting.cjs`
+  (dédoublonnage 6 h, 20 emails/h max) ; consultation : Pilotage → Bugs.
+- Côté serveur : dans chaque `catch` critique d'une fonction `api/`, appeler `reportServerError(kind, err, details)`
+  plutôt qu'un simple `console.error`.
+- Côté app : erreurs globales et plantages d'écran remontés automatiquement (`usePilotage.js`, `ErrorBoundary`).
+
 ## Contraintes
 - Vercel Hobby : 12 fonctions maximum dans `api/` — pas de nouvel endpoint sans en libérer un.
 - Roadmap : Google Sheet « MG360_Suivi_Projet » (premier onglet), lu en direct par Pilotage → Roadmap.

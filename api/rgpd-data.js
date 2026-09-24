@@ -264,7 +264,7 @@ module.exports = async function handler(req, res) {
         abonnement_push:     getData(pushSubRes) ? "Présent (détails masqués pour sécurité)" : "Aucun",
       });
     } catch (e) {
-      console.error("[RGPD] GET export error:", e.message);
+      await require("./alerting.cjs").reportServerError("RGPD — export des données en échec", e, { "Utilisateur": userId });
       return res.status(500).json({ error: "Erreur lors de l'export : " + e.message });
     }
   }
@@ -337,7 +337,7 @@ module.exports = async function handler(req, res) {
 
       return res.status(200).json(report);
     } catch (e) {
-      console.error("[RGPD] DELETE error:", e.message);
+      await require("./alerting.cjs").reportServerError("RGPD — suppression de compte en échec", e, { "Utilisateur": userId });
       report.success = false;
       report.errors.push(`Fatal: ${e.message}`);
       return res.status(500).json(report);

@@ -220,7 +220,7 @@ module.exports = async function handler(req, res) {
     res.json({ text });
 
   } catch (e) {
-    console.error("AI Error:", e.message);
+    await require("./alerting.cjs").reportServerError("Recommandations IA en échec", e);
     res.status(500).json({ error: e.message });
   }
 };
