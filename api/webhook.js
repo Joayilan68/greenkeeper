@@ -35,7 +35,7 @@ module.exports = async function handler(req, res) {
     const rawBody = await getRawBody(req);
     event = stripe.webhooks.constructEvent(rawBody, sig, secret);
   } catch (err) {
-    console.error("[Webhook] Signature invalide :", err.message);
+    await require("./alerting.cjs").recordError({ source: "server", severity: "warning", kind: "Stripe — signature de webhook invalide", message: err.message });
     return res.status(400).json({ error: `Webhook signature invalide : ${err.message}` });
   }
 
@@ -88,7 +88,7 @@ module.exports = async function handler(req, res) {
         break;
     }
   } catch (err) {
-    console.error("[Webhook] Erreur traitement :", err.message);
+    await require("./alerting.cjs").reportServerError("Stripe — traitement du webhook en échec (abonnement non mis à jour ?)", err, { "Événement": event?.type || "?" });
     return res.status(500).json({ error: err.message });
   }
 

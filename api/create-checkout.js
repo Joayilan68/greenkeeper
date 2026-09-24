@@ -58,7 +58,7 @@ module.exports = async function handler(req, res) {
 
     res.json({ url: session.url });
   } catch (e) {
-    console.error("Erreur checkout:", e.message);
+    await require("./alerting.cjs").reportServerError("Paiement — création de session Stripe en échec", e);
     res.status(500).json({ error: e.message });
   }
 };

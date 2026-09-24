@@ -318,20 +318,27 @@ Si la photo ne montre pas de gazon : score_visuel 0 et explique dans resume.`;
       groqData = JSON.parse(groqRawText);
     } catch {
       // Groq a retourné du texte brut (erreur HTTP, rate limit, etc.)
-      console.error("Groq réponse non-JSON:", groqRawText.slice(0, 200));
-      throw new Error("Service IA temporairement indisponible. Réessaie dans quelques secondes.");
+      await require("./alerting.cjs").reportServerError("Diagnostic photo — réponse Groq illisible",
+        new Error(groqRawText.slice(0, 300)), { "Statut HTTP": groqRes.status });
+      const err = new Error("Service IA temporairement indisponible. Réessaie dans quelques secondes.");
+      err.reported = true;
+      throw err;
     }
 
     if (groqData.error) {
       // On journalise le détail complet côté serveur, mais on ne montre JAMAIS
       // le texte brut de Groq à l'utilisateur (fuite d'infos internes / facturation).
-      console.error("[MG360] Groq error:", groqData.error.message || groqData.error);
       const isRate = groqRes.status === 429 ||
                      groqData.error.code === "rate_limit_exceeded" ||
                      /rate.?limit/i.test(groqData.error.message || "");
-      throw new Error(isRate
+      await require("./alerting.cjs").reportServerError(isRate ? "Diagnostic photo — limite Groq atteinte" : "Diagnostic photo — erreur Groq",
+        new Error(groqData.error.message || JSON.stringify(groqData.error)),
+        { "Statut HTTP": groqRes.status, "Code": groqData.error.code || "—" });
+      const err = new Error(isRate
         ? "Nos serveurs d'analyse sont très sollicités en ce moment 😅 Patiente quelques secondes et relance — ce n'est pas lié à toi."
         : "Service IA temporairement indisponible. Réessaie dans quelques secondes.");
+      err.reported = true;
+      throw err;
     }
 
     const rawText = groqData.choices?.[0]?.message?.content || "";
@@ -390,7 +397,7 @@ Si la photo ne montre pas de gazon : score_visuel 0 et explique dans resume.`;
     res.json({ success: true, imageUrl, publicId, analysis, date: new Date().toISOString() });
 
   } catch (e) {
-    console.error("analyze-lawn:", e.message);
+    if (!e.reported) await require("./alerting.cjs").reportServerError("Diagnostic photo en échec", e);
     res.status(500).json({ error: e.message });
   }
 };
@@ -551,7 +558,7 @@ async function handleAnonymousDiagnostic(req, res) {
     } catch (e) { console.error("[MG360] anon save:", e.message); }
     return res.json({ success: true, imageUrl, analysis, date: new Date().toISOString() });
   } catch (e) {
-    console.error("[MG360] anon analyze:", e.message);
+    await require("./alerting.cjs").reportServerError("Diagnostic photo sans compte en échec", e);
     return res.status(500).json({ error: e.message });
   }
 }

@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { ClerkProvider } from "@clerk/clerk-react";
 import App from "./App";
+import { sendBugAlert } from "./lib/usePilotage";
 import "./index.css";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -122,6 +123,11 @@ class ErrorBoundary extends React.Component {
   }
   componentDidCatch(error, info) {
     console.error("[MG360] Erreur capturée:", error.message, info);
+    // Plantage d'écran : ces erreurs n'atteignent pas window.onerror → signalement explicite
+    sendBugAlert("Plantage d'écran", error?.message || String(error), {
+      "Stack":      String(error?.stack || "").substring(0, 500),
+      "Composants": String(info?.componentStack || "").substring(0, 500),
+    });
   }
   render() {
     if (this.state.error) {

@@ -1,5 +1,5 @@
 // api/send.js
-// POST /api/send?type=alert|notification|reminder|save-sub|save-reminders
+// POST /api/send?type=alert|alert-test|notification|reminder|save-sub|save-reminders
 // GET  /api/send → cron quotidien 8h00 (Vercel cron)
 
 const REMINDER_LABELS = {
@@ -208,7 +208,7 @@ module.exports = async function handler(req, res) {
           weatherCache[key] = w;
           return w;
         } catch (e) {
-          console.error("cron weather:", e.message);
+          require("./alerting.cjs").reportServerError("Tâche planifiée — météo", e);
           weatherCache[key] = null;
           return null;
         }
@@ -394,7 +394,7 @@ module.exports = async function handler(req, res) {
             }
           }
         } catch (e) {
-          console.error("cron surveillance parcours:", e.message);
+          require("./alerting.cjs").reportServerError("Tâche planifiée — surveillance parcours", e);
         }
       }
 
@@ -419,7 +419,7 @@ module.exports = async function handler(req, res) {
             if (!error) parcoursTermines++;
           }
         } catch (e) {
-          console.error("cron clôture parcours:", e.message);
+          require("./alerting.cjs").reportServerError("Tâche planifiée — clôture parcours", e);
         }
       }
 
@@ -497,7 +497,7 @@ module.exports = async function handler(req, res) {
             } catch (e) { console.error("cron trial flag:", u.id, e.message); }
             trialRelances++;
           }
-        } catch (e) { console.error("cron trial relances:", e.message); }
+        } catch (e) { await require("./alerting.cjs").reportServerError("Tâche planifiée — relances essai", e); }
       }
 
       // ── SOCLE QUOTIDIEN — 1 conseil gazon utile/jour — créneau MATIN ───────
@@ -529,13 +529,24 @@ module.exports = async function handler(req, res) {
         try {
           const { purgeOldDiagnosticPhotos } = require("./photoRetention.cjs");
           photosPurgees = (await purgeOldDiagnosticPhotos()).deleted;
-        } catch (e) { console.error("cron purge photos:", e.message); }
+        } catch (e) { await require("./alerting.cjs").reportServerError("Tâche planifiée — purge photos (RGPD 90 j)", e); }
       }
+
+      // ── Signal de vie + contrôle : le soir, vérifier que la tâche du matin a tourné ──
+      const alerting = require("./alerting.cjs");
+      if (slot === "soir") {
+        const matin = await alerting.getStatus("cron_matin");
+        if (matin?.value?.date !== today) {
+          await alerting.reportServerError("Tâche planifiée du matin non exécutée",
+            new Error(`Aucune exécution du créneau matin le ${today} (dernière : ${matin?.value?.date || "jamais"})`));
+        }
+      }
+      await alerting.setStatus(`cron_${slot}`, { date: today, at: new Date().toISOString(), pushSent, emailSent, photosPurgees });
 
       console.log(`[CRON ${slot}] reminders:`, remindersData?.length || 0, "pushSent:", pushSent, "emailSent:", emailSent, "skipped:", skipped, "parcoursSent:", parcoursSent, "parcoursTermines:", parcoursTermines, "trialRelances:", trialRelances, "baselineSent:", baselineSent, "photosPurgees:", photosPurgees);
       return res.json({ success: true, date: today, slot, pushSent, emailSent, skipped, parcoursSent, parcoursTermines, trialRelances, baselineSent, photosPurgees, reminders: remindersData?.length || 0 });
     } catch (e) {
-      console.error("cron:", e.message);
+      await require("./alerting.cjs").reportServerError("Tâche planifiée en échec", e, { "Créneau": req.query.slot || "matin" });
       return res.status(500).json({ error: e.message });
     }
   }
@@ -781,84 +792,30 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  // ── ALERT ─────────────────────────────────────────────────────────────────
+  // ── ALERT — erreur remontée par l'application (usePilotage / ErrorBoundary) ──
+  // Stockage error_events + email dédoublonné côté serveur (api/alerting.cjs).
   if (type === "alert") {
-    try {
-      const { type: alertType, message, details = {}, severity = "error" } = req.body;
-      if (!alertType || !message) throw new Error("type et message requis");
+    const { kind, message, severity, path, userId, userAgent, details } = req.body || {};
+    if (!kind || !message) return res.status(400).json({ error: "kind et message requis" });
+    const { recordError } = require("./alerting.cjs");
+    const r = await recordError({
+      source: "client",
+      severity: severity === "warning" ? "warning" : "error", // "info" réservé au serveur
+      kind, message, path, userId, userAgent, details,
+    });
+    return res.json({ success: true, ...r });
+  }
 
-      const severityEmoji = { error: "🔴", warning: "🟠", info: "🔵" }[severity] || "🔴";
-      const severityLabel = { error: "ERREUR CRITIQUE", warning: "AVERTISSEMENT", info: "INFO" }[severity] || "ERREUR";
-      const year = new Date().getFullYear();
-
-      const html = `<!DOCTYPE html>
-<html><head><meta charset="utf-8"/></head>
-<body style="font-family:Arial,sans-serif;background:#0d2b1a;margin:0;padding:24px;">
-<div style="max-width:600px;margin:0 auto;background:#1a4731;border-radius:16px;overflow:hidden;">
-  <div style="background:#0d2b1a;padding:20px 24px;border-bottom:2px solid #2d7d52;">
-    <div style="display:flex;align-items:center;gap:12px;">
-      <span style="font-size:32px;">🌿</span>
-      <div>
-        <div style="color:#a5d6a7;font-size:18px;font-weight:800;">Mongazon360<sup style="font-size:10px;">®</sup></div>
-        <div style="color:#81c784;font-size:12px;">Alerte automatique — Système de pilotage</div>
-      </div>
-    </div>
-  </div>
-  <div style="padding:24px;">
-    <div style="background:${severity==="error"?"rgba(198,40,40,0.3)":severity==="warning"?"rgba(230,81,0,0.3)":"rgba(21,101,192,0.3)"};border:1px solid ${severity==="error"?"#c62828":severity==="warning"?"#e65100":"#1565c0"};border-radius:12px;padding:16px;margin-bottom:20px;">
-      <div style="font-size:24px;margin-bottom:8px;">${severityEmoji}</div>
-      <div style="color:#fff;font-size:16px;font-weight:800;margin-bottom:4px;">${severityLabel}</div>
-      <div style="color:#ef9a9a;font-size:13px;">${alertType}</div>
-    </div>
-    <div style="background:rgba(0,0,0,0.3);border-radius:10px;padding:16px;margin-bottom:20px;">
-      <div style="color:#a5d6a7;font-size:13px;font-weight:700;margin-bottom:8px;">Message</div>
-      <div style="color:#e8f5e9;font-size:14px;line-height:1.6;">${message}</div>
-    </div>
-    ${Object.keys(details).length > 0 ? `
-    <div style="background:rgba(0,0,0,0.2);border-radius:10px;padding:16px;margin-bottom:20px;">
-      <div style="color:#a5d6a7;font-size:13px;font-weight:700;margin-bottom:8px;">Détails techniques</div>
-      ${Object.entries(details).map(([k, v]) => `
-        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
-          <span style="color:#81c784;font-size:12px;">${k}</span>
-          <span style="color:#e8f5e9;font-size:12px;font-weight:600;">${v}</span>
-        </div>`).join("")}
-    </div>` : ""}
-    <div style="background:rgba(0,0,0,0.2);border-radius:10px;padding:12px 16px;">
-      <div style="color:#81c784;font-size:11px;">
-        ⏰ Détecté le ${new Date().toLocaleString("fr-FR", {timeZone:"Europe/Paris"})}<br/>
-        🌐 mongazon360.fr<br/>
-        📱 Système de monitoring automatique MG360
-      </div>
-    </div>
-  </div>
-  <div style="background:#0d2b1a;padding:16px 24px;text-align:center;border-top:1px solid #2d7d52;">
-    <div style="color:#4a7c5c;font-size:11px;">Mongazon360<sup style="font-size:8px;">®</sup> — Système d'alerte automatique</div>
-    <div style="color:#4a7c5c;font-size:9px;margin-top:4px;">
-      © ${year} Mongazon360<sup style="font-size:7px;">®</sup> — Marque déposée et enregistrée à l'EUIPO
-    </div>
-  </div>
-</div>
-</body></html>`;
-
-      const emailRes = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${process.env.RESEND_API_KEY}` },
-        body: JSON.stringify({
-          from:    "Mongazon360 Pilotage <bonjour@mongazon360.fr>",
-          to:      ["mongazon360@gmail.com"],
-          subject: `${severityEmoji} [MG360®] ${severityLabel} — ${alertType}`,
-          html,
-        }),
-      });
-
-      const emailData = await emailRes.json();
-      if (emailData.error) throw new Error("Resend: " + emailData.error.message);
-      return res.json({ success: true, emailId: emailData.id });
-
-    } catch (e) {
-      console.error("send alert:", e.message);
-      return res.status(500).json({ error: e.message });
-    }
+  // ── ALERT-TEST — bouton « Tester l'alerte email » du Pilotage (admin) ──────
+  if (type === "alert-test") {
+    const { recordError, isAdminRequest } = require("./alerting.cjs");
+    if (!(await isAdminRequest(req))) return res.status(403).json({ error: "Accès admin uniquement" });
+    const r = await recordError({
+      source: "server", severity: "info", kind: "Test du système d'alerte",
+      message: "Test manuel depuis le Pilotage — la chaîne d'alerte (base + email) fonctionne.",
+      details: { "Déclencheur": "Pilotage → Services" },
+    }, { forceEmail: true });
+    return res.json({ success: r.emailed, ...r, ...(r.emailed ? {} : { error: "Email non envoyé (voir journaux Vercel)" }) });
   }
 
   // ── NOTIFICATION (push) ───────────────────────────────────────────────────

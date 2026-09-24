@@ -181,7 +181,7 @@ module.exports = async function handler(req, res) {
 
     if (!r.ok) {
       const detail = await r.text();
-      console.error("Open-Meteo error:", r.status, detail);
+      await require("./alerting.cjs").reportServerError("Météo — erreur Open-Meteo", new Error(detail.slice(0, 300)), { "Statut HTTP": r.status });
       return res.status(502).json({ error: "Erreur Open-Meteo", status: r.status });
     }
 
@@ -215,7 +215,7 @@ module.exports = async function handler(req, res) {
 
     return res.status(200).json({ ...data, cached: false });
   } catch (e) {
-    console.error("weather.js:", e.message);
+    await require("./alerting.cjs").reportServerError("Météo en échec", e);
     return res.status(500).json({ error: e.message });
   }
 };

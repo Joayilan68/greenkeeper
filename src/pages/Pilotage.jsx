@@ -188,7 +188,8 @@ export default function Pilotage() {
   const [users, setUsers]     = useState(null);
   const [revenue, setRevenue] = useState(null);
   const [local, setLocal]     = useState(null);
-  const [logs, setLogs]       = useState([]);
+  const [errorsData, setErrorsData] = useState(null);
+  const [openProblem, setOpenProblem] = useState(null);
   const [sending, setSending] = useState(false);
   const [sent, setSent]       = useState("");
   const [lastUpdate, setLastUpdate] = useState("");
@@ -217,6 +218,7 @@ export default function Pilotage() {
     fetchUsers();
     fetchRevenue();
     fetchSocial();
+    fetchErrors();
     setLastUpdate(new Date().toLocaleTimeString("fr-FR"));
   }
 
@@ -253,7 +255,6 @@ export default function Pilotage() {
   function computeLocal() {
     const diagnostics = safeGet("gk_diagnostics", []);
     const history     = safeGet("gk_history", []);
-    const alertLogs   = safeGet("gk_pilotage_logs", []);
     const diagScores  = diagnostics.map(d => d.analysis?.score_visuel).filter(Boolean);
     const diagAvg     = diagScores.length ? Math.round(diagScores.reduce((a,b)=>a+b,0)/diagScores.length) : 0;
     const diagProbs   = diagnostics.flatMap(d => d.analysis?.problemes || []);
@@ -263,8 +264,16 @@ export default function Pilotage() {
     const hist7j      = history.filter(h => {
       try { const [d,m,y]=h.date.split("/"); return daysSince(new Date(y,m-1,d).toISOString())<=7; } catch { return false; }
     }).length;
-    setLocal({ diagnostics:{ total:diagnostics.length, ce7j:diagnostics.filter(d=>daysSince(d.date)<=7).length, avg:diagAvg, topProbs }, history:{ total:history.length, ce7j:hist7j }, errors7j:alertLogs.filter(l=>daysSince(l.date)<=7&&l.severity==="error").length, warnings7j:alertLogs.filter(l=>daysSince(l.date)<=7&&l.severity==="warning").length });
-    setLogs(alertLogs.slice(0, 20));
+    setLocal({ diagnostics:{ total:diagnostics.length, ce7j:diagnostics.filter(d=>daysSince(d.date)<=7).length, avg:diagAvg, topProbs }, history:{ total:history.length, ce7j:hist7j } });
+  }
+
+  async function fetchErrors() {
+    try {
+      const token = await getToken();
+      const res   = await fetch("/api/stats?type=errors", { headers: { Authorization: `Bearer ${token}` } });
+      const data  = await res.json();
+      if (data.success) setErrorsData(data);
+    } catch {}
   }
 
   async function fetchUsers() {
@@ -331,11 +340,12 @@ export default function Pilotage() {
   const sendTestAlert = async () => {
     setSending(true); setSent("");
     try {
-      const res  = await fetch("/api/send-alert", {
-        method: "POST", headers: { "Content-Type":"application/json" },
-        body: JSON.stringify({ type:"Test alerte manuelle", message:"Test du système d'alerte MG360 — tout fonctionne correctement.", details:{ "Déclencheur":"Manuel", "Heure":new Date().toLocaleString("fr-FR") }, severity:"info" })
+      const token = await getToken();
+      const res   = await fetch("/api/send?type=alert-test", {
+        method: "POST", headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
+      fetchErrors();
       setSent(data.success ? "✅ Alerte test envoyée !" : "❌ Erreur : " + data.error);
     } catch (e) { setSent("❌ Erreur : " + e.message); }
     setSending(false);
@@ -687,56 +697,72 @@ export default function Pilotage() {
         )}
 
         {/* ════════════════ TAB BUGS ════════════════ */}
-        {tab === "bugs" && (
+        {tab === "bugs" && (() => {
+          const k = errorsData?.kpi;
+          const matin = errorsData?.status?.cron_matin;
+          const soir  = errorsData?.status?.cron_soir;
+          const today = new Date().toISOString().slice(0, 10);
+          const cronLine = (label, st, expectedToday) => {
+            const ok = st?.date === today || (!expectedToday && st?.date);
+            return (
+              <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, padding:"4px 0" }}>
+                <span>{ok ? "✅" : "⚠️"} {label}</span>
+                <span style={{ color: ok ? "#81c784" : "#ffcc80" }}>
+                  {st?.at ? new Date(st.at).toLocaleString("fr-FR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" }) : "pas encore de relevé"}
+                </span>
+              </div>
+            );
+          };
+          return (
           <>
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, marginBottom:4 }}>
-              <div style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:12, padding:"12px 8px", textAlign:"center" }}>
-                <div style={{ fontSize:22, fontWeight:800, color:"#ef9a9a" }}>{local?.errors7j ?? 0}</div>
-                <div style={{ fontSize:10, color:"#81c784" }}>🔴 Bugs 7j</div>
-              </div>
-              <div style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:12, padding:"12px 8px", textAlign:"center" }}>
-                <div style={{ fontSize:22, fontWeight:800, color:"#ffcc80" }}>{local?.warnings7j ?? 0}</div>
-                <div style={{ fontSize:10, color:"#81c784" }}>🟠 Warnings 7j</div>
-              </div>
-              <div style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:12, padding:"12px 8px", textAlign:"center" }}>
-                <div style={{ fontSize:22, fontWeight:800, color:"#a5d6a7" }}>{logs.length}</div>
-                <div style={{ fontSize:10, color:"#81c784" }}>Total logs</div>
-              </div>
+              <KPI icon="🔴" label="Erreurs 7 j" value={k?.events7 ?? "—"} sub={`dont ${k?.server7 ?? 0} serveur`} color="#ef9a9a" />
+              <KPI icon="🧩" label="Problèmes 7 j" value={k?.problems7 ?? "—"} sub="distincts" color="#ffcc80" />
+              <KPI icon="👤" label="Utilisateurs 7 j" value={k?.users7 ?? "—"} sub="touchés" color="#90caf9" />
             </div>
+
             <div style={card()}>
-              <div style={cardTitle}>
-                <span>🐛 Logs d'alertes</span>
-                <button onClick={() => { localStorage.removeItem("gk_pilotage_logs"); setLogs([]); }}
-                  style={{ background:"rgba(198,40,40,0.15)", border:"1px solid rgba(198,40,40,0.3)", borderRadius:8, padding:"3px 8px", color:"#ef9a9a", fontSize:10, cursor:"pointer" }}>
-                  🗑️ Effacer
-                </button>
-              </div>
-              {logs.length === 0 ? (
-                <div style={{ textAlign:"center", fontSize:12, color:"#81c784", padding:"12px 0" }}>✅ Aucune alerte enregistrée</div>
-              ) : (
-                logs.map((log, i) => {
-                  const s = SEV_STYLE[log.severity] || SEV_STYLE.error;
-                  return (
-                    <div key={i} style={{ background:s.bg, border:`1px solid ${s.border}`, borderRadius:10, padding:"10px 12px", marginBottom:6 }}>
-                      <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
-                        <span style={{ fontSize:11, fontWeight:700, color:s.color }}>{log.type}</span>
-                        <span style={{ fontSize:9, color:"#81c784" }}>{new Date(log.date).toLocaleString("fr-FR")}</span>
-                      </div>
-                      <div style={{ fontSize:11, color:"#e8f5e9", lineHeight:1.5 }}>{log.message}</div>
-                      {log.details && Object.keys(log.details).length > 0 && (
-                        <div style={{ marginTop:6 }}>
-                          {Object.entries(log.details).map(([k,v]) => (
-                            <span key={k} style={{ fontSize:9, color:"#81c784", marginRight:8 }}>{k}: {v}</span>
-                          ))}
-                        </div>
-                      )}
+              <div style={cardTitle}><span>⏱️ Tâches planifiées</span></div>
+              {cronLine("Tâche du matin (notifications, purges)", matin, new Date().getUTCHours() >= 7)}
+              {cronLine("Tâche du soir (arrosage)", soir, new Date().getUTCHours() >= 16)}
+            </div>
+
+            <div style={card()}>
+              <div style={cardTitle}><span>🐛 Problèmes — 30 derniers jours</span><span style={{ fontSize:11, color:"#81c784" }}>tous utilisateurs</span></div>
+              {!errorsData ? (
+                <div style={{ textAlign:"center", fontSize:12, color:"#81c784", padding:"12px 0" }}>Chargement…</div>
+              ) : errorsData.problems.length === 0 ? (
+                <div style={{ textAlign:"center", fontSize:12, color:"#81c784", padding:"12px 0" }}>✅ Aucune erreur enregistrée</div>
+              ) : errorsData.problems.map(p => {
+                const s = SEV_STYLE[p.severity] || SEV_STYLE.error;
+                const open = openProblem === p.fingerprint;
+                return (
+                  <div key={p.fingerprint} onClick={() => setOpenProblem(open ? null : p.fingerprint)}
+                    style={{ background:s.bg, border:`1px solid ${s.border}`, borderRadius:10, padding:"10px 12px", marginBottom:6, cursor:"pointer" }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", gap:8, marginBottom:4 }}>
+                      <span style={{ fontSize:11, fontWeight:700, color:s.color }}>{p.source === "server" ? "🖥️" : "📱"} {p.kind}</span>
+                      <span style={{ fontSize:10, color:"#e8f5e9", whiteSpace:"nowrap" }}>×{p.count}{p.users ? ` · ${p.users} util.` : ""}</span>
                     </div>
-                  );
-                })
-              )}
+                    <div style={{ fontSize:11, color:"#e8f5e9", lineHeight:1.5, wordBreak:"break-word" }}>{p.message}</div>
+                    <div style={{ fontSize:9, color:"#81c784", marginTop:4 }}>
+                      Dernière : {new Date(p.lastSeen).toLocaleString("fr-FR")} · Première : {new Date(p.firstSeen).toLocaleDateString("fr-FR")}{p.emailed ? " · 📧 alerté" : ""}
+                    </div>
+                    {open && (
+                      <div style={{ marginTop:8, paddingTop:8, borderTop:"1px solid rgba(255,255,255,0.1)" }}>
+                        {p.lastPath && <div style={{ fontSize:9, color:"#81c784" }}>Page : {p.lastPath}</div>}
+                        {p.lastUserAgent && <div style={{ fontSize:9, color:"#81c784", wordBreak:"break-all" }}>Appareil : {p.lastUserAgent}</div>}
+                        {p.lastDetails && Object.entries(p.lastDetails).map(([key, v]) => (
+                          <div key={key} style={{ fontSize:9, color:"#81c784", wordBreak:"break-all" }}>{key} : {String(v)}</div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </>
-        )}
+          );
+        })()}
 
         {/* ════════════════ TAB RÉSEAUX ════════════════ */}
         {tab === "reseaux" && (
