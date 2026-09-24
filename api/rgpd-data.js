@@ -10,8 +10,7 @@
 //   1. Photos Cloudinary (folder mg360-diagnostics/<user_id>)
 //   2. Toutes les tables Supabase : profiles, histories, greenpoints, streaks,
 //      diagnostics, reminders, user_consents, user_access, push_subscriptions
-//   3. Table preinscriptions (par email récupéré via Clerk)
-//   4. Compte Clerk (DELETE /v1/users/{user_id})
+//   3. Compte Clerk (DELETE /v1/users/{user_id})
 //
 // SÉCURITÉ : authentification Bearer token Clerk via Clerk Backend API
 // ════════════════════════════════════════════════════════════════════════════
@@ -60,7 +59,7 @@ async function verifyClerkToken(token) {
   return userId;
 }
 
-// ── Récupération email Clerk (pour suppression preinscriptions par email) ────
+// ── Récupération email Clerk (affiché dans l'export) ────────────────────────
 async function getClerkUserEmail(userId) {
   try {
     const res = await fetch(`https://api.clerk.com/v1/users/${userId}`, {
@@ -191,7 +190,7 @@ module.exports = async function handler(req, res) {
   // ══════════════════════════════════════════════════════════════════════════
   if (req.method === "GET") {
     try {
-      // Récupérer email pour preinscriptions
+      // Email du compte (affiché dans l'export)
       const email = await getClerkUserEmail(userId);
 
       // Récupérer toutes les données en parallèle
@@ -208,7 +207,6 @@ module.exports = async function handler(req, res) {
         parcoursRes,
         classementRes,
         dauRes,
-        preinscriptionRes,
       ] = await Promise.allSettled([
         supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle(),
         supabase.from("histories").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
@@ -222,9 +220,6 @@ module.exports = async function handler(req, res) {
         supabase.from("parcours").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
         supabase.from("classement").select("*").eq("user_id", userId).maybeSingle(),
         supabase.from("daily_active_users").select("*").eq("user_id", userId).order("day", { ascending: false }),
-        email
-          ? supabase.from("preinscriptions").select("*").eq("email", email).maybeSingle()
-          : Promise.resolve({ value: { data: null } }),
       ]);
 
       const getData = (r) => (r.status === "fulfilled" ? r.value?.data : null);
@@ -267,7 +262,6 @@ module.exports = async function handler(req, res) {
         classement:          getData(classementRes) || null,
         jours_actifs:        getData(dauRes) || [],
         abonnement_push:     getData(pushSubRes) ? "Présent (détails masqués pour sécurité)" : "Aucun",
-        waitlist:            getData(preinscriptionRes) || null,
       });
     } catch (e) {
       console.error("[RGPD] GET export error:", e.message);
@@ -285,15 +279,11 @@ module.exports = async function handler(req, res) {
       user_id:           userId,
       cloudinary:        null,
       supabase_tables:   {},
-      preinscriptions:   null,
       clerk_account:     null,
       errors:            [],
     };
 
     try {
-      // ── Étape 0 : récupérer l'email AVANT de supprimer Clerk
-      const email = await getClerkUserEmail(userId);
-
       // ── Étape 1 : Cloudinary (photos diagnostics) ──────────────────────────
       report.cloudinary = await deleteCloudinaryFolder(userId);
 
@@ -330,24 +320,7 @@ module.exports = async function handler(req, res) {
         }
       });
 
-      // ── Étape 3 : Table preinscriptions (par email) ───────────────────────
-      if (email) {
-        const { error: preErr } = await supabase
-          .from("preinscriptions")
-          .delete()
-          .eq("email", email);
-
-        if (preErr) {
-          report.preinscriptions = `⚠️ ${preErr.message}`;
-          report.errors.push(`preinscriptions: ${preErr.message}`);
-        } else {
-          report.preinscriptions = "✅ supprimé";
-        }
-      } else {
-        report.preinscriptions = "⏭️ ignoré (email non récupéré)";
-      }
-
-      // ── Étape 4 : Suppression compte Clerk (DERNIÈRE étape) ───────────────
+      // ── Étape 3 : Suppression compte Clerk (DERNIÈRE étape) ───────────────
       const clerkResult = await deleteClerkAccount(userId);
       if (clerkResult.success) {
         report.clerk_account = "✅ supprimé définitivement";
