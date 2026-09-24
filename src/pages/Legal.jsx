@@ -191,6 +191,8 @@ export function Confidentialite() {
             • <strong>Notifications push</strong> — Base légale : consentement<br/>
             • <strong>Géolocalisation</strong> (météo locale) — Base légale : consentement<br/>
             • <strong>Partage de données anonymisées avec partenaires jardinage</strong> — Base légale : consentement<br/>
+            • <strong>Mesure d'audience anonyme</strong> (Vercel Web Analytics et compteurs internes, sans cookie) — Base légale : intérêt légitime<br/>
+            • <strong>Mesure de l'efficacité de nos publicités</strong> (Meta Pixel, cf. Politique de cookies) — Base légale : consentement<br/>
             • <strong>Gestion des demandes RGPD</strong> (accès, rectification, suppression) — Base légale : obligation légale<br/>
             • <strong>Lutte contre la fraude et sécurité</strong> — Base légale : intérêt légitime
           </SubSection>
@@ -209,7 +211,8 @@ export function Confidentialite() {
             • <strong>Compte inactif :</strong> 24 mois après dernière connexion, puis suppression après notification par email et 45 jours sans réponse<br/>
             • <strong>Données de facturation :</strong> 10 ans (obligation comptable)<br/>
             • <strong>Données de prospection commerciale :</strong> 3 ans à compter du dernier contact<br/>
-            • <strong>Logs techniques :</strong> 1 an
+            • <strong>Logs techniques :</strong> 1 an<br/>
+            • <strong>Cookies et choix de consentement :</strong> cookies Meta 90 jours maximum, choix concernant les cookies de mesure 6 mois (cf. Politique de cookies)
           </SubSection>
 
           <SubSection title="5.4 Origine et modalités de collecte des données">
@@ -229,7 +232,7 @@ export function Confidentialite() {
             • <strong>Groq Inc.</strong> (inférence IA : assistant conversationnel, analyse des photos de diagnostic, génération des recommandations personnalisées)<br/>
             • <strong>Cloudinary Ltd</strong> (hébergement et traitement des photos de diagnostic)<br/>
             • <strong>Plus Five Five Inc. (Resend)</strong> (envoi des emails transactionnels)<br/>
-            • <strong>Vercel Inc.</strong> (hébergement frontend)<br/>
+            • <strong>Vercel Inc.</strong> (hébergement frontend et mesure d'audience anonyme sans cookie)<br/>
             • <strong>Open-Meteo</strong> (données météorologiques)<br/>
             • <strong>Google LLC</strong> (authentification Google, support email)
           </SubSection>
@@ -240,14 +243,19 @@ export function Confidentialite() {
             Mongazon360 ne reçoit d'Amazon aucune donnée personnelle relative aux achats effectués par l'utilisateur sur le site Amazon.fr. Les seules données communiquées par Amazon à Mongazon360 sont des rapports de commissions agrégés (montants, nombre de clics, taux de conversion), qui ne constituent pas des données personnelles.
           </SubSection>
 
-          <SubSection title="6.3 Autorités compétentes">
+          <SubSection title="6.3 Meta Platforms Ireland Limited (Meta Pixel)">
+            Uniquement si vous l'avez accepté via le bandeau cookies, l'application transmet à <strong style={{ color:"#a5d6a7" }}>Meta Platforms Ireland Limited</strong> des données de navigation (identifiant du cookie Meta, page visitée, adresse IP, informations sur le navigateur et l'appareil) ainsi que les événements « début d'inscription » et « inscription finalisée », afin de mesurer l'efficacité de nos publicités sur Facebook et Instagram. Aucune donnée de votre compte (nom, email, profil gazon) n'est transmise.<br/><br/>
+            Mongazon360 et Meta sont responsables conjoints de la collecte et de la transmission de ces données ; Meta en est seul responsable pour tout traitement ultérieur, conformément à sa propre politique de confidentialité. Vous pouvez retirer votre consentement à tout moment depuis <em>Paramètres → Mes consentements</em> (détails dans la Politique de cookies).
+          </SubSection>
+
+          <SubSection title="6.4 Autorités compétentes">
             En cas d'obligation légale, vos données peuvent être communiquées aux autorités compétentes, notamment l'administration fiscale, les juridictions, les forces de l'ordre et la Commission Nationale de l'Informatique et des Libertés (CNIL).
           </SubSection>
         </Section>
 
         <Section title="7. Transferts de données hors Union européenne">
           Les données personnelles des Utilisateurs sont stockées en Union européenne (Supabase, Frankfurt).<br/><br/>
-          Des transferts de données personnelles en dehors de l'Union européenne ne peuvent cependant être totalement exclus dans le cadre de l'utilisation de l'application, par l'intermédiaire des sous-traitants suivants notamment : <strong>Clerk Inc.</strong> (authentification), <strong>Stripe LLC</strong> (paiement), <strong>Groq Inc.</strong> (inférence IA : assistant conversationnel, analyse des photos de diagnostic, recommandations personnalisées), <strong>Cloudinary Ltd</strong> (traitement d'images), <strong>Plus Five Five, Inc./Resend</strong> (envoi d'emails), <strong>Vercel Inc.</strong> (hébergement frontend) et <strong>Google LLC/Gmail</strong> (support email). Des données personnelles pourraient alors être stockées et/ou des transferts de données pourraient intervenir en dehors de l'Union européenne, notamment aux États-Unis.<br/><br/>
+          Des transferts de données personnelles en dehors de l'Union européenne ne peuvent cependant être totalement exclus dans le cadre de l'utilisation de l'application, par l'intermédiaire des sous-traitants suivants notamment : <strong>Clerk Inc.</strong> (authentification), <strong>Stripe LLC</strong> (paiement), <strong>Groq Inc.</strong> (inférence IA : assistant conversationnel, analyse des photos de diagnostic, recommandations personnalisées), <strong>Cloudinary Ltd</strong> (traitement d'images), <strong>Plus Five Five, Inc./Resend</strong> (envoi d'emails), <strong>Vercel Inc.</strong> (hébergement frontend et mesure d'audience), <strong>Google LLC/Gmail</strong> (support email) et, si vous y avez consenti, <strong>Meta Platforms, Inc.</strong> (mesure publicitaire, via Meta Platforms Ireland Limited). Des données personnelles pourraient alors être stockées et/ou des transferts de données pourraient intervenir en dehors de l'Union européenne, notamment aux États-Unis.<br/><br/>
           De plus, <strong>Supabase Inc.</strong> est une société de droit américain. Bien que les données soient hébergées en Union européenne (Frankfurt), un accès distant depuis les États-Unis ou Singapour ne peut être exclu (support, maintenance).<br/><br/>
           Le responsable de traitement s'engage à ce que ces transferts soient réalisés :<br/>
           • vers des pays présentant un niveau de protection dit adéquat au sens des autorités européennes de protection des données, ou<br/>
@@ -654,25 +662,42 @@ export function CGV() {
 export function Cookies() {
   return (
     <div>
-      <PageHeader emoji="🍪" title="Politique de cookies" subtitle="Mise à jour : juin 2026" />
+      <PageHeader emoji="🍪" title="Politique de cookies" subtitle="Mise à jour : 24 septembre 2026" />
       <div style={scroll}>
 
         <Section title="Qu'est-ce qu'un cookie ?">
           Un cookie est un petit fichier texte déposé sur votre terminal (ordinateur, téléphone, tablette) lors de votre visite sur un site web ou d'une utilisation d'une application. Il permet au site ou à l'application de mémoriser des informations relatives à votre navigation.<br/><br/>
-          L'application Mongazon360<sup style={{ fontSize:8 }}>®</sup> n'utilise pas de cookies au sens strict, mais utilise des <strong>technologies similaires</strong> stockées localement sur votre appareil (<em>localStorage</em>, <em>sessionStorage</em>) pour permettre son fonctionnement.
+          L'application Mongazon360<sup style={{ fontSize:8 }}>®</sup> utilise des cookies ainsi que des <strong>technologies similaires</strong> stockées localement sur votre appareil (<em>localStorage</em>, <em>sessionStorage</em>). Seuls les traceurs de mesure publicitaire (Meta) nécessitent votre consentement préalable ; ils ne sont jamais déposés avant votre accord.
         </Section>
 
         <Section title="Technologies utilisées par Mongazon360®">
 
           <SubSection title="🔒 Technologies strictement nécessaires (sans consentement)">
-            Ces technologies sont indispensables au fonctionnement de l'application et ne nécessitent pas votre consentement :<br/><br/>
+            Ces technologies sont indispensables au fonctionnement de l'application ou au service que vous demandez, et ne nécessitent pas votre consentement :<br/><br/>
             • <strong>Authentification (Clerk)</strong> : cookies de session permettant de vous maintenir connecté à votre compte ;<br/>
-            • <strong>Préférences utilisateur</strong> : mémorisation de votre profil gazon, des consentements RGPD acceptés et de la complétion de l'onboarding ;<br/>
+            • <strong>Préférences utilisateur</strong> : mémorisation de votre profil gazon, des consentements acceptés, de votre choix concernant les cookies de mesure et de la complétion de l'onboarding ;<br/>
             • <strong>Suivi technique</strong> : capture de la source d'arrivée (UTM, referer) pour mesurer la performance des campagnes (anonymisé).
           </SubSection>
 
-          <SubSection title="🔔 Technologies soumises à consentement">
-            Ces technologies ne sont activées qu'avec votre accord explicite (modifiable depuis <em>Paramètres → Mes consentements</em>) :<br/><br/>
+          <SubSection title="📈 Mesure d'audience anonyme (sans consentement)">
+            Pour connaître la fréquentation de l'application et améliorer son fonctionnement, Mongazon360<sup style={{ fontSize:7 }}>®</sup> utilise des outils de mesure d'audience qui <strong>ne déposent aucun cookie</strong> et ne permettent pas de vous identifier :<br/><br/>
+            • <strong>Vercel Web Analytics</strong> (Vercel Inc.) : statistiques agrégées de fréquentation (pages vues, page de provenance, pays, type d'appareil et de navigateur). Aucun identifiant persistant n'est stocké sur votre terminal ; les visites sont regroupées à l'aide d'une empreinte technique renouvelée chaque jour ;<br/>
+            • <strong>Compteurs internes</strong> : comptage anonyme du nombre de visites par jour et des étapes du parcours d'inscription, sans lien avec votre identité.<br/><br/>
+            Ces mesures sont strictement limitées à la production de statistiques anonymes pour notre propre compte et ne sont ni recoupées avec d'autres traitements, ni transmises à des tiers à d'autres fins.
+          </SubSection>
+
+          <SubSection title="🎯 Cookies de mesure publicitaire — Meta Pixel (avec consentement)">
+            Avec votre accord, l'application utilise le <strong>Meta Pixel</strong> de Meta Platforms Ireland Limited (Facebook, Instagram) afin de <strong>mesurer l'efficacité de nos publicités</strong> diffusées sur ces réseaux : savoir combien de personnes arrivent sur l'application après avoir vu une publicité et combien créent ensuite un compte.<br/><br/>
+            <strong>Événements transmis :</strong> visite d'une page, début d'inscription, inscription finalisée.<br/>
+            <strong>Données transmises à Meta :</strong> identifiant du cookie Meta, adresse de la page visitée, adresse IP, informations techniques sur le navigateur et l'appareil. Aucune donnée de votre compte (nom, email, profil gazon) n'est transmise.<br/>
+            <strong>Cookies déposés :</strong> <em>_fbp</em> (et <em>_fbc</em> si vous arrivez depuis une publicité), d'une durée de vie de 90 jours.<br/><br/>
+            Mongazon360 et Meta Platforms Ireland Limited sont <strong>responsables conjoints</strong> de la collecte et de la transmission de ces données ; Meta est seul responsable de leur utilisation ultérieure, conformément à sa 
+            <a href="https://www.facebook.com/privacy/policy/" target="_blank" rel="noopener noreferrer" style={{ color:"#a5d6a7", textDecoration:"underline" }}>politique de confidentialité</a>. Ces données peuvent être transférées aux États-Unis (Meta Platforms, Inc.), dans le cadre du Data Privacy Framework UE–États-Unis.<br/><br/>
+            <strong>Sans votre accord, aucun de ces cookies n'est déposé</strong> et aucune donnée n'est envoyée à Meta. Refuser n'a aucune conséquence sur l'utilisation de l'application.
+          </SubSection>
+
+          <SubSection title="🔔 Autres autorisations soumises à consentement">
+            Ces fonctionnalités ne sont activées qu'avec votre accord explicite (modifiable depuis <em>Paramètres → Mes consentements</em>) :<br/><br/>
             • <strong>Notifications push</strong> : envoi d'alertes météo, rappels d'entretien, notifications de gamification ;<br/>
             • <strong>Géolocalisation</strong> : utilisation de votre position GPS pour fournir une météo précise ;<br/>
             • <strong>Partage de données anonymisées</strong> : partage avec des partenaires jardinage de données agrégées (jamais nominatives) à des fins d'études de marché ;<br/>
@@ -680,8 +705,8 @@ export function Cookies() {
           </SubSection>
 
           <SubSection title="📊 Cookies tiers (Amazon)">
-            Lorsque vous cliquez sur un lien d'affiliation Amazon depuis l'application, vous êtes redirigé sur le site Amazon.fr. <strong>Amazon</strong> est alors susceptible de déposer ses propres cookies sur votre terminal, en qualité de responsable de traitement indépendant.<br/><br/>
-            Pour gérer ces cookies, consultez directement la{" "}
+            Lorsque vous cliquez sur un lien d'affiliation Amazon depuis l'application, vous êtes redirigé sur le site Amazon.fr. <strong>Amazon</strong> est alors susceptible de déposer ses propres cookies sur votre terminal, en qualité de responsable de traitement indépendant, afin d'attribuer les achats réalisés dans le cadre du Programme Partenaires Amazon.<br/><br/>
+            Pour gérer ces cookies, consultez directement la 
             <a href="https://www.amazon.fr/gp/help/customer/display.html?nodeId=201909150" target="_blank" rel="noopener noreferrer" style={{ color:"#a5d6a7", textDecoration:"underline" }}>
               Politique de cookies d'Amazon
             </a>.
@@ -689,19 +714,17 @@ export function Cookies() {
         </Section>
 
         <Section title="Gérer vos préférences">
-          Vous pouvez à tout moment modifier vos consentements depuis l'application :<br/><br/>
-          <strong style={{ color:"#a5d6a7" }}>Paramètres → Mes consentements</strong><br/><br/>
-          Vous y trouverez l'ensemble des consentements optionnels que vous pouvez activer ou désactiver, avec effet immédiat.<br/><br/>
-          Vous pouvez également supprimer toutes les données stockées localement sur votre appareil depuis :<br/><br/>
-          <strong style={{ color:"#a5d6a7" }}>Paramètres → Supprimer mes données locales</strong>
+          <strong>Cookies de mesure publicitaire (Meta) :</strong> lors de votre première visite, un bandeau vous permet d'<strong>accepter</strong> ou de <strong>refuser</strong>, aussi simplement l'un que l'autre. Vous pouvez modifier ce choix à tout moment, sur chaque appareil, depuis :<br/><br/>
+          <strong style={{ color:"#a5d6a7" }}>Paramètres → Mes consentements → Cookies de mesure (Meta)</strong><br/><br/>
+          Le retrait de votre consentement arrête immédiatement l'envoi de données à Meta et supprime les cookies Meta de votre terminal. Votre choix (acceptation ou refus) est conservé <strong>6 mois</strong>, après quoi il vous est à nouveau demandé.<br/><br/>
+          <strong>Autres consentements :</strong> vous pouvez les activer ou les désactiver depuis <strong style={{ color:"#a5d6a7" }}>Paramètres → Mes consentements</strong>, avec effet immédiat.<br/><br/>
+          Vous pouvez également supprimer toutes les données stockées localement sur votre appareil depuis <strong style={{ color:"#a5d6a7" }}>Paramètres → Supprimer mes données locales</strong>, ou via les réglages de votre navigateur.
         </Section>
 
         <Section title="Durée de conservation">
-          Les données stockées localement sur votre appareil sont conservées jusqu'à :<br/><br/>
-          • la suppression manuelle par vos soins depuis les Paramètres ;<br/>
-          • la suppression du cache de votre navigateur ;<br/>
-          • la désinstallation de l'application ;<br/>
-          • la suppression de votre compte (cf. Politique de confidentialité, article 5.3).
+          • <strong>Cookies Meta</strong> (<em>_fbp</em>, <em>_fbc</em>) : 90 jours maximum, supprimés dès le retrait de votre consentement ;<br/>
+          • <strong>Choix concernant les cookies de mesure</strong> : 6 mois ;<br/>
+          • <strong>Autres données stockées localement</strong> sur votre appareil : jusqu'à leur suppression par vos soins depuis les Paramètres, la suppression du cache de votre navigateur, la désinstallation de l'application ou la suppression de votre compte (cf. Politique de confidentialité, article 5.3).
         </Section>
 
         <Section title="Contact">

@@ -37,7 +37,7 @@ export default function CookieBanner() {
         alignItems: "center", gap: 12, justifyContent: "space-between",
       }}>
         <div style={{ flex: "1 1 320px", fontSize: 12.5, lineHeight: 1.5, color: "#e8f5e9", fontFamily: "'Nunito','Segoe UI',sans-serif" }}>
-          🍪 On utilise des cookies de <b>mesure d'audience</b> (Meta) pour comprendre d'où viennent nos visiteurs et améliorer nos publicités. Tu peux refuser sans rien perdre.{" "}
+          🍪 Avec ton accord, on utilise des cookies de <b>mesure publicitaire</b> (Meta) pour savoir si nos publicités t'ont amené ici. Tu peux refuser sans rien perdre, et changer d'avis à tout moment dans les Paramètres.{" "}
           <a href="/cookies" style={{ color: "#66BB6A", fontWeight: 700, textDecoration: "underline" }}>En savoir plus</a>
         </div>
         <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
