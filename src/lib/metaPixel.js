@@ -11,7 +11,11 @@ let loaded = false;
 
 // Injecte le code de base Meta puis init + PageView. Idempotent.
 export function loadMetaPixel() {
-  if (loaded || typeof window === "undefined" || typeof document === "undefined") return;
+  if (typeof window === "undefined" || typeof document === "undefined") return;
+  if (loaded) { // consentement redonné dans la même session après un retrait
+    try { window.fbq?.("consent", "grant"); } catch { /* non bloquant */ }
+    return;
+  }
   loaded = true;
   if (window.fbq) return; // déjà présent
   /* eslint-disable */
@@ -32,6 +36,20 @@ export function pixelTrack(event, params) {
   try {
     if (typeof window !== "undefined" && typeof window.fbq === "function") {
       window.fbq("track", event, params || undefined);
+    }
+  } catch { /* non bloquant */ }
+}
+
+// Retrait du consentement : stoppe les envois du pixel déjà chargé et efface ses cookies.
+export function revokeMetaPixel() {
+  try { if (typeof window !== "undefined") window.fbq?.("consent", "revoke"); } catch { /* non bloquant */ }
+  try {
+    const host = window.location.hostname;
+    const domains = ["", host, "." + host, "." + host.split(".").slice(-2).join(".")];
+    for (const name of ["_fbp", "_fbc"]) {
+      for (const d of domains) {
+        document.cookie = `${name}=; Max-Age=0; path=/${d ? "; domain=" + d : ""}`;
+      }
     }
   } catch { /* non bloquant */ }
 }
