@@ -654,7 +654,7 @@ export default function Pilotage() {
             <div style={card()}>
               <div style={cardTitle}><span>🗑️ Purge Cloudinary</span></div>
               <div style={{ fontSize:12, color:"#81c784", marginBottom:12, lineHeight:1.6 }}>
-                Supprime les photos de diagnostic de plus de <strong style={{ color:"#a5d6a7" }}>90 jours</strong> pour libérer du stockage.
+                Les photos de diagnostic de plus de <strong style={{ color:"#a5d6a7" }}>90 jours</strong> sont supprimées automatiquement chaque matin (durée de conservation RGPD). Ce bouton force la purge immédiatement.
               </div>
               <button
                 onClick={purgeDiagnostics}

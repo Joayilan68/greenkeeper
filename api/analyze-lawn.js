@@ -1,6 +1,6 @@
 // api/analyze-lawn.js
 // Upload image sur Cloudinary puis analyse avec Groq Llama Vision
-// Gère aussi la purge des anciennes photos (?action=purge)
+// Gère aussi la purge manuelle des anciennes photos (action=purge, admin) — purge auto : cron send.js
 
 const crypto = require("crypto");
 const { createClerkClient } = require("@clerk/backend");
@@ -28,46 +28,24 @@ module.exports = async function handler(req, res) {
       const payload     = JSON.parse(payloadJson);
       const uid         = payload.sub || payload.user_id;
       if (!uid) throw new Error("sub manquant");
-      await clerk.users.getUser(uid); // vérifie que l'user existe
+      const u     = await clerk.users.getUser(uid);
+      const email = u.emailAddresses?.[0]?.emailAddress || "";
+      const ADMINS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
+      if (!ADMINS.includes(email) && u.publicMetadata?.role !== "admin") {
+        return res.status(403).json({ error: "Accès admin uniquement" });
+      }
     } catch {
       return res.status(401).json({ error: "Token invalide" });
     }
 
     try {
-      const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-      const apiKey    = process.env.CLOUDINARY_API_KEY;
-      const apiSecret = process.env.CLOUDINARY_API_SECRET;
-      const authB64   = Buffer.from(`${apiKey}:${apiSecret}`).toString("base64");
-
-      const cutoff = new Date();
-      cutoff.setDate(cutoff.getDate() - 90);
-
-      const listRes  = await fetch(
-        `https://api.cloudinary.com/v1_1/${cloudName}/resources/image?prefix=mg360-diagnostics&max_results=500`,
-        { headers: { Authorization: `Basic ${authB64}` } }
-      );
-      const listData = await listRes.json();
-      const toDelete = (listData.resources || [])
-        .filter(r => new Date(r.created_at) < cutoff)
-        .map(r => r.public_id);
-
-      if (!toDelete.length) {
-        return res.json({ deleted: 0, message: "Aucune photo à supprimer (toutes < 90 jours)" });
-      }
-
-      const delRes  = await fetch(
-        `https://api.cloudinary.com/v1_1/${cloudName}/resources/image/upload`,
-        {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json", Authorization: `Basic ${authB64}` },
-          body: JSON.stringify({ public_ids: toDelete }),
-        }
-      );
-      const delData = await delRes.json();
+      const { purgeOldDiagnosticPhotos, RETENTION_DAYS } = require("./photoRetention.cjs");
+      const { deleted } = await purgeOldDiagnosticPhotos();
       return res.json({
-        deleted: toDelete.length,
-        message: `${toDelete.length} photo(s) supprimée(s) avec succès`,
-        detail:  delData,
+        deleted,
+        message: deleted
+          ? `${deleted} photo(s) supprimée(s) avec succès`
+          : `Aucune photo à supprimer (toutes < ${RETENTION_DAYS} jours)`,
       });
     } catch (e) {
       return res.status(500).json({ error: e.message });
