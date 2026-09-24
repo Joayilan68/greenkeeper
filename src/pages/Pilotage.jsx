@@ -5,6 +5,7 @@ import { useAuth } from "@clerk/clerk-react";
 import { useSubscription } from "../lib/useSubscription";
 import { card, cardTitle, btn, scroll, header, appShell } from "../lib/styles";
 import RoadmapTab from "../components/RoadmapTab";
+import { CHARGES_ACTIVES, CHARGES_PREVUES, STRIPE_FEES, URSSAF_RATE, montant } from "../lib/charges";
 
 function safeGet(key, fallback = null) {
   try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch { return fallback; }
@@ -190,6 +191,7 @@ export default function Pilotage() {
   const [local, setLocal]     = useState(null);
   const [errorsData, setErrorsData] = useState(null);
   const [servicesData, setServicesData] = useState(null);
+  const [periode, setPeriode] = useState("mois"); // Finances : vue mensuelle ou annuelle
   const [loadingServices, setLoadingServices] = useState(false);
   const [openProblem, setOpenProblem] = useState(null);
   const [sending, setSending] = useState(false);
@@ -622,24 +624,88 @@ export default function Pilotage() {
                 <MiniChart data={revenue.months} valueKey="revenue" color="#e65100" unit="€" />
               </div>
             )}
-            <div style={card()}>
-              <div style={cardTitle}><span>💎 Sources de revenus</span></div>
-              {[
-                { label:"Abonnements mensuel", val:revenue ? eur((revenue.premiumMonthly||0)*4.99) : "—", statut:"✅ Actif", color:"#a5d6a7" },
-                { label:"Abonnements annuel",  val:revenue ? eur((revenue.premiumYearly||0)*39.99)  : "—", statut:"✅ Actif", color:"#a5d6a7" },
-                { label:"Affiliation Amazon",  val:"0€", statut:"✅ Actif", color:"#a5d6a7" },
-                { label:"Données anonymisées", val:"0€", statut:"⏳ Phase 4", color:"#f9a825" },
-                { label:"Marque propre MG360", val:"0€", statut:"⏳ Phase 4", color:"#f9a825" },
-              ].map(({ label, val, statut, color }) => (
-                <div key={label} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"6px 0", borderBottom:"1px solid rgba(255,255,255,0.05)", fontSize:12 }}>
-                  <span>{label}</span>
-                  <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                    <span style={{ fontWeight:700, color }}>{val}</span>
-                    <span style={{ fontSize:10, color:"#81c784" }}>{statut}</span>
+            {/* ── Compte de résultat : produits − charges (mensuel / annuel) ── */}
+            {(() => {
+              const k      = periode === "an" ? 12 : 1;
+              const nbM    = revenue?.premiumMonthly || 0;
+              const nbY    = revenue?.premiumYearly  || 0;
+              const caM    = nbM * 4.99 * k;                  // abonnements mensuels
+              const caY    = nbY * 39.99 * (k / 12);          // abonnements annuels (lissés)
+              const ca     = caM + caY;
+              const stripe = (nbM * (STRIPE_FEES.pct * 4.99 + STRIPE_FEES.fixed)) * k
+                           + (nbY * (STRIPE_FEES.pct * 39.99 + STRIPE_FEES.fixed)) * (k / 12);
+              const urssaf = ca * URSSAF_RATE;
+              const fixes  = CHARGES_ACTIVES.reduce((t, c) => t + montant(c, periode), 0);
+              const charges = fixes + stripe + urssaf;
+              const resultat = ca - charges;
+              const prevues = CHARGES_PREVUES.reduce((t, c) => t + montant(c, periode), 0);
+              const line = (label, val, sub, color = "#e8f5e9", bold = false) => (
+                <div key={label} style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:8, padding:"6px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontSize:12, fontWeight: bold ? 800 : 600 }}>{label}</div>
+                    {sub && <div style={{ fontSize:10, color:"#81c784", marginTop:1 }}>{sub}</div>}
                   </div>
+                  <span style={{ fontSize:12, fontWeight:800, color, whiteSpace:"nowrap" }}>{val}</span>
                 </div>
-              ))}
-            </div>
+              );
+              const section = (t) => <div style={{ fontSize:11, fontWeight:800, color:"#f9a825", margin:"12px 0 2px", textTransform:"uppercase", letterSpacing:1 }}>{t}</div>;
+              const suffixe = periode === "an" ? "/an" : "/mois";
+              return (
+                <>
+                  <div style={{ ...card(), background:"rgba(249,168,37,0.06)", border:"1px solid rgba(249,168,37,0.2)" }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+                      <div style={cardTitle}><span>🧾 Produits et charges</span></div>
+                      <div style={{ display:"flex", gap:4 }}>
+                        {[["mois","Mensuel"],["an","Annuel"]].map(([v, l]) => (
+                          <button key={v} onClick={() => setPeriode(v)} style={{ background: periode===v ? "rgba(249,168,37,0.25)" : "rgba(255,255,255,0.06)", border: periode===v ? "1px solid rgba(249,168,37,0.5)" : "1px solid rgba(255,255,255,0.1)", borderRadius:14, padding:"4px 10px", color: periode===v ? "#f9a825" : "#81c784", fontSize:11, cursor:"pointer" }}>{l}</button>
+                        ))}
+                      </div>
+                    </div>
+                    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:6 }}>
+                      {[["Produits", ca, "#a5d6a7"], ["Charges", charges, "#ef9a9a"], ["Résultat", resultat, resultat >= 0 ? "#66bb6a" : "#ef5350"]].map(([l, v, c]) => (
+                        <div key={l} style={{ background:"rgba(255,255,255,0.05)", borderRadius:10, padding:"8px 4px", textAlign:"center" }}>
+                          <div style={{ fontSize:16, fontWeight:800, color:c }}>{loadingRevenue ? "…" : eur(v)}</div>
+                          <div style={{ fontSize:10, color:"#81c784" }}>{l} {suffixe}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {section("Produits")}
+                    {line("Abonnements mensuels", eur(caM), `${nbM} abonné(s) × 4,99 €/mois`, "#a5d6a7")}
+                    {line("Abonnements annuels", eur(caY), `${nbY} abonné(s) × 39,99 €/an, lissé`, "#a5d6a7")}
+                    {line("Affiliation Amazon", eur(0), "Commissions non remontées automatiquement", "#a5d6a7")}
+                    {line("Données anonymisées · Marque propre", eur(0), "À venir (Phase 4)", "#81c784")}
+                    {line("Total produits", eur(ca), null, "#a5d6a7", true)}
+
+                    {section("Charges fixes")}
+                    {CHARGES_ACTIVES.map(c => line(c.name, eur(montant(c, periode)),
+                      [c.role, c.currency === "USD" ? `${c.amount} $/${c.period}` : null, c.note].filter(Boolean).join(" · "), "#ef9a9a"))}
+
+                    {section("Charges variables")}
+                    {line("Frais Stripe", eur(stripe), `${STRIPE_FEES.pct * 100} % + ${STRIPE_FEES.fixed.toFixed(2).replace(".", ",")} € par paiement`, "#ef9a9a")}
+                    {line("Cotisations URSSAF", eur(urssaf), `${(URSSAF_RATE * 100).toFixed(1).replace(".", ",")} % du chiffre d'affaires`, "#ef9a9a")}
+                    {line("Total charges", eur(charges), null, "#ef9a9a", true)}
+
+                    <div style={{ marginTop:10, padding:"10px 12px", borderRadius:10, background: resultat >= 0 ? "rgba(67,160,71,0.15)" : "rgba(198,40,40,0.15)", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                      <span style={{ fontSize:13, fontWeight:800 }}>Résultat {suffixe}</span>
+                      <span style={{ fontSize:16, fontWeight:900, color: resultat >= 0 ? "#66bb6a" : "#ef5350" }}>{eur(resultat)}</span>
+                    </div>
+                    <div style={{ fontSize:10, color:"#81c784", marginTop:8, lineHeight:1.5 }}>
+                      Produits calculés sur les abonnements actifs Stripe (projection). Montants en dollars convertis au taux indicatif. Charges à tenir à jour dans <code>src/lib/charges.js</code>.
+                    </div>
+                  </div>
+
+                  <div style={card()}>
+                    <div style={cardTitle}><span>🔮 Charges prévues</span><span style={{ fontSize:11, color:"#ffcc80", textTransform:"none", letterSpacing:0 }}>+{eur(prevues)} {suffixe}</span></div>
+                    {CHARGES_PREVUES.map(c => line(c.name, eur(montant(c, periode)),
+                      [c.role, c.currency === "USD" ? `${c.amount} $/${c.period}` : null].filter(Boolean).join(" · "), "#ffcc80"))}
+                    <div style={{ fontSize:10, color:"#81c784", marginTop:8 }}>
+                      Non incluses dans le résultat. Résultat si toutes activées : <strong style={{ color: resultat - prevues >= 0 ? "#66bb6a" : "#ef5350" }}>{eur(resultat - prevues)} {suffixe}</strong>
+                    </div>
+                  </div>
+                </>
+              );
+            })()}
             {loadingRevenue && (
               <div style={{ textAlign:"center", color:"#81c784", fontSize:12, padding:16 }}>🔄 Chargement données Stripe...</div>
             )}
