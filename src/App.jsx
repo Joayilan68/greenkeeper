@@ -17,8 +17,6 @@ import EssaiDiagnostic from "./pages/EssaiDiagnostic";
 import DemoApp from "./pages/DemoApp";
 import Subscribe from "./pages/Subscribe";
 import SubscribeSuccess from "./pages/SubscribeSuccess";
-import Admin from "./pages/Admin";
-import Free from "./pages/Free";
 import Register from "./pages/Register";
 import Settings from "./pages/Settings";
 import Pilotage from "./pages/Pilotage";
@@ -207,10 +205,8 @@ function AppRoutes() {
       <Route path="/signup"            element={<Login mode="signup" />} />
       <Route path="/essai"             element={<EssaiDiagnostic />} />
       <Route path="/demo"              element={<DemoApp />} />
-      <Route path="/admin"             element={<Admin />} />
       <Route path="/register"          element={<PrivateRoute><Register /></PrivateRoute>} />
 
-      <Route path="/free"              element={<PrivateRoute><Layout><Free /></Layout></PrivateRoute>} />
       <Route path="/subscribe"         element={<PrivateRoute><Subscribe /></PrivateRoute>} />
       <Route path="/subscribe/success" element={<PrivateRoute><SubscribeSuccess /></PrivateRoute>} />
 

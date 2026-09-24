@@ -327,6 +327,7 @@ async function handleUsers(req, res) {
     // Actifs/jour (table daily_active_users via vue)
     const dauByDay      = await fetchDauByDay();
     const geo           = await fetchGeoPoints();
+    const diagnostics   = await fetchDiagnosticsStats(new Set(allUsers.map(u => u.id)));
     const siteVisits    = await fetchSiteVisits();
     const funnel        = await fetchFunnel();
 
@@ -344,6 +345,7 @@ async function handleUsers(req, res) {
       months,
       dauByDay,
       geo,
+      diagnostics,
       siteVisits,
       funnel,
       clerkSources,
@@ -437,6 +439,33 @@ async function fetchDauByDay() {
 
 // ── Helper : points géographiques des inscrits (profiles.lat/lon agrégés) ─────
 // Regroupe par coordonnées arrondies (≈ même ville) avec un compteur.
+// ── Helper : diagnostics photo de tous les inscrits (hors admins) ──────────────
+// Total, 7 derniers jours, score visuel moyen, problèmes les plus détectés.
+async function fetchDiagnosticsStats(userIds) {
+  try {
+    const sb = createClient(SB_URL, SB_KEY);
+    const { data, error } = await sb.from("diagnostics").select("user_id, created_at, score_visuel, problemes").limit(10000);
+    if (error) throw new Error(error.message);
+    const rows  = (data || []).filter(r => userIds.has(r.user_id));
+    const day7  = Date.now() - 7 * 86400e3;
+    const scores = rows.map(r => r.score_visuel).filter(v => typeof v === "number");
+    const probs = {};
+    for (const r of rows) for (const p of (Array.isArray(r.problemes) ? r.problemes : [])) {
+      if (p?.nom) probs[p.nom] = (probs[p.nom] || 0) + 1;
+    }
+    return {
+      total:  rows.length,
+      last7:  rows.filter(r => new Date(r.created_at).getTime() >= day7).length,
+      users:  new Set(rows.map(r => r.user_id)).size,
+      avgScore: scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null,
+      topProblems: Object.entries(probs).sort((a, b) => b[1] - a[1]).slice(0, 5),
+    };
+  } catch (e) {
+    console.warn("stats-users diagnostics:", e.message);
+    return null;
+  }
+}
+
 async function fetchGeoPoints() {
   try {
     if (!SB_URL || !SB_KEY) return [];
