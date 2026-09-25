@@ -30,6 +30,7 @@ import { useUTMCapture, getCapturedUTM } from "./lib/useUTMCapture"; // ✅ Bloc
 import { useUTMInjection } from "./lib/useUTMInjection"; // ✅ Bloc 1 — injection Clerk metadata first-touch
 import { trackFunnel }     from "./lib/funnel";          // ✅ suivi d'entonnoir (conversion)
 import { deviceInfo }      from "./lib/platform";
+import { usePageMeta }     from "./lib/usePageMeta";      // titre / description / canonique par page
 import { isAnonPending, getAnonIdIfAny, setAnonPending } from "./lib/anonId"; // ✅ rattachement diagnostic anonyme
 import CookieBanner        from "./components/CookieBanner"; // ✅ consentement cookies (RGPD)
 import { getCookieConsent } from "./lib/cookieConsent";
@@ -82,6 +83,7 @@ function pingVisit() {
 
 function AppWithWeather({ children }) {
   usePilotage();
+  usePageMeta();
   useUTMCapture();   // capte les UTM dès l'arrivée sur le site
   useUTMInjection(); // ✅ FIX 01/06/2026 — injecte les UTM dans Clerk unsafeMetadata (first-touch)
 
