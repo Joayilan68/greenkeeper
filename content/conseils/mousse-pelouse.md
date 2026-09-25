@@ -65,4 +65,4 @@ Il n'existe pas de produit miracle « naturel » aussi rapide que le sulfate de 
 
 ## Bob repère la mousse pour vous
 
-Prenez votre pelouse en photo dans Mongazon360 : Bob détecte la mousse, estime son importance et vous propose un plan d'action adapté à votre sol, à votre exposition et à la météo de votre commune, avec les bonnes dates pour traiter, scarifier et regarnir.
+Prenez votre pelouse en photo dans Mongazon360 : Bob détecte la mousse, estime son importance et vous explique quoi faire. Votre plan d'entretien, adapté à votre sol, à votre exposition et à la météo de votre commune, vous propose ensuite la scarification et le regarnissage aux bonnes périodes.
