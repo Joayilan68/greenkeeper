@@ -4,9 +4,9 @@
 //   - Notification       → absent sur Safari iOS, tous les WebViews in-app
 //   - PushManager        → absent sur Safari < 16.4, tous les WebViews
 //   - ServiceWorker      → absent sur certains WebViews et navigateurs anciens
-//   - localStorage       → vide en Safari navigation privée (ne crash pas mais vide)
 // ─────────────────────────────────────────────────────────────────────────────
 import { useState, useEffect } from "react";
+import { sendBugAlert } from "./usePilotage";
 
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
 
@@ -26,11 +26,22 @@ const isSWSupported = () => {
   catch { return false; }
 };
 
-// ── Lecture sécurisée du localStorage ────────────────────────────────────────
-const safeLocalStorage = {
-  get: (key) => { try { return localStorage.getItem(key); } catch { return null; } },
-  set: (key, val) => { try { localStorage.setItem(key, val); } catch {} },
-};
+// Enregistre l'abonnement côté serveur — l'utilisateur est identifié par son jeton Clerk
+async function saveSubscription(sub) {
+  const token = await window.Clerk?.session?.getToken();
+  if (!token) throw new Error("session absente");
+  const res = await fetch("/api/send?type=save-sub", {
+    method:  "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body:    JSON.stringify({ subscription: sub.toJSON() }),
+  });
+  if (!res.ok) throw new Error(`save-sub HTTP ${res.status}`);
+}
+
+// Échec d'activation → Pilotage → Bugs (sévérité info : mesure, sans email)
+function reportActivationFailure(reason, detail) {
+  sendBugAlert("Notifications — activation impossible", `${reason}${detail ? ` : ${detail}` : ""}`, {}, "info");
+}
 
 function urlBase64ToUint8Array(base64String) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -49,7 +60,6 @@ export function usePushNotifications(userId) {
     catch { return "denied"; }
   });
 
-  const [subscription, setSubscription] = useState(null);
   const [loading, setLoading]           = useState(false);
   const [error, setError]               = useState(null);
 
@@ -79,18 +89,10 @@ export function usePushNotifications(userId) {
         }
 
         if (cancelled || !sub) return;
-        setSubscription(sub);
-        safeLocalStorage.set("gk_push_sub", JSON.stringify(sub.toJSON()));
 
         // Ré-enregistrement en base (upsert) → updated_at + endpoint rafraîchis
         if (userId && isNotificationSupported() && Notification.permission === "granted") {
-          try {
-            await fetch("/api/send?type=save-sub", {
-              method:  "POST",
-              headers: { "Content-Type": "application/json" },
-              body:    JSON.stringify({ subscription: sub.toJSON(), userId }),
-            });
-          } catch { /* réseau indisponible — non bloquant */ }
+          try { await saveSubscription(sub); } catch { /* réseau indisponible — non bloquant */ }
         }
       } catch (err) {
         console.warn("[MG360] SW init/refresh:", err.message);
@@ -101,39 +103,35 @@ export function usePushNotifications(userId) {
   }, [userId]);
 
   // ── Demander permission + s'abonner ──────────────────────────────────────────
+  // Renvoie true si l'abonnement est actif ET enregistré côté serveur ; sinon false
+  // et `error` contient un message affichable. À appeler depuis un clic (geste utilisateur).
   const subscribe = async () => {
-    if (!isNotificationSupported()) {
-      setError("Notifications non supportées sur ce navigateur ou appareil");
+    const fail = (message, reason, detail) => {
+      setError(message);
+      setLoading(false);
+      reportActivationFailure(reason, detail);
       return false;
+    };
+    if (!isNotificationSupported() || !isPushSupported()) {
+      return fail("Les notifications ne sont pas disponibles sur cet appareil ou ce navigateur.", "non supporté", navigator.userAgent);
     }
-    if (!isPushSupported()) {
-      setError("Push notifications non supportées sur ce navigateur");
-      return false;
-    }
-    if (!VAPID_PUBLIC_KEY) {
-      setError("Configuration manquante");
-      return false;
-    }
+    if (!VAPID_PUBLIC_KEY) return fail("Configuration manquante.", "clé VAPID absente");
 
     setLoading(true);
     setError(null);
-
     try {
-      // Si permission déjà accordée, ne pas redemander
       let perm = Notification.permission;
       if (perm !== "granted") {
         perm = await Notification.requestPermission();
         setPermission(perm);
       }
       if (perm !== "granted") {
-        setError("Permission refusée");
-        setLoading(false);
-        return false;
+        return fail(
+          "Les notifications sont bloquées. Autorise-les dans les réglages de ton téléphone (Paramètres → Applications → Mongazon360 → Notifications) ou de ton navigateur, puis réessaie.",
+          perm === "denied" ? "autorisation refusée" : "autorisation non accordée", navigator.userAgent);
       }
 
       const reg = await navigator.serviceWorker.ready;
-
-      // Récupérer subscription existante OU en créer une nouvelle
       let sub = await reg.pushManager.getSubscription();
       if (!sub) {
         sub = await reg.pushManager.subscribe({
@@ -141,101 +139,34 @@ export function usePushNotifications(userId) {
           applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
         });
       }
-      setSubscription(sub);
-      safeLocalStorage.set("gk_push_sub", JSON.stringify(sub.toJSON()));
-
-      // Sauvegarder dans Supabase — toujours, même si subscription existait déjà
-      try {
-        const saveRes = await fetch("/api/send?type=save-sub", {
-          method:  "POST",
-          headers: { "Content-Type": "application/json" },
-          body:    JSON.stringify({ subscription: sub.toJSON(), userId }),
-        });
-        if (saveRes.ok) {
-          console.log("[MG360] save-sub OK");
-        } else {
-          console.warn("[MG360] save-sub error:", saveRes.status, await saveRes.text());
-        }
-      } catch (e) {
-        console.warn("[MG360] save-sub fetch error:", e.message);
-      }
-
+      await saveSubscription(sub);
       setLoading(false);
       return true;
     } catch (e) {
-      setError(e.message);
-      setLoading(false);
-      return false;
+      return fail("L'activation a échoué. Réessaie dans quelques instants.", "erreur technique", e?.message);
     }
   };
 
-  // ── Notification de test ──────────────────────────────────────────────────────
+  // ── Notification de test (envoyée par le serveur sur l'abonnement de l'utilisateur) ──
   const sendTestNotification = async () => {
-    if (!subscription) return;
     try {
-      await fetch("/api/send?type=notification", {
+      const token = await window.Clerk?.session?.getToken();
+      if (!token) return;
+      await fetch("/api/send?type=notification-test", {
         method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({
-          subscription,
-          notification: {
-            title: "🌿 Mongazon360",
-            body:  "Vos notifications sont activées !",
-            actionRoute: "/",
-            tag:   "test",
-          },
-        }),
+        headers: { Authorization: `Bearer ${token}` },
       });
     } catch (e) {
       console.warn("[MG360] Test notif:", e.message);
     }
   };
 
-  // ── Alerte basée sur les rappels ──────────────────────────────────────────────
-  const sendAlert = async (notif) => {
-    const subRaw = subscription
-      ? JSON.stringify(subscription)
-      : safeLocalStorage.get("gk_push_sub");
-    const sub = subRaw ? JSON.parse(subRaw) : null;
-    if (!sub) return;
-
-    // Max 1 fois par semaine par type
-    const lastKey  = `gk_notif_last_${notif.id}`;
-    const last     = safeLocalStorage.get(lastKey);
-    if (last) {
-      const daysSince = (Date.now() - parseInt(last)) / (1000 * 60 * 60 * 24);
-      if (daysSince < 7) return;
-    }
-
-    try {
-      await fetch("/api/send?type=notification", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({
-          subscription: sub,
-          notification: {
-            title:       `🌿 Mongazon360 — ${notif.title}`,
-            body:        notif.message,
-            actionRoute: notif.actionRoute,
-            action:      notif.action,
-            tag:         notif.id,
-          },
-        }),
-      });
-      safeLocalStorage.set(lastKey, Date.now().toString());
-    } catch (e) {
-      console.warn("[MG360] sendAlert:", e.message);
-    }
-  };
-
   return {
     permission,
-    subscription,
     loading,
     error,
     isSupported: isNotificationSupported() && isPushSupported(),
     subscribe,
     sendTestNotification,
-    sendAlert,
   };
 }

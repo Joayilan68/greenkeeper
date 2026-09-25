@@ -32,7 +32,7 @@ export default function Dashboard() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showScoreInfo, setShowScoreInfo] = useState(false);
 
-  const { permission, subscribe, sendTestNotification, isSupported } = usePushNotifications(user?.id);
+  const { subscribe, sendTestNotification, isSupported, error: pushError, loading: pushLoading } = usePushNotifications(user?.id);
   const { consents, updateConsents, showPushBanner, syncFromReminders } = useConsents();
   const { enableAll } = useReminders(syncFromReminders);
 
@@ -169,19 +169,16 @@ export default function Dashboard() {
             <div style={{ flex:1 }}>
               <div style={{ fontSize:13, fontWeight:800, color:"#F1F8F2", marginBottom:3 }}>Activez les alertes</div>
               <div style={{ fontSize:12, color:"#81c784", lineHeight:1.5 }}>
-                Recevez vos rappels d'entretien même app fermée.
+                Recevez les conseils de Bob même app fermée.
               </div>
+              {pushError && <div style={{ fontSize:11, color:"#ffcc80", lineHeight:1.5, marginTop:6 }}>⚠️ {pushError}</div>}
             </div>
             <div
               role="button"
-              onClick={() => handleActivatePush()}
-              onTouchEnd={(e) => {
-                e.preventDefault();
-                handleActivatePush();
-              }}
+              onClick={() => { if (!pushLoading) handleActivatePush(); }}
               style={{ flexShrink:0, padding:"8px 14px", borderRadius:10, background:"linear-gradient(135deg,#43a047,#2e7d32)", color:"#fff", fontWeight:800, fontSize:12, cursor:"pointer", userSelect:"none", WebkitTapHighlightColor:"transparent" }}
             >
-              Activer
+              {pushLoading ? "…" : "Activer"}
             </div>
           </div>
         )}
