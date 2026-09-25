@@ -62,4 +62,4 @@ Si votre pelouse souffre de mousse, l'engrais seul ne suffit pas. Traitez la mou
 
 ## Mongazon360 vous donne le bon moment
 
-Mongazon360 suit la température du sol et la pluie annoncée dans votre commune pour vous indiquer **la fenêtre idéale d'épandage**, et vous rappelle l'apport d'automne au bon moment. Votre plan d'entretien est adapté à votre type de gazon, à votre sol et à votre région.
+Le plan d'entretien de Mongazon360 vous rappelle **l'apport d'automne au bon moment**, avec le type d'engrais adapté à la saison, en tenant compte de la météo de votre commune. Il est personnalisé selon votre type de gazon, votre sol et votre région.

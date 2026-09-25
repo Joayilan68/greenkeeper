@@ -67,4 +67,4 @@ Les feuilles mortes sont une ressource précieuse pour le jardin :
 
 ## Mongazon360 vous rappelle les bons gestes
 
-Mongazon360 vous envoie les rappels d'entretien d'automne au bon moment, selon la météo de votre commune : ramassage des feuilles, dernière tonte, engrais d'automne, regarnissage. Et si des plaques jaunes apparaissent, le diagnostic photo de Bob vous dit si c'est dû aux feuilles, à une maladie ou à un autre problème.
+Mongazon360 vous propose un plan d'entretien d'automne adapté à la météo de votre commune : tonte, engrais d'automne, scarification, regarnissage guidé. Et si des plaques jaunes apparaissent, le diagnostic photo de Bob vous dit si c'est dû aux feuilles, à une maladie ou à un autre problème.

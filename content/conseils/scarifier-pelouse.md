@@ -73,4 +73,4 @@ Il y a **deux périodes idéales**, quand le gazon pousse activement et pourra s
 
 ## Mongazon360 vous dit quand scarifier
 
-Mongazon360 suit la température et l'humidité du sol de votre commune pour vous indiquer **la bonne fenêtre** de scarification, et vous prévient si une période sèche rend l'opération risquée. Le diagnostic photo de Bob détecte la mousse et le feutre pour vous dire si votre pelouse en a vraiment besoin.
+Le plan d'entretien de Mongazon360 vous propose la scarification **aux bonnes périodes de l'année** et la reporte automatiquement quand la pluie est annoncée dans votre commune. Le diagnostic photo de Bob détecte la mousse et le feutre pour vous dire si votre pelouse en a vraiment besoin.
