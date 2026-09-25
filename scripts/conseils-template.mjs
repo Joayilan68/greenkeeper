@@ -38,7 +38,8 @@ function page({ title, description, path, ogType, jsonLd, body, campagne }) {
 <meta name="description" content="${esc(description)}" />
 <meta name="robots" content="index, follow" />
 <link rel="canonical" href="${url}" />
-<link rel="icon" href="/favicon.ico" />
+<link rel="icon" href="/favicon.ico" sizes="48x48" />
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png" />
 <meta property="og:type" content="${ogType}" />
 <meta property="og:url" content="${url}" />
 <meta property="og:title" content="${esc(title)}" />
