@@ -1,0 +1,10 @@
+{
+  "fenetres": [
+    { "nom": "hiver", "debut": "12-01", "fin": "02-25" },
+    { "nom": "été",   "debut": "07-01", "fin": "08-15" }
+  ],
+  "prixAnnuel": 39.99,
+  "prixOffre": 19.99,
+  "remiseCentimes": 2000,
+  "couponStripe": "MG360_SAISON_1AN"
+}

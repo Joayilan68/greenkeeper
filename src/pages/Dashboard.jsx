@@ -8,7 +8,8 @@ import { useSubscription } from "../lib/useSubscription";
 import { MONTHLY_PLAN, MONTHS_FR, getWMO } from "../lib/lawn";
 import { calcLawnScore } from "../lib/lawnScore";
 import { usePushNotifications } from "../lib/usePushNotifications";
-import { isIOS, isStandalone } from "../lib/platform";
+import { isIOS, isStandalone, isAndroidTWA } from "../lib/platform";
+import { OFFRE, offreEnCours } from "../lib/offreSaison";
 import { useConsents } from "../lib/useConsents";
 import { useReminders } from "../lib/useReminders";
 import AlertBanner from "../components/AlertBanner";
@@ -28,7 +29,7 @@ export default function Dashboard() {
   const { weather, location, locationName, alerts = [], loading, locLoading, refreshLocation } = useWeather() || {};
   const { profile, saveProfile, synced } = useProfile();
   const { history = [] } = useHistory();
-  const { isPaid = false, isAdmin = false } = useSubscription() || {};
+  const { isPaid = false, isAdmin = false, isTrial = false, isLoading: subLoading = true } = useSubscription() || {};
   const [showIssues, setShowIssues]   = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showScoreInfo, setShowScoreInfo] = useState(false);
@@ -87,6 +88,8 @@ export default function Dashboard() {
 
   const { score, potential, label, color, issues, strengths, diagScore, diagEmoji, diagAge, diagInfluence, hasDiag }
     = calcLawnScore({ weather, profile, history, month, diagnostics });
+
+  const offre = offreEnCours();
 
   // iPhone dans Safari : sans installation, pas de notifications possibles → guide d'installation
   const [showIosInstall, setShowIosInstall] = useState(() => {
@@ -191,6 +194,18 @@ export default function Dashboard() {
             >
               {pushLoading ? "…" : "Activer"}
             </div>
+          </div>
+        )}
+
+        {/* ── OFFRE SAISONNIÈRE (comptes gratuits ou en essai, hors app Android : pas d'achat dans le TWA) ── */}
+        {offre && !subLoading && (!isPaid || isTrial) && !isAndroidTWA() && (
+          <div role="button" onClick={() => navigate("/subscribe")} style={{ background:"linear-gradient(135deg,rgba(249,168,37,0.25),rgba(13,43,26,0.8))", border:"1px solid rgba(249,168,37,0.45)", borderRadius:14, padding:"14px 16px", marginBottom:4, display:"flex", alignItems:"center", gap:12, cursor:"pointer" }}>
+            <span style={{ fontSize:24, flexShrink:0 }}>{offre.nom === "hiver" ? "❄️" : "☀️"}</span>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:13, fontWeight:800, color:"#ffe082", marginBottom:3 }}>Offre {offre.nom === "hiver" ? "d'hiver" : "d'été"} : Premium 1 an à {String(OFFRE.prixOffre).replace(".", ",")} €</div>
+              <div style={{ fontSize:12, color:"#81c784", lineHeight:1.5 }}>Au lieu de {String(OFFRE.prixAnnuel).replace(".", ",")} € — jusqu'au {offre.finLabel}. Prépare ta saison avec Bob.</div>
+            </div>
+            <span style={{ color:"#ffe082", fontSize:18, flexShrink:0 }}>›</span>
           </div>
         )}
 

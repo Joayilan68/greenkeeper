@@ -97,6 +97,32 @@ function buildConseilEmailHtml(prenom, title, body) {
 </div></body></html>`;
 }
 
+// Email offre / fin de bêta (commercial : lien de désinscription vers les Paramètres)
+function buildOffreEmailHtml(prenom, titre, paragraphes, cta) {
+  const year = new Date().getFullYear();
+  const esc = (v) => String(v ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"/></head>
+<body style="font-family:Arial,sans-serif;background:#f5f5f5;margin:0;padding:20px;">
+<div style="max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 20px rgba(0,0,0,0.1);">
+  <div style="background:#1a4731;padding:24px 28px;">
+    <div style="color:#a5d6a7;font-size:18px;font-weight:800;">Mongazon360<sup style="font-size:10px;">®</sup></div>
+    <div style="color:#4a7c5c;font-size:11px;font-style:italic;">Tant qu'il y a gazon, il y a match</div>
+  </div>
+  <div style="padding:24px 28px;">
+    <div style="font-size:20px;font-weight:800;color:#1a4731;margin-bottom:12px;">${esc(titre)}</div>
+    <div style="font-size:14px;color:#555;line-height:1.7;margin-bottom:8px;">Bonjour ${esc(prenom)},</div>
+    ${paragraphes.map(p => `<div style="font-size:14px;color:#555;line-height:1.7;margin-bottom:8px;">${p}</div>`).join("")}
+    <div style="text-align:center;margin:24px 0;">
+      <a href="https://mongazon360.fr/subscribe" style="background:#43a047;color:#fff;text-decoration:none;padding:15px 34px;border-radius:12px;font-size:15px;font-weight:800;display:inline-block;">${esc(cta)} →</a>
+    </div>
+  </div>
+  <div style="background:#f9fbe7;padding:14px 28px;border-top:1px solid #e8f5e9;text-align:center;">
+    <div style="color:#4a7c5c;font-size:10px;"><a href="https://mongazon360.fr/parametres" style="color:#52b788;">Gérer mes préférences d'emails</a></div>
+    <div style="color:#81c784;font-size:9px;margin-top:4px;">© ${year} Mongazon360<sup style="font-size:7px;">®</sup> — Marque déposée et enregistrée à l'EUIPO · <a href="https://mongazon360.fr/mentions-legales" style="color:#52b788;">Mentions légales</a> · <a href="https://mongazon360.fr/confidentialite" style="color:#52b788;">Confidentialité</a></div>
+  </div>
+</div></body></html>`;
+}
+
 // Email de relance fin d'essai Premium (transactionnel — service en cours)
 function buildTrialEmailHtml(prenom, when) {
   const year = new Date().getFullYear();
@@ -590,6 +616,80 @@ module.exports = async function handler(req, res) {
         } catch (e) { await require("./alerting.cjs").reportServerError("Tâche planifiée — relances essai", e); }
       }
 
+      // ── OFFRE SAISONNIÈRE + FIN DE BÊTA — emails, créneau MATIN ────────────
+      // 1. Premium offert à date (bêta) : annonce à J-7 et J-1, avec l'offre en cours au lendemain.
+      // 2. Période creuse en cours : 1 email de lancement par compte gratuit ayant accepté les
+      //    offres (marketing), marqué dans Clerk (private_metadata.offreSaison) ; 25/jour max
+      //    pour rester sous le quota Resend (100/jour, conseils par email compris).
+      let offreEmails = 0;
+      if (slot === "matin") {
+        try {
+          const { OFFRE, offreEnCours } = require("./offreSaison.cjs");
+          const euros = (n) => `${String(n).replace(".", ",")} €`;
+          const sendOffre = async (to, subject, html) => {
+            const r = await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
+              body: JSON.stringify({ from: "Mongazon360 <bonjour@mongazon360.fr>", to: [to], subject, html,
+                headers: { "List-Unsubscribe": "<https://mongazon360.fr/parametres>" } }),
+            });
+            const d = await r.json().catch(() => ({}));
+            if (!r.ok || d.error) throw new Error("Resend : " + (d.error?.message || r.status));
+            offreEmails++;
+          };
+          const offre = offreEnCours();
+          const saisonKey = offre && `${new Date().getMonth() < 6 && offre.nom === "hiver" ? new Date().getFullYear() - 1 : new Date().getFullYear()}-${offre.nom}`;
+          let campagne = 0;
+
+          for (const u of await getClerkUsers()) {
+            const pm = u.public_metadata || {};
+            const email = primaryEmail(u);
+            if (!email) continue;
+            const prenom = u.first_name || "jardinier";
+
+            // 1. Fin de bêta à J-7 / J-1
+            if (pm.guestAccess === true && pm.guestUntil) {
+              const joursRestants = Math.round((Date.parse(pm.guestUntil) - Date.parse(today)) / 86400000);
+              if (joursRestants === 7 || joursRestants === 1) {
+                const lendemain = new Date(Date.parse(pm.guestUntil) + 36 * 3600e3);
+                const offreApres = offreEnCours(lendemain);
+                const dateFin = new Date(pm.guestUntil).toLocaleDateString("fr-FR");
+                await sendOffre(email,
+                  joursRestants === 1 ? "🌿 Ton accès Premium bêta se termine demain" : `🌿 Ton accès Premium bêta se termine le ${dateFin}`,
+                  buildOffreEmailHtml(prenom, "Merci d'avoir testé Mongazon360 Premium 🙏", [
+                    `Ton accès Premium de bêta-testeur se termine le <b>${dateFin}</b>. Tes retours ont beaucoup aidé à faire grandir l'app.`,
+                    offreApres
+                      ? `Pour continuer avec Bob, le diagnostic photo et l'arrosage précis : <b>Premium 1 an à ${euros(OFFRE.prixOffre)}</b> au lieu de ${euros(OFFRE.prixAnnuel)}, du lendemain jusqu'au ${offreApres.finLabel}.`
+                      : "Pour continuer avec Bob, le diagnostic photo et l'arrosage précis, passe Premium en un clic.",
+                    "Sans action de ta part, ton compte repasse simplement en version gratuite : tu gardes ton profil, ton historique et ton score.",
+                  ], offreApres ? `Premium 1 an à ${euros(OFFRE.prixOffre)}` : "Passer Premium"));
+              }
+              continue;
+            }
+
+            // 2. Lancement de l'offre saisonnière
+            if (!offre || campagne >= 25) continue;
+            if (!consentMap[u.id]?.marketing || (u.private_metadata || {}).offreSaison === saisonKey) continue;
+            if (pm.isSubscribed === true || pm.subscriptionStatus === "active" || pm.subscriptionStatus === "trialing" || clerkGuestActive(pm)) continue;
+            await sendOffre(email,
+              `${offre.nom === "hiver" ? "❄️" : "☀️"} Premium 1 an à ${euros(OFFRE.prixOffre)} — jusqu'au ${offre.finLabel}`,
+              buildOffreEmailHtml(prenom, `Offre ${offre.nom === "hiver" ? "d'hiver" : "d'été"} : Premium 1 an à ${euros(OFFRE.prixOffre)}`, [
+                `Jusqu'au <b>${offre.finLabel}</b>, l'abonnement Premium annuel est à <b>${euros(OFFRE.prixOffre)} la première année</b> au lieu de ${euros(OFFRE.prixAnnuel)}.`,
+                offre.nom === "hiver"
+                  ? "Le bon moment pour préparer le printemps : diagnostic photo par Bob, plan d'entretien personnalisé, arrosage précis dès les premières chaleurs."
+                  : "Le bon moment pour sauver ton gazon de l'été : arrosage calculé au millimètre, alertes canicule, diagnostic photo par Bob.",
+                `Offre valable sur l'abonnement annuel souscrit sur le site, renouvelé ensuite à ${euros(OFFRE.prixAnnuel)}/an, résiliable à tout moment.`,
+              ], "J'en profite"));
+            await fetch(`https://api.clerk.com/v1/users/${u.id}/metadata`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}` },
+              body: JSON.stringify({ private_metadata: { offreSaison: saisonKey } }),
+            });
+            campagne++;
+          }
+        } catch (e) { await require("./alerting.cjs").reportServerError("Tâche planifiée — emails offre saisonnière", e); }
+      }
+
       // ── FIN DES PREMIUM OFFERTS À DATE (bêta…) — créneau MATIN ─────────────
       // Date de fin dépassée → user_access repasse en "approved" et Clerk perd
       // guestAccess/guestUntil. Les accès sans date (famille) ne sont jamais touchés.
@@ -686,8 +786,8 @@ module.exports = async function handler(req, res) {
       }
       await alerting.setStatus(`cron_${slot}`, { date: today, at: new Date().toISOString(), pushSent, emailSent, emailFallbackSent, photosPurgees });
 
-      console.log(`[CRON ${slot}] reminders:`, remindersData?.length || 0, "pushSent:", pushSent, "emailSent:", emailSent, "emailFallbackSent:", emailFallbackSent, "skipped:", skipped, "parcoursSent:", parcoursSent, "parcoursTermines:", parcoursTermines, "trialRelances:", trialRelances, "baselineSent:", baselineSent, "premiumOffertsExpires:", premiumOffertsExpires, "photosPurgees:", photosPurgees);
-      return res.json({ success: true, date: today, slot, pushSent, emailSent, emailFallbackSent, skipped, parcoursSent, parcoursTermines, trialRelances, baselineSent, premiumOffertsExpires, photosPurgees, reminders: remindersData?.length || 0 });
+      console.log(`[CRON ${slot}] reminders:`, remindersData?.length || 0, "pushSent:", pushSent, "emailSent:", emailSent, "emailFallbackSent:", emailFallbackSent, "skipped:", skipped, "parcoursSent:", parcoursSent, "parcoursTermines:", parcoursTermines, "trialRelances:", trialRelances, "baselineSent:", baselineSent, "premiumOffertsExpires:", premiumOffertsExpires, "offreEmails:", offreEmails, "photosPurgees:", photosPurgees);
+      return res.json({ success: true, date: today, slot, pushSent, emailSent, emailFallbackSent, skipped, parcoursSent, parcoursTermines, trialRelances, baselineSent, premiumOffertsExpires, offreEmails, photosPurgees, reminders: remindersData?.length || 0 });
     } catch (e) {
       await require("./alerting.cjs").reportServerError("Tâche planifiée en échec", e, { "Créneau": req.query.slot || "matin" });
       return res.status(500).json({ error: e.message });
