@@ -6,6 +6,7 @@
 
 const { createClient } = require("@supabase/supabase-js");
 const { createClerkClient } = require("@clerk/backend");
+const { verifiedUserId, ADMIN_EMAILS } = require("./auth.cjs");
 
 const supabase = createClient(
   process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
@@ -114,19 +115,9 @@ module.exports = async function handler(req, res) {
     const authHeader = req.headers.authorization;
     if (authHeader?.startsWith("Bearer ")) {
       try {
-        // Décoder le JWT manuellement pour extraire le sub (user_id)
-        // puis vérifier via Clerk Admin API que l'user existe bien
-        const token = authHeader.replace("Bearer ", "");
-        const parts = token.split(".");
-        if (parts.length !== 3) throw new Error("JWT malformé");
-        const payloadJson = Buffer.from(parts[1], "base64url").toString("utf8");
-        const payload     = JSON.parse(payloadJson);
-        userId = payload.sub || payload.user_id;
-        if (!userId) throw new Error("sub manquant");
-
-        // Vérifier que l'user existe dans Clerk (prouve que le token est légitime)
+        userId = await verifiedUserId(req);
+        if (!userId) throw new Error("Jeton invalide");
         const user = await clerk.users.getUser(userId);
-        const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
         const email = user.emailAddresses?.[0]?.emailAddress || "";
 
         const isAdmin   = user.publicMetadata?.role === "admin" || ADMIN_EMAILS.includes(email);

@@ -12,52 +12,17 @@
 //      diagnostics, reminders, user_consents, user_access, push_subscriptions
 //   3. Compte Clerk (DELETE /v1/users/{user_id})
 //
-// SÉCURITÉ : authentification Bearer token Clerk via Clerk Backend API
+// SÉCURITÉ : jeton Clerk (Bearer) à signature vérifiée — api/auth.cjs
 // ════════════════════════════════════════════════════════════════════════════
 
 const { createClient } = require("@supabase/supabase-js");
 const crypto = require("crypto");
+const { verifiedUserId } = require("./auth.cjs");
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
-
-// ── Vérification token Clerk via /v1/me ──────────────────────────────────────
-// Méthode robuste : on appelle /v1/me en passant le token utilisateur
-// comme bearer. Si Clerk accepte le token, il renvoie les infos du user.
-// Sinon, il renvoie une erreur 401/422 que l'on intercepte.
-async function verifyClerkToken(token) {
-  // Étape 1 : tenter de décoder le payload du JWT pour récupérer le sub (user_id)
-  // C'est juste pour parser, la VRAIE vérif est faite ensuite côté Clerk.
-  let userId = null;
-  try {
-    const parts = token.split(".");
-    if (parts.length === 3) {
-      // Décodage base64url du payload (deuxième partie)
-      const payloadJson = Buffer.from(parts[1], "base64url").toString("utf8");
-      const payload    = JSON.parse(payloadJson);
-      userId           = payload.sub || payload.user_id;
-    }
-  } catch {
-    throw new Error("Token JWT malformé");
-  }
-
-  if (!userId) throw new Error("user_id introuvable dans le token");
-
-  // Étape 2 : vérifier que ce user_id existe vraiment côté Clerk Admin API
-  // (preuve que le token n'est pas inventé — seul un user authentifié
-  // peut produire un JWT contenant un user_id valide signé par Clerk)
-  const verifyRes = await fetch(`https://api.clerk.com/v1/users/${userId}`, {
-    headers: { "Authorization": `Bearer ${process.env.CLERK_SECRET_KEY}` },
-  });
-
-  if (!verifyRes.ok) {
-    throw new Error(`Clerk Admin API ${verifyRes.status} : user_id non trouvé`);
-  }
-
-  return userId;
-}
 
 // ── Récupération email Clerk (affiché dans l'export) ────────────────────────
 async function getClerkUserEmail(userId) {
@@ -177,13 +142,8 @@ module.exports = async function handler(req, res) {
     return res.status(401).json({ error: "Token manquant" });
   }
 
-  let userId;
-  try {
-    userId = await verifyClerkToken(authHeader.replace("Bearer ", ""));
-  } catch (e) {
-    console.error("[RGPD] Auth failed:", e.message);
-    return res.status(401).json({ error: "Authentification échouée : " + e.message });
-  }
+  const userId = await verifiedUserId(req);
+  if (!userId) return res.status(401).json({ error: "Authentification échouée : jeton invalide" });
 
   // ══════════════════════════════════════════════════════════════════════════
   // GET — Export RGPD Article 20 (Portabilité)

@@ -4,6 +4,7 @@
 
 const crypto = require("crypto");
 const { createClerkClient } = require("@clerk/backend");
+const { verifiedUserId, ADMIN_EMAILS } = require("./auth.cjs");
 
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 
@@ -21,17 +22,11 @@ module.exports = async function handler(req, res) {
       return res.status(401).json({ error: "Token manquant" });
     }
     try {
-      const token = authHeader.replace("Bearer ", "");
-      const parts = token.split(".");
-      if (parts.length !== 3) throw new Error("JWT malformé");
-      const payloadJson = Buffer.from(parts[1], "base64url").toString("utf8");
-      const payload     = JSON.parse(payloadJson);
-      const uid         = payload.sub || payload.user_id;
-      if (!uid) throw new Error("sub manquant");
+      const uid = await verifiedUserId(req);
+      if (!uid) throw new Error("Jeton invalide");
       const u     = await clerk.users.getUser(uid);
       const email = u.emailAddresses?.[0]?.emailAddress || "";
-      const ADMINS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
-      if (!ADMINS.includes(email) && u.publicMetadata?.role !== "admin") {
+      if (!ADMIN_EMAILS.includes(email) && u.publicMetadata?.role !== "admin") {
         return res.status(403).json({ error: "Accès admin uniquement" });
       }
     } catch {
@@ -72,20 +67,14 @@ module.exports = async function handler(req, res) {
   let clerkUserId;
   let clerkUser;
   try {
-    const token = authHeader.replace("Bearer ", "");
-    const parts = token.split(".");
-    if (parts.length !== 3) throw new Error("JWT malformé");
-    const payloadJson = Buffer.from(parts[1], "base64url").toString("utf8");
-    const payload     = JSON.parse(payloadJson);
-    clerkUserId = payload.sub || payload.user_id;
-    if (!clerkUserId) throw new Error("sub manquant");
+    clerkUserId = await verifiedUserId(req);
+    if (!clerkUserId) throw new Error("Jeton invalide");
     clerkUser = await clerk.users.getUser(clerkUserId);
   } catch {
     return res.status(401).json({ error: "Token invalide" });
   }
 
   // Vérification Premium (isSubscribed) ou Admin
-  const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
   const userEmail    = clerkUser.emailAddresses?.[0]?.emailAddress || "";
   const isAdmin      = ADMIN_EMAILS.includes(userEmail) || clerkUser.publicMetadata?.role === "admin";
   const isPremium    = clerkUser.publicMetadata?.isSubscribed === true ||
@@ -569,11 +558,8 @@ async function handleClaimAnon(req, res) {
   if (!authHeader?.startsWith("Bearer ")) return res.status(401).json({ error: "Token manquant" });
   let uid;
   try {
-    const parts = authHeader.replace("Bearer ", "").split(".");
-    if (parts.length !== 3) throw new Error("JWT");
-    const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8"));
-    uid = payload.sub || payload.user_id;
-    if (!uid) throw new Error("sub");
+    uid = await verifiedUserId(req);
+    if (!uid) throw new Error("Jeton invalide");
     await clerk.users.getUser(uid);
   } catch { return res.status(401).json({ error: "Token invalide" }); }
 
