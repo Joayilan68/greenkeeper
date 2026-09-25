@@ -473,7 +473,7 @@ function aggregateClerkSources(clerkUsers) {
   const counts = {
     direct: 0, instagram: 0, tiktok: 0, facebook: 0,
     twitter: 0, youtube: 0, google: 0, email: 0,
-    linkedin: 0, autre: 0,
+    linkedin: 0, conseils: 0, autre: 0,
   };
 
   clerkUsers.forEach(u => {
