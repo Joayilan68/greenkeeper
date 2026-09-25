@@ -20,7 +20,7 @@ export default function Settings() {
   const { history } = useHistory();
   const { profile } = useProfile();
   const { locationName } = useWeather() || {};
-  const { permission, subscribe: subscribePush, isSupported } = usePushNotifications(user?.id);
+  const { permission, subscribe: subscribePush, error: pushError } = usePushNotifications(user?.id);
   const { consents, updateConsent, updateConsents } = useConsents();
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -57,11 +57,9 @@ export default function Settings() {
 
   const handleNotifToggle = async () => {
     if (!consents.notifications) {
-      // Toujours appeler subscribePush pour enregistrer/renouveler la subscription
-      // même si la permission est déjà "granted" (subscription peut avoir expiré)
-      if (isSupported) {
-        await subscribePush();
-      }
+      // Consentement = recevoir les conseils quotidiens. Si l'autorisation du téléphone
+      // échoue, ils partent par email (cron) et pushError explique comment l'accorder.
+      await subscribePush();
       await updateConsent("notifications", true);
     } else {
       await updateConsent("notifications", false);
@@ -427,7 +425,7 @@ export default function Settings() {
           </div>
 
           {[
-            { key:"notifications", label:"🔔 Notifications push", desc:"Alertes téléphone — rappels d'entretien et météo" },
+            { key:"notifications", label:"🔔 Conseils quotidiens", desc:"Conseils de Bob (météo, arrosage, tonte…) — jusqu'à 2/jour, par notification ou à défaut par email" },
             { key:"data_resale",   label:"📊 Données anonymisées", desc:"Partage avec partenaires jardinage — jamais nom/email" },
             { key:"marketing",     label:"📧 Emails Mongazon360", desc:"Conseils saisonniers et nouveautés" },
             { key:"cookies",       label:"🍪 Cookies de mesure (Meta)", desc:"Mesure de l'efficacité de nos publicités — sur cet appareil" },
@@ -444,9 +442,12 @@ export default function Settings() {
                     {isNotif && notifGranted && consents.notifications
                       ? "✅ Actives — pour désactiver : désactivez ce toggle"
                       : isNotif && !notifGranted && consents.notifications
-                      ? "⚠️ Consentement donné mais permission navigateur requise"
+                      ? "📧 Reçus par email — autorise les notifications du téléphone pour les recevoir en direct"
                       : desc}
                   </div>
+                  {isNotif && pushError && (
+                    <div style={{ fontSize:11, color:"#ffcc80", marginTop:4, lineHeight:1.5 }}>⚠️ {pushError}</div>
+                  )}
                 </div>
                 <div
                   onClick={() => isNotif ? handleNotifToggle() : isCookies ? toggleCookieConsent() : updateConsent(key, !consents[key])}

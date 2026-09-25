@@ -6,7 +6,6 @@
 
 const crypto = require("crypto");
 
-const ADMIN_EMAILS     = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
 const ALERT_TO         = "mongazon360@gmail.com";
 const EMAIL_DEDUP_H    = 6;
 const EMAILS_PER_HOUR  = 20;
@@ -172,22 +171,4 @@ async function getStatus(key) {
   } catch { return null; }
 }
 
-// Vérifie qu'une requête vient d'un admin (Bearer JWT Clerk)
-async function isAdminRequest(req) {
-  try {
-    const token = (req.headers.authorization || "").replace("Bearer ", "");
-    const parts = token.split(".");
-    if (parts.length !== 3) return false;
-    const uid = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8")).sub;
-    if (!uid) return false;
-    const r = await fetch(`https://api.clerk.com/v1/users/${uid}`, {
-      headers: { Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}` },
-    });
-    if (!r.ok) return false;
-    const u = await r.json();
-    const email = (u.email_addresses?.[0]?.email_address || "").toLowerCase();
-    return ADMIN_EMAILS.includes(email) || u.public_metadata?.role === "admin";
-  } catch { return false; }
-}
-
-module.exports = { recordError, reportServerError, setStatus, getStatus, isAdminRequest, fingerprint };
+module.exports = { recordError, reportServerError, setStatus, getStatus, fingerprint };

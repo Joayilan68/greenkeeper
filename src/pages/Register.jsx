@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useUser } from "@clerk/clerk-react";
 import { useConsents } from "../lib/useConsents";
+import { usePushNotifications } from "../lib/usePushNotifications";
 import { card, btn } from "../lib/styles";
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -18,6 +20,8 @@ import { card, btn } from "../lib/styles";
 export default function Register() {
   const navigate = useNavigate();
   const { consents: existingConsents, updateConsents } = useConsents();
+  const { user } = useUser();
+  const { subscribe: subscribePush } = usePushNotifications(user?.id);
 
   const [consents, setConsents] = useState({
     cgu_cgv:         false,  // case 1 — obligatoire (CGU + CGV combinées)
@@ -63,6 +67,11 @@ export default function Register() {
 
     setError("");
     setLoading(true);
+
+    // Case « conseils quotidiens » cochée → demande d'autorisation PENDANT le clic
+    // (geste utilisateur requis par le navigateur). Sans autorisation, pas d'abonnement :
+    // le consentement reste enregistré et les conseils partent alors par email.
+    if (consents.notifications) await subscribePush();
 
     // ── Payload Supabase : UNIQUEMENT les colonnes réelles de user_consents ──
     // La table user_consents contient : cgu, confidentialite, notifications,
@@ -195,10 +204,10 @@ export default function Register() {
               style={{ marginTop:3, width:18, height:18, cursor:"pointer", flexShrink:0 }} />
             <div>
               <div style={{ fontSize:13, fontWeight:700, color:"#e8f5e9" }}>
-                🔔 Activer les notifications push <span style={{ color:"#81c784", fontSize:11 }}>(optionnel)</span>
+                🔔 Recevoir les conseils quotidiens de Bob <span style={{ color:"#81c784", fontSize:11 }}>(optionnel)</span>
               </div>
               <div style={{ fontSize:11, color:"#81c784", marginTop:4, lineHeight:1.5 }}>
-                Recevoir des alertes sur mon téléphone (gel, canicule, tonte en retard...) — max 1x/semaine.
+                Météo, arrosage, tonte, alertes gel ou canicule — jusqu'à 2 par jour, par notification sur mon téléphone ou, à défaut, par email.
               </div>
             </div>
           </label>

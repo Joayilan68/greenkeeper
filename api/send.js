@@ -1,5 +1,5 @@
 // api/send.js
-// POST /api/send?type=alert|alert-test|notification|reminder|save-sub|save-reminders
+// POST /api/send?type=alert|alert-test|notification-test|reminder|save-sub|save-reminders
 // GET  /api/send → cron quotidien 8h00 (Vercel cron)
 
 const REMINDER_LABELS = {
@@ -67,6 +67,36 @@ function buildReminderHtml(reminders, userName, profile) {
 </body></html>`;
 }
 
+// Email « Conseil du jour » : relais des notifications quotidiennes pour les comptes
+// qui ont consenti aux conseils mais n'ont pas (ou plus) d'abonnement push actif.
+function buildConseilEmailHtml(prenom, title, body) {
+  const year = new Date().getFullYear();
+  const esc = (v) => String(v ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"/></head>
+<body style="font-family:Arial,sans-serif;background:#f5f5f5;margin:0;padding:20px;">
+<div style="max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 20px rgba(0,0,0,0.1);">
+  <div style="background:#1a4731;padding:24px 28px;">
+    <div style="color:#a5d6a7;font-size:18px;font-weight:800;">Mongazon360<sup style="font-size:10px;">®</sup></div>
+    <div style="color:#4a7c5c;font-size:11px;font-style:italic;">Tant qu'il y a gazon, il y a match</div>
+  </div>
+  <div style="padding:24px 28px;">
+    <div style="font-size:13px;color:#888;margin-bottom:8px;">Bonjour ${esc(prenom)}, voici le conseil de Bob :</div>
+    <div style="padding:16px;background:#f9fbe7;border-radius:12px;border-left:4px solid #43a047;margin-bottom:24px;">
+      <div style="font-size:17px;font-weight:800;color:#1a4731;margin-bottom:6px;">${esc(title)}</div>
+      <div style="font-size:14px;color:#555;line-height:1.6;">${esc(body)}</div>
+    </div>
+    <div style="text-align:center;margin-bottom:20px;">
+      <a href="https://mongazon360.fr/today" style="background:#1a4731;color:#fff;text-decoration:none;padding:14px 32px;border-radius:12px;font-size:14px;font-weight:800;display:inline-block;">🌿 Ouvrir Mongazon360 →</a>
+    </div>
+    <div style="font-size:12px;color:#888;line-height:1.6;">📱 Astuce : autorise les notifications de l'app sur ton téléphone pour recevoir ces conseils en direct plutôt que par email.</div>
+  </div>
+  <div style="background:#f9fbe7;padding:14px 28px;border-top:1px solid #e8f5e9;text-align:center;">
+    <div style="color:#4a7c5c;font-size:10px;">Tu reçois cet email car tu as activé les conseils quotidiens (2 maximum par jour). <a href="https://mongazon360.fr/parametres" style="color:#52b788;">Ne plus les recevoir</a></div>
+    <div style="color:#81c784;font-size:9px;margin-top:4px;">© ${year} Mongazon360<sup style="font-size:7px;">®</sup> — Marque déposée et enregistrée à l'EUIPO · <a href="https://mongazon360.fr/mentions-legales" style="color:#52b788;">Mentions légales</a> · <a href="https://mongazon360.fr/confidentialite" style="color:#52b788;">Confidentialité</a></div>
+  </div>
+</div></body></html>`;
+}
+
 // Email de relance fin d'essai Premium (transactionnel — service en cours)
 function buildTrialEmailHtml(prenom, when) {
   const year = new Date().getFullYear();
@@ -128,8 +158,7 @@ module.exports = async function handler(req, res) {
   // Itération 2a : PUSH piloté par le moteur intelligent (notificationEngine).
   //   ?slot=matin (défaut) → priorité la plus haute disponible (niveaux 2-6)
   //   ?slot=soir           → arrosage (N10, bilan hydrique ET₀)
-  // EMAIL de rappel entretien : logique historique CONSERVÉE (inchangée),
-  //   ne tourne qu'au créneau matin pour éviter les doublons.
+  // Sans abonnement push actif, la même décision part par EMAIL (conseils par email).
   if (req.method === "GET") {
     try {
       const { createClient } = require("@supabase/supabase-js");
@@ -158,6 +187,50 @@ module.exports = async function handler(req, res) {
         }
       };
 
+      // Comptes Clerk (email + prénom), chargés une seule fois par exécution
+      let clerkUsersCache = null;
+      const getClerkUsers = async () => {
+        if (clerkUsersCache) return clerkUsersCache;
+        const users = [];
+        for (let page = 0, offset = 0; page < 20; page++, offset += 100) {
+          const r = await fetch(`https://api.clerk.com/v1/users?limit=100&offset=${offset}&order_by=-created_at`,
+            { headers: { Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`, "Content-Type": "application/json" } });
+          if (!r.ok) throw new Error(`Clerk : liste des comptes refusée (HTTP ${r.status})`);
+          const j = await r.json();
+          const batch = Array.isArray(j) ? j : (j.data || []);
+          users.push(...batch);
+          if (batch.length < 100) break;
+        }
+        clerkUsersCache = users;
+        return users;
+      };
+      const primaryEmail = (u) => u.email_addresses?.find(e => e.id === u.primary_email_address_id)?.email_address
+                               || u.email_addresses?.[0]?.email_address || null;
+
+      // Conseils par email : relais des notifications pour les comptes consentants sans abonnement
+      // push actif. Mêmes décisions et même plafond (2/jour) que le push ; budget par exécution
+      // pour rester sous le quota Resend gratuit (100 emails/jour, tous envois confondus).
+      const EMAIL_CONSEILS_PAR_CRENEAU = 45;
+      let emailFallbackSent = 0, emailFallbackCapped = 0;
+      const sendConseilEmail = async (to, prenom, title, body) => {
+        if (emailFallbackSent >= EMAIL_CONSEILS_PAR_CRENEAU) { emailFallbackCapped++; return false; }
+        const r = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
+          body: JSON.stringify({
+            from:    "Bob de Mongazon360 <bonjour@mongazon360.fr>",
+            to:      [to],
+            subject: title,
+            html:    buildConseilEmailHtml(prenom, title, body),
+            headers: { "List-Unsubscribe": "<https://mongazon360.fr/parametres>" },
+          }),
+        });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok || d.error) throw new Error("Resend : " + (d.error?.message || r.status));
+        emailFallbackSent++;
+        return true;
+      };
+
       // Créneau courant (matin par défaut si non précisé)
       const slot = (req.query.slot === "soir") ? "soir" : "matin";
       const today = new Date().toISOString().slice(0, 10);
@@ -181,6 +254,19 @@ module.exports = async function handler(req, res) {
       // ← nouveau : parcours actif par user (un seul actif possible, cf. règle useParcours.js)
       const parcoursMap = {};
       (parcoursActifsData || []).forEach(p => { parcoursMap[p.user_id] = p; });
+
+      // Destinataires des conseils par email : consentement « notifications » sans abonnement push
+      const emailConseilMap = {}; // user_id → { email, prenom }
+      if ((consentsData || []).some(c => c.notifications && !subMap[c.user_id])) {
+        try {
+          for (const u of await getClerkUsers()) {
+            const email = primaryEmail(u);
+            if (email && consentMap[u.id]?.notifications && !subMap[u.id]) {
+              emailConseilMap[u.id] = { email, prenom: u.first_name || "jardinier" };
+            }
+          }
+        } catch (e) { await require("./alerting.cjs").reportServerError("Tâche planifiée — conseils par email", e); }
+      }
 
       // Cache météo par zone arrondie (1 fetch/zone/exécution → protège le quota)
       const weatherCache = {};
@@ -224,7 +310,11 @@ module.exports = async function handler(req, res) {
         const profile = profileMap[user_id] || {};
         const sub = subMap[user_id];
 
-        const weather = (userConsents.notifications && sub) || (userConsents.marketing && email)
+        // Déjà servi sur ce créneau aujourd'hui (exécution relancée) → pas de socle en plus
+        if (notif_log?.history?.some(h => h.date === today && h.slot === slot)) pushedToday.add(user_id);
+
+        const contact = emailConseilMap[user_id];
+        const weather = (userConsents.notifications && (sub || contact)) || (userConsents.marketing && email)
           ? await getWeatherForUser(profile)
           : null;
 
@@ -271,6 +361,18 @@ module.exports = async function handler(req, res) {
             await pruneSub(e, user_id);
             skipped++;
           }
+        }
+
+        // ── CONSEIL PAR EMAIL : même décision que le push, pour les comptes sans abonnement ──
+        if (userConsents.notifications && !sub && contact) {
+          try {
+            if (await sendConseilEmail(contact.email, contact.prenom, decision.title, decision.body)) {
+              logUpdated = appendNotifLog(logUpdated, {
+                date: today, priority: decision.priority, type: decision.type, slot, channel: "email",
+              });
+              pushedToday.add(user_id);
+            }
+          } catch (e) { await require("./alerting.cjs").reportServerError("Tâche planifiée — conseils par email", e, { user: user_id }); }
         }
 
         // ── EMAIL : UNIQUEMENT urgences niveau 1, max 1/jour ──────────────────
@@ -431,19 +533,7 @@ module.exports = async function handler(req, res) {
         try {
           const TRIAL_MS = 7 * 24 * 60 * 60 * 1000;
           const clerkKey = process.env.CLERK_SECRET_KEY;
-          const clerkUsers = [];
-          for (let page = 0, offset = 0; page < 20; page++, offset += 100) {
-            const r = await fetch(`https://api.clerk.com/v1/users?limit=100&offset=${offset}&order_by=-created_at`,
-              { headers: { Authorization: `Bearer ${clerkKey}`, "Content-Type": "application/json" } });
-            if (!r.ok) break;
-            const j = await r.json();
-            const batch = Array.isArray(j) ? j : (j.data || []);
-            if (!batch.length) break;
-            clerkUsers.push(...batch);
-            if (batch.length < 100) break;
-          }
-
-          for (const u of clerkUsers) {
+          for (const u of await getClerkUsers()) {
             const um = u.unsafe_metadata || {};
             const pm = u.public_metadata || {};
             const trialStart = um.trialStartedAt;
@@ -458,8 +548,7 @@ module.exports = async function handler(req, res) {
             else if (daysLeft <= 0 && !um.trialRemindedJ0)  { flagKey = "trialRemindedJ0"; when = "aujourd'hui"; }
             if (!flagKey) continue;
 
-            const email  = u.email_addresses?.find(e => e.id === u.primary_email_address_id)?.email_address
-                        || u.email_addresses?.[0]?.email_address || null;
+            const email  = primaryEmail(u);
             const sub    = subMap[u.id];
             const consent = consentMap[u.id] || {};
             const prenom = u.first_name || "Jardinier";
@@ -521,6 +610,17 @@ module.exports = async function handler(req, res) {
             baselineSent++;
           } catch (e) { console.error("cron baseline:", uid, e.message); await pruneSub(e, uid); }
         }
+        for (const [uid, contact] of Object.entries(emailConseilMap)) {
+          if (pushedToday.has(uid)) continue;
+          try {
+            if (await sendConseilEmail(contact.email, contact.prenom, tip.title, tip.body)) pushedToday.add(uid);
+          } catch (e) { await require("./alerting.cjs").reportServerError("Tâche planifiée — conseils par email", e, { user: uid }); }
+        }
+      }
+
+      if (emailFallbackCapped) {
+        await require("./alerting.cjs").reportServerError("Conseils par email — plafond atteint",
+          new Error(`${emailFallbackCapped} conseil(s) non envoyé(s) : plafond de ${EMAIL_CONSEILS_PAR_CRENEAU} emails par créneau (quota Resend gratuit 100/jour)`));
       }
 
       // ── RÉTENTION RGPD — photos de diagnostic > 90 jours — créneau MATIN ──
@@ -553,10 +653,10 @@ module.exports = async function handler(req, res) {
             new Error(`Aucune exécution du créneau matin le ${today} (dernière : ${matin?.value?.date || "jamais"})`));
         }
       }
-      await alerting.setStatus(`cron_${slot}`, { date: today, at: new Date().toISOString(), pushSent, emailSent, photosPurgees });
+      await alerting.setStatus(`cron_${slot}`, { date: today, at: new Date().toISOString(), pushSent, emailSent, emailFallbackSent, photosPurgees });
 
-      console.log(`[CRON ${slot}] reminders:`, remindersData?.length || 0, "pushSent:", pushSent, "emailSent:", emailSent, "skipped:", skipped, "parcoursSent:", parcoursSent, "parcoursTermines:", parcoursTermines, "trialRelances:", trialRelances, "baselineSent:", baselineSent, "photosPurgees:", photosPurgees);
-      return res.json({ success: true, date: today, slot, pushSent, emailSent, skipped, parcoursSent, parcoursTermines, trialRelances, baselineSent, photosPurgees, reminders: remindersData?.length || 0 });
+      console.log(`[CRON ${slot}] reminders:`, remindersData?.length || 0, "pushSent:", pushSent, "emailSent:", emailSent, "emailFallbackSent:", emailFallbackSent, "skipped:", skipped, "parcoursSent:", parcoursSent, "parcoursTermines:", parcoursTermines, "trialRelances:", trialRelances, "baselineSent:", baselineSent, "photosPurgees:", photosPurgees);
+      return res.json({ success: true, date: today, slot, pushSent, emailSent, emailFallbackSent, skipped, parcoursSent, parcoursTermines, trialRelances, baselineSent, photosPurgees, reminders: remindersData?.length || 0 });
     } catch (e) {
       await require("./alerting.cjs").reportServerError("Tâche planifiée en échec", e, { "Créneau": req.query.slot || "matin" });
       return res.status(500).json({ error: e.message });
@@ -771,8 +871,11 @@ module.exports = async function handler(req, res) {
   // ── SAVE-SUB (souscription push → Supabase) ───────────────────────────────
   if (type === "save-sub") {
     try {
-      const { subscription, userId } = req.body;
-      if (!subscription || !userId) throw new Error("Données manquantes");
+      const user = await require("./auth.cjs").getAuthUser(req);
+      if (!user) return res.status(401).json({ error: "Authentification requise" });
+      const userId = user.id; // identité vérifiée — jamais celle envoyée par le client
+      const { subscription } = req.body || {};
+      if (!subscription?.endpoint) throw new Error("Données manquantes");
       const { createClient } = require("@supabase/supabase-js");
       const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
       await supabase.from("push_subscriptions").upsert(
@@ -812,7 +915,7 @@ module.exports = async function handler(req, res) {
     const { recordError } = require("./alerting.cjs");
     const r = await recordError({
       source: "client",
-      severity: severity === "warning" ? "warning" : "error", // "info" réservé au serveur
+      severity: ["warning", "info"].includes(severity) ? severity : "error", // info = mesure, sans email
       kind, message, path, userId, userAgent, details,
     });
     return res.json({ success: true, ...r });
@@ -820,7 +923,8 @@ module.exports = async function handler(req, res) {
 
   // ── ALERT-TEST — bouton « Tester l'alerte email » du Pilotage (admin) ──────
   if (type === "alert-test") {
-    const { recordError, isAdminRequest } = require("./alerting.cjs");
+    const { recordError } = require("./alerting.cjs");
+    const { isAdminRequest } = require("./auth.cjs");
     if (!(await isAdminRequest(req))) return res.status(403).json({ error: "Accès admin uniquement" });
     const r = await recordError({
       source: "server", severity: "info", kind: "Test du système d'alerte",
@@ -830,35 +934,26 @@ module.exports = async function handler(req, res) {
     return res.json({ success: r.emailed, ...r, ...(r.emailed ? {} : { error: "Email non envoyé (voir journaux Vercel)" }) });
   }
 
-  // ── NOTIFICATION (push) ───────────────────────────────────────────────────
-  if (type === "notification") {
+  // ── NOTIFICATION-TEST — confirmation après activation (sur l'abonnement de l'appelant) ──
+  if (type === "notification-test") {
     try {
-      const { subscription, notification } = req.body;
-      if (!subscription || !notification) throw new Error("Données manquantes");
-
-      const vapidPublicKey  = process.env.VAPID_PUBLIC_KEY;
-      const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
-      const vapidEmail      = process.env.VAPID_EMAIL || "mailto:contact@mongazon360.fr";
-
-      if (!vapidPublicKey || !vapidPrivateKey) throw new Error("Clés VAPID manquantes");
-
-      const payload = JSON.stringify({
-        title:       notification.title       || "🌿 Mongazon360",
-        body:        notification.body        || "Nouvelle alerte pour votre gazon",
-        icon:        "/icon-192.png",
-        tag:         notification.tag         || "mg360-alert",
-        url:         notification.actionRoute || "/",
-        actionRoute: notification.actionRoute || "/",
-      });
+      const user = await require("./auth.cjs").getAuthUser(req);
+      if (!user) return res.status(401).json({ error: "Authentification requise" });
+      const { createClient } = require("@supabase/supabase-js");
+      const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+      const { data } = await supabase.from("push_subscriptions").select("subscription").eq("user_id", user.id).maybeSingle();
+      if (!data?.subscription) return res.status(404).json({ error: "Aucun abonnement" });
 
       const webpush = require("web-push");
-      webpush.setVapidDetails(vapidEmail, vapidPublicKey, vapidPrivateKey);
-      await webpush.sendNotification(subscription, payload);
-
+      webpush.setVapidDetails(process.env.VAPID_EMAIL || "mailto:contact@mongazon360.fr",
+        process.env.VAPID_PUBLIC_KEY, process.env.VAPID_PRIVATE_KEY);
+      await webpush.sendNotification(data.subscription, JSON.stringify({
+        title: "🌿 Mongazon360", body: "C'est activé ! Bob t'enverra ses conseils ici.",
+        icon: "/icon-192.png", tag: "test", url: "/", actionRoute: "/",
+      }));
       return res.json({ success: true });
-
     } catch (e) {
-      console.error("send notification:", e.message);
+      await require("./alerting.cjs").reportServerError("Notification de test en échec", e);
       return res.status(500).json({ error: e.message });
     }
   }
@@ -930,5 +1025,5 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  return res.status(400).json({ error: "Type requis : ?type=alert|notification|reminder|parcours-cansow|parcours-schedule|parcours-current" });
+  return res.status(400).json({ error: "Type requis : ?type=alert|notification-test|reminder|parcours-cansow|parcours-schedule|parcours-current" });
 };
