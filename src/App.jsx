@@ -26,7 +26,7 @@ import Layout from "./components/Layout";
 import { WeatherProvider } from "./lib/WeatherContext";
 import { usePilotage }     from "./lib/usePilotage";
 import { useSubscription } from "./lib/useSubscription"; // ✅ statut Premium → WeatherProvider (ET₀/sol)
-import { useUTMCapture }   from "./lib/useUTMCapture";   // ✅ Bloc 1 — capture UTM dès l'arrivée
+import { useUTMCapture, getCapturedUTM } from "./lib/useUTMCapture"; // ✅ Bloc 1 — capture UTM dès l'arrivée
 import { useUTMInjection } from "./lib/useUTMInjection"; // ✅ Bloc 1 — injection Clerk metadata first-touch
 import { trackFunnel }     from "./lib/funnel";          // ✅ suivi d'entonnoir (conversion)
 import { deviceInfo }      from "./lib/platform";
@@ -66,9 +66,15 @@ function pingVisit() {
     const key   = `mg360_visit_${today}`;
     if (localStorage.getItem(key)) return;
     localStorage.setItem(key, "1"); // pose le garde AVANT l'insert (anti double-comptage)
+    const utm = getCapturedUTM(); // source d'arrivée → conversion par lien / campagne (Pilotage)
     import("./lib/supabase").then(({ supabase }) => {
       supabase.from("site_visits")
-        .insert({ path: typeof location !== "undefined" ? location.pathname : null, ...deviceInfo() })
+        .insert({
+          path: typeof location !== "undefined" ? location.pathname : null,
+          ...deviceInfo(),
+          source:   String(utm.source || "direct").slice(0, 40),
+          campaign: utm.campaign ? String(utm.campaign).slice(0, 80) : null,
+        })
         .then(() => {}, () => {});
     }).catch(() => {});
   } catch { /* non bloquant */ }

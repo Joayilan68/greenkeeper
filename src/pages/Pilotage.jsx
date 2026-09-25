@@ -463,6 +463,34 @@ export default function Pilotage() {
               title="🎯 Sources d'inscription (comptes créés)"
             />
 
+            {/* Conversion par lien / campagne : visites → inscriptions */}
+            {users?.acquisition && (
+              <div style={card()}>
+                <div style={cardTitle}><span>📈 Conversion par source</span><span style={{ fontSize:11, color:"#81c784", textTransform:"none", letterSpacing:0 }}>depuis le {new Date(users.acquisition.debut).toLocaleDateString("fr-FR")}</span></div>
+                {[["Par source", users.acquisition.sources, false], ["Par campagne (utm_campaign)", users.acquisition.campagnes, true]].map(([titre, rows, isCamp]) => rows.length > 0 && (
+                  <div key={titre} style={{ marginBottom:10 }}>
+                    <div style={{ display:"flex", fontSize:10, color:"#81c784", fontWeight:700, padding:"4px 0", borderBottom:"1px solid rgba(255,255,255,0.1)" }}>
+                      <span style={{ flex:1 }}>{titre}</span><span style={{ width:52, textAlign:"right" }}>Visites</span><span style={{ width:52, textAlign:"right" }}>Inscrits</span><span style={{ width:52, textAlign:"right" }}>Taux</span>
+                    </div>
+                    {rows.map(r => {
+                      const m = SOURCE_META[r.source] || { icon:"🌐", label:r.source };
+                      return (
+                        <div key={`${r.source}|${r.campaign || ""}`} style={{ display:"flex", fontSize:12, padding:"5px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
+                          <span style={{ flex:1, minWidth:0, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{m.icon} {isCamp ? `${r.campaign} · ${m.label}` : m.label}</span>
+                          <span style={{ width:52, textAlign:"right" }}>{r.visits}</span>
+                          <span style={{ width:52, textAlign:"right" }}>{r.signups}</span>
+                          <span style={{ width:52, textAlign:"right", fontWeight:700, color:"#a5d6a7" }}>{r.rate != null ? `${r.rate} %` : "—"}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+                <div style={{ fontSize:10, color:"#4a7c5c", lineHeight:1.5 }}>
+                  Visites = visiteurs non connectés (1 par appareil/jour) ; inscrits = comptes créés sur la même période, rattachés à leur source d'arrivée. Pour une pub, ajouter utm_source et utm_campaign au lien (ex. ?utm_source=facebook&utm_campaign=pub-printemps).
+                </div>
+              </div>
+            )}
+
             {users?.days?.length > 0 && (
               <div style={card()}>
                 <div style={cardTitle}><span>🆕 Nouveaux inscrits — 30 jours</span></div>

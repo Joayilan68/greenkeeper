@@ -255,8 +255,8 @@ async function handleUsers(req, res) {
   try {
     // ✅ Pagination explicite + parsing format multi-version Clerk
     // Toutes les sources en parallèle (la page attendait auparavant chaque requête l'une après l'autre)
-    const [allUsersRaw, dauByDay, geo, diagRows, siteVisits, funnel, devices] = await Promise.all([
-      fetchAllClerkUsers(), fetchDauByDay(), fetchGeoPoints(), fetchDiagnosticsRows(), fetchSiteVisits(), fetchFunnel(), fetchDevices(),
+    const [allUsersRaw, dauByDay, geo, diagRows, siteVisits, funnel, devices, sourceVisits] = await Promise.all([
+      fetchAllClerkUsers(), fetchDauByDay(), fetchGeoPoints(), fetchDiagnosticsRows(), fetchSiteVisits(), fetchFunnel(), fetchDevices(), fetchSourceVisits(),
     ]);
 
     // Exclure les comptes admin de TOUTES les stats (règle "admins exclus de tout")
@@ -324,6 +324,7 @@ async function handleUsers(req, res) {
     const clerkSources = aggregateClerkSources(allUsers);
 
     const diagnostics = diagnosticsStats(diagRows, new Set(allUsers.map(u => u.id)));
+    const acquisition = acquisitionStats(sourceVisits, allUsers);
 
     res.json({
       success: true,
@@ -343,6 +344,7 @@ async function handleUsers(req, res) {
       siteVisits,
       funnel,
       devices,
+      acquisition,
       clerkSources,
     });
 
@@ -540,6 +542,56 @@ async function fetchFunnel() {
   }
 }
 
+// ── Lecture complète d'une table par pages de 1 000 lignes (plafond d'une requête Supabase) ──
+async function selectAll(sb, table, cols, notNullCol) {
+  const rows = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await sb.from(table).select(cols).not(notNullCol, "is", null)
+      .order("day", { ascending: false }).range(from, from + 999);
+    if (error) throw new Error(error.message);
+    rows.push(...data);
+    if (data.length < 1000) return rows;
+  }
+}
+
+// ── Helper : visites par source d'arrivée (conversion par lien / campagne) ─────
+async function fetchSourceVisits() {
+  try {
+    return await selectAll(createClient(SB_URL, SB_KEY), "site_visits", "day, source, campaign", "source");
+  } catch (e) {
+    console.warn("stats-users source visits:", e.message);
+    return null;
+  }
+}
+
+// Visites (non connectés, 1 par appareil/jour) et inscriptions par source et par campagne,
+// depuis le début de la mesure des sources. Taux = inscrits / visites.
+function acquisitionStats(visits, users) {
+  if (!visits?.length) return null;
+  const debut   = visits.map(v => v.day).sort()[0];
+  const debutMs = Date.parse(debut);
+  const bySource = {}, byCampaign = {};
+  const add = (map, key, field, extra) => {
+    map[key] = map[key] || { ...extra, visits: 0, signups: 0 };
+    map[key][field]++;
+  };
+  for (const v of visits) {
+    add(bySource, v.source, "visits", { source: v.source });
+    if (v.campaign) add(byCampaign, `${v.source}|${v.campaign}`, "visits", { source: v.source, campaign: v.campaign });
+  }
+  for (const u of users) {
+    if (u.created_at < debutMs) continue;
+    const source   = (u.unsafe_metadata?.source || "direct").toLowerCase();
+    const campaign = u.unsafe_metadata?.campaign || "";
+    add(bySource, source, "signups", { source });
+    if (campaign) add(byCampaign, `${source}|${campaign}`, "signups", { source, campaign });
+  }
+  const finish = (map) => Object.values(map)
+    .map(r => ({ ...r, rate: r.visits ? Math.round(r.signups / r.visits * 1000) / 10 : null }))
+    .sort((a, b) => b.visits - a.visits || b.signups - a.signups);
+  return { debut, sources: finish(bySource), campagnes: finish(byCampaign) };
+}
+
 // ── Helper : appareils (étude Apple) — actifs connectés et visiteurs ──────────
 // Depuis le début de la mesure (référence de la décision App Store) et sur 30 jours.
 // Actifs : dernier appareil connu par utilisateur. Visiteurs : 1 par appareil/jour.
@@ -554,20 +606,9 @@ async function fetchDevices() {
   };
   try {
     const sb = createClient(SB_URL, SB_KEY);
-    // Lecture complète par pages de 1 000 lignes (plafond d'une requête Supabase)
-    const all = async (table, cols) => {
-      const rows = [];
-      for (let from = 0; ; from += 1000) {
-        const { data, error } = await sb.from(table).select(cols).not("os", "is", null)
-          .order("day", { ascending: false }).range(from, from + 999);
-        if (error) throw new Error(error.message);
-        rows.push(...data);
-        if (data.length < 1000) return rows;
-      }
-    };
     const [dau, visits] = await Promise.all([
-      all("daily_active_users", "user_id, day, os, installed"),
-      all("site_visits", "day, os, installed"),
+      selectAll(sb, "daily_active_users", "user_id, day, os, installed", "os"),
+      selectAll(sb, "site_visits", "day, os, installed", "os"),
     ]);
     const periode = (since) => {
       const latest = new Map();
