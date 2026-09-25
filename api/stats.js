@@ -353,7 +353,13 @@ async function handleUsers(req, res) {
 }
 
 // ── Helper : pagination Clerk complète ─────────────────────────────────────
+// Liste gardée 2 min en mémoire : l'API Clerk est l'appel le plus lent de la page,
+// et Pilotage se rafraîchit toutes les 60 s.
+const CLERK_CACHE_MS = 2 * 60 * 1000;
+let clerkCache = { at: 0, users: null };
+
 async function fetchAllClerkUsers() {
+  if (clerkCache.users && Date.now() - clerkCache.at < CLERK_CACHE_MS) return clerkCache.users;
   const clerkKey = process.env.CLERK_SECRET_KEY;
   const limit    = 100;
   let   offset   = 0;
@@ -378,6 +384,7 @@ async function fetchAllClerkUsers() {
     offset += limit;
   }
 
+  clerkCache = { at: Date.now(), users: all };
   return all;
 }
 
