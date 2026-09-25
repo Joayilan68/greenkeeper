@@ -20,10 +20,14 @@ blockquote{margin:18px 0;padding:12px 16px;background:#e8f5e9;border-left:4px so
 footer{border-top:1px solid #dfe8e1;background:#fff}footer div{max-width:760px;margin:0 auto;padding:18px 20px;font-size:12px;color:#5b6f61}footer a{color:#5b6f61;margin-right:12px}
 @media(max-width:520px){h1{font-size:26px}.bar .btn{padding:8px 12px;font-size:13px}}`;
 
+// Liens vers l'essai gratuit balisés : l'inscription est attribuée à la source « conseils »
+// (et à l'article d'origine) dans Pilotage → Activité, au lieu de « autre ».
+const essai = (campagne) => `/essai?utm_source=conseils&amp;utm_medium=article&amp;utm_campaign=${campagne}`;
+
 const SAISONS = { automne: "🍂 Automne", hiver: "❄️ Hiver", printemps: "🌱 Printemps", ete: "☀️ Été" };
 const frDate = (d) => new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 
-function page({ title, description, path, ogType, jsonLd, body }) {
+function page({ title, description, path, ogType, jsonLd, body, campagne }) {
   const url = SITE + path;
   return `<!DOCTYPE html>
 <html lang="fr">
@@ -53,7 +57,7 @@ function page({ title, description, path, ogType, jsonLd, body }) {
 <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
-<header><div class="bar"><a class="logo" href="/"><img src="/icon-192.png" alt="" />Mongazon360<sup>®</sup></a><a class="btn" href="/essai">Diagnostic gratuit</a></div></header>
+<header><div class="bar"><a class="logo" href="/"><img src="/icon-192.png" alt="" />Mongazon360<sup>®</sup></a><a class="btn" href="${essai(campagne)}">Diagnostic gratuit</a></div></header>
 <main>${body}</main>
 <footer><div><a href="/conseils">Conseils gazon</a><a href="/mentions-legales">Mentions légales</a><a href="/confidentialite">Confidentialité</a><a href="/cookies">Cookies</a><br />© ${new Date().getFullYear()} Mongazon360® — marque déposée et enregistrée à l'EUIPO</div></footer>
 </body>
@@ -61,7 +65,7 @@ function page({ title, description, path, ogType, jsonLd, body }) {
 `;
 }
 
-const CTA = `<div class="cta"><strong>Votre gazon mérite un vrai diagnostic</strong>Prenez votre pelouse en photo : Bob repère mousse, carences et maladies, et vous dit quoi faire selon votre météo.<br /><a class="btn" href="/essai">Essayer gratuitement</a></div>`;
+const cta = (campagne) => `<div class="cta"><strong>Votre gazon mérite un vrai diagnostic</strong>Prenez votre pelouse en photo : Bob repère mousse, carences et maladies, et vous dit quoi faire selon votre météo.<br /><a class="btn" href="${essai(campagne)}">Essayer gratuitement</a></div>`;
 
 export function articlePage(a, autres) {
   const path = `/conseils/${a.slug}`;
@@ -79,8 +83,8 @@ export function articlePage(a, autres) {
     `<a class="card" href="/conseils/${o.slug}"><b>${esc(o.title)}</b><span>${esc(o.description)}</span></a>`).join("")}</div>` : "";
   const body = `<div class="crumb"><a href="/">Accueil</a> › <a href="/conseils">Conseils gazon</a></div>
 <article><h1>${esc(a.title)}</h1><div class="meta">${SAISONS[a.saison] || ""} · Mis à jour le ${frDate(a.maj || a.date)} · Par l'équipe Mongazon360</div>
-${a.html}</article>${CTA}${lies}`;
-  return page({ title: `${a.title} — Mongazon360®`, description: a.description, path, ogType: "article", jsonLd, body });
+${a.html}</article>${cta(a.slug)}${lies}`;
+  return page({ title: `${a.title} — Mongazon360®`, description: a.description, path, ogType: "article", jsonLd, body, campagne: a.slug });
 }
 
 export function indexPage(articles) {
@@ -90,8 +94,8 @@ export function indexPage(articles) {
     return liste.length ? `<div class="season">${label}</div><div class="cards">${liste.map(a =>
       `<a class="card" href="/conseils/${a.slug}"><b>${esc(a.title)}</b><span>${esc(a.description)}</span></a>`).join("")}</div>` : "";
   }).join("");
-  const body = `<h1>Conseils gazon</h1><p>Tonte, arrosage, semis, mousse, engrais : les bons gestes au bon moment, expliqués simplement par l'équipe Mongazon360.</p>${groupes}${CTA}`;
+  const body = `<h1>Conseils gazon</h1><p>Tonte, arrosage, semis, mousse, engrais : les bons gestes au bon moment, expliqués simplement par l'équipe Mongazon360.</p>${groupes}${cta("rubrique")}`;
   return page({ title: "Conseils gazon : entretien de la pelouse saison par saison — Mongazon360®",
     description: "Guides pratiques pour une belle pelouse toute l'année : regarnissage, scarification, mousse, engrais, tonte et arrosage, saison par saison.",
-    path: "/conseils", ogType: "website", jsonLd, body });
+    path: "/conseils", ogType: "website", jsonLd, body, campagne: "rubrique" });
 }

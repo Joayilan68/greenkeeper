@@ -474,6 +474,16 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* ── CONSEILS GAZON (rubrique statique /conseils, hors de l'app) ───── */}
+        <a href="/conseils" style={{ ...card(), display:"flex", alignItems:"center", gap:12, textDecoration:"none", color:"inherit" }}>
+          <span style={{ fontSize:24 }}>📚</span>
+          <div style={{ flex:1 }}>
+            <div style={{ fontSize:13, fontWeight:800, color:"#F1F8F2" }}>Conseils gazon</div>
+            <div style={{ fontSize:12, color:"#81c784", lineHeight:1.5 }}>Nos guides saison par saison : tonte, arrosage, mousse, semis…</div>
+          </div>
+          <span style={{ color:"#81c784", fontSize:18 }}>›</span>
+        </a>
+
         {/* ── LIENS LÉGAUX ──────────────────────────────────────────────────── */}
         <div style={{ display:"flex", justifyContent:"center", flexWrap:"wrap", gap:12, padding:"8px 0" }}>
           {[
