@@ -24,6 +24,29 @@ footer{border-top:1px solid #dfe8e1;background:#fff}footer div{max-width:760px;m
 // (et à l'article d'origine) dans Pilotage → Activité, au lieu de « autre ».
 const essai = (campagne) => `/essai?utm_source=conseils&amp;utm_medium=article&amp;utm_campaign=${campagne}`;
 
+// Mesure d'audience des pages Conseils (même logique que l'app, sans cookie ni donnée personnelle) :
+// 1. origine du visiteur conservée jusqu'à l'inscription : même clé sessionStorage que useUTMCapture
+//    (utm_source, sinon site d'origine ; campagne = utm_campaign, sinon l'article) ;
+// 2. visite comptée dans site_visits (1 par appareil et par jour, clé partagée avec l'app, comptes
+//    connectés exclus) si l'URL et la clé publique Supabase sont fournies au build.
+const SUPABASE_URL  = process.env.VITE_SUPABASE_URL || "";
+const SUPABASE_ANON = process.env.VITE_SUPABASE_ANON_KEY || "";
+if (!SUPABASE_URL || !SUPABASE_ANON) console.warn("[seo] Supabase non configuré : visites des pages Conseils non comptées");
+
+const suivi = (campagne) => `<script>(function(){try{
+var p=new URLSearchParams(location.search),ref=document.referrer||"",K="mg360_utm_capture",src=(p.get("utm_source")||"").toLowerCase().trim();
+if(!src){src="direct";var m=[[/instagram\\./i,"instagram"],[/tiktok\\./i,"tiktok"],[/facebook\\.|fb\\.com/i,"facebook"],[/(twitter|x)\\.com/i,"twitter"],[/youtube\\.|youtu\\.be/i,"youtube"],[/linkedin\\./i,"linkedin"],[/google\\.|bing\\.|duckduckgo\\./i,"google"],[/mail\\.|gmail|outlook|yahoo/i,"email"]];
+if(ref&&!/mongazon360\\./i.test(ref)){src="autre";for(var i=0;i<m.length;i++)if(m[i][0].test(ref)){src=m[i][1];break;}}}
+var cap=null;try{cap=JSON.parse(sessionStorage.getItem(K));}catch(e){}
+if(!cap){cap={source:src,medium:p.get("utm_medium")||"conseils",campaign:p.get("utm_campaign")||"${campagne}",referer:ref,landingPath:location.pathname+location.search,capturedAt:new Date().toISOString()};sessionStorage.setItem(K,JSON.stringify(cap));}
+var U="${SUPABASE_URL}",A="${SUPABASE_ANON}",d=new Date().toLocaleDateString("fr-CA"),V="mg360_visit_"+d;
+if(!U||!A||localStorage.getItem(V)||/__client_uat=[1-9]/.test(document.cookie))return;
+localStorage.setItem(V,"1");
+var ua=navigator.userAgent||"",ios=/iPhone|iPad|iPod/i.test(ua)||(/Macintosh/i.test(ua)&&navigator.maxTouchPoints>1);
+fetch(U+"/rest/v1/site_visits",{method:"POST",headers:{apikey:A,Authorization:"Bearer "+A,"Content-Type":"application/json",Prefer:"return=minimal"},
+body:JSON.stringify({path:location.pathname,os:ios?"ios":/Android/i.test(ua)?"android":"ordinateur",installed:matchMedia("(display-mode: standalone)").matches,source:String(cap.source).slice(0,40),campaign:cap.campaign?String(cap.campaign).slice(0,80):null})}).catch(function(){});
+}catch(e){}})();</script>`;
+
 const SAISONS = { automne: "🍂 Automne", hiver: "❄️ Hiver", printemps: "🌱 Printemps", ete: "☀️ Été" };
 const frDate = (d) => new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 
@@ -60,6 +83,7 @@ function page({ title, description, path, ogType, jsonLd, body, campagne }) {
 <body>
 <header><div class="bar"><a class="logo" href="/"><img src="/icon-192.png" alt="" />Mongazon360<sup>®</sup></a><a class="btn" href="${essai(campagne)}">Diagnostic gratuit</a></div></header>
 <main>${body}</main>
+${suivi(campagne)}
 <footer><div><a href="/conseils">Conseils gazon</a><a href="/mentions-legales">Mentions légales</a><a href="/confidentialite">Confidentialité</a><a href="/cookies">Cookies</a><br />© ${new Date().getFullYear()} Mongazon360® — marque déposée et enregistrée à l'EUIPO</div></footer>
 </body>
 </html>
