@@ -116,6 +116,10 @@
       "destination": "/sw.js"
     },
     {
+      "source": "/:page(essai|demo|mentions-legales|confidentialite|cgu|cgv|cookies|login|signup)",
+      "destination": "/:page/index.html"
+    },
+    {
       "source": "/((?!sw\\.js|\\.well-known).*)",
       "destination": "/index.html"
     }
