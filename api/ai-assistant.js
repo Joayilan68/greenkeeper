@@ -3,6 +3,7 @@
 
 const { createClerkClient } = require("@clerk/backend");
 const { verifiedUserId, ADMIN_EMAILS } = require("./auth.cjs");
+const { isGuestUser } = require("./premium.cjs");
 const { createClient }      = require("@supabase/supabase-js");
 
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
@@ -52,7 +53,7 @@ module.exports = async function handler(req, res) {
     const isPremium    = clerkUser.publicMetadata?.isSubscribed === true ||
                          clerkUser.publicMetadata?.subscriptionStatus === "active" ||
                          clerkUser.publicMetadata?.subscriptionStatus === "trialing" ||
-                         isTrial;
+                         isTrial || await isGuestUser(clerkUserId, clerkUser.publicMetadata);
 
     // Free : 5 messages/jour — Premium (dont essai) : 20 messages/jour
     const dailyLimit = isAdmin ? 9999 : isPremium ? 20 : 5;

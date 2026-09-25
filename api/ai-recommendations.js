@@ -7,6 +7,7 @@
 const { createClient } = require("@supabase/supabase-js");
 const { createClerkClient } = require("@clerk/backend");
 const { verifiedUserId, ADMIN_EMAILS } = require("./auth.cjs");
+const { isGuestUser } = require("./premium.cjs");
 
 const supabase = createClient(
   process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
@@ -135,19 +136,8 @@ module.exports = async function handler(req, res) {
         } else if (isPremium || isTrial) {
           tier = "paid";
         } else {
-          // Premium invité — vérité serveur : user_access.status === "guest"
-          let isGuest = false;
-          try {
-            const { data: ua } = await supabase
-              .from("user_access")
-              .select("status")
-              .eq("user_id", userId)
-              .maybeSingle();
-            isGuest = ua?.status === "guest";
-          } catch (e) {
-            console.warn("[MG360] guest check (ai-reco) :", e.message);
-          }
-          tier = isGuest ? "paid" : "free";
+          // Premium offert (famille, bêta…) encore valide — règle commune api/premium.cjs
+          tier = (await isGuestUser(userId, user.publicMetadata)) ? "paid" : "free";
         }
       } catch {
         // Token invalide ou user inexistant
@@ -161,7 +151,7 @@ module.exports = async function handler(req, res) {
 
     // ── 2. Rate limiting ─────────────────────────────────────────────────────
     // Bloquer les appels sans token valide (unknown = IP) ET les comptes gratuits.
-    // Accès réservé : admin, Premium Stripe, invité (user_access.status="guest").
+    // Accès réservé : admin, Premium Stripe ou essai, Premium offert en cours.
     if (tier === "unknown") {
       return res.status(401).json({
         error:   "Authentification requise",
