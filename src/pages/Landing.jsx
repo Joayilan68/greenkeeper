@@ -222,6 +222,7 @@ export default function Landing() {
         {/* ── Pied de page ── */}
         <footer style={{ marginTop:40, paddingTop:20, borderTop:"1px solid rgba(165,214,167,0.14)", textAlign:"center" }}>
           <div style={{ display:"flex", gap:16, justifyContent:"center", flexWrap:"wrap", fontSize:12 }}>
+            <a href="/conseils" style={{ color:G.accent, textDecoration:"none", fontWeight:700 }}>Conseils gazon</a>
             <a href="/mentions-legales" style={{ color:G.soft, textDecoration:"none" }}>Mentions légales</a>
             <a href="/confidentialite" style={{ color:G.soft, textDecoration:"none" }}>Confidentialité</a>
             <a href="/cgu" style={{ color:G.soft, textDecoration:"none" }}>CGU</a>
