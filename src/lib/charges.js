@@ -27,7 +27,7 @@ export const URSSAF_RATE   = 0.221;                       // micro-entrepreneur,
 export const CHARGES_PREVUES = [
   { name: "RC Pro numérique",         role: "Assurance — devis en cours (Hiscox / Stello / April)", amount: 150, currency: "EUR", period: "an" },
   { name: "Apple Developer",          role: "Publication iOS — si GO de l'étude Apple",             amount: 99,  currency: "USD", period: "an" },
-  { name: "Codemagic",                role: "Build iOS sans Mac — si GO de l'étude Apple",          amount: 30,  currency: "USD", period: "mois" },
+  { name: "Codemagic",                role: "Build iOS sans Mac — si GO de l'étude Apple",          amount: 0,   currency: "USD", period: "mois", note: "offre gratuite : 500 min/mois sur Mac" },
 ];
 
 // Montant en € pour la période demandée ("mois" | "an")

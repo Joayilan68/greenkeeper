@@ -8,6 +8,7 @@ import { useSubscription } from "../lib/useSubscription";
 import { MONTHLY_PLAN, MONTHS_FR, getWMO } from "../lib/lawn";
 import { calcLawnScore } from "../lib/lawnScore";
 import { usePushNotifications } from "../lib/usePushNotifications";
+import { isIOS, isStandalone } from "../lib/platform";
 import { useConsents } from "../lib/useConsents";
 import { useReminders } from "../lib/useReminders";
 import AlertBanner from "../components/AlertBanner";
@@ -86,6 +87,16 @@ export default function Dashboard() {
 
   const { score, potential, label, color, issues, strengths, diagScore, diagEmoji, diagAge, diagInfluence, hasDiag }
     = calcLawnScore({ weather, profile, history, month, diagnostics });
+
+  // iPhone dans Safari : sans installation, pas de notifications possibles → guide d'installation
+  const [showIosInstall, setShowIosInstall] = useState(() => {
+    try { return isIOS() && !isStandalone() && !localStorage.getItem("mg360_ios_install_hidden"); }
+    catch { return false; }
+  });
+  const hideIosInstall = () => {
+    setShowIosInstall(false);
+    try { localStorage.setItem("mg360_ios_install_hidden", "1"); } catch { /* navigation privée */ }
+  };
 
   const handleActivatePush = async () => {
     const success = await subscribe();
@@ -180,6 +191,20 @@ export default function Dashboard() {
             >
               {pushLoading ? "…" : "Activer"}
             </div>
+          </div>
+        )}
+
+        {/* ── IPHONE : installer l'app (condition des notifications sur iOS) ── */}
+        {showIosInstall && (
+          <div style={{ background:"linear-gradient(135deg,rgba(27,94,32,0.6),rgba(13,43,26,0.8))", border:"1px solid rgba(102,187,106,0.35)", borderRadius:14, padding:"14px 16px", marginBottom:4, display:"flex", alignItems:"flex-start", gap:12 }}>
+            <span style={{ fontSize:24, flexShrink:0 }}>📲</span>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:13, fontWeight:800, color:"#F1F8F2", marginBottom:3 }}>Installe Mongazon360 sur ton iPhone</div>
+              <div style={{ fontSize:12, color:"#81c784", lineHeight:1.5 }}>
+                Touche <b>Partager ⬆️</b> puis <b>« Sur l'écran d'accueil »</b>. Ouvre ensuite l'app depuis son icône : tu pourras recevoir les conseils de Bob en notification.
+              </div>
+            </div>
+            <button onClick={hideIosInstall} aria-label="Masquer" style={{ background:"none", border:"none", color:"#81c784", fontSize:16, cursor:"pointer", padding:0, flexShrink:0 }}>✕</button>
           </div>
         )}
 
