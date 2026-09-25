@@ -174,6 +174,7 @@ module.exports = async function handler(req, res) {
       );
 
       const { decideNotification, appendNotifLog } = require("./notificationEngine.cjs");
+      const { clerkGuestActive } = require("./premium.cjs");
       // ← nouveau : source de vérité de la phase parcours, partagée avec Today.jsx/phaseParcours()
       const { currentPhase } = require("./parcoursEngine.cjs");
 
@@ -539,7 +540,7 @@ module.exports = async function handler(req, res) {
             const trialStart = um.trialStartedAt;
             if (!trialStart) continue;
             if (pm.isSubscribed === true || pm.subscriptionStatus === "active"
-                || pm.subscriptionStatus === "trialing" || pm.guestAccess === true) continue;
+                || pm.subscriptionStatus === "trialing" || clerkGuestActive(pm)) continue;
 
             const daysLeft = Math.ceil((Number(trialStart) + TRIAL_MS - Date.now()) / 86400000);
             let flagKey = null, when = null;
@@ -587,6 +588,36 @@ module.exports = async function handler(req, res) {
             trialRelances++;
           }
         } catch (e) { await require("./alerting.cjs").reportServerError("Tâche planifiée — relances essai", e); }
+      }
+
+      // ── FIN DES PREMIUM OFFERTS À DATE (bêta…) — créneau MATIN ─────────────
+      // Date de fin dépassée → user_access repasse en "approved" et Clerk perd
+      // guestAccess/guestUntil. Les accès sans date (famille) ne sont jamais touchés.
+      let premiumOffertsExpires = 0;
+      if (slot === "matin") {
+        try {
+          const { todayParis } = require("./premium.cjs");
+          const expired = new Set();
+          const { data: rows } = await supabase.from("user_access")
+            .select("user_id").eq("status", "guest").lt("guest_until", todayParis());
+          for (const r of rows || []) expired.add(r.user_id);
+          for (const u of await getClerkUsers()) {
+            const pm = u.public_metadata || {};
+            if (pm.guestAccess === true && !clerkGuestActive(pm)) expired.add(u.id);
+          }
+          for (const uid of expired) {
+            await supabase.from("user_access")
+              .update({ status: "approved", updated_at: new Date().toISOString() })
+              .eq("user_id", uid).eq("status", "guest");
+            const r = await fetch(`https://api.clerk.com/v1/users/${uid}/metadata`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}` },
+              body: JSON.stringify({ public_metadata: { guestAccess: null, guestUntil: null } }),
+            });
+            if (!r.ok) throw new Error(`Clerk : retrait du Premium offert refusé (HTTP ${r.status}) pour ${uid}`);
+            premiumOffertsExpires++;
+          }
+        } catch (e) { await require("./alerting.cjs").reportServerError("Tâche planifiée — fin des Premium offerts", e); }
       }
 
       // ── SOCLE QUOTIDIEN — 1 conseil gazon utile/jour — créneau MATIN ───────
@@ -655,8 +686,8 @@ module.exports = async function handler(req, res) {
       }
       await alerting.setStatus(`cron_${slot}`, { date: today, at: new Date().toISOString(), pushSent, emailSent, emailFallbackSent, photosPurgees });
 
-      console.log(`[CRON ${slot}] reminders:`, remindersData?.length || 0, "pushSent:", pushSent, "emailSent:", emailSent, "emailFallbackSent:", emailFallbackSent, "skipped:", skipped, "parcoursSent:", parcoursSent, "parcoursTermines:", parcoursTermines, "trialRelances:", trialRelances, "baselineSent:", baselineSent, "photosPurgees:", photosPurgees);
-      return res.json({ success: true, date: today, slot, pushSent, emailSent, emailFallbackSent, skipped, parcoursSent, parcoursTermines, trialRelances, baselineSent, photosPurgees, reminders: remindersData?.length || 0 });
+      console.log(`[CRON ${slot}] reminders:`, remindersData?.length || 0, "pushSent:", pushSent, "emailSent:", emailSent, "emailFallbackSent:", emailFallbackSent, "skipped:", skipped, "parcoursSent:", parcoursSent, "parcoursTermines:", parcoursTermines, "trialRelances:", trialRelances, "baselineSent:", baselineSent, "premiumOffertsExpires:", premiumOffertsExpires, "photosPurgees:", photosPurgees);
+      return res.json({ success: true, date: today, slot, pushSent, emailSent, emailFallbackSent, skipped, parcoursSent, parcoursTermines, trialRelances, baselineSent, premiumOffertsExpires, photosPurgees, reminders: remindersData?.length || 0 });
     } catch (e) {
       await require("./alerting.cjs").reportServerError("Tâche planifiée en échec", e, { "Créneau": req.query.slot || "matin" });
       return res.status(500).json({ error: e.message });
@@ -683,11 +714,11 @@ module.exports = async function handler(req, res) {
       const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
       const { data } = await supabase
         .from("user_access")
-        .select("status")
+        .select("status, guest_until")
         .eq("user_id", userId)
         .maybeSingle();
 
-      return res.json({ status: data?.status || null, isGuest: data?.status === "guest" });
+      return res.json({ status: data?.status || null, isGuest: require("./premium.cjs").rowGuestActive(data) });
     } catch (e) {
       console.error("[send] guest-status:", e.message);
       return res.status(500).json({ error: e.message, isGuest: false });
@@ -747,12 +778,12 @@ module.exports = async function handler(req, res) {
       let writeErr = null;
       if (existing) {
         const { error } = await supabase.from("user_access")
-          .update({ status: "guest", guest_code: gc.code, approved_at: nowIso, updated_at: nowIso })
+          .update({ status: "guest", guest_code: gc.code, guest_until: gc.access_until || null, guest_label: gc.label || null, approved_at: nowIso, updated_at: nowIso })
           .eq("user_id", userId);
         writeErr = error;
       } else {
         const { error } = await supabase.from("user_access")
-          .insert({ user_id: userId, status: "guest", guest_code: gc.code, approved_at: nowIso, updated_at: nowIso });
+          .insert({ user_id: userId, status: "guest", guest_code: gc.code, guest_until: gc.access_until || null, guest_label: gc.label || null, approved_at: nowIso, updated_at: nowIso });
         writeErr = error;
       }
 
@@ -778,7 +809,7 @@ module.exports = async function handler(req, res) {
         await fetch(`https://api.clerk.com/v1/users/${userId}/metadata`, {
           method:  "PATCH",
           headers: { "Authorization": `Bearer ${process.env.CLERK_SECRET_KEY}`, "Content-Type": "application/json" },
-          body:    JSON.stringify({ public_metadata: { guestAccess: true } }),
+          body:    JSON.stringify({ public_metadata: { guestAccess: true, guestUntil: gc.access_until || null } }),
         });
       } catch (e) {
         console.warn("[send] validate-guest clerk metadata:", e.message);

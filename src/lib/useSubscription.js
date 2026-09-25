@@ -5,6 +5,14 @@ import { useAuth, useUser } from "@clerk/clerk-react";
 // Emails admin — seule source d'accès admin (vérifiée par Clerk, infalsifiable côté client)
 const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
 
+// Premium offert (famille, bêta…) : guestAccess posé par le serveur, guestUntil = dernier jour inclus
+// (absent = à vie). Même règle que api/premium.cjs.
+function guestActive(pm) {
+  const until = pm?.guestUntil;
+  return pm?.guestAccess === true
+    && (!until || String(until).slice(0, 10) >= new Date().toLocaleDateString("fr-CA", { timeZone: "Europe/Paris" }));
+}
+
 // ── Flag localStorage pour un compte admin (cache d'affichage, pas une preuve) ──
 function setAdminFlags() {
   try { localStorage.setItem("mg360_onboarding_done", "true"); } catch {}
@@ -47,13 +55,13 @@ export function useSubscription() {
     const subscribed = meta.isSubscribed === true ||
                        meta.subscriptionStatus === "active" ||
                        meta.subscriptionStatus === "trialing";
-    let guestAccess = meta.guestAccess === true;
+    let guestAccess = guestActive(meta);
 
     if (!subscribed && !guestAccess && typeof user.reload === "function") {
       try {
         await user.reload();
         meta = user.publicMetadata || {};
-        guestAccess = meta.guestAccess === true;
+        guestAccess = guestActive(meta);
       } catch { /* reload impossible — on garde la valeur en cache */ }
     }
 
@@ -116,7 +124,7 @@ export function useSubscription() {
   const realPremium    = user?.publicMetadata?.isSubscribed === true
                       || user?.publicMetadata?.subscriptionStatus === "active"
                       || user?.publicMetadata?.subscriptionStatus === "trialing"
-                      || user?.publicMetadata?.guestAccess === true;
+                      || guestActive(user?.publicMetadata);
   const isTrial        = tier === "paid" && !realPremium && !!trialStartedAt
                       && Date.now() < Number(trialStartedAt) + TRIAL_MS;
   const trialDaysLeft  = trialStartedAt

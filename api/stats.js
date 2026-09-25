@@ -39,6 +39,7 @@ module.exports = async function handler(req, res) {
 
   const { type } = req.query;
 
+  if (type === "guests") return handleGuests(req, res);
   // Réseaux sociaux : lecture (GET ?type=social) + écriture (POST)
   if (type === "social" || req.method === "POST") return handleSocial(req, res);
   if (type === "revenue") return handleRevenue(req, res);
@@ -46,7 +47,7 @@ module.exports = async function handler(req, res) {
   if (type === "errors")   return handleErrors(req, res);
   if (type === "services") return handleServices(req, res);
 
-  return res.status(400).json({ error: 'Paramètre ?type=revenue|users|social|errors|services requis' });
+  return res.status(400).json({ error: 'Paramètre ?type=revenue|users|social|errors|services|guests requis' });
 };
 
 // ── Réseaux sociaux (followers — saisie manuelle mensuelle) ───────────────────
@@ -354,14 +355,90 @@ async function handleUsers(req, res) {
   }
 }
 
+// ── Premium offerts (famille, bêta…) — Pilotage → Finances ─────────────────────
+// GET  : liste des comptes (Clerk guestAccess ou user_access "guest"), date de fin, dernière activité
+// POST : { action:"add", email, until, label } | { action:"update", userId, until, label } | { action:"remove", userId }
+//        until = "AAAA-MM-JJ" (dernier jour inclus) ou null (à vie). Le compte doit exister.
+async function handleGuests(req, res) {
+  const sb = createClient(SB_URL, SB_KEY);
+  const primary = (u) => u.email_addresses?.find(e => e.id === u.primary_email_address_id)?.email_address
+                      || u.email_addresses?.[0]?.email_address || "";
+  const setClerk = async (userId, public_metadata) => {
+    const r = await fetch(`https://api.clerk.com/v1/users/${userId}/metadata`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}` },
+      body: JSON.stringify({ public_metadata }),
+    });
+    if (!r.ok) throw new Error(`Clerk : mise à jour refusée (HTTP ${r.status})`);
+  };
+  try {
+    if (req.method === "POST") {
+      const { action, email, label = null } = req.body || {};
+      const until = req.body?.until ? String(req.body.until).slice(0, 10) : null;
+      if (until && !/^\d{4}-\d{2}-\d{2}$/.test(until)) return res.status(400).json({ error: "Date de fin invalide" });
+      let userId = req.body?.userId;
+      if (action === "add") {
+        const r = await fetch(`https://api.clerk.com/v1/users?email_address=${encodeURIComponent(String(email || "").trim())}`,
+          { headers: { Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}` } });
+        const found = r.ok ? await r.json() : [];
+        userId = (Array.isArray(found) ? found : found.data || [])[0]?.id;
+        if (!userId) return res.status(404).json({ error: "Aucun compte avec cet email — la personne doit d'abord créer son compte" });
+      }
+      if (!userId) return res.status(400).json({ error: "Compte manquant" });
+      const now = new Date().toISOString();
+      if (action === "add" || action === "update") {
+        const { error } = await sb.from("user_access").upsert(
+          { user_id: userId, status: "guest", guest_until: until, guest_label: label, updated_at: now,
+            ...(action === "add" ? { approved_at: now } : {}) },
+          { onConflict: "user_id" });
+        if (error) throw new Error(error.message);
+        await setClerk(userId, { guestAccess: true, guestUntil: until });
+      } else if (action === "remove") {
+        const { error } = await sb.from("user_access")
+          .update({ status: "approved", guest_until: null, updated_at: now }).eq("user_id", userId);
+        if (error) throw new Error(error.message);
+        await setClerk(userId, { guestAccess: null, guestUntil: null });
+      } else {
+        return res.status(400).json({ error: "Action inconnue" });
+      }
+      clerkCache = { at: 0, users: null };
+    }
+
+    const [clerkUsers, { data: rows, error }] = await Promise.all([
+      fetchAllClerkUsers({ fresh: true }),
+      sb.from("user_access").select("user_id, status, guest_code, guest_until, guest_label").eq("status", "guest"),
+    ]);
+    if (error) throw new Error(error.message);
+    const rowMap = Object.fromEntries((rows || []).map(r => [r.user_id, r]));
+    const guests = clerkUsers
+      .filter(u => u.public_metadata?.guestAccess === true || rowMap[u.id])
+      .map(u => {
+        const row = rowMap[u.id] || {};
+        return {
+          userId:     u.id,
+          email:      primary(u),
+          name:       [u.first_name, u.last_name].filter(Boolean).join(" "),
+          label:      row.guest_label || row.guest_code || null,
+          until:      row.guest_until || u.public_metadata?.guestUntil || null,
+          lastActive: u.last_active_at || null,
+        };
+      })
+      .sort((a, b) => (a.until || "9999").localeCompare(b.until || "9999") || a.email.localeCompare(b.email));
+    return res.json({ success: true, guests });
+  } catch (e) {
+    await require("./alerting.cjs").reportServerError("Pilotage — Premium offerts", e);
+    return res.status(500).json({ error: e.message });
+  }
+}
+
 // ── Helper : pagination Clerk complète ─────────────────────────────────────
 // Liste gardée 2 min en mémoire : l'API Clerk est l'appel le plus lent de la page,
 // et Pilotage se rafraîchit toutes les 60 s.
 const CLERK_CACHE_MS = 2 * 60 * 1000;
 let clerkCache = { at: 0, users: null };
 
-async function fetchAllClerkUsers() {
-  if (clerkCache.users && Date.now() - clerkCache.at < CLERK_CACHE_MS) return clerkCache.users;
+async function fetchAllClerkUsers({ fresh = false } = {}) {
+  if (!fresh && clerkCache.users && Date.now() - clerkCache.at < CLERK_CACHE_MS) return clerkCache.users;
   const clerkKey = process.env.CLERK_SECRET_KEY;
   const limit    = 100;
   let   offset   = 0;
