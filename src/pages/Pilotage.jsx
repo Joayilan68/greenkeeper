@@ -330,16 +330,19 @@ export default function Pilotage() {
     setTimeout(() => setSocialMsg(""), 5000);
   }
 
-  const sendTestAlert = async () => {
+  // Actions de test : alerte email admin, ou notification sur l'abonnement push du compte connecté
+  const sendTest = async (type, okMsg) => {
     setSending(true); setSent("");
     try {
       const token = await getToken();
-      const res   = await fetch("/api/send?type=alert-test", {
+      const res   = await fetch(`/api/send?type=${type}`, {
         method: "POST", headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       fetchErrors();
-      setSent(data.success ? "✅ Alerte test envoyée !" : "❌ Erreur : " + data.error);
+      setSent(data.success ? okMsg
+        : res.status === 404 ? "❌ Aucun abonnement aux notifications sur ce compte — active-les dans Paramètres"
+        : "❌ Erreur : " + data.error);
     } catch (e) { setSent("❌ Erreur : " + e.message); }
     setSending(false);
     setTimeout(() => setSent(""), 5000);
@@ -775,8 +778,11 @@ export default function Pilotage() {
                 </div>
               )}
               <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-                <button onClick={sendTestAlert} disabled={sending} style={{ ...btn.ghost, fontSize:13, opacity:sending?0.7:1 }}>
+                <button onClick={() => sendTest("alert-test", "✅ Alerte test envoyée !")} disabled={sending} style={{ ...btn.ghost, fontSize:13, opacity:sending?0.7:1 }}>
                   🧪 Tester l'alerte email
+                </button>
+                <button onClick={() => sendTest("notification-test", "✅ Notification envoyée sur ton téléphone !")} disabled={sending} style={{ ...btn.ghost, fontSize:13, opacity:sending?0.7:1 }}>
+                  🔔 Tester la notification sur mon téléphone
                 </button>
               </div>
             </div>
