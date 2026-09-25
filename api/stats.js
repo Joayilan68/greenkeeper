@@ -8,7 +8,7 @@
 //   GET /api/stats?type=services → vérification en direct des services externes (Pilotage → Services)
 
 // Emails admin — exclus de TOUTES les stats (règle "admins exclus de tout")
-const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
+const { verifiedUserId, ADMIN_EMAILS } = require("./auth.cjs");
 
 const { createClerkClient } = require("@clerk/backend");
 const { createClient }      = require("@supabase/supabase-js");
@@ -27,12 +27,8 @@ module.exports = async function handler(req, res) {
     return res.status(401).json({ error: "Authentification requise" });
   }
   try {
-    const token   = authHeader.replace("Bearer ", "");
-    const parts   = token.split(".");
-    if (parts.length !== 3) throw new Error("JWT malformé");
-    const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8"));
-    const uid     = payload.sub || payload.user_id;
-    if (!uid) throw new Error("sub manquant");
+    const uid     = await verifiedUserId(req);
+    if (!uid) throw new Error("Jeton invalide");
     const user    = await clerk.users.getUser(uid);
     const email   = (user.emailAddresses?.[0]?.emailAddress || "").toLowerCase();
     const isAdmin = ADMIN_EMAILS.includes(email) || user.publicMetadata?.role === "admin";

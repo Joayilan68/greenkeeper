@@ -1,7 +1,5 @@
 const Stripe = require("stripe");
-const { createClerkClient } = require("@clerk/backend");
-
-const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
+const { verifiedUserId } = require("./auth.cjs");
 
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -15,19 +13,7 @@ module.exports = async function handler(req, res) {
     const { plan, email } = req.body;
 
     // ── Extraire userId depuis le token Clerk ─────────────────────────────
-    let userId = null;
-    const authHeader = req.headers.authorization;
-    if (authHeader?.startsWith("Bearer ")) {
-      try {
-        const token       = authHeader.replace("Bearer ", "");
-        const parts       = token.split(".");
-        const payloadJson = Buffer.from(parts[1], "base64url").toString("utf8");
-        const payload     = JSON.parse(payloadJson);
-        userId = payload.sub || payload.user_id;
-      } catch (e) {
-        console.warn("[Checkout] Token decode error:", e.message);
-      }
-    }
+    const userId = await verifiedUserId(req);
 
     const PRICES = {
       monthly: process.env.STRIPE_PRICE_MONTHLY,

@@ -2,6 +2,7 @@
 // Assistant IA gazon — Groq/Llama 3.1 avec contexte personnalisé
 
 const { createClerkClient } = require("@clerk/backend");
+const { verifiedUserId, ADMIN_EMAILS } = require("./auth.cjs");
 const { createClient }      = require("@supabase/supabase-js");
 
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
@@ -19,17 +20,7 @@ module.exports = async function handler(req, res) {
     return res.status(401).json({ error: "Token manquant" });
   }
 
-  // Décodage du payload Clerk (même méthode que rgpd-data.js / send.js — fonctionne
-  // avec l'instance de production clerk.mongazon360.fr). On lit le sub ; l'identité
-  // est revérifiée via l'API Clerk plus bas (clerk.users.getUser).
-  let clerkUserId = null;
-  try {
-    const parts = authHeader.replace("Bearer ", "").split(".");
-    if (parts.length === 3) {
-      const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8"));
-      clerkUserId = payload.sub || payload.user_id;
-    }
-  } catch {}
+  const clerkUserId = await verifiedUserId(req);
   if (!clerkUserId) {
     return res.status(401).json({ error: "Token invalide" });
   }
@@ -50,7 +41,6 @@ module.exports = async function handler(req, res) {
     const currentCount = rateData?.count || 0;
 
     // Admins illimités
-    const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
     const clerkUser    = await clerk.users.getUser(clerkUserId);
     const userEmail    = clerkUser.emailAddresses?.[0]?.emailAddress || "";
     const isAdmin      = ADMIN_EMAILS.includes(userEmail) || clerkUser.publicMetadata?.role === "admin";

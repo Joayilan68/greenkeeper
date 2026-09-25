@@ -676,15 +676,7 @@ module.exports = async function handler(req, res) {
     try {
       const authHeader = req.headers.authorization;
       if (!authHeader?.startsWith("Bearer ")) return res.status(401).json({ error: "Token manquant", isGuest: false });
-      const token = authHeader.replace("Bearer ", "");
-      let userId = null;
-      try {
-        const parts = token.split(".");
-        if (parts.length === 3) {
-          const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8"));
-          userId = payload.sub || payload.user_id;
-        }
-      } catch {}
+      const userId = await require("./auth.cjs").verifiedUserId(req);
       if (!userId) return res.status(401).json({ error: "Token invalide", isGuest: false });
 
       const { createClient } = require("@supabase/supabase-js");
@@ -714,15 +706,7 @@ module.exports = async function handler(req, res) {
       if (!authHeader?.startsWith("Bearer ")) {
         return res.status(401).json({ error: "Token manquant" });
       }
-      const token = authHeader.replace("Bearer ", "");
-      let userId = null;
-      try {
-        const parts = token.split(".");
-        if (parts.length === 3) {
-          const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8"));
-          userId = payload.sub || payload.user_id;
-        }
-      } catch {}
+      const userId = await require("./auth.cjs").verifiedUserId(req);
       if (!userId) return res.status(401).json({ error: "Token JWT invalide" });
 
       const rawCode = (req.body?.code || "").trim();
@@ -823,16 +807,7 @@ module.exports = async function handler(req, res) {
         return res.status(401).json({ error: "Token manquant" });
       }
 
-      // ── Décodage JWT Clerk pour user_id ────────────────────────────────
-      const token = authHeader.replace("Bearer ", "");
-      let userId = null;
-      try {
-        const parts = token.split(".");
-        if (parts.length === 3) {
-          const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8"));
-          userId = payload.sub || payload.user_id;
-        }
-      } catch {}
+      const userId = await require("./auth.cjs").verifiedUserId(req);
 
       if (!userId) return res.status(401).json({ error: "Token JWT invalide" });
 
