@@ -4,6 +4,7 @@ import { useAuth, useUser } from "@clerk/clerk-react";
 import { appShell, btn, card } from "../lib/styles";
 import { isAndroidTWA } from "../lib/platform";
 import ComparatifPremium from "../components/ComparatifPremium";
+import { OFFRE, offreEnCours } from "../lib/offreSaison";
 
 // ════════════════════════════════════════════════════════════════════════════
 // SUBSCRIBE — Page de souscription Premium (avant Stripe Checkout)
@@ -43,7 +44,8 @@ export default function Subscribe() {
   const navigate = useNavigate();
   const { getToken } = useAuth();
   const { user } = useUser();
-  const [selected, setSelected] = useState("monthly");
+  const offre = offreEnCours(); // offre saisonnière : annuel à 19,99 € la 1re année
+  const [selected, setSelected] = useState(offre ? "yearly" : "monthly");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -52,7 +54,11 @@ export default function Subscribe() {
   const [acceptedCgv,         setAcceptedCgv]         = useState(false);
   const [acceptedRetractation, setAcceptedRetractation] = useState(false);
 
-  const selectedPlan = PLANS.find(p => p.id === selected);
+  const euros = (n) => `${String(n).replace(".", ",")}€`;
+  const plans = PLANS.map(p => p.id === "yearly" && offre
+    ? { ...p, price: euros(OFFRE.prixOffre), period: " la 1re année", desc: `au lieu de ${euros(OFFRE.prixAnnuel)} · jusqu'au ${offre.finLabel}` }
+    : p);
+  const selectedPlan = plans.find(p => p.id === selected);
   const canSubscribe = acceptedCgv && acceptedRetractation;
 
   const handleSubscribe = async () => {
@@ -147,14 +153,19 @@ export default function Subscribe() {
       </button>
 
       {/* ── Sélecteur de plan ──────────────────────────────────────────────── */}
+      {offre && (
+        <div style={{ background:"rgba(249,168,37,0.12)", border:"1px solid rgba(249,168,37,0.4)", borderRadius:12, padding:"10px 12px", marginBottom:16, fontSize:12, color:"#ffe082", lineHeight:1.5, textAlign:"center" }}>
+          {offre.nom === "hiver" ? "❄️ Offre d'hiver" : "☀️ Offre d'été"} : <strong>Premium 1 an à {euros(OFFRE.prixOffre)}</strong> au lieu de {euros(OFFRE.prixAnnuel)}, jusqu'au {offre.finLabel}.
+        </div>
+      )}
       <div style={{ display:"flex", gap:10, marginBottom:16 }}>
-        {PLANS.map(p => (
+        {plans.map(p => (
           <button key={p.id} onClick={() => setSelected(p.id)} style={{
             flex:1, background: selected===p.id ? "rgba(76,175,80,0.2)" : "rgba(255,255,255,0.05)",
             border:`2px solid ${selected===p.id ? "#43a047" : "rgba(255,255,255,0.1)"}`,
             borderRadius:16, padding:"14px 8px", cursor:"pointer", color:"#e8f5e9", textAlign:"center", position:"relative",
           }}>
-            {p.highlight && <div style={{ position:"absolute", top:-10, left:"50%", transform:"translateX(-50%)", background:"#43a047", borderRadius:20, padding:"2px 10px", fontSize:10, fontWeight:700, whiteSpace:"nowrap" }}>⭐ Populaire</div>}
+            {p.highlight && <div style={{ position:"absolute", top:-10, left:"50%", transform:"translateX(-50%)", background: offre ? "#f9a825" : "#43a047", borderRadius:20, padding:"2px 10px", fontSize:10, fontWeight:700, whiteSpace:"nowrap" }}>{offre ? "🎁 -50 %" : "⭐ Populaire"}</div>}
             <div style={{ fontWeight:800, fontSize:14, marginBottom:4 }}>{p.label}</div>
             <div style={{ fontSize:20, fontWeight:800, color:"#a5d6a7" }}>{p.price}</div>
             <div style={{ fontSize:11, color:"#81c784" }}>{p.period}</div>
@@ -173,7 +184,7 @@ export default function Subscribe() {
 
         {/* Récap de la commande */}
         <div style={{ background:"rgba(0,0,0,0.2)", borderRadius:10, padding:"10px 12px", marginBottom:14, fontSize:12, color:"#e8f5e9" }}>
-          Vous allez souscrire à <strong style={{ color:"#a5d6a7" }}>Mongazon360<sup style={{ fontSize:7 }}>®</sup> Premium {selectedPlan.label}</strong> au prix de <strong style={{ color:"#a5d6a7" }}>{selectedPlan.price}{selectedPlan.period}</strong>.
+          Vous allez souscrire à <strong style={{ color:"#a5d6a7" }}>Mongazon360<sup style={{ fontSize:7 }}>®</sup> Premium {selectedPlan.label}</strong> au prix de <strong style={{ color:"#a5d6a7" }}>{selectedPlan.price}{selectedPlan.period}</strong>{selected === "yearly" && offre && <>, puis {euros(OFFRE.prixAnnuel)}/an</>}.
           {selected === "monthly" ? " Renouvellement automatique chaque mois." : " Renouvellement automatique chaque année."} Résiliable à tout moment.
         </div>
 

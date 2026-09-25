@@ -1,5 +1,6 @@
 const Stripe = require("stripe");
 const { verifiedUserId } = require("./auth.cjs");
+const { offreEnCours, couponSaison } = require("./offreSaison.cjs");
 
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -22,20 +23,27 @@ module.exports = async function handler(req, res) {
     const priceId = PRICES[plan] || PRICES.monthly;
     if (!priceId) throw new Error("Price ID manquant");
 
+    // Offre saisonnière : annuel à 19,99 € la 1re année pendant les périodes creuses
+    const offre = plan === "yearly" && offreEnCours();
+    const discounts = offre ? [{ coupon: await couponSaison(stripe) }] : undefined;
+
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       payment_method_types: ["card"],
       line_items: [{ price: priceId, quantity: 1 }],
+      ...(discounts ? { discounts } : {}),
       customer_email: email,
       // ✅ userId Clerk dans les metadata — utilisé par le webhook pour activer Premium
       metadata: {
         userId: userId || "",
         plan,
+        ...(offre ? { offre: `saison-${offre.nom}` } : {}),
       },
       subscription_data: {
         metadata: {
           userId: userId || "",
           plan,
+          ...(offre ? { offre: `saison-${offre.nom}` } : {}),
         },
       },
       success_url: `${process.env.VITE_APP_URL}/subscribe/success`,
