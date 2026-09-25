@@ -1,4 +1,5 @@
 {
+  "regions": ["dub1"],
   "functions": {
     "api/analyze-lawn.js": {
       "maxDuration": 30
