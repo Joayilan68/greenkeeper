@@ -29,6 +29,7 @@ import { useSubscription } from "./lib/useSubscription"; // ✅ statut Premium �
 import { useUTMCapture }   from "./lib/useUTMCapture";   // ✅ Bloc 1 — capture UTM dès l'arrivée
 import { useUTMInjection } from "./lib/useUTMInjection"; // ✅ Bloc 1 — injection Clerk metadata first-touch
 import { trackFunnel }     from "./lib/funnel";          // ✅ suivi d'entonnoir (conversion)
+import { deviceInfo }      from "./lib/platform";
 import { isAnonPending, getAnonIdIfAny, setAnonPending } from "./lib/anonId"; // ✅ rattachement diagnostic anonyme
 import CookieBanner        from "./components/CookieBanner"; // ✅ consentement cookies (RGPD)
 import { getCookieConsent } from "./lib/cookieConsent";
@@ -50,7 +51,7 @@ async function pingPresence(userId) {
     const { supabase } = await import("./lib/supabase");
     const { error } = await supabase
       .from("daily_active_users")
-      .upsert({ user_id: userId, day: today }, { onConflict: "user_id,day", ignoreDuplicates: true });
+      .upsert({ user_id: userId, day: today, ...deviceInfo() }, { onConflict: "user_id,day", ignoreDuplicates: true });
     if (!error) localStorage.setItem(key, "1");
   } catch { /* non bloquant */ }
 }
@@ -67,7 +68,7 @@ function pingVisit() {
     localStorage.setItem(key, "1"); // pose le garde AVANT l'insert (anti double-comptage)
     import("./lib/supabase").then(({ supabase }) => {
       supabase.from("site_visits")
-        .insert({ path: typeof location !== "undefined" ? location.pathname : null })
+        .insert({ path: typeof location !== "undefined" ? location.pathname : null, ...deviceInfo() })
         .then(() => {}, () => {});
     }).catch(() => {});
   } catch { /* non bloquant */ }

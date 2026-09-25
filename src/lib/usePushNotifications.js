@@ -7,6 +7,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { useState, useEffect } from "react";
 import { sendBugAlert } from "./usePilotage";
+import { isIOS, isStandalone } from "./platform";
 
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
 
@@ -112,6 +113,11 @@ export function usePushNotifications(userId) {
       reportActivationFailure(reason, detail);
       return false;
     };
+    if (isIOS() && !isStandalone()) {
+      // Sur iPhone, les notifications web n'existent que pour l'app ajoutée à l'écran d'accueil
+      setError("Sur iPhone, installe d'abord l'app : bouton Partager ⬆️ puis « Sur l'écran d'accueil ». Ouvre-la ensuite depuis l'icône pour activer les notifications.");
+      return false;
+    }
     if (!isNotificationSupported() || !isPushSupported()) {
       return fail("Les notifications ne sont pas disponibles sur cet appareil ou ce navigateur.", "non supporté", navigator.userAgent);
     }

@@ -255,8 +255,8 @@ async function handleUsers(req, res) {
   try {
     // ✅ Pagination explicite + parsing format multi-version Clerk
     // Toutes les sources en parallèle (la page attendait auparavant chaque requête l'une après l'autre)
-    const [allUsersRaw, dauByDay, geo, diagRows, siteVisits, funnel] = await Promise.all([
-      fetchAllClerkUsers(), fetchDauByDay(), fetchGeoPoints(), fetchDiagnosticsRows(), fetchSiteVisits(), fetchFunnel(),
+    const [allUsersRaw, dauByDay, geo, diagRows, siteVisits, funnel, devices] = await Promise.all([
+      fetchAllClerkUsers(), fetchDauByDay(), fetchGeoPoints(), fetchDiagnosticsRows(), fetchSiteVisits(), fetchFunnel(), fetchDevices(),
     ]);
 
     // Exclure les comptes admin de TOUTES les stats (règle "admins exclus de tout")
@@ -342,6 +342,7 @@ async function handleUsers(req, res) {
       diagnostics,
       siteVisits,
       funnel,
+      devices,
       clerkSources,
     });
 
@@ -529,6 +530,34 @@ async function fetchFunnel() {
   } catch (e) {
     console.warn("stats-users funnel:", e.message);
     return empty;
+  }
+}
+
+// ── Helper : appareils sur 30 jours (étude Apple) — actifs connectés et visiteurs ──
+// Actifs : dernier appareil connu par utilisateur. Visiteurs : 1 par appareil/jour.
+async function fetchDevices() {
+  const count = (rows) => {
+    const c = { total: rows.length, ios: 0, iosInstalled: 0, android: 0, androidInstalled: 0, ordinateur: 0 };
+    for (const r of rows) {
+      c[r.os]++;
+      if (r.installed && r.os !== "ordinateur") c[`${r.os}Installed`]++;
+    }
+    return c;
+  };
+  try {
+    const sb    = createClient(SB_URL, SB_KEY);
+    const since = new Date(Date.now() - 30 * 86400e3).toISOString().slice(0, 10);
+    const [{ data: dau, error: e1 }, { data: visits, error: e2 }] = await Promise.all([
+      sb.from("daily_active_users").select("user_id, day, os, installed").gte("day", since).not("os", "is", null).order("day", { ascending: false }),
+      sb.from("site_visits").select("os, installed").gte("day", since).not("os", "is", null),
+    ]);
+    if (e1 || e2) throw new Error((e1 || e2).message);
+    const latest = new Map();
+    for (const r of dau || []) if (!latest.has(r.user_id)) latest.set(r.user_id, r);
+    return { actifs: count([...latest.values()]), visiteurs: count(visits || []) };
+  } catch (e) {
+    console.warn("stats-users devices:", e.message);
+    return null;
   }
 }
 

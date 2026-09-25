@@ -483,7 +483,29 @@ export default function Pilotage() {
                 <div style={cardTitle}><span>🌐 Visiteurs du site — 30 j</span><span style={{ fontSize:11, color:"#81c784" }}>{users.siteVisits.total30} sur 30 j</span></div>
                 <MiniChart data={users.siteVisits.byDay} valueKey="count" color="#4FC3F7" />
                 <div style={{ fontSize:10, color:"#4a7c5c", marginTop:6, lineHeight:1.5 }}>
-                  Visiteurs non connectés, toutes pages confondues (accueil, essai, démo, mentions…), 1 par appareil/jour. Les connectés sont dans « Actifs ». Comptage démarré aujourd'hui.
+                  Visiteurs non connectés, toutes pages confondues (accueil, essai, démo, mentions…), 1 par appareil/jour. Les connectés sont dans « Actifs ».
+                </div>
+              </div>
+            )}
+            {users?.devices && (
+              <div style={card()}>
+                <div style={cardTitle}><span>📱 Appareils — 30 j</span></div>
+                {[["Utilisateurs actifs", users.devices.actifs], ["Visiteurs non connectés", users.devices.visiteurs]].map(([titre, d]) => {
+                  const pct = (n) => d.total ? `${Math.round(n / d.total * 100)} %` : "—";
+                  return (
+                    <div key={titre} style={{ marginBottom:10 }}>
+                      <div style={{ fontSize:12, fontWeight:700, color:"#a5d6a7", marginBottom:4 }}>{titre} ({d.total})</div>
+                      {[["🍎 iPhone / iPad", d.ios, d.iosInstalled], ["🤖 Android", d.android, d.androidInstalled], ["💻 Ordinateur", d.ordinateur, null]].map(([label, n, inst]) => (
+                        <div key={label} style={{ display:"flex", justifyContent:"space-between", padding:"4px 0", borderBottom:"1px solid rgba(255,255,255,0.05)", fontSize:12 }}>
+                          <span>{label}{inst != null && n > 0 && <span style={{ color:"#81c784", fontSize:10 }}> · {inst} avec l'app installée</span>}</span>
+                          <span style={{ fontWeight:700 }}>{n} · {pct(n)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
+                <div style={{ fontSize:10, color:"#4a7c5c", lineHeight:1.5 }}>
+                  Mesure démarrée le 25/09/2026. Critère App Store (revue fin février 2027) : au moins 25 % d'iPhone.
                 </div>
               </div>
             )}
