@@ -684,7 +684,7 @@ export function Cookies() {
           <SubSection title="📈 Mesure d'audience anonyme (sans consentement)">
             Pour connaître la fréquentation de l'application et améliorer son fonctionnement, Mongazon360<sup style={{ fontSize:7 }}>®</sup> utilise des outils de mesure d'audience qui <strong>ne déposent aucun cookie</strong> et ne permettent pas de vous identifier :<br/><br/>
             • <strong>Vercel Web Analytics</strong> (Vercel Inc.) : statistiques agrégées de fréquentation (pages vues, page de provenance, pays, type d'appareil et de navigateur). Aucun identifiant persistant n'est stocké sur votre terminal ; les visites sont regroupées à l'aide d'une empreinte technique renouvelée chaque jour ;<br/>
-            • <strong>Compteurs internes</strong> : comptage anonyme du nombre de visites par jour, du type d'appareil (iPhone, Android ou ordinateur) et des étapes du parcours d'inscription, sans lien avec votre identité.<br/><br/>
+            • <strong>Compteurs internes</strong> : comptage anonyme du nombre de visites par jour, du type d'appareil (iPhone, Android ou ordinateur), de la source d'arrivée (lien suivi ou site d'origine) et des étapes du parcours d'inscription, sans lien avec votre identité.<br/><br/>
             Ces mesures sont strictement limitées à la production de statistiques anonymes pour notre propre compte et ne sont ni recoupées avec d'autres traitements, ni transmises à des tiers à d'autres fins.
           </SubSection>
 
