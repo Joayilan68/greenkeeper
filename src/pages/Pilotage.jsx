@@ -489,8 +489,13 @@ export default function Pilotage() {
             )}
             {users?.devices && (
               <div style={card()}>
-                <div style={cardTitle}><span>📱 Appareils — 30 j</span></div>
-                {[["Utilisateurs actifs", users.devices.actifs], ["Visiteurs non connectés", users.devices.visiteurs]].map(([titre, d]) => {
+                <div style={cardTitle}><span>📱 Appareils</span></div>
+                {[
+                  [`Utilisateurs actifs — depuis le ${users.devices.debut ? new Date(users.devices.debut).toLocaleDateString("fr-FR") : "début"}`, users.devices.depuis.actifs],
+                  ["Utilisateurs actifs — 30 j", users.devices.j30.actifs],
+                  ["Visiteurs non connectés — depuis le début", users.devices.depuis.visiteurs],
+                  ["Visiteurs non connectés — 30 j", users.devices.j30.visiteurs],
+                ].map(([titre, d]) => {
                   const pct = (n) => d.total ? `${Math.round(n / d.total * 100)} %` : "—";
                   return (
                     <div key={titre} style={{ marginBottom:10 }}>
@@ -505,7 +510,7 @@ export default function Pilotage() {
                   );
                 })}
                 <div style={{ fontSize:10, color:"#4a7c5c", lineHeight:1.5 }}>
-                  Mesure démarrée le 25/09/2026. Critère App Store (revue fin février 2027) : au moins 25 % d'iPhone.
+                  Chaque utilisateur compte une fois, avec son dernier appareil. Critère App Store (revue fin février 2027) : au moins 25 % d'iPhone chez les utilisateurs actifs depuis le début de la mesure.
                 </div>
               </div>
             )}
