@@ -533,7 +533,8 @@ async function fetchFunnel() {
   }
 }
 
-// ── Helper : appareils sur 30 jours (étude Apple) — actifs connectés et visiteurs ──
+// ── Helper : appareils (étude Apple) — actifs connectés et visiteurs ──────────
+// Depuis le début de la mesure (référence de la décision App Store) et sur 30 jours.
 // Actifs : dernier appareil connu par utilisateur. Visiteurs : 1 par appareil/jour.
 async function fetchDevices() {
   const count = (rows) => {
@@ -545,16 +546,33 @@ async function fetchDevices() {
     return c;
   };
   try {
-    const sb    = createClient(SB_URL, SB_KEY);
-    const since = new Date(Date.now() - 30 * 86400e3).toISOString().slice(0, 10);
-    const [{ data: dau, error: e1 }, { data: visits, error: e2 }] = await Promise.all([
-      sb.from("daily_active_users").select("user_id, day, os, installed").gte("day", since).not("os", "is", null).order("day", { ascending: false }),
-      sb.from("site_visits").select("os, installed").gte("day", since).not("os", "is", null),
+    const sb = createClient(SB_URL, SB_KEY);
+    // Lecture complète par pages de 1 000 lignes (plafond d'une requête Supabase)
+    const all = async (table, cols) => {
+      const rows = [];
+      for (let from = 0; ; from += 1000) {
+        const { data, error } = await sb.from(table).select(cols).not("os", "is", null)
+          .order("day", { ascending: false }).range(from, from + 999);
+        if (error) throw new Error(error.message);
+        rows.push(...data);
+        if (data.length < 1000) return rows;
+      }
+    };
+    const [dau, visits] = await Promise.all([
+      all("daily_active_users", "user_id, day, os, installed"),
+      all("site_visits", "day, os, installed"),
     ]);
-    if (e1 || e2) throw new Error((e1 || e2).message);
-    const latest = new Map();
-    for (const r of dau || []) if (!latest.has(r.user_id)) latest.set(r.user_id, r);
-    return { actifs: count([...latest.values()]), visiteurs: count(visits || []) };
+    const periode = (since) => {
+      const latest = new Map();
+      for (const r of dau) if (r.day >= since && !latest.has(r.user_id)) latest.set(r.user_id, r);
+      return { actifs: count([...latest.values()]), visiteurs: count(visits.filter(r => r.day >= since)) };
+    };
+    const days = [...dau, ...visits].map(r => r.day).sort();
+    return {
+      debut:  days[0] || null,
+      depuis: periode(""),
+      j30:    periode(new Date(Date.now() - 30 * 86400e3).toISOString().slice(0, 10)),
+    };
   } catch (e) {
     console.warn("stats-users devices:", e.message);
     return null;
