@@ -256,8 +256,8 @@ async function handleUsers(req, res) {
   try {
     // ✅ Pagination explicite + parsing format multi-version Clerk
     // Toutes les sources en parallèle (la page attendait auparavant chaque requête l'une après l'autre)
-    const [allUsersRaw, dauByDay, geo, diagRows, siteVisits, funnel, devices, sourceVisits] = await Promise.all([
-      fetchAllClerkUsers(), fetchDauByDay(), fetchGeoPoints(), fetchDiagnosticsRows(), fetchSiteVisits(), fetchFunnel(), fetchDevices(), fetchSourceVisits(),
+    const [allUsersRaw, dauByDay, geo, diagRows, siteVisits, funnel, devices, sourceVisits, bob] = await Promise.all([
+      fetchAllClerkUsers(), fetchDauByDay(), fetchGeoPoints(), fetchDiagnosticsRows(), fetchSiteVisits(), fetchFunnel(), fetchDevices(), fetchSourceVisits(), fetchBobUsage(),
     ]);
 
     // Exclure les comptes admin de TOUTES les stats (règle "admins exclus de tout")
@@ -346,6 +346,7 @@ async function handleUsers(req, res) {
       funnel,
       devices,
       acquisition,
+      bob,
       clerkSources,
     });
 
@@ -628,6 +629,32 @@ async function selectAll(sb, table, cols, notNullCol) {
     if (error) throw new Error(error.message);
     rows.push(...data);
     if (data.length < 1000) return rows;
+  }
+}
+
+// ── Helper : utilisation de Bob sur 30 jours (1 ligne rate_limits par question) ─
+// Premium (endpoint "bob") et gratuit ("bob_free", 3 questions par mois).
+async function fetchBobUsage() {
+  try {
+    const sb    = createClient(SB_URL, SB_KEY);
+    const since = new Date(Date.now() - 30 * 86400e3).toISOString();
+    const { data, error } = await sb.from("rate_limits").select("user_id, endpoint, window_start")
+      .in("endpoint", ["bob", "bob_free"]).gte("window_start", since).limit(10000);
+    if (error) throw new Error(error.message);
+    const rows  = data || [];
+    const month = new Date().toISOString().slice(0, 7);
+    const freeThisMonth = {};
+    for (const r of rows) if (r.endpoint === "bob_free" && r.window_start.slice(0, 7) === month)
+      freeThisMonth[r.user_id] = (freeThisMonth[r.user_id] || 0) + 1;
+    return {
+      questionsPremium: rows.filter(r => r.endpoint === "bob").length,
+      questionsGratuites: rows.filter(r => r.endpoint === "bob_free").length,
+      utilisateurs: new Set(rows.map(r => r.user_id)).size,
+      gratuitsAuMax: Object.values(freeThisMonth).filter(n => n >= 3).length,
+    };
+  } catch (e) {
+    console.warn("stats-users bob:", e.message);
+    return null;
   }
 }
 

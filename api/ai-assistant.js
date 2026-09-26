@@ -1,5 +1,5 @@
 // api/ai-assistant.js
-// Assistant IA gazon — Groq/Llama 3.1 avec contexte personnalisé
+// Assistant IA gazon « Bob » — Groq (modèle : aiModels.cjs) avec contexte personnalisé
 
 const { createClerkClient } = require("@clerk/backend");
 const { verifiedUserId, ADMIN_EMAILS } = require("./auth.cjs");
@@ -26,57 +26,65 @@ module.exports = async function handler(req, res) {
     return res.status(401).json({ error: "Token invalide" });
   }
 
-  // ✅ RATE LIMITING — max 20 messages Bob par jour (Free + Premium)
-  // Premium a accès à Bob mais avec limite raisonnable pour contrôler les coûts
+  // ✅ QUOTA — compté en base (fonction bob_consume : verrou par compte, périodes à l'heure de Paris)
+  //   Premium / essai / Premium offert : 20 questions par jour · Gratuit : 3 par mois · Admin : illimité
+  const QUOTAS = {
+    paid: { endpoint: "bob",      period: "day",   limit: 20 },
+    free: { endpoint: "bob_free", period: "month", limit: 3 },
+  };
+  const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY);
+  let quota, consumed = null;
   try {
-    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
-    const today    = new Date().toISOString().split("T")[0];
-    const rateKey  = `bob_${clerkUserId}_${today}`;
-
-    const { data: rateData } = await supabase
-      .from("rate_limits")
-      .select("count")
-      .eq("key", rateKey)
-      .maybeSingle();
-
-    const currentCount = rateData?.count || 0;
-
-    // Admins illimités
-    const clerkUser    = await clerk.users.getUser(clerkUserId);
-    const userEmail    = clerkUser.emailAddresses?.[0]?.emailAddress || "";
-    const isAdmin      = ADMIN_EMAILS.includes(userEmail) || clerkUser.publicMetadata?.role === "admin";
+    const clerkUser  = await clerk.users.getUser(clerkUserId);
+    const userEmail  = clerkUser.emailAddresses?.[0]?.emailAddress || "";
+    const isAdmin    = ADMIN_EMAILS.includes(userEmail) || clerkUser.publicMetadata?.role === "admin";
     // Essai gratuit 7 jours (unsafeMetadata.trialStartedAt, posé côté client)
     const TRIAL_MS   = 7 * 24 * 60 * 60 * 1000;
     const trialMeta  = clerkUser.unsafeMetadata || clerkUser.unsafe_metadata || {};
     const trialStart = Number(trialMeta.trialStartedAt) || 0;
     const isTrial    = trialStart > 0 && Date.now() < trialStart + TRIAL_MS;
-    const isPremium    = clerkUser.publicMetadata?.isSubscribed === true ||
-                         clerkUser.publicMetadata?.subscriptionStatus === "active" ||
-                         clerkUser.publicMetadata?.subscriptionStatus === "trialing" ||
-                         isTrial || await isGuestUser(clerkUserId, clerkUser.publicMetadata);
+    const isPremium  = clerkUser.publicMetadata?.isSubscribed === true ||
+                       clerkUser.publicMetadata?.subscriptionStatus === "active" ||
+                       clerkUser.publicMetadata?.subscriptionStatus === "trialing" ||
+                       isTrial || await isGuestUser(clerkUserId, clerkUser.publicMetadata);
+    quota = isAdmin ? null : isPremium ? QUOTAS.paid : QUOTAS.free;
 
-    // Free : 5 messages/jour — Premium (dont essai) : 20 messages/jour
-    const dailyLimit = isAdmin ? 9999 : isPremium ? 20 : 5;
-
-    if (currentCount >= dailyLimit) {
-      const msg = isPremium
-        ? "Limite journalière atteinte (20 messages). Revenez demain !"
-        : "Limite gratuite atteinte (5 messages). Passez Premium pour 20 messages/jour.";
-      return res.status(429).json({ error: msg });
+    // Consultation du solde (affichage dans l'app), sans consommer
+    if (req.body?.action === "quota") {
+      if (!quota) return res.json({ unlimited: true });
+      const { data: used, error } = await supabase.rpc("bob_usage",
+        { p_user: clerkUserId, p_endpoint: quota.endpoint, p_period: quota.period });
+      if (error) throw new Error(error.message);
+      return res.json({ remaining: Math.max(0, quota.limit - used), limit: quota.limit, period: quota.period });
     }
 
-    // Incrémenter
-    await supabase.from("rate_limits").upsert(
-      { key: rateKey, count: currentCount + 1, updated_at: new Date().toISOString() },
-      { onConflict: "key" }
-    );
+    if (quota) {
+      const { data, error } = await supabase.rpc("bob_consume",
+        { p_user: clerkUserId, p_endpoint: quota.endpoint, p_period: quota.period, p_limit: quota.limit });
+      if (error) throw new Error(error.message);
+      if (!data?.[0]?.allowed) {
+        return res.status(429).json({
+          remaining: 0, limit: quota.limit, period: quota.period,
+          error: quota.period === "day"
+            ? `Tu as posé tes ${quota.limit} questions du jour. Bob te retrouve demain ! 🌿`
+            : `Tu as utilisé tes ${quota.limit} questions gratuites du mois. Avec Premium, Bob répond à ${QUOTAS.paid.limit} questions par jour.`,
+        });
+      }
+      consumed = data[0];
+    }
   } catch (e) {
-    console.warn("[MG360] bob rate_limit (non bloquant):", e.message);
+    // Quota invérifiable → on refuse plutôt que de laisser passer sans limite
+    await require("./alerting.cjs").reportServerError("Assistant IA Bob — quota indisponible", e);
+    return res.status(503).json({ error: "Bob est momentanément indisponible. Réessaie dans quelques minutes." });
   }
 
   try {
-    const { messages, profile = {}, weather = {}, score = 0, month = 1 } = req.body;
-    if (!messages?.length) throw new Error("Messages manquants");
+    const { profile = {}, weather = {}, score = 0, month = 1 } = req.body;
+    // Seuls les derniers échanges sont transmis (coût et pertinence maîtrisés)
+    const messages = (req.body.messages || []).slice(-10)
+      .filter(m => (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
+      .map(m => ({ role: m.role, content: m.content.slice(0, 2000) }));
+    if (!messages.length) throw new Error("Messages manquants");
 
     const MOIS = ["","Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
 
@@ -137,9 +145,11 @@ RÈGLES :
     if (data.error) throw new Error("Groq: " + (data.error.message || JSON.stringify(data.error)));
 
     const reply = data.choices?.[0]?.message?.content || "Désolé, je n'ai pas pu générer une réponse.";
-    res.json({ success:true, reply });
+    res.json({ success:true, reply, ...(consumed ? { remaining: consumed.remaining, limit: quota.limit, period: quota.period } : {}) });
 
   } catch (e) {
+    // Réponse non fournie → la question est rendue
+    if (consumed?.row_id) await supabase.from("rate_limits").delete().eq("id", consumed.row_id);
     await require("./alerting.cjs").reportServerError("Assistant IA Bob en échec", e);
     res.status(500).json({ error: e.message });
   }
