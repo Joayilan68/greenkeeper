@@ -51,15 +51,6 @@ const GAZONS_STANDARD = [
   { id: "inconnu",     icon: "🤷", label: "Je ne sais pas",            desc: "Recommandation automatique selon votre profil" },
 ];
 
-const GAZONS_CREER = [
-  { id: "sport",      icon: "⚽", label: "Résistant au piétinement", desc: "Idéal enfants, animaux, sport" },
-  { id: "ornemental", icon: "🏡", label: "Esthétique / décoratif",   desc: "Dense, vert foncé, impeccable" },
-  { id: "ombre",      icon: "🌿", label: "Ombre / mi-ombre",          desc: "Pour zones peu ensoleillées" },
-  { id: "sec",        icon: "☀️", label: "Résistant à la sécheresse", desc: "Peu d'arrosage, climat chaud" },
-  { id: "universel",  icon: "🔄", label: "Polyvalent / universel",    desc: "Bon compromis toutes situations" },
-  { id: "inconnu",    icon: "🤷", label: "Je ne sais pas encore",     desc: "Recommandation automatique selon votre profil" },
-];
-
 const USAGES = [
   { id: "enfants", icon: "👶", label: "Enfants" },
   { id: "animaux", icon: "🐕", label: "Chiens / animaux" },
@@ -148,23 +139,6 @@ function SectionTitle({ children }) {
   );
 }
 
-function InfoBanner({ color = "orange", children }) {
-  const colors = {
-    orange: { bg: "rgba(244,162,97,0.1)",  border: "rgba(244,162,97,0.3)",  text: "#f4c88a" },
-    green:  { bg: "rgba(82,183,136,0.1)",  border: "rgba(82,183,136,0.3)",  text: C.lightGreen },
-    blue:   { bg: "rgba(100,160,255,0.1)", border: "rgba(100,160,255,0.3)", text: "#a0c4ff" },
-  };
-  const s = colors[color];
-  return (
-    <div style={{
-      background: s.bg, border: `1px solid ${s.border}`, borderRadius: 12,
-      padding: "10px 14px", marginBottom: 16, fontSize: 12, color: s.text, lineHeight: 1.6,
-    }}>
-      {children}
-    </div>
-  );
-}
-
 // ── Composant principal ───────────────────────────────────────────────────────
 export default function OnboardingModal({ onComplete }) {
   const TOTAL_STEPS = 6;
@@ -192,7 +166,6 @@ export default function OnboardingModal({ onComplete }) {
   const geoRequestRef  = useRef(0); // anti race condition
 
   const isSynthetique = false; // option supprimée
-  const isCreer       = objectif === "creer";
 
   // locOk : GPS validé, OU ville sélectionnée via autocomplete, OU saisie libre offline
   const locOk = locStatus === "success" || geoSelected !== null || (isOffline && manualCity.trim().length >= 2);
@@ -315,7 +288,6 @@ export default function OnboardingModal({ onComplete }) {
     const profile = {
       objectif, pelouse: gazon || "inconnu", surface: parseInt(surface),
       ville: finalCity, lat: finalLat, lon: finalLon, usages,
-      isCreer,
       cityVerified: locStatus === "success" || geoSelected !== null,
       sol:        null,
       exposition: null,
@@ -395,9 +367,7 @@ export default function OnboardingModal({ onComplete }) {
   const goNext    = () => goToStep(FLOW[Math.min(FLOW.length - 1, flowPos + 1)]);
   const goPrev    = () => goToStep(FLOW[Math.max(0, flowPos - 1)]);
 
-  const gazonLabel = isCreer
-    ? `${GAZON_LABEL_MAP[gazon] || GAZONS_CREER.find(g => g.id === gazon)?.label || gazon} (à créer)`
-    : GAZON_LABEL_MAP[gazon] || GAZONS_STANDARD.find(g => g.id === gazon)?.label || gazon;
+  const gazonLabel = GAZON_LABEL_MAP[gazon] || GAZONS_STANDARD.find(g => g.id === gazon)?.label || gazon;
 
   return (
     <div style={{
@@ -455,7 +425,7 @@ export default function OnboardingModal({ onComplete }) {
               </div>
             </div>
 
-            <SectionTitle>📐 Surface {isCreer ? "du terrain à aménager" : "de votre pelouse"} (m²)</SectionTitle>
+            <SectionTitle>📐 Surface de votre pelouse (m²)</SectionTitle>
             <input type="number" placeholder="Ex : 150" value={surface} onChange={e => handleSurface(e.target.value)} style={inputStyle(!!surfaceErr, surface && !surfaceErr)} />
             {surfaceErr
               ? <div style={{ color: "#ef9a9a", fontSize: 11, margin: "4px 0 12px" }}>{surfaceErr}</div>
@@ -598,12 +568,6 @@ export default function OnboardingModal({ onComplete }) {
                 </div>
               ))}
             </div>
-
-            {isCreer && (
-              <InfoBanner color="green">
-                ✨ Votre profil de création inclura : type de sol, exposition, méthode de semis et planning d'implantation.
-              </InfoBanner>
-            )}
 
             <div style={{ background: "rgba(82,183,136,0.08)", border: `1px solid ${C.border}`, borderRadius: 12, padding: "12px 16px", marginBottom: 24 }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: 12 }}>
