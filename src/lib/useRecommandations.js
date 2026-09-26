@@ -214,28 +214,26 @@ const CALENDRIER = {
 
   desherbage: {
     id:           "desherbage",
-    label:        "Désherbant Sélectif Gazon",
+    label:        "Désherbage manuel",
     icone:        "🪴",
     mois_valides: [4, 5, 9],
     conditions:   (profil, score, meteo, history) => {
       if (isGazonSynth(profil)) return false;
       if (isGazonBermuda(profil)) return false;
-      if (isObjectifNaturel(profil)) return false; // désherbant chimique bloqué
-      if (isObjectifCreer(profil)) return false;   // création : pas de désherbant avant J45
+      if (isObjectifCreer(profil)) return false;   // création : pas d'arrachage avant J45
       if (isGazonRustique(profil)) return false;   // trèfle protégé
-      if (pluiePrevue(meteo, 3)) return false;
-      if (tropFroid(meteo, 10)) return false;
       if (dernierJour(history, "desherb") < 21) return false;
       if (dernierJour(history, "désherb") < 21) return false;
       return score < 70;
     },
     max_par_an:   2,
+    // Désherbants chimiques interdits aux particuliers depuis 2019 : outils manuels selon le budget
     message:      (score, profil) => {
       const g = gamme(profil?.budget);
-      const produit = g === "eco" ? "un désherbant sélectif basique (~10€)" :
-                      g === "premium" ? "un désherbant professionnel sélectif (~40€)" :
-                      "un désherbant sélectif gazon (~15-25€)";
-      return `C'est la période idéale — les mauvaises herbes sont vulnérables. Utilisez ${produit}.${hasMateriel(profil, "pulverisateur") ? "" : " 🛒 Un pulvérisateur est recommandé pour une application homogène (~15€)."}`;
+      const outil = g === "eco" ? "un couteau désherbeur (~10 €)" :
+                    g === "standard" ? "une gouge à désherber (~15 €)" :
+                    "un extracteur de racines à pédale (~40-55 €)";
+      return `C'est la période idéale pour arracher pissenlits et plantains, avec leur racine, sur sol souple après une pluie. Utilisez ${outil}, puis regarnissez les trous.`;
     },
     impact_score: "+6 à +10 pts potentiels",
     urgence:      "normale",

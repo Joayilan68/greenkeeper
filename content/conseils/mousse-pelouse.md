@@ -3,6 +3,7 @@ title: Mousse dans la pelouse : causes et solutions durables
 description: La mousse envahit votre gazon ? Elle n'est que le symptôme d'un problème de sol, d'ombre ou de tonte. Comment la supprimer et surtout l'empêcher de revenir.
 saison: automne
 date: 2026-09-25
+produits: antiMousse, engraisHiver
 ---
 
 La mousse est l'un des problèmes les plus fréquents dans les pelouses françaises, surtout en automne et en hiver. On la traite souvent… puis elle revient l'année suivante. La raison est simple : **la mousse n'est pas la cause du problème, c'est un symptôme**. Elle s'installe là où le gazon est affaibli. Pour s'en débarrasser durablement, il faut agir en trois temps : l'éliminer, l'enlever, puis corriger ce qui l'a fait venir.

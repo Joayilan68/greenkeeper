@@ -3,6 +3,7 @@ title: Pelouse et canicule : protéger son gazon pendant les fortes chaleurs
 description: Au-delà de 30 °C, le gazon souffre et jaunit. Arroser ou le laisser en dormance, hauteur de tonte, gestes à éviter : comment passer la canicule et récupérer une belle pelouse.
 saison: ete
 date: 2026-09-25
+produits: biostimulant
 ---
 
 Les épisodes de canicule se multiplient, et les pelouses sont en première ligne. Au-delà d'environ **30 °C**, les graminées de nos gazons ralentissent, puis stoppent leur croissance pour se protéger. Faut-il arroser coûte que coûte ? Laisser jaunir ? Voici comment traverser les fortes chaleurs et retrouver une belle pelouse à l'automne.

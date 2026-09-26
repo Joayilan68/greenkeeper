@@ -424,32 +424,21 @@ export const ACTIONS_PLAN = [
       // Naturel + Créer + Rénover : toujours inclus dans les mois (blocage géré dans getBlocked)
       return [4, 5, 6, 7, 8, 9, 10];
     },
-    getInterval: (month) => (month === 9 || month === 10) ? 14 : 7,
+    getInterval: () => 14,
+    // Désherbage MANUEL pour tous (désherbants chimiques interdits aux particuliers depuis 2019) :
+    // seul un gazon trop jeune bloque (piétinement des semis)
     getBlocked: (w, profile) => {
-      // Objectif Naturel → désherbage manuel autorisé, pas de blocage
-      // L'action passe en "recommended" avec flag isManuel pour adapter le label
-      if (isObjectifNaturel(profile))
-        return { blocked: false, isManuel: true };
-      // Programme Créer : désherbant bloqué J0-J45
       if (isObjectifCreer(profile) && estDansProgramme(profile, 45))
-        return { blocked: true, raison: `Création J0-J45 : désherbant bloqué (gazon trop jeune)` };
-      // Programme Rénover : désherbant total bloqué J0-J30
+        return { blocked: true, raison: `Création J0-J45 : gazon trop jeune, attendre avant d'arracher` };
       if (isObjectifRenover(profile) && estDansProgramme(profile, 30))
-        return { blocked: true, raison: `Rénovation J0-J30 : désherbant bloqué` };
-      if (pluiePrevue(w, 3)) return { blocked: true, raison: "Pluie prévue — désherbant lessivé avant absorption" };
-      if (tropFroid(w, 10))  return { blocked: true, raison: "Trop froid (<10°C) — désherbant inefficace" };
-      return { blocked: false };
+        return { blocked: true, raison: `Rénovation J0-J30 : gazon trop jeune, attendre avant d'arracher` };
+      return { blocked: false, isManuel: true };
     },
     keywords:     ["desherb", "désherb"],
-    detail:       (plan, arros, profile, month) => {
-      if (isObjectifNaturel(profile)) return "Désherbage MANUEL recommandé · arrachage ou outil à désherber";
-      return (month === 9 || month === 10)
-        ? "Désherbant sélectif · 2x/mois sept-oct"
-        : "Désherbant sélectif · 1x/semaine avr-août";
-    },
+    detail:       () => "Désherbage manuel · arracher pissenlits et plantains avec leur racine, sol souple après une pluie, puis regarnir les trous",
     needsProduct: true,
     exclusive:    [],
-    maxParAn:     24, // ~24 fois/an selon KB
+    maxParAn:     14, // 2x/mois d'avril à octobre
   },
 
   // ── 11. ANTI-MOUSSE 💊 ───────────────────────────────────────────────────
