@@ -31,6 +31,8 @@
   dédiée de `vercel.json` (le build échoue sinon).
 - Rubrique « Conseils gazon » : un article = un fichier `content/conseils/<slug>.md` (en-tête title, description,
   saison, date). Les paragraphes « Mongazon360 » ne citent que des fonctions qui existent réellement dans l'app.
+  La liste des articles est publiée dans `/conseils.json` : Bob (api/ai-assistant.js) y renvoie automatiquement.
+- Bob : ses consignes listent les fonctions réelles de l'app ; toute nouvelle fonction doit y être ajoutée.
 - Search Console : ne pas retirer les balises `google-site-verification` de `index.html`.
 
 ## Offres et Premium offerts

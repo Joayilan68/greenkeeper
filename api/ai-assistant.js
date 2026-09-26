@@ -5,6 +5,18 @@ const { createClerkClient } = require("@clerk/backend");
 const { verifiedUserId, ADMIN_EMAILS } = require("./auth.cjs");
 const { isGuestUser } = require("./premium.cjs");
 const { buildBobContext } = require("./bobContext.cjs");
+
+// Articles « Conseils gazon » (publiés au build dans /conseils.json), gardés 1 h en mémoire
+let articlesCache = { at: 0, liste: [] };
+async function articlesConseils() {
+  if (Date.now() - articlesCache.at < 3600e3 && articlesCache.liste.length) return articlesCache.liste;
+  try {
+    const base = process.env.SELF_BASE_URL || "https://mongazon360.fr";
+    const r = await fetch(`${base}/conseils.json`, { signal: AbortSignal.timeout(3000) });
+    if (r.ok) articlesCache = { at: Date.now(), liste: await r.json() };
+  } catch (e) { console.warn("[bob] articles conseils :", e.message); }
+  return articlesCache.liste;
+}
 const { createClient }      = require("@supabase/supabase-js");
 
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
@@ -89,6 +101,7 @@ module.exports = async function handler(req, res) {
     if (!messages.length) throw new Error("Messages manquants");
 
     // Dossier de l'utilisateur construit côté serveur (profil, actions, diagnostic, parcours, météo 5 jours)
+    const articles = await articlesConseils();
     let contexte;
     try {
       contexte = await buildBobContext(supabase, { userId: clerkUserId, premium, clientProfile: profile, score, month });
@@ -118,6 +131,12 @@ si une fonction n'existe pas, dis simplement que ce n'est pas encore possible) :
 - Rubrique « Conseils gazon » sur mongazon360.fr/conseils : 18 guides saison par saison.
 L'app ne permet PAS de planifier des actions futures, de piloter un programmateur ou un robot, ni de commander
 des produits.
+
+ARTICLES « CONSEILS GAZON » DE MONGAZON360 :
+${articles.map(a => `- ${a.title} — https://mongazon360.fr/conseils/${a.slug}`).join("\n") || "- (liste indisponible)"}
+Quand un de ces articles correspond directement à la question, termine ta réponse par UNE seule ligne :
+« 👉 Pour aller plus loin : [titre de l'article](adresse exacte ci-dessus) ». Jamais plus d'un lien, jamais
+d'autre adresse que celles de cette liste, et aucun lien si aucun article ne correspond vraiment.
 
 PRINCIPES DE BOB :
 1. Expert nuancé, pas dogmatique : donne la meilleure pratique ET explique pourquoi. Accepte les alternatives
