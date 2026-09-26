@@ -67,11 +67,12 @@ function buildReminderHtml(reminders, userName, profile) {
 </body></html>`;
 }
 
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+
 // Email « Conseil du jour » : relais des notifications quotidiennes pour les comptes
 // qui ont consenti aux conseils mais n'ont pas (ou plus) d'abonnement push actif.
 function buildConseilEmailHtml(prenom, title, body) {
   const year = new Date().getFullYear();
-  const esc = (v) => String(v ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
   return `<!DOCTYPE html><html><head><meta charset="utf-8"/></head>
 <body style="font-family:Arial,sans-serif;background:#f5f5f5;margin:0;padding:20px;">
 <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 20px rgba(0,0,0,0.1);">
@@ -97,10 +98,9 @@ function buildConseilEmailHtml(prenom, title, body) {
 </div></body></html>`;
 }
 
-// Email offre / fin de bêta (commercial : lien de désinscription vers les Paramètres)
-function buildOffreEmailHtml(prenom, titre, paragraphes, cta) {
+// Email offre / fin de bêta / relance (lien de désinscription vers les Paramètres)
+function buildOffreEmailHtml(prenom, titre, paragraphes, cta, url = "https://mongazon360.fr/subscribe") {
   const year = new Date().getFullYear();
-  const esc = (v) => String(v ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
   return `<!DOCTYPE html><html><head><meta charset="utf-8"/></head>
 <body style="font-family:Arial,sans-serif;background:#f5f5f5;margin:0;padding:20px;">
 <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 20px rgba(0,0,0,0.1);">
@@ -113,7 +113,7 @@ function buildOffreEmailHtml(prenom, titre, paragraphes, cta) {
     <div style="font-size:14px;color:#555;line-height:1.7;margin-bottom:8px;">Bonjour ${esc(prenom)},</div>
     ${paragraphes.map(p => `<div style="font-size:14px;color:#555;line-height:1.7;margin-bottom:8px;">${p}</div>`).join("")}
     <div style="text-align:center;margin:24px 0;">
-      <a href="https://mongazon360.fr/subscribe" style="background:#43a047;color:#fff;text-decoration:none;padding:15px 34px;border-radius:12px;font-size:15px;font-weight:800;display:inline-block;">${esc(cta)} →</a>
+      <a href="${esc(url)}" style="background:#43a047;color:#fff;text-decoration:none;padding:15px 34px;border-radius:12px;font-size:15px;font-weight:800;display:inline-block;">${esc(cta)} →</a>
     </div>
   </div>
   <div style="background:#f9fbe7;padding:14px 28px;border-top:1px solid #e8f5e9;text-align:center;">
@@ -319,8 +319,101 @@ module.exports = async function handler(req, res) {
       let pushSent = 0, emailSent = 0, skipped = 0;
       const pushedToday = new Set(); // users déjà notifiés ce jour (anti-doublon socle/relance)
 
+      // ── RELANCE DES INACTIFS (J+7, J+21, J+45 sans visite) — créneau MATIN ──
+      // Règles et textes : relances.cjs. Push si abonné, sinon email (consentement conseils ou
+      // offres) ; admins exclus ; 20 emails par jour au plus (quota Resend). Contenu : la
+      // décision du moteur, sinon le conseil du jour. Un compte relancé ne reçoit ni notification du
+      // moteur ni email d'offre ce jour-là.
+      const RELANCES_EMAIL_MAX = 20;
+      const relancesDuJour = new Set();
+      let relancesPush = 0, relancesEmail = 0;
+      if (slot === "matin") {
+        try {
+          const { palierDu, messageRelance, marquerRetours, ajouterRelance } = require("./relances.cjs");
+          const { ADMIN_EMAILS } = require("./auth.cjs");
+          const remMap = {};
+          (remindersData || []).forEach(r => { remMap[r.user_id] = r; });
+          const majRelances = async (uid, relances) => {
+            const r = await fetch(`https://api.clerk.com/v1/users/${uid}/metadata`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}` },
+              body: JSON.stringify({ private_metadata: { relances } }),
+            });
+            if (!r.ok) throw new Error(`Clerk : enregistrement de la relance refusé (HTTP ${r.status}) pour ${uid}`);
+          };
+
+          for (const u of await getClerkUsers()) {
+            const retours = marquerRetours(u);
+            if (retours) {
+              await majRelances(u.id, retours);
+              u.private_metadata = { ...u.private_metadata, relances: retours };
+            }
+            const palier = palierDu(u);
+            if (!palier) continue;
+            const email = primaryEmail(u);
+            if (u.banned || ADMIN_EMAILS.includes((email || "").toLowerCase())) continue;
+            const consent = consentMap[u.id] || {};
+            const canal = consent.notifications && subMap[u.id] ? "push"
+              : email && (consent.notifications || consent.marketing) && relancesEmail < RELANCES_EMAIL_MAX ? "email" : null;
+            if (!canal) continue;
+
+            const profile = profileMap[u.id] || {};
+            const profilComplet = !!(profile.pelouse || profile.gazons?.length);
+            const parcoursRow = parcoursMap[u.id];
+            const parcoursState = parcoursRow ? currentPhase({ type: parcoursRow.type, dateSemis: parcoursRow.date_semis, today }) : null;
+            const action = profilComplet && decideNotification({
+              profile, weather: await getWeatherForUser(profile),
+              reminderPrefs: remMap[u.id]?.preferences || {},
+              history: Array.isArray(profile.history) ? profile.history : [],
+              notifLog: remMap[u.id]?.notif_log, month, slot, today,
+              gami: null, parcours: parcoursState?.termine ? null : parcoursState,
+              joursInactif: 7, // sans gamification ni astuce : l'action la plus utile
+            });
+            const msg = messageRelance(palier, { ville: profile.ville, action, conseil: conseilDuJour(today, month), profilComplet });
+
+            try {
+              if (canal === "push") {
+                await webpush.sendNotification(subMap[u.id], JSON.stringify({
+                  title: msg.title, body: msg.body, icon: "/icon-192.png", tag: "mg360-relance",
+                  url: msg.url, actionRoute: msg.url, t: jetonOuverture(u.id, today, `relance_${palier}`),
+                }));
+                if (remMap[u.id]) {
+                  await supabase.from("reminders").update({
+                    notif_log: appendNotifLog(remMap[u.id].notif_log, { date: today, priority: 5, type: `relance_${palier}`, slot }),
+                    updated_at: new Date().toISOString(),
+                  }).eq("user_id", u.id);
+                }
+                relancesPush++;
+              } else {
+                const r = await fetch("https://api.resend.com/emails", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
+                  body: JSON.stringify({
+                    from: "Bob de Mongazon360 <bonjour@mongazon360.fr>", to: [email], subject: msg.title,
+                    html: buildOffreEmailHtml(u.first_name || "jardinier", msg.title, [esc(msg.body)],
+                      profilComplet ? "Ouvrir Mongazon360" : "Créer mon plan", `https://mongazon360.fr${msg.url}`),
+                    headers: { "List-Unsubscribe": "<https://mongazon360.fr/parametres>" },
+                  }),
+                });
+                const d = await r.json().catch(() => ({}));
+                if (!r.ok || d.error) throw new Error("Resend : " + (d.error?.message || r.status));
+                relancesEmail++;
+              }
+            } catch (e) {
+              if (canal === "push") await pruneSub(e, u.id);
+              else await require("./alerting.cjs").reportServerError("Tâche planifiée — relance des inactifs", e, { user: u.id });
+              continue;
+            }
+            await majRelances(u.id, ajouterRelance(u, { p: palier, at: today, canal }));
+            relancesDuJour.add(u.id);
+            pushedToday.add(u.id);
+          }
+        } catch (e) { await require("./alerting.cjs").reportServerError("Tâche planifiée — relance des inactifs", e); }
+      }
+
       for (const row of (remindersData || [])) {
         const { user_id, email, preferences, notif_log } = row;
+        if (relancesDuJour.has(user_id)) continue;
         const prefs = preferences || {};
         const userConsents = consentMap[user_id] || {};
         const profile = profileMap[user_id] || {};
@@ -659,7 +752,7 @@ module.exports = async function handler(req, res) {
             }
 
             // 2. Lancement de l'offre saisonnière
-            if (!offre || campagne >= 25) continue;
+            if (!offre || campagne >= 25 || relancesDuJour.has(u.id)) continue;
             if (!consentMap[u.id]?.marketing || (u.private_metadata || {}).offreSaison === saisonKey) continue;
             if (pm.isSubscribed === true || pm.subscriptionStatus === "active" || pm.subscriptionStatus === "trialing" || clerkGuestActive(pm)) continue;
             await sendOffre(email,
@@ -776,8 +869,8 @@ module.exports = async function handler(req, res) {
       }
       await alerting.setStatus(`cron_${slot}`, { date: today, at: new Date().toISOString(), pushSent, emailSent, emailFallbackSent, photosPurgees });
 
-      console.log(`[CRON ${slot}] reminders:`, remindersData?.length || 0, "pushSent:", pushSent, "emailSent:", emailSent, "emailFallbackSent:", emailFallbackSent, "skipped:", skipped, "parcoursSent:", parcoursSent, "parcoursTermines:", parcoursTermines, "trialRelances:", trialRelances, "baselineSent:", baselineSent, "premiumOffertsExpires:", premiumOffertsExpires, "offreEmails:", offreEmails, "photosPurgees:", photosPurgees);
-      return res.json({ success: true, date: today, slot, pushSent, emailSent, emailFallbackSent, skipped, parcoursSent, parcoursTermines, trialRelances, baselineSent, premiumOffertsExpires, offreEmails, photosPurgees, reminders: remindersData?.length || 0 });
+      console.log(`[CRON ${slot}] reminders:`, remindersData?.length || 0, "pushSent:", pushSent, "emailSent:", emailSent, "emailFallbackSent:", emailFallbackSent, "skipped:", skipped, "parcoursSent:", parcoursSent, "parcoursTermines:", parcoursTermines, "trialRelances:", trialRelances, "baselineSent:", baselineSent, "premiumOffertsExpires:", premiumOffertsExpires, "offreEmails:", offreEmails, "relancesPush:", relancesPush, "relancesEmail:", relancesEmail, "photosPurgees:", photosPurgees);
+      return res.json({ success: true, date: today, slot, pushSent, emailSent, emailFallbackSent, skipped, parcoursSent, parcoursTermines, trialRelances, baselineSent, premiumOffertsExpires, offreEmails, relancesPush, relancesEmail, photosPurgees, reminders: remindersData?.length || 0 });
     } catch (e) {
       await require("./alerting.cjs").reportServerError("Tâche planifiée en échec", e, { "Créneau": req.query.slot || "matin" });
       return res.status(500).json({ error: e.message });
