@@ -256,8 +256,8 @@ async function handleUsers(req, res) {
   try {
     // ✅ Pagination explicite + parsing format multi-version Clerk
     // Toutes les sources en parallèle (la page attendait auparavant chaque requête l'une après l'autre)
-    const [allUsersRaw, dauByDay, geo, diagRows, siteVisits, funnel, devices, sourceVisits, bob] = await Promise.all([
-      fetchAllClerkUsers(), fetchDauByDay(), fetchGeoPoints(), fetchDiagnosticsRows(), fetchSiteVisits(), fetchFunnel(), fetchDevices(), fetchSourceVisits(), fetchBobUsage(),
+    const [allUsersRaw, dauByDay, geo, diagRows, siteVisits, funnel, devices, sourceVisits, bob, notifs] = await Promise.all([
+      fetchAllClerkUsers(), fetchDauByDay(), fetchGeoPoints(), fetchDiagnosticsRows(), fetchSiteVisits(), fetchFunnel(), fetchDevices(), fetchSourceVisits(), fetchBobUsage(), fetchNotifStats(),
     ]);
 
     // Exclure les comptes admin de TOUTES les stats (règle "admins exclus de tout")
@@ -347,6 +347,7 @@ async function handleUsers(req, res) {
       devices,
       acquisition,
       bob,
+      notifs,
       clerkSources,
     });
 
@@ -629,6 +630,30 @@ async function selectAll(sb, table, cols, notNullCol) {
     if (error) throw new Error(error.message);
     rows.push(...data);
     if (data.length < 1000) return rows;
+  }
+}
+
+// ── Helper : notifications du moteur sur 14 jours (journal reminders.notif_log) ──
+// Push : envoyées, ouvertes (clic mesuré par le service worker), taux par type ; emails : envoyés.
+async function fetchNotifStats() {
+  try {
+    const { data, error } = await createClient(SB_URL, SB_KEY).from("reminders").select("notif_log").limit(5000);
+    if (error) throw new Error(error.message);
+    const types = {};
+    let push = 0, ouvertes = 0, emails = 0;
+    for (const r of data || []) for (const h of r.notif_log?.history || []) {
+      if (h.channel === "email") { emails++; continue; }
+      push++;
+      if (h.opened) ouvertes++;
+      const t = String(h.type || "autre").replace(/^(entretien|maladie|urgence|conseil|gami)_.*/, "$1");
+      types[t] = types[t] || { envoyees: 0, ouvertes: 0 };
+      types[t].envoyees++;
+      if (h.opened) types[t].ouvertes++;
+    }
+    return { push, ouvertes, emails, parType: Object.entries(types).sort((a, b) => b[1].envoyees - a[1].envoyees) };
+  } catch (e) {
+    console.warn("stats-users notifs:", e.message);
+    return null;
   }
 }
 

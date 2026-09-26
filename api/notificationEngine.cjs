@@ -1,18 +1,14 @@
 // api/notificationEngine.cjs
 // ─────────────────────────────────────────────────────────────────────────────
-// MOTEUR DE DÉCISION DES NOTIFICATIONS — Itération 2a (serveur)
+// MOTEUR DE DÉCISION DES NOTIFICATIONS (serveur) — source unique des notifications
 //
-// Porté depuis la KB "Règles Notifications" + notifications.js (front).
-// CommonJS pur : AUCUN import ESM, AUCUN appel réseau, AUCUN effet de bord.
-// → 100% testable unitairement. send.js l'appelle et gère les I/O (météo, envoi, DB).
-//
-// ⚠️ LIEN DE COHÉRENCE : la logique agronomique ici doit rester alignée avec
-//    src/lib/notifications.js (front). Si une règle change là-bas, répercuter ici
-//    (et inversement). Migration vers module partagé prévue en itération 2b.
+// Règles issues de la KB "Règles Notifications". CommonJS pur : AUCUN appel réseau,
+// AUCUN effet de bord → testable unitairement. send.js gère les I/O (météo, envoi, DB).
 //
 // Décisions actées : 2 notifs/jour max (matin priorité haute + soir arrosage N10),
 // hiérarchie 6 priorités, N08 (regroupement), N10 (arrosage quantitatif ET₀).
-// Anti-fatigue (ignored_streak) : champ présent mais NON utilisé en 2a.
+// Itération 2b : type de gazon (synthétique, bermuda en dormance, rustique), risques
+// de maladie, astuces de saison, anti-fatigue selon les jours sans visite.
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Intervalles d'entretien (jours) — alignés sur send.js / useReminders KB v4
@@ -22,10 +18,24 @@ const LABELS = {
   tonte:      { icon: "✂️", label: "Tonte" },
   arrosage:   { icon: "💧", label: "Arrosage" },
   engrais:    { icon: "🌱", label: "Engrais" },
-  fongicide:  { icon: "💊", label: "Traitement fongicide" },
+  fongicide:  { icon: "🦠", label: "Prévention maladies" },
   aeration:   { icon: "🌀", label: "Aération" },
   desherbage: { icon: "🪴", label: "Désherbage" },
 };
+
+// Corps spécifiques (sinon « Il est temps de faire votre … »)
+const CORPS = {
+  fongicide: "Surveillez les taches (fil rouge, rouille, plaques rondes) et évitez d'arroser le soir. Un doute ? Faites un diagnostic photo.",
+  desherbage: "Arrachez pissenlits et plantains avec leur racine, sur sol souple, puis regarnissez les trous.",
+};
+
+// ── Type de gazon (profil) ─────────────────────────────────────────────────────
+const aType = (p, t) => p?.pelouse === t || (Array.isArray(p?.gazons) && p.gazons.includes(t));
+const isGazonSynth    = (p) => p?.isSynthetique === true || aType(p, "synthetique");
+const isGazonBermuda  = (p) => aType(p, "bermuda");
+const isGazonRustique = (p) => aType(p, "rustique");
+const isGazonOmbre    = (p) => aType(p, "ombre");
+const isGazonSport    = (p) => aType(p, "sport");
 
 // ── Équipement déclaré (profil) — adapte les rappels ──────────────────────────
 // Robot tondeuse → pas de rappel tonte. Arrosage auto/programmateur → on parle
@@ -179,6 +189,8 @@ function checkEntretienDu(profile, reminderPrefs, history, month) {
     if (!r || typeof r !== "object" || !r.enabled) continue;
     // Ne pas rappeler l'arrosage ici (géré au créneau soir avec N10)
     if (id === "arrosage") continue;
+    // Gazon rustique : trèfle et fleurs font partie du gazon → pas de désherbage
+    if (id === "desherbage" && isGazonRustique(profile)) continue;
     // Robot déclaré → on ne rappelle pas "tondez" mais une SUPERVISION espacée (14j) :
     // filet de sécurité si le robot ne tond pas (panne / débranché / non connecté).
     const robotTonte = id === "tonte" && hasRobotTondeuse(profile);
@@ -200,7 +212,7 @@ function checkEntretienDu(profile, reminderPrefs, history, month) {
     const a = dus[0];
     const body = a.supervision
       ? "Votre robot tondeuse a-t-il bien tondu ? Vérifiez la lame et la hauteur de coupe."
-      : `Il est temps de faire votre ${a.label.toLowerCase()}.`;
+      : CORPS[a.id] || `Il est temps de faire votre ${a.label.toLowerCase()}.`;
     return { priority: 3, type: `entretien_${a.id}`,
       title: `${a.icon} ${a.label}`, body };
   }
@@ -249,21 +261,71 @@ function checkGamification(gami) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// NIVEAU 6 — Éducatif (dernier filet). Matin, 2-3x/sem max (géré via notif_log).
+// NIVEAU 3 bis — Risque de maladie selon la météo (au plus 1 fois par semaine et par maladie).
+// Mesures préventives uniquement : les fongicides de synthèse sont interdits aux particuliers.
 // ─────────────────────────────────────────────────────────────────────────────
-const TIPS = [
-  "En été, tondez haut (7-8 cm) : le gazon résiste mieux à la sécheresse.",
-  "Un arrosage rare mais copieux enracine mieux qu'un arrosage quotidien léger.",
-  "Laissez l'herbe coupée fine sur place (mulching) : elle nourrit le sol.",
-  "Alternez le sens de tonte pour éviter que l'herbe ne se couche.",
-  "En hiver, évitez de marcher sur un gazon gelé : les brins cassent.",
+function checkMaladie(weather, profile, month, notifLog, today) {
+  if (!weather) return null;
+  const { temp_min, temp_max, humidity, precip } = weather;
+  let m = null;
+  if (typeof temp_min === "number" && temp_min < 5 && (humidity || 0) > 85 && [10, 11, 2, 3, 4].includes(month))
+    m = { type: "maladie_fusariose", title: "🦠 Risque de fusariose",
+      body: "Froid humide : ramassez les feuilles, évitez l'engrais azoté et ne marchez pas sur le gazon mouillé. Plaques rondes beige-rosé ? Faites un diagnostic photo." };
+  else if ((temp_max || 0) > 30 && (precip || 0) > 3 && [6, 7, 8].includes(month))
+    m = { type: "maladie_pythium", title: "🦠 Risque de pythium",
+      body: "Chaleur et pluie : n'arrosez pas le soir et évitez l'engrais. Taches grasses gris-vert ? Faites un diagnostic photo." };
+  else if (isGazonOmbre(profile) && (temp_max || 0) >= 18 && (temp_max || 0) <= 24 && (humidity || 0) >= 70 && [4, 5, 9, 10].includes(month))
+    m = { type: "maladie_oidium", title: "🦠 Risque d'oïdium",
+      body: "Temps doux et humide à l'ombre : surveillez une poudre blanche sur les brins. Tondez un peu plus haut et aérez." };
+  else if (isGazonSport(profile) && (temp_max || 0) > 25 && (precip || 0) < 2 && [5, 6, 7, 8, 9].includes(month))
+    m = { type: "maladie_helmintho", title: "🦠 Risque d'helminthosporiose",
+      body: "Chaleur et sécheresse : arrosez tôt le matin, en profondeur. Taches brun-noir ? Faites un diagnostic photo." };
+  if (!m) return null;
+  const h = (notifLog && Array.isArray(notifLog.history)) ? notifLog.history : [];
+  const semaine = new Date(Date.parse(today || new Date().toISOString().slice(0, 10)) - 7 * 86400000).toISOString().slice(0, 10);
+  if (h.some(x => x.type === m.type && x.date > semaine)) return null;
+  return { priority: 3, ...m };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NIVEAU 6 — Éducatif (dernier filet) et socle quotidien de send.js : astuces de Bob,
+// filtrées par saison (mois), rotation déterministe par jour.
+// ─────────────────────────────────────────────────────────────────────────────
+const PRINTEMPS = [3, 4, 5], ETE = [6, 7, 8], AUTOMNE = [9, 10, 11], HIVER = [12, 1, 2];
+const CONSEILS_QUOTIDIENS = [
+  { title:"✂️ Le conseil de Bob",     body:"Ne tonds jamais plus d'un tiers de la hauteur d'un coup : ton gazon reste dense et résiste mieux." },
+  { title:"💧 Astuce arrosage",       body:"Arrose tôt le matin plutôt que le soir : moins d'évaporation, moins de maladies.", mois:[...PRINTEMPS, ...ETE, 9] },
+  { title:"🌱 Bob te souffle",         body:"Une lame de tonte bien affûtée coupe net ; une lame émoussée déchire et jaunit les pointes." },
+  { title:"☀️ Le saviez-vous",         body:"En période chaude, remonte la hauteur de tonte : une herbe plus haute garde le sol frais.", mois:[5, ...ETE] },
+  { title:"🍂 Conseil du jour",        body:"Ramasse les feuilles mortes : sous un tapis de feuilles, le gazon s'asphyxie et la mousse s'installe.", mois:[10, 11, 12] },
+  { title:"🌿 Bob rappelle",           body:"Laisse parfois les tontes fines sur place (mulching) : elles nourrissent ton sol gratuitement.", mois:[...PRINTEMPS, ...ETE, 9, 10] },
+  { title:"💪 Astuce racines",         body:"Arrose moins souvent mais plus abondamment : les racines plongent et ton gazon devient plus résistant.", mois:[...PRINTEMPS, ...ETE, 9] },
+  { title:"🔍 L'œil de Bob",           body:"Des taches jaunes qui s'étendent ? Prends-les en photo dans l'app, je te dis ce que c'est." },
+  { title:"🌾 Conseil semis",          body:"Un sol bien griffé avant de semer, c'est deux fois plus de graines qui lèvent.", mois:[3, 4, 5, 9, 10] },
+  { title:"🪱 Bob t'explique",         body:"Des vers de terre, c'est bon signe : ils aèrent ton sol mieux qu'aucun outil." },
+  { title:"🌡️ Astuce saison",         body:"Le gazon pousse surtout quand le sol est entre 10 et 25 °C : c'est là qu'il faut le chouchouter." },
+  { title:"🚫 Erreur fréquente",       body:"Trop d'engrais brûle le gazon. Mieux vaut peu, mais au bon moment.", mois:[...PRINTEMPS, ...AUTOMNE] },
+  { title:"🌧️ Bob observe le ciel",   body:"Pluie annoncée ? Reporte l'arrosage : inutile de doubler ce que fait la nature.", mois:[...PRINTEMPS, ...ETE, 9] },
+  { title:"🏆 Motivation du jour",     body:"Un beau gazon, c'est de la régularité, pas de l'effort intense. Un petit geste vaut mieux qu'un grand coup." },
+  { title:"🌱 Conseil densité",        body:"Un gazon dense étouffe les mauvaises herbes tout seul : vise l'épaisseur avant tout." },
+  { title:"✂️ Bob insiste",           body:"Varie le sens de tonte à chaque passage : l'herbe se redresse mieux et pousse plus droite.", mois:[...PRINTEMPS, ...ETE, ...AUTOMNE] },
+  { title:"💚 Astuce couleur",         body:"Un gazon qui vire au bleu-gris a soif : c'est le tout premier signe, avant le jaune.", mois:[...PRINTEMPS, ...ETE, 9] },
+  { title:"🌍 Le mot de Bob",          body:"Un gazon en bonne santé, c'est aussi de la fraîcheur, de l'oxygène et de la biodiversité chez toi." },
+  { title:"❄️ Conseil d'hiver",        body:"Gazon gelé ou givré ? N'y marche pas : les brins cassent et laissent des traces brunes.", mois:[11, ...HIVER, 3] },
+  { title:"🧪 Bob te conseille",       body:"L'hiver est le bon moment pour mesurer le pH et chauler si ton sol est acide (pH sous 6).", mois:[11, ...HIVER] },
+  { title:"🔧 Astuce matériel",        body:"Profite de la pause d'hiver pour faire affûter la lame et réviser ta tondeuse.", mois:[11, ...HIVER] },
 ];
-function checkEducatif(today) {
-  // Rotation déterministe par jour (pas de random pour rester testable)
-  const seed = today ? today.split("-").reduce((a, b) => a + Number(b), 0) : 0;
-  const tip = TIPS[seed % TIPS.length];
-  return { priority: 6, type: "educatif",
-    title: "💡 Le saviez-vous ?", body: tip };
+
+// Astuce du jour pour le mois donné (rotation déterministe par jour)
+function conseilDuJour(today, month) {
+  const liste = CONSEILS_QUOTIDIENS.filter(c => !c.mois || c.mois.includes(month));
+  const jour = Math.floor(Date.parse(today || new Date().toISOString().slice(0, 10)) / 86400000);
+  return liste[jour % liste.length];
+}
+
+function checkEducatif(today, month) {
+  const c = conseilDuJour(today, month);
+  return { priority: 6, type: "educatif", title: c.title, body: c.body };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -274,14 +336,21 @@ function decideNotification(ctx) {
   const {
     profile = {}, weather = null, reminderPrefs = {}, history = [],
     notifLog = null, month = null, slot = "matin", today = null,
-    gami = null, parcours: parcoursState = null,
+    gami = null, parcours: parcoursState = null, joursInactif = 0,
   } = ctx || {};
 
   const sent = sentTodayInfo(notifLog, today);
 
+  // ── Type de gazon : synthétique (pas de tonte, d'engrais ni d'arrosage) et bermuda en
+  //    dormance hivernale (nov-mars : brun normal, aucune intervention) ─────────────────
+  const synth   = isGazonSynth(profile);
+  const dormant = isGazonBermuda(profile) && [11, 12, 1, 2, 3].includes(month);
+
   // ── Plafond 2/jour (hors urgence niveau 1) ────────────────────────────────
   // L'urgence niveau 1 peut s'ajouter même si le plafond est atteint.
-  const urgence = checkUrgenceMeteo(weather);
+  let urgence = checkUrgenceMeteo(weather);
+  if (urgence && synth && urgence.type !== "urgence_canicule") urgence = null;
+  if (urgence && dormant && urgence.type === "urgence_gel") urgence = null;
   if (urgence) {
     // éviter de renvoyer la même urgence 2x le même jour
     if (!sent.priorities.includes(1) || !sameTypeSentToday(notifLog, today, urgence.type)) {
@@ -289,9 +358,18 @@ function decideNotification(ctx) {
     }
   }
 
+  if (synth || dormant) return null;
+
   // Si déjà 2 notifs aujourd'hui (hors urgence) → stop
   const nonUrgentSent = sent.count - countUrgentToday(notifLog, today);
   if (nonUrgentSent >= 2) return null;
+
+  // ── Anti-fatigue selon les jours sans visite dans l'app (urgences et parcours exemptés) :
+  //    ≥ 7 j → 1 notification par jour (matin), sans gamification ni astuce ;
+  //    ≥ 21 j → en plus, au plus une tous les 3 jours (2 à 3 par semaine).
+  const fatigue = joursInactif >= 21 ? 2 : joursInactif >= 7 ? 1 : 0;
+  const recentNonUrgent = (notifLog?.history || []).some(x => x.priority !== 1 && x.priority !== 2 &&
+    x.date > new Date(Date.parse(today || new Date().toISOString().slice(0, 10)) - 3 * 86400000).toISOString().slice(0, 10));
 
   // ── Créneau SOIR : dédié à l'arrosage (N10) ───────────────────────────────
   if (slot === "soir") {
@@ -300,6 +378,7 @@ function decideNotification(ctx) {
     // parcours actif d'abord (germination), sinon arrosage entretien
     const parcours = checkParcoursActif(parcoursState, weather, "soir");
     if (parcours) return finalize(parcours, "soir");
+    if (fatigue) return null;
     const ars = decideArrosageSoir(weather, profile);
     if (ars) return finalize({ priority: 2, type: "arrosage_soir", title: ars.title, body: ars.body }, "soir");
     return null; // rien de pertinent le soir → on n'envoie pas pour envoyer
@@ -308,12 +387,18 @@ function decideNotification(ctx) {
   // ── Créneau MATIN : la priorité la plus haute disponible (2 → 6) ──────────
   if (sent.slots.includes("matin")) return null;
 
+  const parcoursMatin = checkParcoursActif(parcoursState, weather, "matin");  // 2 (exempté d'anti-fatigue)
+  if (parcoursMatin) return finalize(parcoursMatin, "matin");
+  if (fatigue === 2 && recentNonUrgent) return null;
+
   const candidates = [
-    checkParcoursActif(parcoursState, weather, "matin"),   // 2
     checkEntretienDu(profile, reminderPrefs, history, month), // 3 (N08)
+    checkMaladie(weather, profile, month, notifLog, today),   // 3 bis
     checkConseilMeteo(weather),                       // 4
-    checkGamification(gami),                          // 5
-    checkEducatif(today),                             // 6 (toujours dispo = filet ultime)
+    ...(fatigue ? [] : [
+      checkGamification(gami),                        // 5
+      checkEducatif(today, month),                    // 6 (toujours dispo = filet ultime)
+    ]),
   ].filter(Boolean);
 
   if (!candidates.length) return null;
@@ -357,4 +442,4 @@ function appendNotifLog(notifLog, entry) {
   return { history: pruned, ignored_streak: base.ignored_streak || 0 };
 }
 
-module.exports = { decideNotification, appendNotifLog, INTERVALLES, LABELS };
+module.exports = { decideNotification, appendNotifLog, conseilDuJour, INTERVALLES, LABELS };

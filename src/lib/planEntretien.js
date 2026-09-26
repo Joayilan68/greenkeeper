@@ -70,8 +70,6 @@ const ventFort    = (w) => w?.wind   !== undefined && w.wind >= 40;
 // Compatible multi-select (gazons[]) ET single-select (pelouse)
 const isGazonOmbre    = (p) => p?.pelouse === "ombre" ||
   (Array.isArray(p?.gazons) && p.gazons.includes("ombre"));
-const isGazonSport    = (p) => p?.pelouse === "sport" ||
-  (Array.isArray(p?.gazons) && p.gazons.includes("sport"));
 const isGazonRustique = (p) => p?.pelouse === "rustique" ||
   (Array.isArray(p?.gazons) && p.gazons.includes("rustique"));
 
@@ -101,41 +99,6 @@ export function estDansProgramme(profile, maxJours) {
   const j = joursProgramme(profile);
   if (j === null) return false; // pas de date_debut = on ne bloque pas
   return j <= maxJours;
-}
-
-// ── Alertes maladies fongiques ────────────────────────────────────────────────
-// Retourne la maladie détectée ou null selon les conditions météo
-export function detecterMaladie(weather, profile, month) {
-  if (!weather) return null;
-  const { temp_min, temp_max, humidity, precip } = weather;
-  const isOmbre = isGazonOmbre(profile);
-  const isSport = isGazonSport(profile);
-
-  // Fusariose : gel/froid + humidité élevée 48h
-  if (temp_min < 5 && (humidity || 0) > 85 && [10,11,2,3,4].includes(month))
-    return { id: "fusariose", label: "Risque Fusariose", urgence: "haute",
-      message: "Températures basses + humidité élevée : conditions idéales pour la fusariose. Traitement préventif recommandé.",
-      traitement: "Fongicide préventif (iprodione ou thirame)" };
-
-  // Pythium : chaleur + pluie nocturne
-  if ((temp_max || 0) > 30 && (precip || 0) > 3 && [6,7,8].includes(month))
-    return { id: "pythium", label: "Risque Pythium ⚠️", urgence: "haute",
-      message: "Chaleur extrême + pluie récente : risque Pythium élevé (taches grasses gris-vert). Agir sous 24h.",
-      traitement: "Fongicide spécifique (métalaxyl). Éviter arrosage soir." };
-
-  // Oïdium : ombrage + conditions douces
-  if (isOmbre && (temp_max || 0) >= 18 && (temp_max || 0) <= 24 && (humidity || 0) >= 70 && [4,5,9,10].includes(month))
-    return { id: "oidium", label: "Risque Oïdium", urgence: "normale",
-      message: "Gazon ombre + conditions douces : surveillez l'apparition de poudre blanche sur les brins.",
-      traitement: "Soufre micronisé (bio) ou fongicide soufre" };
-
-  // Helminthosporiose : stress hydrique + chaleur (sport surtout)
-  if (isSport && (temp_max || 0) > 25 && (precip || 0) < 2 && [5,6,7,8,9].includes(month))
-    return { id: "helmintho", label: "Risque Helminthosporiose", urgence: "normale",
-      message: "Chaleur + sécheresse sur gazon sport : taches brun-noir possibles. Arrosez tôt le matin.",
-      traitement: "Engrais équilibré + arrosage matinal régulier" };
-
-  return null;
 }
 
 // ── Helpers historique ────────────────────────────────────────────────────────

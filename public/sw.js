@@ -35,7 +35,7 @@ self.addEventListener('push', (e) => {
     vibrate:  [200, 100, 200],
     tag:      data.tag || 'mg360-notif',
     renotify: true,
-    data:     { url: data.url || '/', actionRoute: data.actionRoute || '/' },
+    data:     { url: data.url || '/', actionRoute: data.actionRoute || '/', t: data.t || null },
     actions:  data.action ? [
       { action: 'open',  title: data.action },
       { action: 'close', title: 'Ignorer' },
@@ -52,7 +52,13 @@ self.addEventListener('notificationclick', (e) => {
   const url = e.notification.data?.actionRoute || '/';
   if (e.action === 'close') return;
 
-  e.waitUntil(
+  // Ouverture comptée (jeton signé par le serveur) — taux d'ouverture dans Pilotage
+  const t = e.notification.data?.t;
+  const ouverture = t
+    ? fetch('/api/send?type=notif-open', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ t }), keepalive: true }).catch(() => {})
+    : Promise.resolve();
+
+  e.waitUntil(Promise.all([ouverture,
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
         if (client.url.includes(self.location.origin) && 'focus' in client) {
@@ -62,5 +68,5 @@ self.addEventListener('notificationclick', (e) => {
       }
       if (clients.openWindow) return clients.openWindow(self.location.origin + url);
     })
-  );
+  ]));
 });
