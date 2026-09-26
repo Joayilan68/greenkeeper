@@ -2,10 +2,11 @@
 // 1. Pages publiques de l'app (src/lib/seoPages.json) : dist/<page>/index.html avec leur titre,
 //    description, adresse canonique et balises de partage (lues sans JavaScript).
 // 2. Rubrique « Conseils gazon » : articles Markdown de content/conseils → pages HTML statiques.
-// 3. dist/sitemap.xml et dist/conseils.json (liste des articles lue par Bob pour y renvoyer).
+// 3. dist/sitemap.xml, dist/conseils.json et dist/produits.json (articles et catalogue Amazon lus par Bob).
 import { readFileSync, writeFileSync, mkdirSync, readdirSync } from "node:fs";
 import { marked } from "marked";
 import { articlePage, indexPage } from "./conseils-template.mjs";
+import AMAZON_PRODUCTS from "../src/lib/amazonProducts.js";
 
 const SITE  = "https://mongazon360.fr";
 const pages = JSON.parse(readFileSync("src/lib/seoPages.json", "utf8"));
@@ -62,6 +63,17 @@ const articles = readdirSync("content/conseils").filter(f => f.endsWith(".md")).
 mkdirSync("dist/conseils", { recursive: true });
 writeFileSync("dist/conseils/index.html", indexPage(articles));
 writeFileSync("dist/conseils.json", JSON.stringify(articles.map(({ slug, title, saison }) => ({ slug, title, saison }))));
+
+// Catalogue proposé par Bob : fiches complètes uniquement, sans les désherbants chimiques
+// (interdits aux particuliers depuis 2019, loi Labbé)
+const CATALOGUE_EXCLU = ["desherbage"];
+const produits = Object.fromEntries(Object.entries(AMAZON_PRODUCTS)
+  .filter(([cle]) => !CATALOGUE_EXCLU.includes(cle))
+  .map(([cle, cat]) => [cle, { label: cat.label, tiers: Object.fromEntries(Object.entries(cat.tiers || {})
+    .filter(([, p]) => p?.label && p.prix && p.url)
+    .map(([tier, p]) => [tier, { label: p.label, marque: p.marque, prix: p.prix, url: p.url }])) }])
+  .filter(([, cat]) => Object.keys(cat.tiers).length));
+writeFileSync("dist/produits.json", JSON.stringify(produits));
 for (const a of articles) {
   const autres = articles.filter(o => o.slug !== a.slug && o.saison === a.saison).slice(0, 3);
   mkdirSync(`dist/conseils/${a.slug}`, { recursive: true });

@@ -33,14 +33,20 @@ const WELCOME_MESSAGE = {
   content: "Salut ! 🌿 Moi c'est Bob, ton assistant gazon.\n\n⚠️ Je suis une IA : mes réponses peuvent contenir des inexactitudes et ne remplacent pas l'avis d'un professionnel du jardinage.\n\nPose-moi tes questions sur ta pelouse et ton jardin !",
 };
 
-// Mise en forme légère des réponses de Bob (titres, gras, listes, liens vers mongazon360.fr), sans HTML injecté
-const LIEN = /\[([^\]]+)\]\((https:\/\/mongazon360\.fr\/[^\s)]*)\)/;
+// Mise en forme légère des réponses de Bob (titres, gras, listes, liens), sans HTML injecté.
+// Liens autorisés : mongazon360.fr et les liens partenaires Amazon générés par le serveur.
+const URL_OK = "https:\\/\\/(?:mongazon360\\.fr\\/|www\\.amazon\\.fr\\/s\\?[^\\s)]*tag=mongazon360-21)[^\\s)]*";
+const LIEN   = new RegExp(`\\[([^\\]]+)\\]\\((${URL_OK})\\)`);
+const DECOUPE = new RegExp(`(\\*\\*[^*]+\\*\\*|\\[[^\\]]+\\]\\(${URL_OK}\\))`, "g");
+const AMAZON = /www\.amazon\.fr\/s\?[^\s)]*tag=mongazon360-21/;
 function inline(text) {
-  return text.split(/(\*\*[^*]+\*\*|\[[^\]]+\]\(https:\/\/mongazon360\.fr\/[^\s)]*\))/g).map((part, i) => {
+  return text.split(DECOUPE).map((part, i) => {
     if (part.startsWith("**") && part.endsWith("**")) return <strong key={i}>{part.slice(2, -2)}</strong>;
     const lien = part.match(LIEN);
-    if (lien) return <a key={i} href={lien[2]} style={{ color:"#a5d6a7", fontWeight:700 }}>{lien[1]}</a>;
-    return part;
+    if (!lien) return part;
+    const amazon = AMAZON.test(lien[2]);
+    return <a key={i} href={lien[2]} {...(amazon ? { target:"_blank", rel:"sponsored noopener noreferrer" } : {})}
+      style={{ color:"#a5d6a7", fontWeight:700 }}>{lien[1]}</a>;
   });
 }
 function BobText({ text }) {
@@ -283,6 +289,11 @@ export default function AIAssistant() {
                   whiteSpace: m.role === "user" ? "pre-wrap" : "normal",
                 }}>
                   {m.role === "assistant" ? <BobText text={m.content} /> : m.content}
+                  {m.role === "assistant" && AMAZON.test(m.content) && (
+                    <div style={{ fontSize:10, color:"#81c784", marginTop:6, fontStyle:"italic" }}>
+                      Lien partenaire Amazon : en tant que Partenaire Amazon, Mongazon360® perçoit une commission sur les achats éligibles, sans surcoût pour toi.
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

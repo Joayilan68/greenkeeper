@@ -6,16 +6,31 @@ const { verifiedUserId, ADMIN_EMAILS } = require("./auth.cjs");
 const { isGuestUser } = require("./premium.cjs");
 const { buildBobContext } = require("./bobContext.cjs");
 
-// Articles « Conseils gazon » (publiés au build dans /conseils.json), gardés 1 h en mémoire
-let articlesCache = { at: 0, liste: [] };
-async function articlesConseils() {
-  if (Date.now() - articlesCache.at < 3600e3 && articlesCache.liste.length) return articlesCache.liste;
+// Articles « Conseils gazon » et catalogue Amazon (publiés au build : /conseils.json, /produits.json),
+// gardés 1 h en mémoire
+const publies = {};
+async function publie(fichier, vide) {
+  const c = publies[fichier];
+  if (c && Date.now() - c.at < 3600e3) return c.data;
   try {
     const base = process.env.SELF_BASE_URL || "https://mongazon360.fr";
-    const r = await fetch(`${base}/conseils.json`, { signal: AbortSignal.timeout(3000) });
-    if (r.ok) articlesCache = { at: Date.now(), liste: await r.json() };
-  } catch (e) { console.warn("[bob] articles conseils :", e.message); }
-  return articlesCache.liste;
+    const r = await fetch(`${base}/${fichier}`, { signal: AbortSignal.timeout(3000) });
+    if (r.ok) publies[fichier] = { at: Date.now(), data: await r.json() };
+  } catch (e) { console.warn(`[bob] ${fichier} :`, e.message); }
+  return publies[fichier]?.data || vide;
+}
+
+// Le catalogue (~800 jetons) n'est joint que si la question parle d'achat ou de produit
+const QUESTION_PRODUIT = /achet|produit|engrais|semence|graine|anti.?mousse|chaux|chaul|biostimul|scarificateur|a[ée]rateur|tondeuse|mat[ée]riel|marque|prix|combien co[uû]te|recommand|conseill.*(quel|lequel)|quel(le)?s? .*(choisir|prendre|utiliser)/i;
+
+const prix = (n) => `${Number(n).toFixed(2).replace(".", ",")} €`;
+
+// [[produit:cle:gamme]] écrit par Bob → lien affilié Amazon (les jetons inconnus sont retirés)
+function lierProduits(texte, produits) {
+  return texte.replace(/\[\[produit:([a-zA-Z]+):([a-z]+)\]\]/g, (_, cle, tier) => {
+    const p = produits[cle]?.tiers?.[tier];
+    return p ? `[🛒 ${p.label} (${p.marque}, ~${prix(p.prix)})](${p.url})` : "";
+  });
 }
 const { createClient }      = require("@supabase/supabase-js");
 
@@ -101,7 +116,8 @@ module.exports = async function handler(req, res) {
     if (!messages.length) throw new Error("Messages manquants");
 
     // Dossier de l'utilisateur construit côté serveur (profil, actions, diagnostic, parcours, météo 5 jours)
-    const articles = await articlesConseils();
+    const questionProduit = QUESTION_PRODUIT.test(messages.filter(m => m.role === "user").slice(-1)[0]?.content || "");
+    const [articles, produits] = await Promise.all([publie("conseils.json", []), questionProduit ? publie("produits.json", {}) : {}]);
     let contexte;
     try {
       contexte = await buildBobContext(supabase, { userId: clerkUserId, premium, clientProfile: profile, score, month });
@@ -138,7 +154,16 @@ Quand un de ces articles correspond directement à la question, termine ta répo
 « 👉 Pour aller plus loin : [titre de l'article](adresse exacte ci-dessus) ». Jamais plus d'un lien, jamais
 d'autre adresse que celles de cette liste, et aucun lien si aucun article ne correspond vraiment.
 
-PRINCIPES DE BOB :
+${questionProduit ? `PRODUITS RECOMMANDABLES (catalogue partenaire Amazon — gamme : eco, standard, qualite, premium) :
+${Object.entries(produits).map(([cle, c]) => `- ${cle} (${c.label}) : ` + Object.entries(c.tiers).map(([t, p]) => `${t} = ${p.label}, ${p.marque}, ${prix(p.prix)}`).join(" | ")).join("\n") || "- (catalogue indisponible)"}
+Règles produits : propose un produit SEULEMENT si l'utilisateur demande quoi acheter ou si un produit est vraiment
+nécessaire pour appliquer ton conseil ; 2 produits maximum ; choisis la gamme conseillée par son budget ; si son
+objectif est naturel, uniquement des produits organiques, minéraux naturels, semences ou outils. Pour citer un
+produit, écris exactement le jeton [[produit:cle:gamme]] (ex. [[produit:engraisAutomne:standard]]) : l'app le
+transforme en lien. N'écris jamais d'adresse Amazon toi-même. Ne recommande jamais de désherbant chimique
+(interdit aux particuliers depuis 2019).
+
+` : "Ne recommande aucun produit précis dans cette réponse (pas de catalogue joint).\n\n"}PRINCIPES DE BOB :
 1. Expert nuancé, pas dogmatique : donne la meilleure pratique ET explique pourquoi. Accepte les alternatives
    réalistes quand l'utilisateur a une contrainte (ex. : l'idéal est d'arroser tôt le matin ; si ce n'est possible
    que le soir, arroser en début de soirée pour que l'herbe sèche avant la nuit).
@@ -190,7 +215,7 @@ STYLE :
     const data = await groqRes.json();
     if (data.error) throw new Error("Groq: " + (data.error.message || JSON.stringify(data.error)));
 
-    const reply = data.choices?.[0]?.message?.content || "Désolé, je n'ai pas pu générer une réponse.";
+    const reply = lierProduits(data.choices?.[0]?.message?.content || "Désolé, je n'ai pas pu générer une réponse.", produits);
     res.json({ success:true, reply, ...(consumed ? { remaining: consumed.remaining, limit: quota.limit, period: quota.period } : {}) });
 
   } catch (e) {
