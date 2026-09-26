@@ -5,6 +5,8 @@ import { useProfile } from "../lib/useProfile";
 import { trackAmazonClick } from "../lib/useAmazonProducts";
 import AMAZON_PRODUCTS from "../lib/amazonProducts";
 import { card, btn, scroll } from "../lib/styles";
+import { ajouterAchat, achatsAnnee } from "../lib/depenses";
+import BudgetDepenses from "../components/BudgetDepenses";
 
 // ════════════════════════════════════════════════════════════════════════════
 // PRODUCTS — Catalogue de produits Amazon partenaire
@@ -57,7 +59,8 @@ const selectProduit = (key, tier, profile) => {
 };
 
 // ── 1 ligne par type de produit, sélection auto selon budget ──────────────────
-function ProductRow({ amazonKey, tier, profile }) {
+function ProductRow({ amazonKey, tier, profile, saveProfile }) {
+  const [prixAchat, setPrixAchat] = useState(null); // saisie « Je l'ai acheté » ouverte
   const cat     = AMAZON_PRODUCTS[amazonKey];
   const produit = selectProduit(amazonKey, tier, profile);
   if (!cat || !produit) return null;
@@ -67,27 +70,52 @@ function ProductRow({ amazonKey, tier, profile }) {
   if (cat.ratioGM2  && cat.conditionnement) quantite = calcQuantite(surface, cat.ratioGM2,  cat.conditionnement);
   if (cat.ratioMlM2 && cat.conditionnement) quantite = calcQuantite(surface, cat.ratioMlM2, cat.conditionnement);
 
+  const dejaNote = achatsAnnee(profile).some(a => a.cle === amazonKey);
+  const noter = () => {
+    const prix = Number(String(prixAchat).replace(",", "."));
+    if (!(prix > 0)) return;
+    saveProfile(ajouterAchat(profile, { label: `${cat.label} · ${produit.label}`, prix, cle: amazonKey }));
+    setPrixAchat(null);
+  };
+
   return (
-    <div style={{ display:"flex", alignItems:"center", gap:12, padding:"14px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
-      <div style={{ flex:1, minWidth:0 }}>
-        <div style={{ fontSize:13, fontWeight:700, color:"#e8f5e9", lineHeight:1.4, marginBottom:3 }}>
-          {cat.label}
-        </div>
-        <div style={{ fontSize:11, color:"#81c784" }}>
-          {produit.label}
-        </div>
-        {quantite > 1 && (
-          <div style={{ fontSize:11, color:"#66BB6A", marginTop:4 }}>
-            📐 Pour {surface} m² : {quantite} unité{quantite > 1 ? "s" : ""}
+    <div style={{ padding:"14px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
+      <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+        <div style={{ flex:1, minWidth:0 }}>
+          <div style={{ fontSize:13, fontWeight:700, color:"#e8f5e9", lineHeight:1.4, marginBottom:3 }}>
+            {cat.label}
           </div>
-        )}
+          <div style={{ fontSize:11, color:"#81c784" }}>
+            {produit.label}
+          </div>
+          {quantite > 1 && (
+            <div style={{ fontSize:11, color:"#66BB6A", marginTop:4 }}>
+              📐 Pour {surface} m² : {quantite} unité{quantite > 1 ? "s" : ""}
+            </div>
+          )}
+        </div>
+        <button
+          onClick={() => { trackAmazonClick(amazonKey, null, 0); window.open(produit.url, "_blank", "noopener,noreferrer"); }}
+          style={{ background:"#FF9900", border:"none", borderRadius:8, padding:"9px 14px", color:"#111", fontSize:12, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap", flexShrink:0 }}
+        >
+          🛒 Amazon →
+        </button>
       </div>
-      <button
-        onClick={() => { trackAmazonClick(amazonKey, null, 0); window.open(produit.url, "_blank", "noopener,noreferrer"); }}
-        style={{ background:"#FF9900", border:"none", borderRadius:8, padding:"9px 14px", color:"#111", fontSize:12, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap", flexShrink:0 }}
-      >
-        🛒 Amazon →
-      </button>
+      {prixAchat === null ? (
+        <button onClick={() => setPrixAchat(produit.prix ? String(Math.round(produit.prix * quantite * 100) / 100).replace(".", ",") : "")}
+          style={{ background:"none", border:"none", padding:"6px 0 0", color: dejaNote ? "#66BB6A" : "#a5d6a7", fontSize:11, cursor:"pointer", textDecoration:"underline" }}>
+          {dejaNote ? "✓ Noté cette année · noter un autre achat" : "✓ Je l'ai acheté"}
+        </button>
+      ) : (
+        <div style={{ display:"flex", alignItems:"center", gap:6, marginTop:8 }}>
+          <span style={{ fontSize:11, color:"#81c784" }}>Prix payé</span>
+          <input value={prixAchat} onChange={e => setPrixAchat(e.target.value)} inputMode="decimal" autoFocus
+            style={{ width:70, background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:8, padding:"6px 8px", color:"#e8f5e9", fontSize:12 }} />
+          <span style={{ fontSize:11, color:"#81c784" }}>€</span>
+          <button onClick={noter} style={{ background:"#43a047", border:"none", borderRadius:8, padding:"6px 12px", color:"#fff", fontSize:11, fontWeight:700, cursor:"pointer" }}>Noter</button>
+          <button onClick={() => setPrixAchat(null)} style={{ background:"none", border:"none", color:"#81c784", fontSize:11, cursor:"pointer" }}>Annuler</button>
+        </div>
+      )}
     </div>
   );
 }
@@ -95,7 +123,7 @@ function ProductRow({ amazonKey, tier, profile }) {
 export default function Products() {
   const navigate    = useNavigate();
   const { isPaid }  = useSubscription();
-  const { profile } = useProfile();
+  const { profile, saveProfile } = useProfile();
   const [activeTab, setActiveTab] = useState("entretien");
 
   const tier        = isPaid ? getBudgetTier(profile?.budget) : "standard";
@@ -158,6 +186,8 @@ export default function Products() {
             </button>
           </div>
         )}
+
+        <BudgetDepenses profile={profile} saveProfile={saveProfile} />
 
         {/* ── Tabs catégories ── */}
         <div style={{ display:"flex", gap:6, overflowX:"auto", padding:"0 0 4px", marginBottom:8 }}>
@@ -223,7 +253,7 @@ export default function Products() {
             Résultats actualisés en temps réel sur Amazon · Prix et disponibilités gérés par Amazon
           </div>
           {cat.keys.map(key => (
-            <ProductRow key={key} amazonKey={key} tier={tier} profile={profile} />
+            <ProductRow key={key} amazonKey={key} tier={tier} profile={profile} saveProfile={saveProfile} />
           ))}
         </div>
 
