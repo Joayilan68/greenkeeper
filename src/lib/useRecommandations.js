@@ -77,8 +77,6 @@ const isGazonBermuda  = (p) => p?.pelouse === "bermuda" ||
 const isGazonRustique = (p) => p?.pelouse === "rustique" ||
   (Array.isArray(p?.gazons) && p.gazons.includes("rustique"));
 const isObjectifNaturel = (p) => p?.objectif === "naturel";
-const isObjectifCreer   = (p) => p?.objectif === "creer";
-const isObjectifRenover = (p) => p?.objectif === "renover";
 
 // ── Grilles budget ────────────────────────────────────────────────────────────
 // Retourne la gamme de produit adaptée au budget déclaré
@@ -220,7 +218,6 @@ const CALENDRIER = {
     conditions:   (profil, score, meteo, history) => {
       if (isGazonSynth(profil)) return false;
       if (isGazonBermuda(profil)) return false;
-      if (isObjectifCreer(profil)) return false;   // création : pas d'arrachage avant J45
       if (isGazonRustique(profil)) return false;   // trèfle protégé
       if (dernierJour(history, "desherb") < 21) return false;
       if (dernierJour(history, "désherb") < 21) return false;
@@ -248,7 +245,6 @@ const CALENDRIER = {
       if (isGazonSynth(profil)) return false;
       if (isGazonBermuda(profil)) return false;
       if (isObjectifNaturel(profil)) return false;
-      if (isObjectifCreer(profil)) return false; // J0-J60 bloqué
       if (solDetrempé(meteo)) return false;
       if (dernierJour(history, "engrais") < 45) return false;
       if (profil?.pelouse === "sec" || profil?.pelouse === "chaud") return score < 75;
@@ -319,8 +315,6 @@ const CALENDRIER = {
       if (dernierJour(history, "semences") < 60) return false;
       if (dernierJour(history, "semis") < 60) return false;
       const moisActuel = new Date().getMonth() + 1;
-      // Objectif Créer : toujours prioritaire en bonne saison
-      if (isObjectifCreer(profil)) return true;
       if (moisActuel === 6) return score < 65 && (meteo?.temp_max || 30) < 26;
       if (moisActuel === 3 || moisActuel === 4) {
         if ((meteo?.temp_max || 0) < 10) return false;

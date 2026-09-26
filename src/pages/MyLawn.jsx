@@ -303,7 +303,7 @@ export default function MyLawn() {
             </div>
             {/* Infos profil */}
             {(() => {
-              const OBJECTIF_LABELS = { parfait:"Gazon parfait", fonctionnel:"Pelouse fonctionnelle", naturel:"Gazon naturel", renover:"Rénover ma pelouse", creer:"Créer une nouvelle pelouse" };
+              const OBJECTIF_LABELS = { parfait:"Gazon parfait", fonctionnel:"Pelouse fonctionnelle", naturel:"Gazon naturel" };
               const SOL_LABELS      = { argileux:"Argileux", limoneux:"Limoneux", sableux:"Sableux", calcaire:"Calcaire", humifere:"Humifère", compacte:"Compacté", inconnu:"Non défini" };
               const EXPO_LABELS     = { ensoleille:"Ensoleillé", "mi-ombre":"Mi-ombre", ombrage:"Ombragé" };
               const ARROSAGE_LABELS = { automatique:"Arrosage auto", manuel:"Tuyau/manuel", aucun:"Pas d'arrosage", rarement:"Rarement" };
