@@ -3,6 +3,7 @@ title: Semer un gazon au printemps : le calendrier et la méthode
 description: Créer une pelouse ou regarnir au printemps : la bonne période selon la température du sol, la préparation du terrain, la dose de semis et l'arrosage jusqu'à la première tonte.
 saison: printemps
 date: 2026-09-25
+produits: regarnissage, engraisStarter
 ---
 
 L'automne est la saison idéale pour semer un gazon, mais **le printemps est la seconde meilleure période**, et parfois la seule possible : maison neuve, travaux terminés en hiver, pelouse abîmée par l'hiver. Un semis de printemps réussit très bien à condition de respecter deux choses : **attendre que le sol soit assez chaud**, et **semer assez tôt pour que le gazon soit installé avant les chaleurs**.

@@ -3,6 +3,7 @@ title: Regarnir son gazon en automne : le guide étape par étape
 description: Pelouse clairsemée après l'été ? L'automne est la meilleure saison pour regarnir. Période idéale, préparation du sol, dose de semis, arrosage et première tonte.
 saison: automne
 date: 2026-09-25
+produits: regarnissage, engraisStarter
 ---
 
 Après un été sec, une pelouse présente souvent des zones clairsemées, des trous ou des plaques jaunies. Bonne nouvelle : **l'automne est la meilleure saison de l'année pour regarnir**. Le sol est encore chaud, les pluies reviennent et les mauvaises herbes poussent moins vite. Voici la méthode complète, étape par étape.

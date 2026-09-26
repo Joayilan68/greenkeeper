@@ -3,6 +3,7 @@ title: Première tonte de printemps : quand et à quelle hauteur ?
 description: Trop tôt, trop court, sur gazon mouillé : la première tonte conditionne toute la saison. Le bon moment, la bonne hauteur et les gestes pour bien redémarrer la pelouse.
 saison: printemps
 date: 2026-09-25
+produits: engraisStarter
 ---
 
 Aux premiers beaux jours, l'envie de sortir la tondeuse est forte. Pourtant, **la première tonte de l'année est la plus délicate** : faite trop tôt ou trop court, elle affaiblit un gazon qui sort à peine de l'hiver et ouvre la porte à la mousse et aux mauvaises herbes. Voici comment la réussir.

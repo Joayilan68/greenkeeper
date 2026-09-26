@@ -51,7 +51,8 @@ for (const page of pages) {
 
 // ── Conseils gazon ──────────────────────────────────────────────────────────
 // Chaque fichier : en-tête « clé: valeur » entre deux lignes « --- » (title, description,
-// saison = automne|hiver|printemps|ete, date AAAA-MM-JJ, maj facultative, brouillon: oui pour masquer).
+// saison = automne|hiver|printemps|ete, date AAAA-MM-JJ, maj facultative, brouillon: oui pour masquer,
+// produits facultatif = catégories du catalogue Amazon pour l'encadré « matériel conseillé »).
 const articles = readdirSync("content/conseils").filter(f => f.endsWith(".md")).map(f => {
   const [, head, md] = readFileSync(`content/conseils/${f}`, "utf8").match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/)
     || (() => { throw new Error(`[seo] en-tête manquant : ${f}`); })();
@@ -60,24 +61,26 @@ const articles = readdirSync("content/conseils").filter(f => f.endsWith(".md")).
   return { ...meta, slug: f.replace(/\.md$/, ""), html: marked.parse(md) };
 }).filter(a => a.brouillon !== "oui").sort((a, b) => a.date.localeCompare(b.date));
 
-mkdirSync("dist/conseils", { recursive: true });
-writeFileSync("dist/conseils/index.html", indexPage(articles));
-writeFileSync("dist/conseils.json", JSON.stringify(articles.map(({ slug, title, saison }) => ({ slug, title, saison }))));
-
-// Catalogue proposé par Bob : fiches complètes uniquement, sans les désherbants chimiques
-// (interdits aux particuliers depuis 2019, loi Labbé)
-const CATALOGUE_EXCLU = ["desherbage"];
+// Catalogue proposé par Bob et par les articles : fiches complètes uniquement
 const produits = Object.fromEntries(Object.entries(AMAZON_PRODUCTS)
-  .filter(([cle]) => !CATALOGUE_EXCLU.includes(cle))
   .map(([cle, cat]) => [cle, { label: cat.label, tiers: Object.fromEntries(Object.entries(cat.tiers || {})
     .filter(([, p]) => p?.label && p.prix && p.url)
     .map(([tier, p]) => [tier, { label: p.label, marque: p.marque, prix: p.prix, url: p.url }])) }])
   .filter(([, cat]) => Object.keys(cat.tiers).length));
 writeFileSync("dist/produits.json", JSON.stringify(produits));
+
+for (const a of articles) for (const cle of (a.produits || "").split(",").map(x => x.trim()).filter(Boolean)) {
+  if (!produits[cle]) throw new Error(`[seo] ${a.slug} : catégorie de produits inconnue « ${cle} »`);
+}
+mkdirSync("dist/conseils", { recursive: true });
+writeFileSync("dist/conseils/index.html", indexPage(articles));
+writeFileSync("dist/conseils.json", JSON.stringify(articles.map(({ slug, title, saison }) => ({ slug, title, saison }))));
+
+
 for (const a of articles) {
   const autres = articles.filter(o => o.slug !== a.slug && o.saison === a.saison).slice(0, 3);
   mkdirSync(`dist/conseils/${a.slug}`, { recursive: true });
-  writeFileSync(`dist/conseils/${a.slug}/index.html`, articlePage(a, autres));
+  writeFileSync(`dist/conseils/${a.slug}/index.html`, articlePage(a, autres, produits));
 }
 
 const today = new Date().toISOString().slice(0, 10);

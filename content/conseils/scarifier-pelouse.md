@@ -3,6 +3,7 @@ title: Scarifier sa pelouse : quand, comment et pourquoi
 description: Mousse, feutre, gazon spongieux ? La scarification redonne de l'air à la pelouse. Signes qui ne trompent pas, meilleures périodes, méthode et soins après le passage.
 saison: automne
 date: 2026-09-25
+produits: verticut
 ---
 
 Une pelouse qui s'essouffle, qui s'étouffe sous la mousse ou dont le sol semble spongieux sous le pied a souvent besoin d'une chose : **être scarifiée**. Ce geste, un peu brutal en apparence, est l'un des plus efficaces pour relancer un gazon fatigué.

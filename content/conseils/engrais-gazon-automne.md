@@ -3,6 +3,7 @@ title: Engrais gazon d'automne : lequel choisir et quand l'épandre
 description: L'engrais d'automne prépare le gazon à l'hiver et au printemps. Pourquoi privilégier le potassium, quelle période choisir, comment l'épandre et les erreurs à éviter.
 saison: automne
 date: 2026-09-25
+produits: engraisAutomne
 ---
 
 L'automne est la saison où l'on pense le moins à nourrir sa pelouse, et pourtant c'est **l'un des apports les plus utiles de l'année**. Après l'été, le gazon a puisé dans ses réserves. Un bon engrais d'automne lui permet de reconstituer ses racines, de mieux résister au froid et aux maladies, et de repartir plus vite au printemps.

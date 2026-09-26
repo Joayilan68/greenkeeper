@@ -3,6 +3,7 @@ title: Taches jaunes sur la pelouse : trouver la cause et y remédier
 description: Sécheresse, urine de chien, engrais, maladie, larves ? Une tache jaune ne se soigne pas toujours de la même façon. Le guide pour identifier la cause et sauver votre gazon.
 saison: printemps
 date: 2026-09-25
+produits: biostimulant
 ---
 
 Une tache jaune qui apparaît sur la pelouse inquiète toujours. Pourtant, **les causes sont nombreuses**, et le remède dépend entièrement du diagnostic : arroser une pelouse attaquée par des larves ou mettre de l'engrais sur une brûlure d'engrais ne ferait qu'aggraver les choses. Voici comment reconnaître chaque cause.
