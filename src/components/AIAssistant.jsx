@@ -33,10 +33,15 @@ const WELCOME_MESSAGE = {
   content: "Salut ! 🌿 Moi c'est Bob, ton assistant gazon.\n\n⚠️ Je suis une IA : mes réponses peuvent contenir des inexactitudes et ne remplacent pas l'avis d'un professionnel du jardinage.\n\nPose-moi tes questions sur ta pelouse et ton jardin !",
 };
 
-// Mise en forme légère des réponses de Bob (titres, gras, listes), sans HTML injecté
+// Mise en forme légère des réponses de Bob (titres, gras, listes, liens vers mongazon360.fr), sans HTML injecté
+const LIEN = /\[([^\]]+)\]\((https:\/\/mongazon360\.fr\/[^\s)]*)\)/;
 function inline(text) {
-  return text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
-    part.startsWith("**") && part.endsWith("**") ? <strong key={i}>{part.slice(2, -2)}</strong> : part);
+  return text.split(/(\*\*[^*]+\*\*|\[[^\]]+\]\(https:\/\/mongazon360\.fr\/[^\s)]*\))/g).map((part, i) => {
+    if (part.startsWith("**") && part.endsWith("**")) return <strong key={i}>{part.slice(2, -2)}</strong>;
+    const lien = part.match(LIEN);
+    if (lien) return <a key={i} href={lien[2]} style={{ color:"#a5d6a7", fontWeight:700 }}>{lien[1]}</a>;
+    return part;
+  });
 }
 function BobText({ text }) {
   return text.split("\n").map((line, i) => {

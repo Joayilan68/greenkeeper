@@ -2,7 +2,7 @@
 // 1. Pages publiques de l'app (src/lib/seoPages.json) : dist/<page>/index.html avec leur titre,
 //    description, adresse canonique et balises de partage (lues sans JavaScript).
 // 2. Rubrique « Conseils gazon » : articles Markdown de content/conseils → pages HTML statiques.
-// 3. dist/sitemap.xml.
+// 3. dist/sitemap.xml et dist/conseils.json (liste des articles lue par Bob pour y renvoyer).
 import { readFileSync, writeFileSync, mkdirSync, readdirSync } from "node:fs";
 import { marked } from "marked";
 import { articlePage, indexPage } from "./conseils-template.mjs";
@@ -61,6 +61,7 @@ const articles = readdirSync("content/conseils").filter(f => f.endsWith(".md")).
 
 mkdirSync("dist/conseils", { recursive: true });
 writeFileSync("dist/conseils/index.html", indexPage(articles));
+writeFileSync("dist/conseils.json", JSON.stringify(articles.map(({ slug, title, saison }) => ({ slug, title, saison }))));
 for (const a of articles) {
   const autres = articles.filter(o => o.slug !== a.slug && o.saison === a.saison).slice(0, 3);
   mkdirSync(`dist/conseils/${a.slug}`, { recursive: true });
