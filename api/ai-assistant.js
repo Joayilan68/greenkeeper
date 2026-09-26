@@ -21,7 +21,18 @@ async function publie(fichier, vide) {
 }
 
 // Le catalogue (~800 jetons) n'est joint que si la question parle d'achat ou de produit
-const QUESTION_PRODUIT = /achet|produit|engrais|semence|graine|anti.?mousse|chaux|chaul|biostimul|scarificateur|a[ée]rateur|tondeuse|mat[ée]riel|marque|prix|combien co[uû]te|recommand|conseill.*(quel|lequel)|quel(le)?s? .*(choisir|prendre|utiliser)/i;
+const QUESTION_PRODUIT = /achet|produit|mat[ée]riel|marque|prix|combien co[uû]te|budget|recommand|conseill.*(quel|lequel)|quel(le)?s? .*(choisir|prendre|utiliser)/i;
+// Catégories du catalogue jointes selon la question (moins de jetons) ; question d'achat générale → catalogue complet
+const CATEGORIES_PRODUIT = [
+  [/engrais|nourri|jaun|carenc|p[aâ]le/i, ["engraisStarter", "engraisEte", "engraisAutomne", "engraisHiver"]],
+  [/semence|graine|regarn|sem(er|is)|trou|clairsem|pel[ée]e/i, ["regarnissage"]],
+  [/mousse/i, ["antiMousse"]],
+  [/d[ée]sherb|mauvaise.? herbe|pissenlit|plantain|tr[eè]fle/i, ["desherbage"]],
+  [/a[ée]r(er|ation|ateur)|carott|tass|compact/i, ["aeration"]],
+  [/scarif|verticut|feutre/i, ["verticut"]],
+  [/tond|tonte/i, ["tonte"]],
+  [/biostimul|stress|reprise/i, ["biostimulant"]],
+];
 
 const prix = (n) => `${Number(n).toFixed(2).replace(".", ",")} €`;
 
@@ -116,8 +127,12 @@ module.exports = async function handler(req, res) {
     if (!messages.length) throw new Error("Messages manquants");
 
     // Dossier de l'utilisateur construit côté serveur (profil, actions, diagnostic, parcours, météo 5 jours)
-    const questionProduit = QUESTION_PRODUIT.test(messages.filter(m => m.role === "user").slice(-1)[0]?.content || "");
-    const [articles, produits] = await Promise.all([publie("conseils.json", []), questionProduit ? publie("produits.json", {}) : {}]);
+    const question = messages.filter(m => m.role === "user").slice(-1)[0]?.content || "";
+    const cles = [...new Set(CATEGORIES_PRODUIT.filter(([re]) => re.test(question)).flatMap(([, c]) => c))];
+    const categories = cles.length || !QUESTION_PRODUIT.test(question) ? cles : null; // null = catalogue complet
+    const questionProduit = !categories || categories.length > 0;
+    const [articles, catalogue] = await Promise.all([publie("conseils.json", []), questionProduit ? publie("produits.json", {}) : {}]);
+    const produits = categories ? Object.fromEntries(Object.entries(catalogue).filter(([cle]) => categories.includes(cle))) : catalogue;
     let contexte;
     try {
       contexte = await buildBobContext(supabase, { userId: clerkUserId, premium, clientProfile: profile, score, month });
@@ -158,11 +173,14 @@ d'autre adresse que celles de cette liste, et aucun lien si aucun article ne cor
 
 ${questionProduit ? `PRODUITS RECOMMANDABLES (catalogue partenaire Amazon — gamme : eco, standard, qualite, premium) :
 ${Object.entries(produits).map(([cle, c]) => `- ${cle} (${c.label}) : ` + Object.entries(c.tiers).map(([t, p]) => `${t} = ${p.label}, ${p.marque}, ${prix(p.prix)}`).join(" | ")).join("\n") || "- (catalogue indisponible)"}
-Règles produits : propose un produit SEULEMENT si l'utilisateur demande quoi acheter ou si un produit est vraiment
-nécessaire pour appliquer ton conseil ; 2 produits maximum ; choisis la gamme conseillée par son budget ; si son
-objectif est naturel, uniquement des produits organiques, minéraux naturels, semences ou outils. Pour citer un
-produit, écris exactement le jeton [[produit:cle:gamme]] (ex. [[produit:engraisAutomne:standard]]) : l'app le
-transforme en lien. N'écris jamais d'adresse Amazon toi-même. Ne recommande jamais de désherbant chimique
+Règles produits : propose un produit quand l'utilisateur demande quoi acheter ou quand ton conseil en demande un
+pour être appliqué (engrais de saison, semences, anti-mousse…), jamais pour une action qui n'en a pas besoin ;
+2 produits maximum ; choisis la gamme conseillée par son budget et tiens compte du budget restant indiqué dans son
+dossier : s'il est dépassé ou presque, propose d'abord une solution sans achat ou l'entrée de gamme, et dis-le
+simplement. Après un produit cité, ajoute une courte phrase : il peut le noter avec « Je l'ai acheté » dans
+l'onglet Produits pour suivre son budget. Si son objectif est naturel, uniquement des produits organiques,
+minéraux naturels, semences ou outils. Pour citer un produit, écris exactement le jeton [[produit:cle:gamme]]
+(ex. [[produit:engraisAutomne:standard]]) : l'app le transforme en lien. N'écris jamais d'adresse Amazon toi-même. Ne recommande jamais de désherbant chimique
 (interdit aux particuliers depuis 2019).
 
 ` : "Ne recommande aucun produit précis dans cette réponse (pas de catalogue joint).\n\n"}PRINCIPES DE BOB :
