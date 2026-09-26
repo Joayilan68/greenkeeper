@@ -33,7 +33,7 @@ const WELCOME_MESSAGE = {
   content: "Salut ! 🌿 Moi c'est Bob, ton assistant gazon.\n\n⚠️ Je suis une IA : mes réponses peuvent contenir des inexactitudes et ne remplacent pas l'avis d'un professionnel du jardinage.\n\nPose-moi tes questions sur ta pelouse et ton jardin !",
 };
 
-// Mise en forme légère des réponses de Bob (titres, gras, listes, liens), sans HTML injecté.
+// Mise en forme légère des réponses de Bob (titres, gras, listes, citations, tableaux, liens), sans HTML injecté.
 // Liens autorisés : mongazon360.fr et les liens partenaires Amazon générés par le serveur.
 const URL_OK = "https:\\/\\/(?:mongazon360\\.fr\\/|www\\.amazon\\.fr\\/s\\?[^\\s)]*tag=mongazon360-21)[^\\s)]*";
 const LIEN   = new RegExp(`\\[([^\\]]+)\\]\\((${URL_OK})\\)`);
@@ -49,12 +49,43 @@ function inline(text) {
       style={{ color:"#a5d6a7", fontWeight:700 }}>{lien[1]}</a>;
   });
 }
+const cellules = (ligne) => ligne.trim().replace(/^\||\|$/g, "").split("|").map(c => c.trim());
+function Tableau({ lignes }) {
+  const rangs = lignes.filter(l => !/^\s*\|?[\s:|-]+\|?\s*$/.test(l)).map(cellules); // sans la ligne |---|
+  return (
+    <div style={{ overflowX:"auto", margin:"6px 0" }}>
+      <table style={{ borderCollapse:"collapse", fontSize:12, width:"100%" }}>
+        <tbody>
+          {rangs.map((r, i) => (
+            <tr key={i} style={{ borderBottom:"1px solid rgba(255,255,255,0.1)" }}>
+              {r.map((c, j) => {
+                const Cell = i === 0 ? "th" : "td";
+                return <Cell key={j} style={{ padding:"4px 6px", textAlign: j ? "right" : "left", color: i === 0 ? "#a5d6a7" : undefined }}>{inline(c)}</Cell>;
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function BobText({ text }) {
-  return text.split("\n").map((line, i) => {
+  const blocs = [];
+  for (const line of text.split("\n")) {
+    const dernier = blocs[blocs.length - 1];
+    if (/^\s*\|.*\|\s*$/.test(line)) {
+      if (dernier?.tableau) dernier.tableau.push(line); else blocs.push({ tableau: [line] });
+    } else blocs.push({ line });
+  }
+  return blocs.map(({ line, tableau }, i) => {
+    if (tableau) return <Tableau key={i} lignes={tableau} />;
     const titre = line.match(/^#{1,6}\s+(.*)$/);
     if (titre) return <div key={i} style={{ fontWeight:800, color:"#a5d6a7", marginTop:i ? 6 : 0 }}>{inline(titre[1])}</div>;
     const puce = line.match(/^\s*[-*•]\s+(.*)$/);
     if (puce) return <div key={i} style={{ paddingLeft:14, textIndent:-10 }}>• {inline(puce[1])}</div>;
+    const citation = line.match(/^\s*>\s?(.*)$/);
+    if (citation) return <div key={i} style={{ borderLeft:"3px solid rgba(165,214,167,0.4)", paddingLeft:8, color:"#c8e6c9" }}>{inline(citation[1])}</div>;
     return line.trim() ? <div key={i}>{inline(line)}</div> : <div key={i} style={{ height:8 }} />;
   });
 }
