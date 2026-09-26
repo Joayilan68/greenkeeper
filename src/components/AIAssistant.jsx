@@ -128,7 +128,6 @@ export default function AIAssistant() {
         body: JSON.stringify({
           messages: newMessages.slice(1).slice(-10).map(m => ({ role:m.role, content:m.content })),
           profile:  profile || {},
-          weather:  weather || {},
           score,
           month,
         })

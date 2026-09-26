@@ -4,6 +4,7 @@
 const { createClerkClient } = require("@clerk/backend");
 const { verifiedUserId, ADMIN_EMAILS } = require("./auth.cjs");
 const { isGuestUser } = require("./premium.cjs");
+const { buildBobContext } = require("./bobContext.cjs");
 const { createClient }      = require("@supabase/supabase-js");
 
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
@@ -33,7 +34,7 @@ module.exports = async function handler(req, res) {
     free: { endpoint: "bob_free", period: "month", limit: 3 },
   };
   const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY);
-  let quota, consumed = null;
+  let quota, consumed = null, premium = false;
   try {
     const clerkUser  = await clerk.users.getUser(clerkUserId);
     const userEmail  = clerkUser.emailAddresses?.[0]?.emailAddress || "";
@@ -47,6 +48,7 @@ module.exports = async function handler(req, res) {
                        clerkUser.publicMetadata?.subscriptionStatus === "active" ||
                        clerkUser.publicMetadata?.subscriptionStatus === "trialing" ||
                        isTrial || await isGuestUser(clerkUserId, clerkUser.publicMetadata);
+    premium = isAdmin || isPremium;
     quota = isAdmin ? null : isPremium ? QUOTAS.paid : QUOTAS.free;
 
     // Consultation du solde (affichage dans l'app), sans consommer
@@ -79,27 +81,27 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { profile = {}, weather = {}, score = 0, month = 1 } = req.body;
+    const { profile = {}, score = 0, month = 1 } = req.body;
     // Seuls les derniers échanges sont transmis (coût et pertinence maîtrisés)
     const messages = (req.body.messages || []).slice(-10)
       .filter(m => (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
       .map(m => ({ role: m.role, content: m.content.slice(0, 2000) }));
     if (!messages.length) throw new Error("Messages manquants");
 
-    const MOIS = ["","Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+    // Dossier de l'utilisateur construit côté serveur (profil, actions, diagnostic, parcours, météo 5 jours)
+    let contexte;
+    try {
+      contexte = await buildBobContext(supabase, { userId: clerkUserId, premium, clientProfile: profile, score, month });
+    } catch (e) {
+      console.warn("[bob] contexte partiel :", e.message);
+      contexte = `- Score de santé : ${score}/100 · profil : ${JSON.stringify(profile).slice(0, 400)}`;
+    }
 
     const systemPrompt = `Tu es Bob, l'assistant expert en gazon et pelouses de l'application Mongazon360®.
 Tu es passionné, bienveillant et très compétent en agronomie du gazon et en jardinage.
 
-CONTEXTE UTILISATEUR :
-- Score de santé actuel : ${score}/100
-- Mois : ${MOIS[month]}
-- Type de gazon : ${profile.pelouse || "non renseigné"}
-- Type de sol : ${profile.sol || "non renseigné"}
-- Surface : ${profile.surface ? profile.surface + " m²" : "non renseignée"}
-- Objectif : ${profile.objectif || "non renseigné"}
-- Ville : ${profile.ville || "non renseignée"}
-${weather.temp_max ? `- Météo : ${Math.round(weather.temp_max)}°C max, ${weather.precip}mm pluie, humidité ${weather.humidity}%` : "- Météo : non disponible"}
+CE QUE L'APP SAIT DE L'UTILISATEUR (utilise-le pour personnaliser, sans le réciter) :
+${contexte}
 
 PRINCIPES DE BOB :
 1. Expert nuancé, pas dogmatique : donne la meilleure pratique ET explique pourquoi. Accepte les alternatives
