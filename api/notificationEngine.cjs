@@ -141,31 +141,31 @@ function decideArrosageSoir(weather, profile) {
     const p = typeof pluie === "number" ? pluie : 0;
     const ratio = p / et0;
     if (ratio >= 0.80) {
-      return { title: "✓ Pas d'arrosage ce soir",
+      return { title: "✓ Pas d'arrosage demain matin",
         body: `Il a plu ~${p.toFixed(1)} mm, suffisant pour le besoin du jour (${et0.toFixed(1)} mm). Économisez l'eau.` };
     }
     if (ratio >= 0.20) {
       const manque = Math.max(0, et0 - p);
       return auto
         ? { title: "💧 Ajustez votre programmateur",
-            body: `Pluie partielle (${p.toFixed(1)} mm). Réglez votre programmateur pour compléter ~${manque.toFixed(1)} mm ce soir.` }
+            body: `Pluie partielle (${p.toFixed(1)} mm). Réglez votre programmateur pour compléter ~${manque.toFixed(1)} mm demain matin, tôt.` }
         : { title: "💧 Complétez l'arrosage",
-            body: `Pluie partielle (${p.toFixed(1)} mm). Complétez d'environ ${manque.toFixed(1)} mm ce soir.` };
+            body: `Pluie partielle (${p.toFixed(1)} mm). Complétez d'environ ${manque.toFixed(1)} mm demain matin, tôt.` };
     }
     return auto
       ? { title: "💧 Ajustez votre programmateur",
-          body: `Besoin du jour ~${et0.toFixed(1)} mm, peu de pluie. Réglez votre programmateur pour ce soir (arrosage tôt = moins d'évaporation).` }
-      : { title: "💧 Arrosez ce soir",
-          body: `Besoin du jour ~${et0.toFixed(1)} mm, peu de pluie. Arrosez tôt le soir pour limiter l'évaporation.` };
+          body: `Besoin du jour ~${et0.toFixed(1)} mm, peu de pluie. Programmez l'arrosage pour demain matin tôt : moins d'évaporation et de maladies.` }
+      : { title: "💧 Arrosage demain matin",
+          body: `Besoin du jour ~${et0.toFixed(1)} mm, peu de pluie. Arrosez demain matin tôt : moins d'évaporation et de maladies.` };
   }
 
   // Fallback sans ET₀ : logique simple sur la pluie
   if (typeof pluie === "number" && pluie >= 8) return null; // assez plu → pas de notif
   return auto
     ? { title: "💧 Vérifiez votre programmateur",
-        body: "Peu de pluie prévue : assurez-vous que votre programmateur couvre le besoin de ce soir." }
+        body: "Peu de pluie prévue : assurez-vous que votre programmateur arrose demain matin tôt." }
     : { title: "💧 Pensez à arroser",
-        body: "Peu de pluie prévue : un arrosage ce soir aidera votre gazon." };
+        body: "Peu de pluie prévue : un arrosage demain matin tôt aidera votre gazon." };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

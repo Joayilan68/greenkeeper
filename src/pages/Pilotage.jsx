@@ -603,6 +603,19 @@ export default function Pilotage() {
                 <MiniChart data={users.months} valueKey="count" color="#1565c0" />
               </div>
             )}
+            {users?.bob && (
+              <div style={card()}>
+                <div style={cardTitle}><span>🤖 Bob — 30 j</span><span style={{ fontSize:11, color:"#81c784" }}>{users.bob.utilisateurs} utilisateur{users.bob.utilisateurs > 1 ? "s" : ""}</span></div>
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, textAlign:"center" }}>
+                  {[["Questions Premium", users.bob.questionsPremium], ["Questions gratuites", users.bob.questionsGratuites], ["Gratuits à 3/3 ce mois", users.bob.gratuitsAuMax]].map(([l, v]) => (
+                    <div key={l}><div style={{ fontSize:20, fontWeight:800, color:"#a5d6a7" }}>{v}</div><div style={{ fontSize:10, color:"#81c784" }}>{l}</div></div>
+                  ))}
+                </div>
+                <div style={{ fontSize:10, color:"#4a7c5c", marginTop:8, lineHeight:1.5 }}>
+                  Comptage depuis le 26/09/2026. « Gratuits à 3/3 » = comptes gratuits ayant épuisé leurs questions du mois : les plus susceptibles de passer Premium.
+                </div>
+              </div>
+            )}
             {users?.diagnostics?.topProblems?.length > 0 && (
               <div style={card()}>
                 <div style={cardTitle}><span>🔬 Top problèmes détectés</span>{users.diagnostics.avgScore != null && <span style={{ fontSize:11, color:"#81c784", textTransform:"none", letterSpacing:0 }}>score visuel moyen {users.diagnostics.avgScore}/100</span>}</div>
