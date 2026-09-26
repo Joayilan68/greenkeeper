@@ -49,6 +49,8 @@ async function buildBobContext(supabase, { userId, premium, clientProfile = {}, 
   l.push(`Date du jour : ${today.split("-").reverse().join("/")} (${MOIS[month] || ""}) · Score de santé du gazon dans l'app : ${score}/100`);
   l.push(`Gazon : ${lisible(p.pelouse) || "non renseigné"} · sol : ${lisible(p.sol) || "?"} · surface : ${p.surface ? p.surface + " m²" : "?"} · exposition : ${lisible(p.exposition) || "?"}`);
   l.push(`Ville : ${p.ville || "?"} · objectif : ${lisible(p.objectif) || "?"} · usages : ${lisible(p.usages) || "?"}`);
+  const GAMME = { "0-50": "eco", inconnu: "eco", "50-150": "standard", "150-300": "qualite", "300-600": "premium", "600+": "premium" };
+  if (p.budget) l.push(`Budget entretien annuel : ${p.budget === "inconnu" ? "non précisé" : p.budget + " €"} (gamme de produits conseillée : ${GAMME[p.budget] || "standard"})`);
   l.push(`Équipement : tondeuse ${lisible(p.tondeuse) || "?"} · arrosage ${lisible(p.arrosage) || "?"} · matériel ${lisible(p.materiel) || "?"}`);
 
   l.push(hist?.length
