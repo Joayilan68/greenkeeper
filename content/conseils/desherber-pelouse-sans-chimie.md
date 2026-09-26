@@ -3,6 +3,7 @@ title: Désherber sa pelouse sans produits chimiques
 description: Pissenlits, trèfle, pâquerettes, plantain : chaque mauvaise herbe révèle un problème de sol. Les méthodes efficaces pour les éliminer sans chimie, et pour qu'elles ne reviennent pas.
 saison: printemps
 date: 2026-09-25
+produits: desherbage
 ---
 
 Depuis le 1er janvier 2019, **les particuliers ne peuvent plus acheter ni utiliser de désherbants chimiques de synthèse** au jardin (loi Labbé). Les désherbants sélectifs « spécial gazon » d'autrefois ont donc disparu des rayons grand public. Bonne nouvelle : **une pelouse dense et bien entretenue est le meilleur désherbant qui soit**. Voici comment faire place nette sans chimie, et surtout durablement.

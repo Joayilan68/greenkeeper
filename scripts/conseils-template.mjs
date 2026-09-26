@@ -15,6 +15,9 @@ article table{border-collapse:collapse;width:100%;margin:16px 0;font-size:15px}a
 blockquote{margin:18px 0;padding:12px 16px;background:#e8f5e9;border-left:4px solid #43a047;border-radius:6px}blockquote p{margin:0}
 .cta{margin:36px 0;padding:22px;border-radius:16px;background:#1a4731;color:#e8f5e9;text-align:center}.cta strong{display:block;font-size:20px;color:#fff;margin-bottom:6px}
 .cta .btn{display:inline-block;margin-top:14px;font-size:16px;padding:12px 22px}.cards{display:grid;gap:12px}
+.shop{margin:32px 0 0;padding:18px;border:1px solid #dfe8e1;border-radius:16px;background:#fff}.shop h2{margin:0 0 4px;font-size:19px}
+.shop a{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid #eef3ef;text-decoration:none;color:#1f2d24;font-size:15px}
+.shop a span:last-child{white-space:nowrap;color:#2e7d32;font-weight:700}.shop small{display:block;font-size:12px;color:#5b6f61;margin-top:8px;line-height:1.5}
 .card{display:block;background:#fff;border:1px solid #dfe8e1;border-radius:14px;padding:16px;text-decoration:none;color:#1f2d24}.card b{color:#1a4731;font-size:17px}
 .card span{display:block;font-size:14px;color:#5b6f61;margin-top:4px}.season{font-size:12px;font-weight:700;color:#2e7d32;text-transform:uppercase;letter-spacing:.06em;margin:26px 0 8px}
 footer{border-top:1px solid #dfe8e1;background:#fff}footer div{max-width:760px;margin:0 auto;padding:18px 20px;font-size:12px;color:#5b6f61}footer a{color:#5b6f61;margin-right:12px}
@@ -92,7 +95,18 @@ ${suivi(campagne)}
 
 const cta = (campagne) => `<div class="cta"><strong>Votre gazon mérite un vrai diagnostic</strong>Prenez votre pelouse en photo : Bob repère mousse, carences et maladies, et vous dit quoi faire selon votre météo.<br /><a class="btn" href="${essai(campagne)}">Essayer gratuitement</a></div>`;
 
-export function articlePage(a, autres) {
+// Encadré « Le matériel conseillé » : catégories du catalogue listées dans l'en-tête de l'article
+// (produits: engraisAutomne, antiMousse), 3 gammes par catégorie et 4 produits au plus, liens partenaires Amazon
+function encadreProduits(cles, produits) {
+  const lignes = cles.flatMap(cle => Object.values(produits[cle]?.tiers || {}).slice(0, 3)).slice(0, 4);
+  if (!lignes.length) return "";
+  const prix = (n) => `${Number(n).toFixed(2).replace(".", ",")} €`;
+  return `<div class="shop"><h2>🛒 Le matériel conseillé</h2>${lignes.map(p =>
+    `<a href="${esc(p.url)}" target="_blank" rel="sponsored noopener noreferrer"><span>${esc(p.label)} — ${esc(p.marque)}</span><span>~${prix(p.prix)}</span></a>`).join("")}
+<small>Liens partenaires Amazon : en tant que Partenaire Amazon, Mongazon360® perçoit une commission sur les achats éligibles, sans surcoût pour vous. Prix indicatifs.</small></div>`;
+}
+
+export function articlePage(a, autres, produits = {}) {
   const path = `/conseils/${a.slug}`;
   const jsonLd = { "@context": "https://schema.org", "@graph": [
     { "@type": "Article", headline: a.title, description: a.description, image: `${SITE}/og-image.jpg`,
@@ -108,7 +122,7 @@ export function articlePage(a, autres) {
     `<a class="card" href="/conseils/${o.slug}"><b>${esc(o.title)}</b><span>${esc(o.description)}</span></a>`).join("")}</div>` : "";
   const body = `<div class="crumb"><a href="/">Accueil</a> › <a href="/conseils">Conseils gazon</a></div>
 <article><h1>${esc(a.title)}</h1><div class="meta">${SAISONS[a.saison] || ""} · Mis à jour le ${frDate(a.maj || a.date)} · Par l'équipe Mongazon360</div>
-${a.html}</article>${cta(a.slug)}${lies}`;
+${a.html}</article>${encadreProduits(a.produits ? a.produits.split(",").map(x => x.trim()) : [], produits)}${cta(a.slug)}${lies}`;
   return page({ title: `${a.title} — Mongazon360®`, description: a.description, path, ogType: "article", jsonLd, body, campagne: a.slug });
 }
 

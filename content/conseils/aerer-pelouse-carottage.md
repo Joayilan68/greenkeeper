@@ -3,6 +3,7 @@ title: Aérer sa pelouse (carottage) : pourquoi, quand et comment
 description: Flaques qui stagnent, sol dur, mousse et pâquerettes ? Votre pelouse étouffe. L'aération par carottage décompacte le sol et relance le gazon. Méthode, outils et bonne période.
 saison: printemps
 date: 2026-09-25
+produits: aeration
 ---
 
 Un gazon peut être tondu, nourri et arrosé correctement et pourtant végéter. Souvent, le problème est invisible : **le sol est tassé**. Les racines manquent d'air, l'eau ruisselle au lieu de pénétrer, et l'engrais profite mal. L'**aération par carottage** est le geste qui redonne de l'air au sol.

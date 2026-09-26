@@ -3,6 +3,7 @@ title: Préparer son gazon pour l'hiver : la check-list complète
 description: Dernière tonte, feuilles, engrais, aération, arrosage : les gestes d'octobre à décembre pour que votre pelouse passe l'hiver sans dégâts et reparte vite au printemps.
 saison: hiver
 date: 2026-09-25
+produits: engraisAutomne
 ---
 
 Une pelouse qui entre en hiver en bonne santé est une pelouse qui **repart vite et verte au printemps**. À l'inverse, un gazon trop long, étouffé par les feuilles ou affaibli par l'été s'expose au gel, à la mousse et aux maladies. Voici les gestes à faire entre octobre et décembre, dans l'ordre.

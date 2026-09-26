@@ -249,55 +249,44 @@ const AMAZON_PRODUCTS = {
   },
 
   // ══════════════════════════════════════════════════════════════
-  // DÉSHERBAGE SÉLECTIF — Avr/Mai/Sept
+  // DÉSHERBAGE MANUEL — Avr→Oct
+  // Outils uniquement : les désherbants chimiques de synthèse sont interdits
+  // aux particuliers depuis le 01/01/2019 (loi Labbé)
   // ══════════════════════════════════════════════════════════════
   desherbage: {
-    label: 'Désherbage sélectif',
-    ratioMlM2: 7,
-    conditionnement: 250,
+    label: 'Désherbage manuel',
     tiers: {
       eco: {
-        asin: 'B0FD3RLXGD',
-        label: 'Désherbant sélectif concentré',
-        marque: 'Protect Expert',
+        asin: null,
+        label: 'Couteau désherbeur inox',
+        marque: 'Gardena',
         prix: 9.9,
-        commission: 0.04,
-        url: url('B0FD3RLXGD', 'désherbant sélectif gazon concentré'),
+        commission: 0.07,
+        url: url(null, 'couteau désherbeur gazon inox'),
       },
       standard: {
-        asin: null, // 🔵 À remplir — Bayer Gazon prêt emploi
-        label: "Désherbant sélectif prêt à l'emploi",
-        marque: 'Bayer Gazon',
-        prix: 16.9,
-        commission: 0.04,
-        url: url(null, 'désherbant sélectif gazon prêt emploi'),
+        asin: null,
+        label: 'Gouge à désherber (pissenlits, plantains)',
+        marque: 'Fiskars',
+        prix: 14.9,
+        commission: 0.07,
+        url: url(null, 'gouge désherbeuse pissenlit'),
       },
       qualite: {
-        asin: 'B08VRYZ8J5',
-        label: 'Désherbant sélectif pro dicotylédones',
-        marque: 'Roundup',
-        prix: 24.9,
-        commission: 0.04,
-        url: url('B08VRYZ8J5', 'désherbant professionnel gazon dicots'),
+        asin: null,
+        label: 'Extracteur de racines à pédale',
+        marque: 'Fiskars',
+        prix: 39.9,
+        commission: 0.07,
+        url: url(null, 'extracteur racines mauvaises herbes pédale'),
       },
       premium: {
-        asin: null, // 🔵 À remplir — Bayer Pro haute efficacité
-        label: 'Désherbant professionnel haute efficacité',
-        marque: 'Bayer Pro',
-        prix: 44.9,
-        commission: 0.04,
-        url: url(null, 'désherbant pro gazon haute efficacité'),
-      },
-    },
-    accessoires: {
-      pulverisateur: {
-        asin: 'B008O1CE2O',
-        label: 'Pulvérisateur 5L à dos',
-        marque: 'CON:P',
-        prix: 34.9,
+        asin: null,
+        label: 'Extracteur de racines Xact à long manche',
+        marque: 'Fiskars',
+        prix: 54.9,
         commission: 0.07,
-        url: url('B008O1CE2O', 'pulvérisateur dos jardin 5L'),
-        ctaSi: 'pas_pulverisateur', // afficher si profile.materiel?.pulverisateur !== true
+        url: url(null, 'Fiskars Xact extracteur racines'),
       },
     },
   },

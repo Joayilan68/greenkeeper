@@ -16,9 +16,9 @@ import { card, btn, scroll } from "../lib/styles";
 
 const CATEGORIES = [
   { id:"entretien",  label:"Entretien courant", icon:"🌱", keys:["engraisStarter","engraisEte","engraisAutomne","engraisHiver"] },
-  { id:"traitement", label:"Traitements",       icon:"💊", keys:["antiMousse","desherbage","biostimulant"], isPhyto: true },
+  { id:"traitement", label:"Traitements",       icon:"💊", keys:["antiMousse","biostimulant"], isPhyto: true },
   { id:"renovation", label:"Rénovation",        icon:"🌾", keys:["regarnissage","aeration","verticut"] },
-  { id:"materiel",   label:"Matériel",          icon:"🛠️", keys:["tonte"] },
+  { id:"materiel",   label:"Matériel",          icon:"🛠️", keys:["desherbage","tonte"] },
 ];
 
 const getBudgetTier = (budget) => {

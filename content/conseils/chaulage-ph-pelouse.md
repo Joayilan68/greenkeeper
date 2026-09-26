@@ -3,6 +3,7 @@ title: Chaulage et pH du sol : faut-il chauler sa pelouse ?
 description: Mousse qui revient chaque année, gazon qui végète ? Un sol trop acide est souvent en cause. Comment mesurer le pH, quand et comment chauler, et quelle chaux choisir.
 saison: hiver
 date: 2026-09-25
+produits: engraisHiver
 ---
 
 Si la mousse revient chaque année malgré les traitements, si le gazon reste pâle et peu dense malgré l'engrais, le problème vient peut-être du sol lui-même : **il est trop acide**. Le chaulage corrige cette acidité. Encore faut-il savoir si votre pelouse en a besoin, car chauler un sol qui ne l'est pas ne sert à rien, voire nuit.
