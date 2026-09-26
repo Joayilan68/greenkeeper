@@ -12,6 +12,7 @@ const { verifiedUserId, ADMIN_EMAILS } = require("./auth.cjs");
 
 const { createClerkClient } = require("@clerk/backend");
 const { createClient }      = require("@supabase/supabase-js");
+const { statsRelances }     = require("./relances.cjs");
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 
 module.exports = async function handler(req, res) {
@@ -326,6 +327,7 @@ async function handleUsers(req, res) {
 
     const diagnostics = diagnosticsStats(diagRows, new Set(allUsers.map(u => u.id)));
     const acquisition = acquisitionStats(sourceVisits, allUsers);
+    const relances = statsRelances(allUsers);
 
     res.json({
       success: true,
@@ -348,6 +350,7 @@ async function handleUsers(req, res) {
       acquisition,
       bob,
       notifs,
+      relances,
       clerkSources,
     });
 
@@ -645,7 +648,7 @@ async function fetchNotifStats() {
       if (h.channel === "email") { emails++; continue; }
       push++;
       if (h.opened) ouvertes++;
-      const t = String(h.type || "autre").replace(/^(entretien|maladie|urgence|conseil|gami)_.*/, "$1");
+      const t = String(h.type || "autre").replace(/^(entretien|maladie|urgence|conseil|gami|relance)_.*/, "$1");
       types[t] = types[t] || { envoyees: 0, ouvertes: 0 };
       types[t].envoyees++;
       if (h.opened) types[t].ouvertes++;

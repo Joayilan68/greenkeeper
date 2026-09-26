@@ -617,6 +617,20 @@ export default function Pilotage() {
                 </div>
               </div>
             )}
+            {users?.relances && (
+              <div style={card()}>
+                <div style={cardTitle}><span>👋 Relances des inactifs — 30 j</span><span style={{ fontSize:11, color:"#81c784" }}>{users.relances.mesurables ? Math.round(users.relances.retours / users.relances.mesurables * 100) : 0} % de retour</span></div>
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, textAlign:"center", marginBottom:8 }}>
+                  {[["Inactifs 7-20 j", users.relances.inactifs.j7], ["Inactifs 21-44 j", users.relances.inactifs.j21], ["Inactifs 45 j +", users.relances.inactifs.j45]].map(([l, v]) => (
+                    <div key={l}><div style={{ fontSize:20, fontWeight:800, color:"#a5d6a7" }}>{v}</div><div style={{ fontSize:10, color:"#81c784" }}>{l}</div></div>
+                  ))}
+                </div>
+                <div style={{ fontSize:12, color:"#a5d6a7" }}>{users.relances.envoyees} relance{users.relances.envoyees > 1 ? "s" : ""} ({users.relances.parCanal.push} notifications · {users.relances.parCanal.email} emails) · {users.relances.retours} retour{users.relances.retours > 1 ? "s" : ""} sur {users.relances.mesurables} mesurable{users.relances.mesurables > 1 ? "s" : ""}</div>
+                <div style={{ fontSize:10, color:"#4a7c5c", marginTop:8, lineHeight:1.5 }}>
+                  3 relances au plus par absence (J+7, J+21, J+45 ; J+21 et J+45 de novembre à février). Retour = visite dans les 7 jours qui suivent la relance. Depuis le 27/09/2026.
+                </div>
+              </div>
+            )}
             {users?.bob && (
               <div style={card()}>
                 <div style={cardTitle}><span>🤖 Bob — 30 j</span><span style={{ fontSize:11, color:"#81c784" }}>{users.bob.utilisateurs} utilisateur{users.bob.utilisateurs > 1 ? "s" : ""}</span></div>
