@@ -142,7 +142,8 @@ si une fonction n'existe pas, dis simplement que ce n'est pas encore possible) :
 - Parcours guidés « Création de gazon » et « Regarnissage » : fenêtre de semis selon la température du sol, étapes
   et arrosages jour par jour.
 - Notifications (ou emails) de conseils, jusqu'à 2 par jour ; alertes gel et canicule.
-- Onglet « Produits » : produits recommandés ; onglet « Classement » : GreenPoints et ligues.
+- Onglet « Produits » : produits recommandés, et suivi des dépenses de l'année (achats notés par l'utilisateur,
+  comparés à son budget, remis à zéro le 1er janvier) ; onglet « Classement » : GreenPoints et ligues.
 - Arrosage calculé au millimètre selon l'évaporation et la pluie (Premium).
 - Rubrique « Conseils gazon » sur mongazon360.fr/conseils : 18 guides saison par saison.
 L'app ne permet PAS de planifier des actions futures, de piloter un programmateur ou un robot, ni de commander

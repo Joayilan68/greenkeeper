@@ -1,7 +1,8 @@
 // api/bobContext.cjs
 // Dossier de l'utilisateur lu par Bob avant de répondre (api/ai-assistant.js), construit côté serveur :
-// profil et équipement, dernières actions, dernier diagnostic photo, parcours en cours, météo des 5 jours
-// (température du sol et évaporation pour Premium). Texte compact pour limiter les jetons.
+// profil, équipement et dépenses gazon de l'année, dernières actions, dernier diagnostic photo, parcours
+// en cours, météo des 5 jours (température du sol et évaporation pour Premium). Texte compact pour limiter
+// les jetons.
 
 const { currentPhase } = require("./parcoursEngine.cjs");
 
@@ -51,6 +52,12 @@ async function buildBobContext(supabase, { userId, premium, clientProfile = {}, 
   l.push(`Ville : ${p.ville || "?"} · objectif : ${lisible(p.objectif) || "?"} · usages : ${lisible(p.usages) || "?"}`);
   const GAMME = { "0-50": "eco", inconnu: "eco", "50-150": "standard", "150-300": "qualite", "300-600": "premium", "600+": "premium" };
   if (p.budget) l.push(`Budget entretien annuel : ${p.budget === "inconnu" ? "non précisé" : p.budget + " €"} (gamme de produits conseillée : ${GAMME[p.budget] || "standard"})`);
+  const annee = today.slice(0, 4);
+  const achats = (Array.isArray(p.achats) ? p.achats : []).filter(a => a.date?.startsWith(annee));
+  if (achats.length) {
+    const total = Math.round(achats.reduce((t, a) => t + (Number(a.prix) || 0), 0));
+    l.push(`Dépenses gazon notées dans l'app en ${annee} : ${total} € (${achats.slice(-5).map(a => a.label).join(", ")})`);
+  }
   l.push(`Équipement : tondeuse ${lisible(p.tondeuse) || "?"} · arrosage ${lisible(p.arrosage) || "?"} · matériel ${lisible(p.materiel) || "?"}`);
 
   l.push(hist?.length
