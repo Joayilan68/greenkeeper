@@ -1,5 +1,6 @@
 // src/components/AIAssistant.jsx
-// Bouton flottant + modal chat IA — Premium & Admin uniquement
+// Bouton flottant + modal chat IA — tous les comptes connectés.
+// Quota vérifié côté serveur (api/ai-assistant.js) : Premium 20 questions/jour, gratuit 3/mois.
 // ════════════════════════════════════════════════════════════════════════════
 // Conforme à l'exigence avocat (Cabinet Victoris) :
 //   Mention 3 — Bandeau permanent indiquant que Bob est une IA, peut contenir
@@ -7,21 +8,24 @@
 // ════════════════════════════════════════════════════════════════════════════
 
 import { useState, useRef, useEffect } from "react";
-import { useAuth } from "@clerk/clerk-react";
+import { useAuth, useUser } from "@clerk/clerk-react";
+import { useNavigate } from "react-router-dom";
+import { isAndroidTWA } from "../lib/platform";
 import { useProfile } from "../lib/useProfile";
 import { useWeather } from "../lib/useWeather";
 import { useSubscription } from "../lib/useSubscription";
 import { calcLawnScore } from "../lib/lawnScore";
 import { useHistory } from "../lib/useHistory";
 
-const SUGGESTIONS = [
-  "Quand faut-il tondre en mars ?",
-  "Comment éliminer la mousse ?",
-  "Mon gazon jaunit, pourquoi ?",
-  "Quel engrais choisir ce mois ?",
-  "Comment aérer mon sol argileux ?",
-  "Fréquence d'arrosage idéale ?",
-];
+// Questions suggérées selon la saison
+const SUGGESTIONS = {
+  printemps: ["Quand faire ma première tonte ?", "Faut-il scarifier ce printemps ?", "Quel engrais de printemps choisir ?", "Comment regarnir les trous de l'hiver ?"],
+  ete:       ["Combien arroser par forte chaleur ?", "Mon gazon jaunit, pourquoi ?", "À quelle hauteur tondre en été ?", "Faut-il arroser un gazon en dormance ?"],
+  automne:   ["Quand regarnir mon gazon ?", "Comment éliminer la mousse ?", "Quel engrais d'automne choisir ?", "Faut-il ramasser les feuilles mortes ?"],
+  hiver:     ["Comment préparer mon gazon pour l'hiver ?", "Peut-on marcher sur un gazon gelé ?", "Faut-il chauler ma pelouse ?", "Comment hiverner ma tondeuse ?"],
+};
+const saison = (m) => m >= 3 && m <= 5 ? "printemps" : m >= 6 && m <= 8 ? "ete" : m >= 9 && m <= 11 ? "automne" : "hiver";
+const HISTORY_MAX = 20; // messages gardés sur l'appareil
 
 // ── Message d'accueil avec mention IA obligatoire ──────────────────────────
 const WELCOME_MESSAGE = {
@@ -42,6 +46,8 @@ function TypingIndicator() {
 
 export default function AIAssistant() {
   const { getToken }       = useAuth();
+  const { user }           = useUser();
+  const navigate           = useNavigate();
   const { profile }        = useProfile();
   const { weather }        = useWeather() || {};
   const { history = [] }   = useHistory();
@@ -50,7 +56,37 @@ export default function AIAssistant() {
   const [open, setOpen]         = useState(false);
   const [input, setInput]       = useState("");
   const [loading, setLoading]   = useState(false);
+  const storeKey = user?.id ? `mg360_bob_${user.id}` : null;
   const [messages, setMessages] = useState([WELCOME_MESSAGE]);
+  const [quota, setQuota]       = useState(null); // { remaining, limit, period } | { unlimited }
+
+  // Conversation gardée sur l'appareil (par compte)
+  useEffect(() => {
+    if (!storeKey) return;
+    try { const saved = JSON.parse(localStorage.getItem(storeKey)); if (Array.isArray(saved) && saved.length) setMessages([WELCOME_MESSAGE, ...saved]); }
+    catch { /* stockage indisponible */ }
+  }, [storeKey]);
+  useEffect(() => {
+    if (!storeKey) return;
+    try { localStorage.setItem(storeKey, JSON.stringify(messages.slice(1).slice(-HISTORY_MAX))); }
+    catch { /* stockage indisponible */ }
+  }, [messages, storeKey]);
+
+  // Solde de questions, relu à chaque ouverture
+  useEffect(() => {
+    if (!open) return;
+    (async () => {
+      try {
+        const token = await getToken();
+        const res = await fetch("/api/ai-assistant", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ action: "quota" }),
+        });
+        if (res.ok) setQuota(await res.json());
+      } catch { /* affichage du solde non bloquant */ }
+    })();
+  }, [open]); // eslint-disable-line
 
   const bottomRef = useRef();
   const inputRef  = useRef();
@@ -70,11 +106,11 @@ export default function AIAssistant() {
     bottomRef.current?.scrollIntoView({ behavior:"smooth" });
   }, [messages, loading]);
 
-  if (!isPaid && !isAdmin) return null;
+  const epuise = quota && !quota.unlimited && quota.remaining <= 0;
 
   const sendMessage = async (text) => {
     const userText = (text || input).trim();
-    if (!userText || loading) return;
+    if (!userText || loading || epuise) return;
     setInput("");
 
     const newMessages = [...messages, { role:"user", content:userText }];
@@ -90,7 +126,7 @@ export default function AIAssistant() {
           ...(token ? { "Authorization": `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
-          messages: newMessages.map(m => ({ role:m.role, content:m.content })),
+          messages: newMessages.slice(1).slice(-10).map(m => ({ role:m.role, content:m.content })),
           profile:  profile || {},
           weather:  weather || {},
           score,
@@ -98,6 +134,7 @@ export default function AIAssistant() {
         })
       });
       const data = await res.json();
+      if (typeof data.remaining === "number") setQuota({ remaining: data.remaining, limit: data.limit, period: data.period });
       const fallback = res.status === 429
         ? (data.error || "Limite journalière atteinte. Revenez demain !")
         : "Désolé, une erreur est survenue.";
@@ -161,6 +198,7 @@ export default function AIAssistant() {
                 <div style={{ fontSize:10, color:"#81c784" }}>
                   Assistant gazon IA · Score : {score}/100
                   {isAdmin && " · 👑 Admin"}
+                  {quota && !quota.unlimited && ` · ${quota.remaining}/${quota.limit} question${quota.limit > 1 ? "s" : ""} ${quota.period === "day" ? "aujourd'hui" : "ce mois-ci"}`}
                 </div>
               </div>
             </div>
@@ -198,7 +236,7 @@ export default function AIAssistant() {
               <div style={{ marginBottom:8 }}>
                 <div style={{ fontSize:10, color:"#4a7c5c", marginBottom:8, fontWeight:700, letterSpacing:1 }}>QUESTIONS FRÉQUENTES</div>
                 <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
-                  {SUGGESTIONS.map(s => (
+                  {SUGGESTIONS[saison(month)].map(s => (
                     <button key={s} onClick={() => sendMessage(s)} style={{ background:"rgba(67,160,71,0.12)", border:"1px solid rgba(67,160,71,0.3)", borderRadius:20, padding:"5px 10px", color:"#a5d6a7", fontSize:11, cursor:"pointer" }}>
                       {s}
                     </button>
@@ -234,6 +272,16 @@ export default function AIAssistant() {
             <div ref={bottomRef} />
           </div>
 
+          {/* Questions épuisées */}
+          {epuise && (
+            <div style={{ padding:"10px 14px", borderTop:"1px solid rgba(255,255,255,0.08)", fontSize:12, color:"#ffe082", lineHeight:1.5, flexShrink:0 }}>
+              {quota.period === "day"
+                ? "Tu as posé toutes tes questions du jour. Bob te retrouve demain ! 🌿"
+                : <>Tes {quota.limit} questions gratuites du mois sont utilisées. Elles reviennent le 1er du mois.
+                    {!isPaid && !isAndroidTWA() && <> <span onClick={() => { setOpen(false); navigate("/subscribe"); }} style={{ color:"#a5d6a7", textDecoration:"underline", cursor:"pointer", fontWeight:700 }}>Passe Premium</span> pour 20 questions par jour.</>}</>}
+            </div>
+          )}
+
           {/* Input */}
           <div style={{ padding:"10px 12px", borderTop:"1px solid rgba(255,255,255,0.08)", display:"flex", gap:8, flexShrink:0 }}>
             <input
@@ -243,7 +291,7 @@ export default function AIAssistant() {
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendMessage()}
-              disabled={loading}
+              disabled={loading || epuise}
               style={{
                 flex:1, background:"rgba(255,255,255,0.08)",
                 border:"1px solid rgba(165,214,167,0.25)",
