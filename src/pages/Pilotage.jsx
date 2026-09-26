@@ -513,7 +513,7 @@ export default function Pilotage() {
                 <div style={cardTitle}><span>🌐 Visiteurs du site — 30 j</span><span style={{ fontSize:11, color:"#81c784" }}>{users.siteVisits.total30} sur 30 j</span></div>
                 <MiniChart data={users.siteVisits.byDay} valueKey="count" color="#4FC3F7" />
                 <div style={{ fontSize:10, color:"#4a7c5c", marginTop:6, lineHeight:1.5 }}>
-                  Visiteurs non connectés, toutes pages confondues (accueil, essai, démo, mentions…), 1 par appareil/jour. Les connectés sont dans « Actifs ».
+                  Visiteurs non connectés, toutes pages confondues (accueil, essai, démo, mentions…), 1 par appareil/jour. Les connectés sont dans « Actifs ». Robots (Google…) exclus depuis le 26/09/2026 au soir.
                 </div>
               </div>
             )}

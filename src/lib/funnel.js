@@ -15,7 +15,10 @@
 // ne sont pas dédupliqués (ce sont des actions volontaires).
 // ────────────────────────────────────────────────────────────────────────────
 
+import { isRobot } from "./platform";
+
 export function trackFunnel(step, meta) {
+  if (isRobot()) return; // robots d'indexation : pas des prospects
   try {
     import("./supabase").then(({ supabase }) => {
       supabase.from("funnel_events")

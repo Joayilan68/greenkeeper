@@ -29,7 +29,7 @@ import { useSubscription } from "./lib/useSubscription"; // ✅ statut Premium �
 import { useUTMCapture, getCapturedUTM } from "./lib/useUTMCapture"; // ✅ Bloc 1 — capture UTM dès l'arrivée
 import { useUTMInjection } from "./lib/useUTMInjection"; // ✅ Bloc 1 — injection Clerk metadata first-touch
 import { trackFunnel }     from "./lib/funnel";          // ✅ suivi d'entonnoir (conversion)
-import { deviceInfo }      from "./lib/platform";
+import { deviceInfo, isRobot } from "./lib/platform";
 import { usePageMeta }     from "./lib/usePageMeta";      // titre / description / canonique par page
 import { isAnonPending, getAnonIdIfAny, setAnonPending } from "./lib/anonId"; // ✅ rattachement diagnostic anonyme
 import CookieBanner        from "./components/CookieBanner"; // ✅ consentement cookies (RGPD)
@@ -62,6 +62,7 @@ async function pingPresence(userId) {
 // plafond des 12 fonctions Vercel). Garde localStorage = 1 visite/jour/appareil.
 // Compte TOUS les visiteurs, y compris non connectés (landing) → vraie "visite".
 function pingVisit() {
+  if (isRobot()) return;
   try {
     const today = new Date().toLocaleDateString("fr-CA"); // YYYY-MM-DD
     const key   = `mg360_visit_${today}`;

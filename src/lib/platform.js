@@ -59,3 +59,12 @@ export function deviceInfo() {
   const os = isIOS() ? "ios" : /Android/i.test(navigator.userAgent || "") ? "android" : "ordinateur";
   return { os, installed: isStandalone() };
 }
+
+// Robots (moteurs de recherche, outils de test Google/Search Console, navigateurs automatisés) :
+// ils exécutent les pages mais ne doivent pas compter dans les visites ni l'entonnoir.
+// Même expression dans scripts/conseils-template.mjs (pages Conseils).
+export const ROBOT_UA = /bot\/|bot;|\+http|crawl|spider|slurp|google-inspectiontool|google-read-aloud|mediapartners|lighthouse|pagespeed|headless|preview|facebookexternalhit|bingpreview/i;
+export function isRobot() {
+  if (typeof navigator === "undefined") return true;
+  return navigator.webdriver === true || ROBOT_UA.test(navigator.userAgent || "");
+}

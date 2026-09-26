@@ -1,5 +1,6 @@
 // scripts/conseils-template.mjs — gabarit HTML statique de la rubrique « Conseils gazon »
 // (pages complètes sans JavaScript : lisibles par Google et par les aperçus de partage).
+import { ROBOT_UA } from "../src/lib/platform.js";
 const SITE = "https://mongazon360.fr";
 export const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 
@@ -31,7 +32,7 @@ const essai = (campagne) => `/essai?utm_source=conseils&amp;utm_medium=article&a
 // 1. origine du visiteur conservée jusqu'à l'inscription : même clé sessionStorage que useUTMCapture
 //    (utm_source, sinon site d'origine ; campagne = utm_campaign, sinon l'article) ;
 // 2. visite comptée dans site_visits (1 par appareil et par jour, clé partagée avec l'app, comptes
-//    connectés exclus) si l'URL et la clé publique Supabase sont fournies au build.
+//    connectés et robots exclus) si l'URL et la clé publique Supabase sont fournies au build.
 const SUPABASE_URL  = process.env.VITE_SUPABASE_URL || "";
 const SUPABASE_ANON = process.env.VITE_SUPABASE_ANON_KEY || "";
 if (!SUPABASE_URL || !SUPABASE_ANON) console.warn("[seo] Supabase non configuré : visites des pages Conseils non comptées");
@@ -43,7 +44,7 @@ if(ref&&!/mongazon360\\./i.test(ref)){src="autre";for(var i=0;i<m.length;i++)if(
 var cap=null;try{cap=JSON.parse(sessionStorage.getItem(K));}catch(e){}
 if(!cap){cap={source:src,medium:p.get("utm_medium")||"conseils",campaign:p.get("utm_campaign")||"${campagne}",referer:ref,landingPath:location.pathname+location.search,capturedAt:new Date().toISOString()};sessionStorage.setItem(K,JSON.stringify(cap));}
 var U="${SUPABASE_URL}",A="${SUPABASE_ANON}",d=new Date().toLocaleDateString("fr-CA"),V="mg360_visit_"+d;
-if(!U||!A||localStorage.getItem(V)||/__client_uat=[1-9]/.test(document.cookie))return;
+if(!U||!A||localStorage.getItem(V)||/__client_uat=[1-9]/.test(document.cookie)||navigator.webdriver||${ROBOT_UA}.test(navigator.userAgent))return;
 localStorage.setItem(V,"1");
 var ua=navigator.userAgent||"",ios=/iPhone|iPad|iPod/i.test(ua)||(/Macintosh/i.test(ua)&&navigator.maxTouchPoints>1);
 fetch(U+"/rest/v1/site_visits",{method:"POST",headers:{apikey:A,Authorization:"Bearer "+A,"Content-Type":"application/json",Prefer:"return=minimal"},
