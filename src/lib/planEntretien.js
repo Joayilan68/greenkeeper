@@ -74,32 +74,7 @@ const isGazonRustique = (p) => p?.pelouse === "rustique" ||
   (Array.isArray(p?.gazons) && p.gazons.includes("rustique"));
 
 // ── Helpers objectif profil ───────────────────────────────────────────────────
-const isObjectifCreer   = (p) => p?.objectif === "creer";
-const isObjectifRenover = (p) => p?.objectif === "renover";
 const isObjectifNaturel = (p) => p?.objectif === "naturel";
-
-// ── Jours depuis début de programme Rénover/Créer ────────────────────────────
-// Stocké dans profiles.data.date_debut_programme (ISO string)
-// Retourne null si pas de programme actif
-export function joursProgramme(profile) {
-  const debut = profile?.date_debut_programme;
-  if (!debut) return null;
-  try {
-    const d = new Date(debut);
-    if (isNaN(d.getTime())) return null;
-    const now = new Date(); now.setHours(0,0,0,0);
-    return Math.floor((now - d) / 86400000);
-  } catch { return null; }
-}
-
-// Vérifie si on est dans la fenêtre de restriction du programme
-// ex: estDansProgramme(profile, 60) → true si J0-J60
-export function estDansProgramme(profile, maxJours) {
-  if (!isObjectifCreer(profile) && !isObjectifRenover(profile)) return false;
-  const j = joursProgramme(profile);
-  if (j === null) return false; // pas de date_debut = on ne bloque pas
-  return j <= maxJours;
-}
 
 // ── Helpers historique ────────────────────────────────────────────────────────
 export function daysSince(history, keywords) {
@@ -140,8 +115,6 @@ export const ACTIONS_PLAN = [
     // Intervalle : printemps=5j, été=4j, automne=7j
     getInterval: (month) => month >= 6 && month <= 8 ? 4 : month >= 3 && month <= 5 ? 5 : 7,
     getBlocked: (w, profile) => {
-      if (isObjectifCreer(profile) && estDansProgramme(profile, 30))
-        return { blocked: true, raison: "Création J0-J30 : attendre 8-10cm avant première tonte" };
       if (pluiePrevue(w, 5)) return { blocked: true, raison: "Pluie prévue (>5mm) — gazon glissant, risque fongique" };
       if (ventFort(w))       return { blocked: true, raison: "Vents forts (≥40km/h) — reporter" };
       if (w?.temp_min !== undefined && w.temp_min <= 0) return { blocked: true, raison: "Gel — ne pas tondre le gazon gelé" };
@@ -177,13 +150,6 @@ export const ACTIONS_PLAN = [
       if (w?.precip >= 10) return { blocked: true, raison: "Forte pluie — arrosage inutile aujourd'hui" };
       if (w?.precip >= 8)  return { blocked: true, raison: `Pluie ${w.precip}mm ≥ 8mm — arrosage inutile aujourd'hui` };
       return { blocked: false };
-    },
-    // Arrosage quotidien J0-J60 pour Créer (géré dans detail et Today.jsx)
-    getArrosageMode: (profile) => {
-      if (isObjectifCreer(profile) && estDansProgramme(profile, 60)) return "quotidien";
-      if (isObjectifCreer(profile) && estDansProgramme(profile, 90)) return "intensif"; // J61-J90
-      if (isObjectifRenover(profile) && estDansProgramme(profile, 30)) return "intensif"; // J0-J30
-      return "standard";
     },
     keywords:      ["arrosage"],
     detail:        (plan, arros, profile, month, zone) => {
@@ -235,10 +201,6 @@ export const ACTIONS_PLAN = [
     getInterval: () => 45,
     getBlocked: (w, profile) => {
       if (isObjectifNaturel(profile)) return { blocked: true, raison: "Objectif Naturel — utilisez un engrais organique d'été (algues marines, acides humiques)", alternative: "organique" };
-      if (isObjectifCreer(profile) && estDansProgramme(profile, 60))
-        return { blocked: true, raison: `Création J0-J60 : engrais été bloqué (gazon en germination)` };
-      if (isObjectifRenover(profile) && estDansProgramme(profile, 60))
-        return { blocked: true, raison: `Rénovation J0-J60 : engrais été bloqué` };
       if (solDetrempé(w)) return { blocked: true, raison: "Sol détrempé (>15mm) — lessivage immédiat" };
       return { blocked: false };
     },
@@ -329,8 +291,6 @@ export const ACTIONS_PLAN = [
     },
     getInterval: () => 90,
     getBlocked: (w, profile) => {
-      if (isObjectifCreer(profile) && estDansProgramme(profile, 90))
-        return { blocked: true, raison: "Création J0-J90 : gazon pas encore établi" };
       if (solDetrempé(w)) return { blocked: true, raison: "Sol détrempé — attendre que ça sèche" };
       return { blocked: false };
     },
@@ -360,8 +320,6 @@ export const ACTIONS_PLAN = [
     },
     getInterval: () => 180,
     getBlocked: (w, profile) => {
-      if (isObjectifCreer(profile) && estDansProgramme(profile, 90))
-        return { blocked: true, raison: "Création J0-J90 : gazon pas encore établi" };
       if (pluiePrevue(w, 3)) return { blocked: true, raison: "Pluie prévue — reporter" };
       if (tropFroid(w, 10))  return { blocked: true, raison: "Trop froid (<10°C)" };
       return { blocked: false };
@@ -384,19 +342,12 @@ export const ACTIONS_PLAN = [
     gp:    "desherbage",
     getMois: (zone, sol, isSynth, profile) => {
       if (isGazonRustique(profile)) return []; // Rustique : trèfle protégé — toujours bloqué
-      // Naturel + Créer + Rénover : toujours inclus dans les mois (blocage géré dans getBlocked)
       return [4, 5, 6, 7, 8, 9, 10];
     },
     getInterval: () => 14,
-    // Désherbage MANUEL pour tous (désherbants chimiques interdits aux particuliers depuis 2019) :
-    // seul un gazon trop jeune bloque (piétinement des semis)
-    getBlocked: (w, profile) => {
-      if (isObjectifCreer(profile) && estDansProgramme(profile, 45))
-        return { blocked: true, raison: `Création J0-J45 : gazon trop jeune, attendre avant d'arracher` };
-      if (isObjectifRenover(profile) && estDansProgramme(profile, 30))
-        return { blocked: true, raison: `Rénovation J0-J30 : gazon trop jeune, attendre avant d'arracher` };
-      return { blocked: false, isManuel: true };
-    },
+    // Désherbage MANUEL pour tous (désherbants chimiques interdits aux particuliers depuis 2019) ;
+    // un semis récent est protégé par le parcours (Today.jsx)
+    getBlocked: () => ({ blocked: false, isManuel: true }),
     keywords:     ["desherb", "désherb"],
     detail:       () => "Désherbage manuel · arracher pissenlits et plantains avec leur racine, sol souple après une pluie, puis regarnir les trous",
     needsProduct: true,
@@ -417,8 +368,6 @@ export const ACTIONS_PLAN = [
     },
     getInterval: () => 30,
     getBlocked: (w, profile) => {
-      if (isObjectifCreer(profile) && estDansProgramme(profile, 60))
-        return { blocked: true, raison: "Création J0-J60 : gazon trop jeune" };
       return { blocked: false };
     },
     conditionActive: (profile, score, weather, zone) => {
@@ -481,10 +430,7 @@ export const ACTIONS_PLAN = [
     id:    "regarnissage",
     label: "Regarnissage 🌾",
     gp:    "semences",
-    getMois: (zone, sol, isSynth, profile) => {
-      if (isObjectifCreer(profile)) return [3,4,5,6,8,9]; // Juin OK si conditions strictes
-      return [3, 4, 5, 8, 9];
-    },
+    getMois: () => [3, 4, 5, 8, 9],
     getInterval: () => 60,
     getBlocked: (w, profile, zone, score) => {
       if ((w?.temp_max || 0) > 28) return { blocked: true, raison: "Trop chaud (>28°C) — germination compromise" };
@@ -525,7 +471,6 @@ export function buildActions(profile, weather, history, score, month, arros) {
   const zone    = zoneClimatique(profile);
   const plan    = MONTHLY_PLAN[month];
   const sc      = score ?? 70;
-  const jProg   = joursProgramme(profile); // null si pas de programme actif
 
   const statuts = ACTIONS_PLAN.map(action => {
     const mois     = action.getMois(zone, sol, false, profile); // isSynth toujours false — gazon synthétique supprimé
@@ -621,7 +566,6 @@ export function buildActions(profile, weather, history, score, month, arros) {
       ...base,
       status: "recommended",
       daysLeft: null,
-      joursProgramme: jProg,
       isManuel: blockResult.isManuel || false,
     };
   });

@@ -7,7 +7,7 @@ import { useHistory } from "../lib/useHistory";
 import { useAuth } from "@clerk/clerk-react";
 import { useSubscription } from "../lib/useSubscription";
 import { MONTHLY_PLAN, MONTHS_FR, calcArrosage, calcArrosageSemis, getWMO, getDebitMmH } from "../lib/lawn";
-import { buildActions, zoneClimatique, ZONE_LABELS, joursProgramme } from "../lib/planEntretien";
+import { buildActions, zoneClimatique, ZONE_LABELS } from "../lib/planEntretien";
 import { calcLawnScore } from "../lib/lawnScore";
 import AlertBanner from "../components/AlertBanner";
 import ProductCard from "../components/ProductCard";
@@ -293,8 +293,6 @@ export default function Today() {
     return a;
   });
 
-  const jProg = joursProgramme(profile); // null si pas de programme actif
-  const isProgramme = profile?.objectif === "creer" || profile?.objectif === "renover";
   const recommended = actionStatuses.filter(a => a?.status === "recommended");
   const prevoyez    = actionStatuses
     .filter(a =>
@@ -335,8 +333,6 @@ export default function Today() {
     const isSport   = profile?.pelouse === "sport" ||
       (Array.isArray(profile?.gazons) && profile.gazons.includes("sport"));
     const isNaturel = profile?.objectif === "naturel";
-    const isCreer   = profile?.objectif === "creer";
-    const isRenover = profile?.objectif === "renover";
     const zoneLabel = ZONE_LABELS[zone] || zone;
 
     // Règles KB v3 à injecter dans le prompt selon le profil
@@ -347,8 +343,6 @@ export default function Today() {
       isRustiq  ? "GAZON RUSTIQUE : tonte haute 7-10cm. Ne jamais couper ras. Pas de désherbant (trèfle protégé). Engrais minimal organique uniquement." : null,
       isSport   ? "GAZON SPORT : tonte 3-4cm, jamais <2.5cm. Engrais azoté fréquent. Arrosage intensif 25-30mm/sem. Très sensible Helminthosporiose par chaleur." : null,
       isNaturel ? "OBJECTIF NATUREL : pas d'engrais NPK chimique (→ bio : farine de corne, guano, compost). Pas de désherbant chimique (→ manuel). Pas de fongicide chimique (→ soufre, bicarbonate)." : null,
-      isCreer   ? "OBJECTIF CRÉATION : arrosage quotidien obligatoire J0-J60. Pas d'engrais standard avant J30. Pas de désherbant avant J45. Pas de scarification avant J90." : null,
-      isRenover ? "OBJECTIF RÉNOVATION : scarification profonde → aération → semences + starter → arrosage intensif 30j. Pas d'engrais été avant J60." : null,
       profile?.sol === "argileux" ? "SOL ARGILEUX : arrosage fractionné 2 passages (8-12mm total). Aération prioritaire. Risque compaction élevé." : null,
       profile?.sol === "sableux"  ? "SOL SABLEUX : arrosage 15-20mm tous les 2-3j. Dessèchement rapide. Attention canicule." : null,
       profile?.sol === "calcaire" ? "SOL CALCAIRE : pas d'engrais acides. Engrais chélatés uniquement. Risque chlorose (carence fer)." : null,
@@ -693,31 +687,6 @@ export default function Today() {
             </div>
           )}
 
-          {/* ── BANNIÈRE PROGRAMME RÉNOVER/CRÉER (ancien système — dormant) ─── */}
-          {isProgramme && jProg !== null && (
-            <div style={{ background: profile?.objectif === "creer" ? "rgba(103,58,183,0.15)" : "rgba(25,118,210,0.15)", border: `1px solid ${profile?.objectif === "creer" ? "rgba(149,117,205,0.4)" : "rgba(100,181,246,0.4)"}`, borderRadius:12, padding:"12px 14px", marginBottom:14 }}>
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-                <div>
-                  <div style={{ fontSize:13, fontWeight:800, color: profile?.objectif === "creer" ? "#ce93d8" : "#90caf9" }}>
-                    {profile?.objectif === "creer" ? "🌱 Programme Création" : "🔧 Programme Rénovation"}
-                  </div>
-                  <div style={{ fontSize:11, color:"#a5d6a7", marginTop:2 }}>
-                    {profile?.objectif === "creer"
-                      ? jProg <= 60 ? `J${jProg} · Arrosage quotidien requis · encore ${60 - jProg}j` : jProg <= 90 ? `J${jProg} · Phase de consolidation` : `J${jProg} · Programme terminé 🎉`
-                      : jProg <= 60 ? `J${jProg} · Phase intensive · encore ${60 - jProg}j` : `J${jProg} · Phase de stabilisation`
-                    }
-                  </div>
-                </div>
-                <div style={{ fontSize:22, fontWeight:900, color: profile?.objectif === "creer" ? "rgba(149,117,205,0.7)" : "rgba(100,181,246,0.7)" }}>
-                  J{jProg}
-                </div>
-              </div>
-              <div style={{ marginTop:8, background:"rgba(255,255,255,0.08)", borderRadius:6, height:4 }}>
-                <div style={{ height:"100%", borderRadius:6, background: profile?.objectif === "creer" ? "linear-gradient(90deg,#7b1fa2,#ce93d8)" : "linear-gradient(90deg,#1565c0,#90caf9)", width:`${Math.min(100, Math.round((jProg / (profile?.objectif === "creer" ? 90 : 180)) * 100))}%`, transition:"width 0.5s" }} />
-              </div>
-            </div>
-          )}
-
           {/* À FAIRE AUJOURD'HUI */}
           {recommended.length > 0 ? (
             <div style={{ marginBottom:16 }}>
@@ -777,24 +746,16 @@ export default function Today() {
               <div style={{ fontSize:10, fontWeight:800, color:"#a5d6a7", letterSpacing:1, marginBottom:8 }}>
                 PRÉVOIR
               </div>
-              {prevoyez.map(({ action, status, daysLeft, blockedReason, exclusiveWith, alternative }) => {
-                const isNaturelAlt      = alternative === "manuel";
-                const isProgrammeBloque = isProgramme && blockedReason?.includes("J0-J");
-                const amazonKey         = ACTION_TO_AMAZON[action.id];
+              {prevoyez.map(({ action, status, daysLeft, blockedReason }) => {
+                const amazonKey  = ACTION_TO_AMAZON[action.id];
                 const badgeStyle = status === "done_today"
                   ? { color:"#4ade80", bg:"rgba(74,222,128,0.15)", border:"rgba(74,222,128,0.3)" }
                   : status === "too_soon"
                   ? { color:"#fbbf24", bg:"rgba(251,191,36,0.15)", border:"rgba(251,191,36,0.3)" }
-                  : isNaturelAlt
-                  ? { color:"#a5d6a7", bg:"rgba(76,175,80,0.12)", border:"rgba(76,175,80,0.3)" }
-                  : isProgrammeBloque
-                  ? { color:"#90caf9", bg:"rgba(33,150,243,0.12)", border:"rgba(33,150,243,0.3)" }
                   : { color:"#f87171", bg:"rgba(248,113,113,0.15)", border:"rgba(248,113,113,0.3)" };
                 const badgeText =
                   status === "done_today" ? "✓ Fait aujourd'hui" :
                   status === "too_soon"   ? `Dans ${daysLeft}j` :
-                  status === "blocked" && isNaturelAlt ? "🌿 Manuel" :
-                  status === "blocked" && isProgrammeBloque ? `📅 J${jProg}` :
                   status === "blocked"   ? `⛔ ${blockedReason?.split(" — ")[0] || "Bloqué"}` :
                   `⚠️ Excl. ${daysLeft}j`;
                 return (
@@ -806,18 +767,6 @@ export default function Today() {
                         {badgeText}
                       </div>
                     </div>
-                    {/* Message alternatif Naturel */}
-                    {isNaturelAlt && (
-                      <div style={{ fontSize:11, color:"#a5d6a7", fontStyle:"italic" }}>
-                        🌿 Désherbage chimique bloqué — arrachez manuellement ou utilisez un outil à désherber
-                      </div>
-                    )}
-                    {/* Contexte programme Rénover/Créer */}
-                    {isProgrammeBloque && (
-                      <div style={{ fontSize:11, color:"#90caf9", fontStyle:"italic" }}>
-                        📅 Programme {profile?.objectif === "creer" ? "Création" : "Rénovation"} — J{jProg} · {blockedReason?.split(" : ")[1] || blockedReason}
-                      </div>
-                    )}
                     {/* ── Bouton Amazon inline si l'action a un produit ── */}
                     {amazonKey && profile && status !== "done_today" && (
                       <ProductCard actionKey={amazonKey} profile={profile} compact />
