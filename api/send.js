@@ -774,6 +774,64 @@ module.exports = async function handler(req, res) {
         } catch (e) { await require("./alerting.cjs").reportServerError("Tâche planifiée — emails offre saisonnière", e); }
       }
 
+      // ── BOB : 3 QUESTIONS GRATUITES ÉPUISÉES → OFFRE PREMIUM — créneau MATIN ──
+      // Comptes gratuits ayant posé leurs 3 questions du mois (rate_limits « bob_free »),
+      // consentement offres (marketing) requis ; 1 email par mois au plus, marqué dans Clerk
+      // (private_metadata.relanceBob = AAAA-MM) ; 15 par jour au plus (quota Resend).
+      let relancesBob = 0;
+      if (slot === "matin") {
+        try {
+          const { OFFRE, offreEnCours } = require("./offreSaison.cjs");
+          const mois = today.slice(0, 7);
+          const { data: questions, error } = await supabase.from("rate_limits").select("user_id")
+            .eq("endpoint", "bob_free").gte("window_start", `${mois}-01`).limit(10000);
+          if (error) throw new Error(error.message);
+          const parCompte = {};
+          for (const q of questions || []) parCompte[q.user_id] = (parCompte[q.user_id] || 0) + 1;
+          const auMax = new Set(Object.keys(parCompte).filter(id => parCompte[id] >= 3));
+          const offre = offreEnCours();
+          const euros = (n) => `${String(n).replace(".", ",")} €`;
+          const moisSuivant = new Date(Date.UTC(+mois.slice(0, 4), +mois.slice(5, 7), 1))
+            .toLocaleDateString("fr-FR", { month: "long", timeZone: "UTC" });
+
+          for (const u of auMax.size ? await getClerkUsers() : []) {
+            if (relancesBob >= 15) break;
+            if (!auMax.has(u.id) || relancesDuJour.has(u.id) || !consentMap[u.id]?.marketing) continue;
+            const pm = u.public_metadata || {};
+            if (pm.isSubscribed === true || pm.subscriptionStatus === "active" || pm.subscriptionStatus === "trialing" || clerkGuestActive(pm)) continue;
+            if ((u.private_metadata || {}).relanceBob === mois) continue;
+            const email = primaryEmail(u);
+            if (!email) continue;
+
+            const r = await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
+              body: JSON.stringify({
+                from: "Bob de Mongazon360 <bonjour@mongazon360.fr>", to: [email],
+                subject: "🤖 Tu as posé tes 3 questions à Bob ce mois-ci",
+                headers: { "List-Unsubscribe": "<https://mongazon360.fr/parametres>" },
+                html: buildOffreEmailHtml(u.first_name || "jardinier", "Bob a encore plein de conseils pour toi 🌿", [
+                  `Tu as utilisé tes 3 questions gratuites à Bob ce mois-ci. Elles reviennent le 1er ${moisSuivant}.`,
+                  "Avec <b>Premium</b>, Bob répond à <b>20 questions par jour</b>, analyse tes photos de pelouse (diagnostic photo) et calcule l'arrosage au millimètre selon la météo de ta commune.",
+                  offre
+                    ? `Jusqu'au <b>${offre.finLabel}</b> : <b>Premium 1 an à ${euros(OFFRE.prixOffre)}</b> au lieu de ${euros(OFFRE.prixAnnuel)}, sur le site.`
+                    : `Premium : ${euros(4.99)} par mois sans engagement, ou ${euros(OFFRE.prixAnnuel)} par an.`,
+                ], offre ? `Premium 1 an à ${euros(OFFRE.prixOffre)}` : "Passer Premium"),
+              }),
+            });
+            const d = await r.json().catch(() => ({}));
+            if (!r.ok || d.error) throw new Error("Resend : " + (d.error?.message || r.status));
+            const m = await fetch(`https://api.clerk.com/v1/users/${u.id}/metadata`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}` },
+              body: JSON.stringify({ private_metadata: { relanceBob: mois } }),
+            });
+            if (!m.ok) throw new Error(`Clerk : marquage de la relance Bob refusé (HTTP ${m.status}) pour ${u.id}`);
+            relancesBob++;
+          }
+        } catch (e) { await require("./alerting.cjs").reportServerError("Tâche planifiée — relance Bob (3/3)", e); }
+      }
+
       // ── FIN DES PREMIUM OFFERTS À DATE (bêta…) — créneau MATIN ─────────────
       // Date de fin dépassée → user_access repasse en "approved" et Clerk perd
       // guestAccess/guestUntil. Les accès sans date (famille) ne sont jamais touchés.
@@ -869,8 +927,8 @@ module.exports = async function handler(req, res) {
       }
       await alerting.setStatus(`cron_${slot}`, { date: today, at: new Date().toISOString(), pushSent, emailSent, emailFallbackSent, photosPurgees });
 
-      console.log(`[CRON ${slot}] reminders:`, remindersData?.length || 0, "pushSent:", pushSent, "emailSent:", emailSent, "emailFallbackSent:", emailFallbackSent, "skipped:", skipped, "parcoursSent:", parcoursSent, "parcoursTermines:", parcoursTermines, "trialRelances:", trialRelances, "baselineSent:", baselineSent, "premiumOffertsExpires:", premiumOffertsExpires, "offreEmails:", offreEmails, "relancesPush:", relancesPush, "relancesEmail:", relancesEmail, "photosPurgees:", photosPurgees);
-      return res.json({ success: true, date: today, slot, pushSent, emailSent, emailFallbackSent, skipped, parcoursSent, parcoursTermines, trialRelances, baselineSent, premiumOffertsExpires, offreEmails, relancesPush, relancesEmail, photosPurgees, reminders: remindersData?.length || 0 });
+      console.log(`[CRON ${slot}] reminders:`, remindersData?.length || 0, "pushSent:", pushSent, "emailSent:", emailSent, "emailFallbackSent:", emailFallbackSent, "skipped:", skipped, "parcoursSent:", parcoursSent, "parcoursTermines:", parcoursTermines, "trialRelances:", trialRelances, "baselineSent:", baselineSent, "premiumOffertsExpires:", premiumOffertsExpires, "offreEmails:", offreEmails, "relancesPush:", relancesPush, "relancesEmail:", relancesEmail, "relancesBob:", relancesBob, "photosPurgees:", photosPurgees);
+      return res.json({ success: true, date: today, slot, pushSent, emailSent, emailFallbackSent, skipped, parcoursSent, parcoursTermines, trialRelances, baselineSent, premiumOffertsExpires, offreEmails, relancesPush, relancesEmail, relancesBob, photosPurgees, reminders: remindersData?.length || 0 });
     } catch (e) {
       await require("./alerting.cjs").reportServerError("Tâche planifiée en échec", e, { "Créneau": req.query.slot || "matin" });
       return res.status(500).json({ error: e.message });
