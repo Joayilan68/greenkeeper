@@ -33,6 +33,21 @@ const WELCOME_MESSAGE = {
   content: "Salut ! 🌿 Moi c'est Bob, ton assistant gazon.\n\n⚠️ Je suis une IA : mes réponses peuvent contenir des inexactitudes et ne remplacent pas l'avis d'un professionnel du jardinage.\n\nPose-moi tes questions sur ta pelouse et ton jardin !",
 };
 
+// Mise en forme légère des réponses de Bob (titres, gras, listes), sans HTML injecté
+function inline(text) {
+  return text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
+    part.startsWith("**") && part.endsWith("**") ? <strong key={i}>{part.slice(2, -2)}</strong> : part);
+}
+function BobText({ text }) {
+  return text.split("\n").map((line, i) => {
+    const titre = line.match(/^#{1,6}\s+(.*)$/);
+    if (titre) return <div key={i} style={{ fontWeight:800, color:"#a5d6a7", marginTop:i ? 6 : 0 }}>{inline(titre[1])}</div>;
+    const puce = line.match(/^\s*[-*•]\s+(.*)$/);
+    if (puce) return <div key={i} style={{ paddingLeft:14, textIndent:-10 }}>• {inline(puce[1])}</div>;
+    return line.trim() ? <div key={i}>{inline(line)}</div> : <div key={i} style={{ height:8 }} />;
+  });
+}
+
 function TypingIndicator() {
   return (
     <div style={{ display:"flex", alignItems:"center", gap:4, padding:"10px 14px", background:"rgba(255,255,255,0.06)", borderRadius:"18px 18px 18px 4px", width:"fit-content", maxWidth:80 }}>
@@ -260,9 +275,9 @@ export default function AIAssistant() {
                     : "18px 18px 18px 4px",
                   padding:"10px 14px",
                   fontSize:13, lineHeight:1.6, color:"#e8f5e9",
-                  whiteSpace:"pre-wrap",
+                  whiteSpace: m.role === "user" ? "pre-wrap" : "normal",
                 }}>
-                  {m.content}
+                  {m.role === "assistant" ? <BobText text={m.content} /> : m.content}
                 </div>
               </div>
             ))}
