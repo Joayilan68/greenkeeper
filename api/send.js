@@ -1,12 +1,12 @@
 // api/send.js
-// POST /api/send?type=alert|alert-test|notification-test|reminder|save-sub|save-reminders
+// POST /api/send?type=alert|alert-test|notification-test|notif-open|reminder|save-sub|save-reminders
 // GET  /api/send → cron quotidien 8h00 (Vercel cron)
 
 const REMINDER_LABELS = {
   tonte:     { icon:"✂️", label:"Tonte",               desc:"Fréquence de tonte recommandée" },
   arrosage:  { icon:"💧", label:"Arrosage",             desc:"Rappel d'arrosage régulier" },
   engrais:   { icon:"🌱", label:"Engrais",              desc:"Application d'engrais" },
-  fongicide: { icon:"💊", label:"Traitement fongicide", desc:"Prévention maladies fongiques" },
+  fongicide: { icon:"🦠", label:"Prévention maladies", desc:"Surveillance des maladies fongiques" },
   aeration:  { icon:"🌀", label:"Aération",             desc:"Aération du sol" },
   desherbage:{ icon:"🪴", label:"Désherbage",           desc:"Élimination des mauvaises herbes" },
 };
@@ -67,11 +67,12 @@ function buildReminderHtml(reminders, userName, profile) {
 </body></html>`;
 }
 
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+
 // Email « Conseil du jour » : relais des notifications quotidiennes pour les comptes
 // qui ont consenti aux conseils mais n'ont pas (ou plus) d'abonnement push actif.
 function buildConseilEmailHtml(prenom, title, body) {
   const year = new Date().getFullYear();
-  const esc = (v) => String(v ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
   return `<!DOCTYPE html><html><head><meta charset="utf-8"/></head>
 <body style="font-family:Arial,sans-serif;background:#f5f5f5;margin:0;padding:20px;">
 <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 20px rgba(0,0,0,0.1);">
@@ -97,10 +98,9 @@ function buildConseilEmailHtml(prenom, title, body) {
 </div></body></html>`;
 }
 
-// Email offre / fin de bêta (commercial : lien de désinscription vers les Paramètres)
-function buildOffreEmailHtml(prenom, titre, paragraphes, cta) {
+// Email offre / fin de bêta / relance (lien de désinscription vers les Paramètres)
+function buildOffreEmailHtml(prenom, titre, paragraphes, cta, url = "https://mongazon360.fr/subscribe") {
   const year = new Date().getFullYear();
-  const esc = (v) => String(v ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
   return `<!DOCTYPE html><html><head><meta charset="utf-8"/></head>
 <body style="font-family:Arial,sans-serif;background:#f5f5f5;margin:0;padding:20px;">
 <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 20px rgba(0,0,0,0.1);">
@@ -113,7 +113,7 @@ function buildOffreEmailHtml(prenom, titre, paragraphes, cta) {
     <div style="font-size:14px;color:#555;line-height:1.7;margin-bottom:8px;">Bonjour ${esc(prenom)},</div>
     ${paragraphes.map(p => `<div style="font-size:14px;color:#555;line-height:1.7;margin-bottom:8px;">${p}</div>`).join("")}
     <div style="text-align:center;margin:24px 0;">
-      <a href="https://mongazon360.fr/subscribe" style="background:#43a047;color:#fff;text-decoration:none;padding:15px 34px;border-radius:12px;font-size:15px;font-weight:800;display:inline-block;">${esc(cta)} →</a>
+      <a href="${esc(url)}" style="background:#43a047;color:#fff;text-decoration:none;padding:15px 34px;border-radius:12px;font-size:15px;font-weight:800;display:inline-block;">${esc(cta)} →</a>
     </div>
   </div>
   <div style="background:#f9fbe7;padding:14px 28px;border-top:1px solid #e8f5e9;text-align:center;">
@@ -152,28 +152,6 @@ function buildTrialEmailHtml(prenom, when) {
 </div></body></html>`;
 }
 
-// Socle quotidien : conseils gazon utiles (voix de Bob), rotation par jour
-const CONSEILS_QUOTIDIENS = [
-  { title:"✂️ Le conseil de Bob",     body:"Ne tonds jamais plus d'un tiers de la hauteur d'un coup : ton gazon reste dense et résiste mieux." },
-  { title:"💧 Astuce arrosage",       body:"Arrose tôt le matin plutôt que le soir : moins d'évaporation, moins de maladies." },
-  { title:"🌱 Bob te souffle",         body:"Une lame de tonte bien affûtée coupe net ; une lame émoussée déchire et jaunit les pointes." },
-  { title:"☀️ Le saviez-vous",         body:"En période chaude, remonte la hauteur de tonte : une herbe plus haute garde le sol frais." },
-  { title:"🍂 Conseil du jour",        body:"Ramasse les feuilles mortes : sous un tapis de feuilles, le gazon s'asphyxie et la mousse s'installe." },
-  { title:"🌿 Bob rappelle",           body:"Laisse parfois les tontes fines sur place (mulching) : elles nourrissent ton sol gratuitement." },
-  { title:"💪 Astuce racines",         body:"Arrose moins souvent mais plus abondamment : les racines plongent et ton gazon devient plus résistant." },
-  { title:"🔍 L'œil de Bob",           body:"Des taches jaunes qui s'étendent ? Prends-les en photo dans l'app, je te dis ce que c'est." },
-  { title:"🌾 Conseil semis",          body:"Un sol bien griffé avant de semer, c'est deux fois plus de graines qui lèvent." },
-  { title:"🪱 Bob t'explique",         body:"Des vers de terre, c'est bon signe : ils aèrent ton sol mieux qu'aucun outil." },
-  { title:"🌡️ Astuce saison",         body:"Le gazon pousse surtout quand le sol est entre 10 et 25 °C : c'est là qu'il faut le chouchouter." },
-  { title:"🚫 Erreur fréquente",       body:"Trop d'engrais brûle le gazon. Mieux vaut peu, mais au bon moment." },
-  { title:"🌧️ Bob observe le ciel",   body:"Pluie annoncée ? Reporte l'arrosage : inutile de doubler ce que fait la nature." },
-  { title:"🏆 Motivation du jour",     body:"Un beau gazon, c'est de la régularité, pas de l'effort intense. Un petit geste vaut mieux qu'un grand coup." },
-  { title:"🌱 Conseil densité",        body:"Un gazon dense étouffe les mauvaises herbes tout seul : vise l'épaisseur avant tout." },
-  { title:"✂️ Bob insiste",           body:"Varie le sens de tonte à chaque passage : l'herbe se redresse mieux et pousse plus droite." },
-  { title:"💚 Astuce couleur",         body:"Un gazon qui vire au bleu-gris a soif : c'est le tout premier signe, avant le jaune." },
-  { title:"🌍 Le mot de Bob",          body:"Un gazon en bonne santé, c'est aussi de la fraîcheur, de l'oxygène et de la biodiversité chez toi." },
-];
-
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
@@ -199,16 +177,17 @@ module.exports = async function handler(req, res) {
         process.env.VAPID_PRIVATE_KEY
       );
 
-      const { decideNotification, appendNotifLog } = require("./notificationEngine.cjs");
+      const { decideNotification, appendNotifLog, conseilDuJour } = require("./notificationEngine.cjs");
+      const { jetonOuverture } = require("./notifOpen.cjs");
       const { clerkGuestActive } = require("./premium.cjs");
       // ← nouveau : source de vérité de la phase parcours, partagée avec Today.jsx/phaseParcours()
       const { currentPhase } = require("./parcoursEngine.cjs");
 
-      // Purge d'un abonnement périmé : FCM renvoie 404/410 quand l'endpoint est mort.
-      // On le supprime pour que la table reste propre et que 'skipped' soit fiable.
+      // Purge d'un abonnement mort : 404/410 (endpoint expiré), 400/403 (abonnement invalide
+      // ou créé avec d'anciennes clés VAPID) sont définitifs → suppression, la table reste propre.
       const pruneSub = async (err, uid) => {
         const code = err && err.statusCode;
-        if (code === 404 || code === 410) {
+        if ([400, 403, 404, 410].includes(code)) {
           try { await supabase.from("push_subscriptions").delete().eq("user_id", uid); }
           catch (e) { console.error("prune sub:", uid, e.message); }
         }
@@ -295,6 +274,15 @@ module.exports = async function handler(req, res) {
         } catch (e) { await require("./alerting.cjs").reportServerError("Tâche planifiée — conseils par email", e); }
       }
 
+      // Jours sans visite dans l'app (dernière activité de session Clerk) → anti-fatigue.
+      // Si Clerk ne répond pas : aucun ralentissement (jours = 0).
+      const joursInactifMap = {};
+      try {
+        for (const u of await getClerkUsers()) {
+          if (u.last_active_at) joursInactifMap[u.id] = Math.floor((Date.now() - u.last_active_at) / 86400000);
+        }
+      } catch (e) { console.warn("[cron] activité Clerk indisponible :", e.message); }
+
       // Cache météo par zone arrondie (1 fetch/zone/exécution → protège le quota)
       const weatherCache = {};
       async function getWeatherForUser(profile) {
@@ -315,6 +303,7 @@ module.exports = async function handler(req, res) {
             temp_max: d.temperature_2m_max ? d.temperature_2m_max[0] : null,
             precip:   d.precipitation_sum  ? d.precipitation_sum[0]  : null,
             wind:     d.windspeed_10m_max  ? d.windspeed_10m_max[0]  : null,
+            humidity: d.relative_humidity_2m_mean ? d.relative_humidity_2m_mean[0] : null,
             soil_temp: d.soil_temp ? d.soil_temp[0] : null,
             et0:      d.et0 ? d.et0[0] : null,
           };
@@ -330,8 +319,101 @@ module.exports = async function handler(req, res) {
       let pushSent = 0, emailSent = 0, skipped = 0;
       const pushedToday = new Set(); // users déjà notifiés ce jour (anti-doublon socle/relance)
 
+      // ── RELANCE DES INACTIFS (J+7, J+21, J+45 sans visite) — créneau MATIN ──
+      // Règles et textes : relances.cjs. Push si abonné, sinon email (consentement conseils ou
+      // offres) ; admins exclus ; 20 emails par jour au plus (quota Resend). Contenu : la
+      // décision du moteur, sinon le conseil du jour. Un compte relancé ne reçoit ni notification du
+      // moteur ni email d'offre ce jour-là.
+      const RELANCES_EMAIL_MAX = 20;
+      const relancesDuJour = new Set();
+      let relancesPush = 0, relancesEmail = 0;
+      if (slot === "matin") {
+        try {
+          const { palierDu, messageRelance, marquerRetours, ajouterRelance } = require("./relances.cjs");
+          const { ADMIN_EMAILS } = require("./auth.cjs");
+          const remMap = {};
+          (remindersData || []).forEach(r => { remMap[r.user_id] = r; });
+          const majRelances = async (uid, relances) => {
+            const r = await fetch(`https://api.clerk.com/v1/users/${uid}/metadata`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}` },
+              body: JSON.stringify({ private_metadata: { relances } }),
+            });
+            if (!r.ok) throw new Error(`Clerk : enregistrement de la relance refusé (HTTP ${r.status}) pour ${uid}`);
+          };
+
+          for (const u of await getClerkUsers()) {
+            const retours = marquerRetours(u);
+            if (retours) {
+              await majRelances(u.id, retours);
+              u.private_metadata = { ...u.private_metadata, relances: retours };
+            }
+            const palier = palierDu(u);
+            if (!palier) continue;
+            const email = primaryEmail(u);
+            if (u.banned || ADMIN_EMAILS.includes((email || "").toLowerCase())) continue;
+            const consent = consentMap[u.id] || {};
+            const canal = consent.notifications && subMap[u.id] ? "push"
+              : email && (consent.notifications || consent.marketing) && relancesEmail < RELANCES_EMAIL_MAX ? "email" : null;
+            if (!canal) continue;
+
+            const profile = profileMap[u.id] || {};
+            const profilComplet = !!(profile.pelouse || profile.gazons?.length);
+            const parcoursRow = parcoursMap[u.id];
+            const parcoursState = parcoursRow ? currentPhase({ type: parcoursRow.type, dateSemis: parcoursRow.date_semis, today }) : null;
+            const action = profilComplet && decideNotification({
+              profile, weather: await getWeatherForUser(profile),
+              reminderPrefs: remMap[u.id]?.preferences || {},
+              history: Array.isArray(profile.history) ? profile.history : [],
+              notifLog: remMap[u.id]?.notif_log, month, slot, today,
+              gami: null, parcours: parcoursState?.termine ? null : parcoursState,
+              joursInactif: 7, // sans gamification ni astuce : l'action la plus utile
+            });
+            const msg = messageRelance(palier, { ville: profile.ville, action, conseil: conseilDuJour(today, month), profilComplet });
+
+            try {
+              if (canal === "push") {
+                await webpush.sendNotification(subMap[u.id], JSON.stringify({
+                  title: msg.title, body: msg.body, icon: "/icon-192.png", tag: "mg360-relance",
+                  url: msg.url, actionRoute: msg.url, t: jetonOuverture(u.id, today, `relance_${palier}`),
+                }));
+                if (remMap[u.id]) {
+                  await supabase.from("reminders").update({
+                    notif_log: appendNotifLog(remMap[u.id].notif_log, { date: today, priority: 5, type: `relance_${palier}`, slot }),
+                    updated_at: new Date().toISOString(),
+                  }).eq("user_id", u.id);
+                }
+                relancesPush++;
+              } else {
+                const r = await fetch("https://api.resend.com/emails", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
+                  body: JSON.stringify({
+                    from: "Bob de Mongazon360 <bonjour@mongazon360.fr>", to: [email], subject: msg.title,
+                    html: buildOffreEmailHtml(u.first_name || "jardinier", msg.title, [esc(msg.body)],
+                      profilComplet ? "Ouvrir Mongazon360" : "Créer mon plan", `https://mongazon360.fr${msg.url}`),
+                    headers: { "List-Unsubscribe": "<https://mongazon360.fr/parametres>" },
+                  }),
+                });
+                const d = await r.json().catch(() => ({}));
+                if (!r.ok || d.error) throw new Error("Resend : " + (d.error?.message || r.status));
+                relancesEmail++;
+              }
+            } catch (e) {
+              if (canal === "push") await pruneSub(e, u.id);
+              else await require("./alerting.cjs").reportServerError("Tâche planifiée — relance des inactifs", e, { user: u.id });
+              continue;
+            }
+            await majRelances(u.id, ajouterRelance(u, { p: palier, at: today, canal }));
+            relancesDuJour.add(u.id);
+            pushedToday.add(u.id);
+          }
+        } catch (e) { await require("./alerting.cjs").reportServerError("Tâche planifiée — relance des inactifs", e); }
+      }
+
       for (const row of (remindersData || [])) {
         const { user_id, email, preferences, notif_log } = row;
+        if (relancesDuJour.has(user_id)) continue;
         const prefs = preferences || {};
         const userConsents = consentMap[user_id] || {};
         const profile = profileMap[user_id] || {};
@@ -360,7 +442,8 @@ module.exports = async function handler(req, res) {
           notifLog: notif_log,
           month, slot, today,
           gami: profile.gamification || null,
-          parcours: parcoursState, // ← nouveau
+          parcours: parcoursState,
+          joursInactif: joursInactifMap[user_id] ?? 0,
         });
 
         if (!decision) continue;
@@ -377,6 +460,7 @@ module.exports = async function handler(req, res) {
               tag:   decision.tag,
               url:   decision.url,
               actionRoute: decision.url,
+              t:     jetonOuverture(user_id, today, decision.type),
             }));
             logUpdated = appendNotifLog(logUpdated, {
               date: today, priority: decision.priority, type: decision.type, slot,
@@ -668,7 +752,7 @@ module.exports = async function handler(req, res) {
             }
 
             // 2. Lancement de l'offre saisonnière
-            if (!offre || campagne >= 25) continue;
+            if (!offre || campagne >= 25 || relancesDuJour.has(u.id)) continue;
             if (!consentMap[u.id]?.marketing || (u.private_metadata || {}).offreSaison === saisonKey) continue;
             if (pm.isSubscribed === true || pm.subscriptionStatus === "active" || pm.subscriptionStatus === "trialing" || clerkGuestActive(pm)) continue;
             await sendOffre(email,
@@ -725,11 +809,10 @@ module.exports = async function handler(req, res) {
       // n'ont pas déjà reçu de push (moteur intelligent ou relance essai).
       let baselineSent = 0;
       if (slot === "matin") {
-        const doy = Math.floor((Date.now() - Date.UTC(new Date().getUTCFullYear(), 0, 0)) / 86400000);
-        const tip = CONSEILS_QUOTIDIENS[((doy % CONSEILS_QUOTIDIENS.length) + CONSEILS_QUOTIDIENS.length) % CONSEILS_QUOTIDIENS.length];
+        const tip = conseilDuJour(today, month);
         for (const s of (subsData || [])) {
           const uid = s.user_id;
-          if (pushedToday.has(uid)) continue;
+          if (pushedToday.has(uid) || (joursInactifMap[uid] ?? 0) >= 7) continue;
           const consent = consentMap[uid] || {};
           if (!consent.notifications) continue;
           try {
@@ -742,7 +825,7 @@ module.exports = async function handler(req, res) {
           } catch (e) { console.error("cron baseline:", uid, e.message); await pruneSub(e, uid); }
         }
         for (const [uid, contact] of Object.entries(emailConseilMap)) {
-          if (pushedToday.has(uid)) continue;
+          if (pushedToday.has(uid) || (joursInactifMap[uid] ?? 0) >= 7) continue;
           try {
             if (await sendConseilEmail(contact.email, contact.prenom, tip.title, tip.body)) pushedToday.add(uid);
           } catch (e) { await require("./alerting.cjs").reportServerError("Tâche planifiée — conseils par email", e, { user: uid }); }
@@ -786,8 +869,8 @@ module.exports = async function handler(req, res) {
       }
       await alerting.setStatus(`cron_${slot}`, { date: today, at: new Date().toISOString(), pushSent, emailSent, emailFallbackSent, photosPurgees });
 
-      console.log(`[CRON ${slot}] reminders:`, remindersData?.length || 0, "pushSent:", pushSent, "emailSent:", emailSent, "emailFallbackSent:", emailFallbackSent, "skipped:", skipped, "parcoursSent:", parcoursSent, "parcoursTermines:", parcoursTermines, "trialRelances:", trialRelances, "baselineSent:", baselineSent, "premiumOffertsExpires:", premiumOffertsExpires, "offreEmails:", offreEmails, "photosPurgees:", photosPurgees);
-      return res.json({ success: true, date: today, slot, pushSent, emailSent, emailFallbackSent, skipped, parcoursSent, parcoursTermines, trialRelances, baselineSent, premiumOffertsExpires, offreEmails, photosPurgees, reminders: remindersData?.length || 0 });
+      console.log(`[CRON ${slot}] reminders:`, remindersData?.length || 0, "pushSent:", pushSent, "emailSent:", emailSent, "emailFallbackSent:", emailFallbackSent, "skipped:", skipped, "parcoursSent:", parcoursSent, "parcoursTermines:", parcoursTermines, "trialRelances:", trialRelances, "baselineSent:", baselineSent, "premiumOffertsExpires:", premiumOffertsExpires, "offreEmails:", offreEmails, "relancesPush:", relancesPush, "relancesEmail:", relancesEmail, "photosPurgees:", photosPurgees);
+      return res.json({ success: true, date: today, slot, pushSent, emailSent, emailFallbackSent, skipped, parcoursSent, parcoursTermines, trialRelances, baselineSent, premiumOffertsExpires, offreEmails, relancesPush, relancesEmail, photosPurgees, reminders: remindersData?.length || 0 });
     } catch (e) {
       await require("./alerting.cjs").reportServerError("Tâche planifiée en échec", e, { "Créneau": req.query.slot || "matin" });
       return res.status(500).json({ error: e.message });
@@ -1060,6 +1143,30 @@ module.exports = async function handler(req, res) {
       return res.json({ success: true });
     } catch (e) {
       await require("./alerting.cjs").reportServerError("Notification de test en échec", e);
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
+  // ── NOTIF-OPEN — clic sur une notification (service worker), jeton signé ──
+  // Marque l'envoi « ouvert » dans reminders.notif_log (taux d'ouverture dans Pilotage).
+  if (type === "notif-open") {
+    try {
+      const jeton = require("./notifOpen.cjs").lireJeton(req.body?.t);
+      if (!jeton) return res.status(400).json({ error: "Jeton invalide" });
+      const { createClient } = require("@supabase/supabase-js");
+      const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+      const { data } = await supabase.from("reminders").select("notif_log").eq("user_id", jeton.userId).maybeSingle();
+      const log = data?.notif_log;
+      let modifie = false;
+      const history = (log?.history || []).map(h => {
+        if (h.date !== jeton.date || h.type !== jeton.type || h.channel || h.opened) return h;
+        modifie = true;
+        return { ...h, opened: true };
+      });
+      if (modifie) await supabase.from("reminders").update({ notif_log: { ...log, history } }).eq("user_id", jeton.userId);
+      return res.status(204).end();
+    } catch (e) {
+      await require("./alerting.cjs").reportServerError("Notifications — enregistrement d'une ouverture", e);
       return res.status(500).json({ error: e.message });
     }
   }
