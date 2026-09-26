@@ -257,8 +257,8 @@ async function handleUsers(req, res) {
   try {
     // ✅ Pagination explicite + parsing format multi-version Clerk
     // Toutes les sources en parallèle (la page attendait auparavant chaque requête l'une après l'autre)
-    const [allUsersRaw, dauByDay, geo, diagRows, siteVisits, funnel, devices, sourceVisits, bob, notifs] = await Promise.all([
-      fetchAllClerkUsers(), fetchDauByDay(), fetchGeoPoints(), fetchDiagnosticsRows(), fetchSiteVisits(), fetchFunnel(), fetchDevices(), fetchSourceVisits(), fetchBobUsage(), fetchNotifStats(),
+    const [allUsersRaw, dauByDay, geo, diagRows, siteVisits, funnel, devices, sourceVisits, bob, notifs, presence] = await Promise.all([
+      fetchAllClerkUsers(), fetchDauByDay(), fetchGeoPoints(), fetchDiagnosticsRows(), fetchSiteVisits(), fetchFunnel(), fetchDevices(), fetchSourceVisits(), fetchBobUsage(), fetchNotifStats(), fetchPresence(),
     ]);
 
     // Exclure les comptes admin de TOUTES les stats (règle "admins exclus de tout")
@@ -328,6 +328,7 @@ async function handleUsers(req, res) {
     const diagnostics = diagnosticsStats(diagRows, new Set(allUsers.map(u => u.id)));
     const acquisition = acquisitionStats(sourceVisits, allUsers);
     const relances = statsRelances(allUsers);
+    const retention = presence && retentionCohortes(allUsers, presence);
 
     res.json({
       success: true,
@@ -351,6 +352,7 @@ async function handleUsers(req, res) {
       bob,
       notifs,
       relances,
+      retention,
       clerkSources,
     });
 
@@ -634,6 +636,45 @@ async function selectAll(sb, table, cols, notNullCol) {
     rows.push(...data);
     if (data.length < 1000) return rows;
   }
+}
+
+// ── Helper : jours d'utilisation de l'app par compte (daily_active_users, hors admins) ──
+async function fetchPresence() {
+  try {
+    return await selectAll(createClient(SB_URL, SB_KEY), "daily_active_users", "user_id, day", "day");
+  } catch (e) {
+    console.warn("stats-users presence:", e.message);
+    return null;
+  }
+}
+
+// ── Rétention : les inscrits reviennent-ils ? ──────────────────────────────────
+// Un inscrit est « revenu à J+n » s'il a utilisé l'app au moins une fois n jours ou plus après son
+// inscription. Seuls comptent les inscrits depuis le début de la mesure (1re ligne de
+// daily_active_users) et assez anciens pour avoir atteint J+n. Cohortes = mois d'inscription.
+const PALIERS_RETENTION = [7, 30, 90];
+function retentionCohortes(users, presence) {
+  if (!presence.length) return null;
+  const debut = presence.reduce((m, r) => r.day < m ? r.day : m, presence[0].day);
+  const derniere = new Map(); // compte → dernier jour d'utilisation
+  for (const r of presence) if (!derniere.has(r.user_id) || r.day > derniere.get(r.user_id)) derniere.set(r.user_id, r.day);
+  const jour = (ms) => new Date(ms).toISOString().slice(0, 10);
+  const age = (u) => Math.floor((Date.now() - u.created_at) / 86400000);
+  const ecart = (u) => derniere.has(u.id) ? Math.floor((Date.parse(derniere.get(u.id)) - Date.parse(jour(u.created_at))) / 86400000) : -1;
+
+  const mesure = (liste) => Object.fromEntries(PALIERS_RETENTION.map(n => {
+    const eligibles = liste.filter(u => age(u) >= n);
+    return [`j${n}`, { eligibles: eligibles.length, revenus: eligibles.filter(u => ecart(u) >= n).length }];
+  }));
+  const inscrits = users.filter(u => jour(u.created_at) >= debut);
+  const parMois = {};
+  for (const u of inscrits) (parMois[jour(u.created_at).slice(0, 7)] ||= []).push(u);
+  return {
+    debut,
+    global: { inscrits: inscrits.length, ...mesure(inscrits) },
+    cohortes: Object.entries(parMois).sort(([a], [b]) => b.localeCompare(a)).slice(0, 6)
+      .map(([mois, liste]) => ({ mois, inscrits: liste.length, ...mesure(liste) })),
+  };
 }
 
 // ── Helper : notifications du moteur sur 14 jours (journal reminders.notif_log) ──

@@ -617,6 +617,33 @@ export default function Pilotage() {
                 </div>
               </div>
             )}
+            {users?.retention && (() => {
+              const r = users.retention;
+              const taux = (m) => m.eligibles ? `${Math.round(m.revenus / m.eligibles * 100)} %` : "—";
+              const moisLabel = (m) => new Date(`${m}-01`).toLocaleDateString("fr-FR", { month:"short", year:"2-digit" });
+              return (
+                <div style={card()}>
+                  <div style={cardTitle}><span>🔁 Rétention des inscrits</span><span style={{ fontSize:11, color:"#81c784" }}>{r.global.inscrits} inscrit{r.global.inscrits > 1 ? "s" : ""} mesuré{r.global.inscrits > 1 ? "s" : ""}</span></div>
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, textAlign:"center", marginBottom:10 }}>
+                    {[["j7", "Revenus après J+7"], ["j30", "Après J+30"], ["j90", "Après J+90"]].map(([k, l]) => (
+                      <div key={k}><div style={{ fontSize:20, fontWeight:800, color:"#a5d6a7" }}>{taux(r.global[k])}</div><div style={{ fontSize:10, color:"#81c784" }}>{l} · {r.global[k].revenus}/{r.global[k].eligibles}</div></div>
+                    ))}
+                  </div>
+                  <div style={{ display:"grid", gridTemplateColumns:"1.2fr 1fr 1fr 1fr 1fr", fontSize:11, color:"#81c784", padding:"4px 0", borderBottom:"1px solid rgba(255,255,255,0.08)" }}>
+                    <span>Inscrits en</span><span style={{ textAlign:"right" }}>Nb</span><span style={{ textAlign:"right" }}>J+7</span><span style={{ textAlign:"right" }}>J+30</span><span style={{ textAlign:"right" }}>J+90</span>
+                  </div>
+                  {r.cohortes.map(c => (
+                    <div key={c.mois} style={{ display:"grid", gridTemplateColumns:"1.2fr 1fr 1fr 1fr 1fr", fontSize:12, padding:"4px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
+                      <span>{moisLabel(c.mois)}</span><span style={{ textAlign:"right" }}>{c.inscrits}</span>
+                      {["j7", "j30", "j90"].map(k => <span key={k} style={{ textAlign:"right" }}>{taux(c[k])}</span>)}
+                    </div>
+                  ))}
+                  <div style={{ fontSize:10, color:"#4a7c5c", marginTop:8, lineHeight:1.5 }}>
+                    « Revenu après J+30 » = a utilisé l'app au moins une fois 30 jours ou plus après son inscription. Inscrits depuis le début de la mesure ({new Date(r.debut).toLocaleDateString("fr-FR")}), hors admins ; « — » = cohorte trop récente.
+                  </div>
+                </div>
+              );
+            })()}
             {users?.relances && (
               <div style={card()}>
                 <div style={cardTitle}><span>👋 Relances des inactifs — 30 j</span><span style={{ fontSize:11, color:"#81c784" }}>{users.relances.mesurables ? Math.round(users.relances.retours / users.relances.mesurables * 100) : 0} % de retour</span></div>
