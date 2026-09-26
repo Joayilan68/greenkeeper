@@ -603,6 +603,20 @@ export default function Pilotage() {
                 <MiniChart data={users.months} valueKey="count" color="#1565c0" />
               </div>
             )}
+            {users?.notifs && (
+              <div style={card()}>
+                <div style={cardTitle}><span>🔔 Notifications — 14 j</span><span style={{ fontSize:11, color:"#81c784" }}>{users.notifs.push ? Math.round(users.notifs.ouvertes / users.notifs.push * 100) : 0} % ouvertes</span></div>
+                <div style={{ fontSize:12, color:"#a5d6a7", marginBottom:6 }}>{users.notifs.push} notifications · {users.notifs.ouvertes} ouvertes · {users.notifs.emails} conseils par email</div>
+                {users.notifs.parType.map(([t, v]) => (
+                  <div key={t} style={{ display:"flex", justifyContent:"space-between", fontSize:12, padding:"4px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
+                    <span>{t}</span><span>{v.ouvertes}/{v.envoyees} · {v.envoyees ? Math.round(v.ouvertes / v.envoyees * 100) : 0} %</span>
+                  </div>
+                ))}
+                <div style={{ fontSize:10, color:"#4a7c5c", marginTop:8, lineHeight:1.5 }}>
+                  Ouvertures mesurées depuis le 26/09/2026 (clic sur la notification). Les emails ne sont pas mesurés.
+                </div>
+              </div>
+            )}
             {users?.bob && (
               <div style={card()}>
                 <div style={cardTitle}><span>🤖 Bob — 30 j</span><span style={{ fontSize:11, color:"#81c784" }}>{users.bob.utilisateurs} utilisateur{users.bob.utilisateurs > 1 ? "s" : ""}</span></div>

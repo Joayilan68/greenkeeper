@@ -1,12 +1,12 @@
 // api/send.js
-// POST /api/send?type=alert|alert-test|notification-test|reminder|save-sub|save-reminders
+// POST /api/send?type=alert|alert-test|notification-test|notif-open|reminder|save-sub|save-reminders
 // GET  /api/send → cron quotidien 8h00 (Vercel cron)
 
 const REMINDER_LABELS = {
   tonte:     { icon:"✂️", label:"Tonte",               desc:"Fréquence de tonte recommandée" },
   arrosage:  { icon:"💧", label:"Arrosage",             desc:"Rappel d'arrosage régulier" },
   engrais:   { icon:"🌱", label:"Engrais",              desc:"Application d'engrais" },
-  fongicide: { icon:"💊", label:"Traitement fongicide", desc:"Prévention maladies fongiques" },
+  fongicide: { icon:"🦠", label:"Prévention maladies", desc:"Surveillance des maladies fongiques" },
   aeration:  { icon:"🌀", label:"Aération",             desc:"Aération du sol" },
   desherbage:{ icon:"🪴", label:"Désherbage",           desc:"Élimination des mauvaises herbes" },
 };
@@ -152,28 +152,6 @@ function buildTrialEmailHtml(prenom, when) {
 </div></body></html>`;
 }
 
-// Socle quotidien : conseils gazon utiles (voix de Bob), rotation par jour
-const CONSEILS_QUOTIDIENS = [
-  { title:"✂️ Le conseil de Bob",     body:"Ne tonds jamais plus d'un tiers de la hauteur d'un coup : ton gazon reste dense et résiste mieux." },
-  { title:"💧 Astuce arrosage",       body:"Arrose tôt le matin plutôt que le soir : moins d'évaporation, moins de maladies." },
-  { title:"🌱 Bob te souffle",         body:"Une lame de tonte bien affûtée coupe net ; une lame émoussée déchire et jaunit les pointes." },
-  { title:"☀️ Le saviez-vous",         body:"En période chaude, remonte la hauteur de tonte : une herbe plus haute garde le sol frais." },
-  { title:"🍂 Conseil du jour",        body:"Ramasse les feuilles mortes : sous un tapis de feuilles, le gazon s'asphyxie et la mousse s'installe." },
-  { title:"🌿 Bob rappelle",           body:"Laisse parfois les tontes fines sur place (mulching) : elles nourrissent ton sol gratuitement." },
-  { title:"💪 Astuce racines",         body:"Arrose moins souvent mais plus abondamment : les racines plongent et ton gazon devient plus résistant." },
-  { title:"🔍 L'œil de Bob",           body:"Des taches jaunes qui s'étendent ? Prends-les en photo dans l'app, je te dis ce que c'est." },
-  { title:"🌾 Conseil semis",          body:"Un sol bien griffé avant de semer, c'est deux fois plus de graines qui lèvent." },
-  { title:"🪱 Bob t'explique",         body:"Des vers de terre, c'est bon signe : ils aèrent ton sol mieux qu'aucun outil." },
-  { title:"🌡️ Astuce saison",         body:"Le gazon pousse surtout quand le sol est entre 10 et 25 °C : c'est là qu'il faut le chouchouter." },
-  { title:"🚫 Erreur fréquente",       body:"Trop d'engrais brûle le gazon. Mieux vaut peu, mais au bon moment." },
-  { title:"🌧️ Bob observe le ciel",   body:"Pluie annoncée ? Reporte l'arrosage : inutile de doubler ce que fait la nature." },
-  { title:"🏆 Motivation du jour",     body:"Un beau gazon, c'est de la régularité, pas de l'effort intense. Un petit geste vaut mieux qu'un grand coup." },
-  { title:"🌱 Conseil densité",        body:"Un gazon dense étouffe les mauvaises herbes tout seul : vise l'épaisseur avant tout." },
-  { title:"✂️ Bob insiste",           body:"Varie le sens de tonte à chaque passage : l'herbe se redresse mieux et pousse plus droite." },
-  { title:"💚 Astuce couleur",         body:"Un gazon qui vire au bleu-gris a soif : c'est le tout premier signe, avant le jaune." },
-  { title:"🌍 Le mot de Bob",          body:"Un gazon en bonne santé, c'est aussi de la fraîcheur, de l'oxygène et de la biodiversité chez toi." },
-];
-
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
@@ -199,16 +177,17 @@ module.exports = async function handler(req, res) {
         process.env.VAPID_PRIVATE_KEY
       );
 
-      const { decideNotification, appendNotifLog } = require("./notificationEngine.cjs");
+      const { decideNotification, appendNotifLog, conseilDuJour } = require("./notificationEngine.cjs");
+      const { jetonOuverture } = require("./notifOpen.cjs");
       const { clerkGuestActive } = require("./premium.cjs");
       // ← nouveau : source de vérité de la phase parcours, partagée avec Today.jsx/phaseParcours()
       const { currentPhase } = require("./parcoursEngine.cjs");
 
-      // Purge d'un abonnement périmé : FCM renvoie 404/410 quand l'endpoint est mort.
-      // On le supprime pour que la table reste propre et que 'skipped' soit fiable.
+      // Purge d'un abonnement mort : 404/410 (endpoint expiré), 400/403 (abonnement invalide
+      // ou créé avec d'anciennes clés VAPID) sont définitifs → suppression, la table reste propre.
       const pruneSub = async (err, uid) => {
         const code = err && err.statusCode;
-        if (code === 404 || code === 410) {
+        if ([400, 403, 404, 410].includes(code)) {
           try { await supabase.from("push_subscriptions").delete().eq("user_id", uid); }
           catch (e) { console.error("prune sub:", uid, e.message); }
         }
@@ -295,6 +274,15 @@ module.exports = async function handler(req, res) {
         } catch (e) { await require("./alerting.cjs").reportServerError("Tâche planifiée — conseils par email", e); }
       }
 
+      // Jours sans visite dans l'app (dernière activité de session Clerk) → anti-fatigue.
+      // Si Clerk ne répond pas : aucun ralentissement (jours = 0).
+      const joursInactifMap = {};
+      try {
+        for (const u of await getClerkUsers()) {
+          if (u.last_active_at) joursInactifMap[u.id] = Math.floor((Date.now() - u.last_active_at) / 86400000);
+        }
+      } catch (e) { console.warn("[cron] activité Clerk indisponible :", e.message); }
+
       // Cache météo par zone arrondie (1 fetch/zone/exécution → protège le quota)
       const weatherCache = {};
       async function getWeatherForUser(profile) {
@@ -315,6 +303,7 @@ module.exports = async function handler(req, res) {
             temp_max: d.temperature_2m_max ? d.temperature_2m_max[0] : null,
             precip:   d.precipitation_sum  ? d.precipitation_sum[0]  : null,
             wind:     d.windspeed_10m_max  ? d.windspeed_10m_max[0]  : null,
+            humidity: d.relative_humidity_2m_mean ? d.relative_humidity_2m_mean[0] : null,
             soil_temp: d.soil_temp ? d.soil_temp[0] : null,
             et0:      d.et0 ? d.et0[0] : null,
           };
@@ -360,7 +349,8 @@ module.exports = async function handler(req, res) {
           notifLog: notif_log,
           month, slot, today,
           gami: profile.gamification || null,
-          parcours: parcoursState, // ← nouveau
+          parcours: parcoursState,
+          joursInactif: joursInactifMap[user_id] ?? 0,
         });
 
         if (!decision) continue;
@@ -377,6 +367,7 @@ module.exports = async function handler(req, res) {
               tag:   decision.tag,
               url:   decision.url,
               actionRoute: decision.url,
+              t:     jetonOuverture(user_id, today, decision.type),
             }));
             logUpdated = appendNotifLog(logUpdated, {
               date: today, priority: decision.priority, type: decision.type, slot,
@@ -725,11 +716,10 @@ module.exports = async function handler(req, res) {
       // n'ont pas déjà reçu de push (moteur intelligent ou relance essai).
       let baselineSent = 0;
       if (slot === "matin") {
-        const doy = Math.floor((Date.now() - Date.UTC(new Date().getUTCFullYear(), 0, 0)) / 86400000);
-        const tip = CONSEILS_QUOTIDIENS[((doy % CONSEILS_QUOTIDIENS.length) + CONSEILS_QUOTIDIENS.length) % CONSEILS_QUOTIDIENS.length];
+        const tip = conseilDuJour(today, month);
         for (const s of (subsData || [])) {
           const uid = s.user_id;
-          if (pushedToday.has(uid)) continue;
+          if (pushedToday.has(uid) || (joursInactifMap[uid] ?? 0) >= 7) continue;
           const consent = consentMap[uid] || {};
           if (!consent.notifications) continue;
           try {
@@ -742,7 +732,7 @@ module.exports = async function handler(req, res) {
           } catch (e) { console.error("cron baseline:", uid, e.message); await pruneSub(e, uid); }
         }
         for (const [uid, contact] of Object.entries(emailConseilMap)) {
-          if (pushedToday.has(uid)) continue;
+          if (pushedToday.has(uid) || (joursInactifMap[uid] ?? 0) >= 7) continue;
           try {
             if (await sendConseilEmail(contact.email, contact.prenom, tip.title, tip.body)) pushedToday.add(uid);
           } catch (e) { await require("./alerting.cjs").reportServerError("Tâche planifiée — conseils par email", e, { user: uid }); }
@@ -1060,6 +1050,30 @@ module.exports = async function handler(req, res) {
       return res.json({ success: true });
     } catch (e) {
       await require("./alerting.cjs").reportServerError("Notification de test en échec", e);
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
+  // ── NOTIF-OPEN — clic sur une notification (service worker), jeton signé ──
+  // Marque l'envoi « ouvert » dans reminders.notif_log (taux d'ouverture dans Pilotage).
+  if (type === "notif-open") {
+    try {
+      const jeton = require("./notifOpen.cjs").lireJeton(req.body?.t);
+      if (!jeton) return res.status(400).json({ error: "Jeton invalide" });
+      const { createClient } = require("@supabase/supabase-js");
+      const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+      const { data } = await supabase.from("reminders").select("notif_log").eq("user_id", jeton.userId).maybeSingle();
+      const log = data?.notif_log;
+      let modifie = false;
+      const history = (log?.history || []).map(h => {
+        if (h.date !== jeton.date || h.type !== jeton.type || h.channel || h.opened) return h;
+        modifie = true;
+        return { ...h, opened: true };
+      });
+      if (modifie) await supabase.from("reminders").update({ notif_log: { ...log, history } }).eq("user_id", jeton.userId);
+      return res.status(204).end();
+    } catch (e) {
+      await require("./alerting.cjs").reportServerError("Notifications — enregistrement d'une ouverture", e);
       return res.status(500).json({ error: e.message });
     }
   }
