@@ -10,6 +10,9 @@ const DIAG_MAX_JOURS = 60; // un diagnostic plus ancien ne décrit plus l'état 
 // Valeurs stockées sans accents → libellés lisibles
 const LIBELLES = { elevee: "élevée", ensoleille: "ensoleillé", ombrage: "ombragé", electrique_batterie: "électrique sur batterie",
   electrique_filaire: "électrique filaire", thermique: "thermique", robot: "robot", naturel: "naturel", parfait: "parfait" };
+// Plafond de chaque tranche de budget du profil (même règle que src/lib/depenses.js)
+const PLAFONDS = { "0-50": 50, "50-150": 150, "150-300": 300, "300-600": 600 };
+const euros = (n) => { const v = Math.round(n * 100) / 100; return `${Number.isInteger(v) ? v : v.toFixed(2).replace(".", ",")} €`; };
 const lisible = (v) => Array.isArray(v) ? v.map(lisible).filter(Boolean).join(", ")
   : v ? (LIBELLES[v] || String(v).replace(/_/g, " ")) : "";
 
@@ -54,9 +57,14 @@ async function buildBobContext(supabase, { userId, premium, clientProfile = {}, 
   if (p.budget) l.push(`Budget entretien annuel : ${p.budget === "inconnu" ? "non précisé" : p.budget + " €"} (gamme de produits conseillée : ${GAMME[p.budget] || "standard"})`);
   const annee = today.slice(0, 4);
   const achats = (Array.isArray(p.achats) ? p.achats : []).filter(a => a.date?.startsWith(annee));
+  const plafond = PLAFONDS[p.budget];
   if (achats.length) {
-    const total = Math.round(achats.reduce((t, a) => t + (Number(a.prix) || 0), 0));
-    l.push(`Dépenses gazon notées dans l'app en ${annee} : ${total} € (${achats.slice(-5).map(a => a.label).join(", ")})`);
+    const total = Math.round(achats.reduce((t, a) => t + (Number(a.prix) || 0), 0) * 100) / 100;
+    const bilan = plafond ? (total > plafond ? `, budget de ${plafond} € dépassé de ${euros(total - plafond)}` : `, reste ${euros(plafond - total)} sur le budget de ${plafond} €`) : "";
+    l.push(`Dépenses gazon notées dans l'app en ${annee} : ${euros(total)}${bilan}. Détail : ` +
+      achats.slice(-12).map(a => `${a.date.slice(8, 10)}/${a.date.slice(5, 7)} ${a.label} ${euros(a.prix)}`).join(" · "));
+  } else if (plafond) {
+    l.push(`Aucune dépense gazon notée dans l'app en ${annee} (budget de ${plafond} €).`);
   }
   l.push(`Équipement : tondeuse ${lisible(p.tondeuse) || "?"} · arrosage ${lisible(p.arrosage) || "?"} · matériel ${lisible(p.materiel) || "?"}`);
 
