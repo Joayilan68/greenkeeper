@@ -802,6 +802,37 @@ export default function Pilotage() {
                     </div>
                   </div>
 
+                  {(() => {
+                    // Point d'équilibre : abonnés nécessaires pour couvrir les charges fixes, après Stripe et URSSAF
+                    const fixesMois = CHARGES_ACTIVES.reduce((t, c) => t + montant(c, "mois"), 0);
+                    const prevuesMois = CHARGES_PREVUES.reduce((t, c) => t + montant(c, "mois"), 0);
+                    const net = (prix, parMois) => (prix * (1 - URSSAF_RATE) - (STRIPE_FEES.pct * prix + STRIPE_FEES.fixed)) / parMois;
+                    const formules = [
+                      ["Mensuel 4,99 €", net(4.99, 1)],
+                      ["Annuel 39,99 €", net(39.99, 12)],
+                      ["Offre 1 an 19,99 €", net(19.99, 12)],
+                    ];
+                    const abonnes = (revenue?.premiumMonthly || 0) + (revenue?.premiumYearly || 0);
+                    return (
+                      <div style={card()}>
+                        <div style={cardTitle}><span>⚖️ Point d'équilibre</span><span style={{ fontSize:11, color:"#81c784", textTransform:"none", letterSpacing:0 }}>{loadingRevenue ? "…" : `${abonnes} abonné${abonnes > 1 ? "s" : ""} aujourd'hui`}</span></div>
+                        <div style={{ display:"grid", gridTemplateColumns:"1.4fr 1fr 1fr 1fr", fontSize:11, color:"#81c784", padding:"4px 0", borderBottom:"1px solid rgba(255,255,255,0.08)" }}>
+                          <span>Formule</span><span style={{ textAlign:"right" }}>Net/mois</span><span style={{ textAlign:"right" }}>Charges</span><span style={{ textAlign:"right" }}>+ prévues</span>
+                        </div>
+                        {formules.map(([l, n]) => (
+                          <div key={l} style={{ display:"grid", gridTemplateColumns:"1.4fr 1fr 1fr 1fr", fontSize:12, padding:"5px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
+                            <span>{l}</span><span style={{ textAlign:"right" }}>{eur(n)}</span>
+                            <span style={{ textAlign:"right", fontWeight:800 }}>{Math.ceil(fixesMois / n)}</span>
+                            <span style={{ textAlign:"right", fontWeight:800, color:"#ffcc80" }}>{Math.ceil((fixesMois + prevuesMois) / n)}</span>
+                          </div>
+                        ))}
+                        <div style={{ fontSize:10, color:"#81c784", marginTop:8, lineHeight:1.5 }}>
+                          Nombre d'abonnés d'une même formule pour couvrir les charges fixes ({eur(fixesMois)}/mois), ou avec les charges prévues ({eur(fixesMois + prevuesMois)}/mois). Net = prix − URSSAF − frais Stripe. Hors commissions Amazon et publicité.
+                        </div>
+                      </div>
+                    );
+                  })()}
+
                   <div style={card()}>
                     <div style={cardTitle}><span>🔮 Charges prévues</span><span style={{ fontSize:11, color:"#ffcc80", textTransform:"none", letterSpacing:0 }}>+{eur(prevues)} {suffixe}</span></div>
                     {CHARGES_PREVUES.map(c => line(c.name, eur(montant(c, periode)),
