@@ -30,7 +30,7 @@ const HISTORY_MAX = 20; // messages gardés sur l'appareil
 // ── Message d'accueil avec mention IA obligatoire ──────────────────────────
 const WELCOME_MESSAGE = {
   role: "assistant",
-  content: "Bonjour ! 🌿 Je suis Bob, votre assistant gazon intelligent.\n\n⚠️ Je suis une IA et mes réponses peuvent contenir des inexactitudes. Elles ne remplacent pas l'avis d'un professionnel du jardinage.\n\nPosez-moi vos questions sur l'entretien de votre pelouse !",
+  content: "Salut ! 🌿 Moi c'est Bob, ton assistant gazon.\n\n⚠️ Je suis une IA : mes réponses peuvent contenir des inexactitudes et ne remplacent pas l'avis d'un professionnel du jardinage.\n\nPose-moi tes questions sur ta pelouse et ton jardin !",
 };
 
 function TypingIndicator() {
@@ -145,7 +145,7 @@ export default function AIAssistant() {
     } catch {
       setMessages(prev => [...prev, {
         role:"assistant",
-        content:"❌ Impossible de contacter l'assistant. Vérifiez votre connexion."
+        content:"❌ Impossible de contacter Bob. Vérifie ta connexion."
       }]);
     }
     setLoading(false);
@@ -287,7 +287,7 @@ export default function AIAssistant() {
             <input
               ref={inputRef}
               type="text"
-              placeholder="Posez votre question à Bob..."
+              placeholder="Pose ta question à Bob..."
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendMessage()}
