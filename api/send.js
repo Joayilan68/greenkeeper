@@ -71,7 +71,7 @@ const esc = (v) => String(v ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":
 
 // Email « Conseil du jour » : relais des notifications quotidiennes pour les comptes
 // qui ont consenti aux conseils mais n'ont pas (ou plus) d'abonnement push actif.
-function buildConseilEmailHtml(prenom, title, body) {
+function buildConseilEmailHtml(prenom, title, body, url = "/today") {
   const year = new Date().getFullYear();
   return `<!DOCTYPE html><html><head><meta charset="utf-8"/></head>
 <body style="font-family:Arial,sans-serif;background:#f5f5f5;margin:0;padding:20px;">
@@ -87,7 +87,7 @@ function buildConseilEmailHtml(prenom, title, body) {
       <div style="font-size:14px;color:#555;line-height:1.6;">${esc(body)}</div>
     </div>
     <div style="text-align:center;margin-bottom:20px;">
-      <a href="https://mongazon360.fr/today" style="background:#1a4731;color:#fff;text-decoration:none;padding:14px 32px;border-radius:12px;font-size:14px;font-weight:800;display:inline-block;">🌿 Ouvrir Mongazon360 →</a>
+      <a href="https://mongazon360.fr${esc(url)}" style="background:#1a4731;color:#fff;text-decoration:none;padding:14px 32px;border-radius:12px;font-size:14px;font-weight:800;display:inline-block;">🌿 Ouvrir Mongazon360 →</a>
     </div>
     <div style="font-size:12px;color:#888;line-height:1.6;">📱 Astuce : autorise les notifications de l'app sur ton téléphone pour recevoir ces conseils en direct plutôt que par email.</div>
   </div>
@@ -218,7 +218,7 @@ module.exports = async function handler(req, res) {
       // pour rester sous le quota Resend gratuit (100 emails/jour, tous envois confondus).
       const EMAIL_CONSEILS_PAR_CRENEAU = 45;
       let emailFallbackSent = 0, emailFallbackCapped = 0;
-      const sendConseilEmail = async (to, prenom, title, body) => {
+      const sendConseilEmail = async (to, prenom, title, body, url) => {
         if (emailFallbackSent >= EMAIL_CONSEILS_PAR_CRENEAU) { emailFallbackCapped++; return false; }
         const r = await fetch("https://api.resend.com/emails", {
           method: "POST",
@@ -227,7 +227,7 @@ module.exports = async function handler(req, res) {
             from:    "Bob de Mongazon360 <bonjour@mongazon360.fr>",
             to:      [to],
             subject: title,
-            html:    buildConseilEmailHtml(prenom, title, body),
+            html:    buildConseilEmailHtml(prenom, title, body, url),
             headers: { "List-Unsubscribe": "<https://mongazon360.fr/parametres>" },
           }),
         });
@@ -477,7 +477,7 @@ module.exports = async function handler(req, res) {
         // ── CONSEIL PAR EMAIL : même décision que le push, pour les comptes sans abonnement ──
         if (userConsents.notifications && !sub && contact) {
           try {
-            if (await sendConseilEmail(contact.email, contact.prenom, decision.title, decision.body)) {
+            if (await sendConseilEmail(contact.email, contact.prenom, decision.title, decision.body, decision.url)) {
               logUpdated = appendNotifLog(logUpdated, {
                 date: today, priority: decision.priority, type: decision.type, slot, channel: "email",
               });
