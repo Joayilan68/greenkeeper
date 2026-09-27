@@ -16,7 +16,7 @@ import AlertBanner from "../components/AlertBanner";
 import OnboardingModal from "../components/OnboardingModal";
 import GreenScoreModal from "../components/GreenScoreModal";
 import CompteARebours from "../components/CompteARebours";
-import { anneeDuBilan, bilanDisponible, compterActions, TYPES_ACTIONS } from "../lib/bilanSaison";
+import { anneeDuBilan, bilanDisponible, compterActions, actionsDeLAnnee, TYPES_ACTIONS } from "../lib/bilanSaison";
 import { card, cardTitle, btn, scroll } from "../lib/styles";
 import { useState, useEffect } from "react";
 import { useGreenPoints } from "../lib/useGreenPoints";
@@ -117,26 +117,36 @@ export default function Dashboard() {
     setShowOnboarding(false);
   };
 
-  const [period, setPeriod] = useState("7j");
+  const [actionsAnnee, setActionsAnnee] = useState(null);
+  useEffect(() => {
+    if (!user?.id) return;
+    actionsDeLAnnee(user.id, new Date().getFullYear()).then(setActionsAnnee).catch(() => {});
+  }, [user?.id, history.length]);
+
+  // Évolution du score depuis le 1er janvier (ou la 1re action de l'année) : score recalculé chaque semaine
+  // avec les actions et diagnostics connus à cette date (la météo reste celle du jour)
   const scoreHistory = (() => {
-    const days = period === "30j" ? 30 : 7;
+    const jour = (s) => { const [dd, mm, yy] = (s || "").split("/"); return new Date(yy, mm - 1, dd); };
+    const actions = (actionsAnnee || history).map(a => ({ ...a, t: jour(a.date) })).filter(a => !isNaN(a.t));
+    const aujourdHui = new Date(); aujourdHui.setHours(23, 59, 59, 0);
+    const premiere = actions.reduce((m, a) => a.t < m ? a.t : m, aujourdHui);
+    const debut = new Date(Math.max(new Date(aujourdHui.getFullYear(), 0, 1), premiere)); debut.setHours(23, 59, 59, 0);
     const pts = [];
-    for (let i = days; i >= 0; i--) {
-      const d = new Date(); d.setDate(d.getDate() - i);
-      const h = history.filter(e => {
-        const [dd,mm,yy] = (e.date||"").split("/");
-        return new Date(yy,mm-1,dd) <= d;
-      });
-      pts.push({ day: i === 0 ? "Aujourd'hui" : `Il y a ${days}j`, score: calcLawnScore({ weather, profile, history: h, month, diagnostics }).score });
+    for (let d = new Date(debut); ; d.setDate(d.getDate() + 7)) {
+      const t = d > aujourdHui ? aujourdHui : new Date(d);
+      pts.push({ t, score: calcLawnScore({
+        weather, profile, month: t.getMonth() + 1, ref: t.getTime(),
+        history: actions.filter(a => a.t <= t),
+        diagnostics: diagnostics.filter(x => new Date(x.date) <= t),
+      }).score });
+      if (t >= aujourdHui) break;
     }
     return pts;
   })();
-  // Compteurs d'actions sur la période affichée (7 ou 30 jours), mêmes types que le bilan de saison
-  const debutPeriode = new Date(); debutPeriode.setHours(0, 0, 0, 0); debutPeriode.setDate(debutPeriode.getDate() - (period === "30j" ? 30 : 7));
-  const compteurs = compterActions(history.filter(e => {
-    const [dd, mm, yy] = (e.date || "").split("/");
-    return new Date(yy, mm - 1, dd) >= debutPeriode;
-  }));
+  // Compteurs d'actions depuis le 1er janvier : mêmes chiffres que le bilan de saison (toutes les actions de
+  // l'année en base ; en attendant, celles de l'historique local de l'année)
+  const anneeEnCours = new Date().getFullYear();
+  const compteurs = compterActions(actionsAnnee || history.filter(e => (e.date || "").endsWith(`/${anneeEnCours}`)));
   const minScore  = Math.min(...scoreHistory.map(p => p.score));
   const maxScore  = Math.max(...scoreHistory.map(p => p.score));
   const scoreRange = maxScore - minScore || 1;
@@ -425,11 +435,7 @@ export default function Dashboard() {
         <div style={{ ...card(), padding:14 }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
             <span style={{ fontWeight:700, color:"#66BB6A", fontSize:14 }}>📈 Évolution du score</span>
-            <div style={{ display:"flex", gap:4 }}>
-              {["7j","30j"].map(p => (
-                <button key={p} onClick={() => setPeriod(p)} style={{ background: period===p ? "rgba(76,175,80,0.3)" : "none", border:`1px solid ${period===p ? "#43a047" : "rgba(255,255,255,0.2)"}`, borderRadius:8, padding:"2px 8px", color: period===p ? "#a5d6a7" : "#81c784", fontSize:11, cursor:"pointer" }}>{p}</button>
-              ))}
-            </div>
+            <span style={{ fontSize:11, color:"#81c784" }}>{anneeEnCours}, semaine par semaine</span>
           </div>
 
           <div style={{ position:"relative", height:60, marginBottom:8 }}>
@@ -440,7 +446,7 @@ export default function Dashboard() {
                 return (
                   <>
                     <polyline points={points} fill="none" stroke="#43a047" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke"/>
-                    {scoreHistory.map((p,i) => (
+                    {scoreHistory.map((p,i) => (scoreHistory.length <= 12 || i === scoreHistory.length - 1) && (
                       <circle key={i} cx={`${i*w}%`} cy={60 - ((p.score - minScore) / scoreRange) * 50} r="3" fill="#66BB6A"/>
                     ))}
                     <text x="100%" y={60 - ((scoreHistory[scoreHistory.length-1].score - minScore) / scoreRange) * 50 - 6} textAnchor="end" fill="#a5d6a7" fontSize="11" fontWeight="bold">{scoreHistory[scoreHistory.length-1].score}</text>
@@ -451,10 +457,11 @@ export default function Dashboard() {
           </div>
 
           <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:"#4a7c5c", marginBottom:12 }}>
-            <span>Il y a {period === "30j" ? "30j" : "7j"}</span>
+            <span>{scoreHistory[0].t.toLocaleDateString("fr-FR", { day:"numeric", month:"short" })}</span>
             <span>Aujourd'hui</span>
           </div>
 
+          <div style={{ fontSize:10, color:"#81c784", marginBottom:6 }}>Actions depuis le 1er janvier {anneeEnCours}</div>
           <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:4 }}>
             {TYPES_ACTIONS.map(({ cle, icone, court }) => (
               <div key={cle} style={{ flexShrink:0, minWidth:56, background:"rgba(255,255,255,0.05)", borderRadius:10, padding:"8px 6px", textAlign:"center" }}>

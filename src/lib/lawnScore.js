@@ -14,16 +14,17 @@ const hasArrosageAuto = (p) =>
   p?.arrosage === "automatique" ||
   (Array.isArray(p?.materiel) && p.materiel.includes("arroseur"));
 
-function daysSince(dateStr) {
+// ref = date de référence (maintenant par défaut ; une date passée pour la courbe d'évolution du score)
+function daysSince(dateStr, ref = Date.now()) {
   const parts = dateStr?.split('/');
   if (!parts || parts.length !== 3) return 999;
   const date = new Date(parts[2], parts[1]-1, parts[0]);
-  return Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));
+  return Math.floor((ref - date.getTime()) / (1000 * 60 * 60 * 24));
 }
 
-function daysSinceISO(isoStr) {
+function daysSinceISO(isoStr, ref = Date.now()) {
   if (!isoStr) return 999;
-  return Math.floor((Date.now() - new Date(isoStr).getTime()) / (1000 * 60 * 60 * 24));
+  return Math.floor((ref - new Date(isoStr).getTime()) / (1000 * 60 * 60 * 24));
 }
 
 // Valeur sentinelle : action JAMAIS réalisée (aucun historique).
@@ -31,24 +32,24 @@ function daysSinceISO(isoStr) {
 // détectée à l'affichage pour montrer "Aucun ... enregistré" au lieu de "999j".
 const JAMAIS = 999;
 
-function lastAction(history, keyword) {
+function lastAction(history, keyword, ref) {
   const found = history?.filter(h => h.action?.toLowerCase().includes(keyword.toLowerCase()));
   if (!found?.length) return JAMAIS;
-  return Math.min(...found.map(h => daysSince(h.date)));
+  return Math.min(...found.map(h => daysSince(h.date, ref)));
 }
 
 // ── Récupère le diagnostic récent valide depuis le tableau fourni ──────────
 // `diagnostics` est attendu trié par date décroissante (le plus récent en [0])
 // Format attendu : [{ date: ISO string, analysis: { score_visuel, emoji, etat_general, problemes } }, ...]
-function pickLastDiagnostic(diagnostics) {
+function pickLastDiagnostic(diagnostics, ref) {
   if (!Array.isArray(diagnostics) || diagnostics.length === 0) return null;
   const last = diagnostics[0];
   if (!last?.date) return null;
-  if (daysSinceISO(last.date) > DIAG_MAX_AGE) return null;
+  if (daysSinceISO(last.date, ref) > DIAG_MAX_AGE) return null;
   return last;
 }
 
-export function calcLawnScore({ weather, profile, history = [], month, diagnostics = [] }) {
+export function calcLawnScore({ weather, profile, history = [], month, diagnostics = [], ref = Date.now() }) {
   const plan      = MONTHLY_PLAN[month];
   const issues    = [];
   const strengths = [];
@@ -63,7 +64,7 @@ export function calcLawnScore({ weather, profile, history = [], month, diagnosti
   // Robot tondeuse déclaré → tonte gérée automatiquement : on ne pénalise pas.
   if (!hasRobotTondeuse(profile)) {
     const tonteFreq     = month >= 5 && month <= 8 ? 4 : month >= 3 && month <= 10 ? 5 : 14;
-    const derniereTonte = lastAction(history, "tonte");
+    const derniereTonte = lastAction(history, "tonte", ref);
     if (derniereTonte > tonteFreq * 3)      { deductEntretien += 25; issues.push({ icon:"✂️", label: derniereTonte >= JAMAIS ? "Aucune tonte enregistrée" : `Tonte abandonnée depuis ${derniereTonte}j`, impact:-25 }); }
     else if (derniereTonte > tonteFreq * 2) { deductEntretien += 18; issues.push({ icon:"✂️", label: derniereTonte >= JAMAIS ? "Aucune tonte enregistrée" : `Tonte très en retard (${derniereTonte}j)`, impact:-18 }); }
     else if (derniereTonte > tonteFreq + 2) { deductEntretien += 10; issues.push({ icon:"✂️", label:"Tonte en retard", impact:-10 }); }
@@ -74,7 +75,7 @@ export function calcLawnScore({ weather, profile, history = [], month, diagnosti
 
   // ── 2. ENGRAIS — KB v4 : bloqué >90j, alerte >45j ──────────────────────
   if (plan?.engrais) {
-    const dernierEngrais = lastAction(history, "engrais");
+    const dernierEngrais = lastAction(history, "engrais", ref);
     if (dernierEngrais > 90)      { deductNutriments += 15; issues.push({ icon:"🌱", label: dernierEngrais >= JAMAIS ? "Aucun engrais enregistré" : `Aucun engrais depuis ${dernierEngrais}j`, impact:-15 }); }
     else if (dernierEngrais > 45) { deductNutriments += 8;  issues.push({ icon:"🌱", label:"Engrais en retard (délai 45j min)", impact:-8 }); }
     else                          { strengths.push({ icon:"🌱", label:"Fertilisation à jour ✓" }); }
@@ -82,7 +83,7 @@ export function calcLawnScore({ weather, profile, history = [], month, diagnosti
 
   // ── 3. AÉRATION — KB v4 : délai min 90j ─────────────────────────────────
   if (plan?.aeration) {
-    const derniereAeration = lastAction(history, "aération");
+    const derniereAeration = lastAction(history, "aération", ref);
     if (derniereAeration > 90)      { deductEntretien += 10; issues.push({ icon:"🌀", label:"Aération recommandée — sol compacté", impact:-10 }); }
     else if (derniereAeration > 60) { deductEntretien += 5;  issues.push({ icon:"🌀", label:"Aération à prévoir", impact:-5 }); }
     else                            { strengths.push({ icon:"🌀", label:"Aération effectuée ✓" }); }
@@ -90,7 +91,7 @@ export function calcLawnScore({ weather, profile, history = [], month, diagnosti
 
   // ── 4. VERTICUT — KB v4 ──────────────────────────────────────────────────
   if (plan?.verticut) {
-    const dernierVerticut = lastAction(history, "verticut");
+    const dernierVerticut = lastAction(history, "verticut", ref);
     if (dernierVerticut > 120)      { deductEntretien += 7; issues.push({ icon:"🔧", label:"Verticut recommandé ce mois", impact:-7 }); }
     else if (dernierVerticut > 90)  { deductEntretien += 3; issues.push({ icon:"🔧", label:"Verticut à prévoir", impact:-3 }); }
     else                            { strengths.push({ icon:"🔧", label:"Verticut effectué ✓" }); }
@@ -102,7 +103,7 @@ export function calcLawnScore({ weather, profile, history = [], month, diagnosti
   if (plan?.arrosage_base > 0) {
     const skipArrosage = profile?.arrosage === "aucun" || profile?.arrosage === "rarement" || hasArrosageAuto(profile);
     if (!skipArrosage) {
-      const dernierArrosage = lastAction(history, "arrosage");
+      const dernierArrosage = lastAction(history, "arrosage", ref);
       if (dernierArrosage > 10 && (!weather || weather.precip < 5))      { deductEntretien += 12; issues.push({ icon:"💧", label:"Arrosage insuffisant", impact:-12 }); }
       else if (dernierArrosage > 5 && (!weather || weather.precip < 3))  { deductEntretien += 5;  issues.push({ icon:"💧", label:"Arrosage en retard", impact:-5 }); }
       else if (dernierArrosage <= 3)                                      { strengths.push({ icon:"💧", label:"Arrosage régulier ✓" }); }
@@ -116,20 +117,20 @@ export function calcLawnScore({ weather, profile, history = [], month, diagnosti
     else if (weather.temp_max >= 26) { deductMeteo += 3;  issues.push({ icon:"☀️", label:"Chaleur modérée", impact:-3 }); }
     if (weather.temp_min <= -2)      { deductMeteo += 12; issues.push({ icon:"❄️", label:"Gel — stress racinaire sévère", impact:-12 }); }
     else if (weather.temp_min <= 2)  { deductMeteo += 6;  issues.push({ icon:"🌡️", label:"Risque de gel", impact:-6 }); }
-    if (weather.precip < 1 && weather.temp_max > 20 && lastAction(history, "arrosage") > 4 && !hasArrosageAuto(profile)) { deductMeteo += 10; issues.push({ icon:"🌵", label:"Sécheresse sans arrosage", impact:-10 }); }
+    if (weather.precip < 1 && weather.temp_max > 20 && lastAction(history, "arrosage", ref) > 4 && !hasArrosageAuto(profile)) { deductMeteo += 10; issues.push({ icon:"🌵", label:"Sécheresse sans arrosage", impact:-10 }); }
     if (weather.humidity > 80 && weather.temp_max > 18)      { deductMeteo += 10; issues.push({ icon:"🦠", label:"Conditions fongiques critiques", impact:-10 }); }
     else if (weather.humidity > 70 && weather.temp_max > 15) { deductMeteo += 5;  issues.push({ icon:"🦠", label:"Risque fongique modéré", impact:-5 }); }
-    if (lastAction(history, "fongicide") <= 14) strengths.push({ icon:"💊", label:"Traitement fongicide récent ✓" });
+    if (lastAction(history, "fongicide", ref) <= 14) strengths.push({ icon:"💊", label:"Traitement fongicide récent ✓" });
   }
 
   // ── 7. SOL ───────────────────────────────────────────────────────────────
   if (profile?.sol) {
     if (profile.sol === "argileux") {
-      if (lastAction(history, "aération") > 60) { deductSol += 8;  issues.push({ icon:"🏔️", label:"Sol argileux — compaction sans aération récente", impact:-8 }); }
+      if (lastAction(history, "aération", ref) > 60) { deductSol += 8;  issues.push({ icon:"🏔️", label:"Sol argileux — compaction sans aération récente", impact:-8 }); }
       else strengths.push({ icon:"🌀", label:"Aération récente — compaction compensée ✓" });
     }
     if (profile.sol === "compacte") {
-      if (lastAction(history, "aération") > 45) { deductSol += 10; issues.push({ icon:"🧱", label:"Sol compacté — aération urgente", impact:-10 }); }
+      if (lastAction(history, "aération", ref) > 45) { deductSol += 10; issues.push({ icon:"🧱", label:"Sol compacté — aération urgente", impact:-10 }); }
       else strengths.push({ icon:"🌀", label:"Aération récente sur sol compacté ✓" });
     }
     if (profile.sol === "sableux" && weather?.temp_max > 22) { deductSol += 5; issues.push({ icon:"🏖️", label:"Sol sableux — sèche rapidement par chaleur", impact:-5 }); }
@@ -137,9 +138,9 @@ export function calcLawnScore({ weather, profile, history = [], month, diagnosti
   }
 
   // ── 8. ACTIVITÉ GÉNÉRALE ─────────────────────────────────────────────────
-  const actions30j = (Array.isArray(history) ? history : []).filter(h => daysSince(h.date) <= 30).length;
-  const actions14j = (Array.isArray(history) ? history : []).filter(h => daysSince(h.date) <= 14).length;
-  const actions7j  = (Array.isArray(history) ? history : []).filter(h => daysSince(h.date) <= 7).length;
+  const actions30j = (Array.isArray(history) ? history : []).filter(h => daysSince(h.date, ref) <= 30).length;
+  const actions14j = (Array.isArray(history) ? history : []).filter(h => daysSince(h.date, ref) <= 14).length;
+  const actions7j  = (Array.isArray(history) ? history : []).filter(h => daysSince(h.date, ref) <= 7).length;
   if (actions30j === 0)     { deductEntretien += 12; issues.push({ icon:"📋", label:"Aucune intervention ce mois", impact:-12 }); }
   else if (actions14j === 0){ deductEntretien += 6;  issues.push({ icon:"📋", label:"Aucune intervention ces 14 derniers jours", impact:-6 }); }
   else if (actions7j >= 3)  strengths.push({ icon:"✅", label:"Entretien très régulier cette semaine ✓" });
@@ -169,7 +170,7 @@ export function calcLawnScore({ weather, profile, history = [], month, diagnosti
 
   // ── DIAGNOSTIC PHOTO ─────────────────────────────────────────────────────
   // Source de vérité : tableau `diagnostics` fourni par le caller (depuis Supabase via useDiagnostics)
-  const lastDiag    = pickLastDiagnostic(diagnostics);
+  const lastDiag    = pickLastDiagnostic(diagnostics, ref);
   let diagScore     = null;
   let diagEmoji     = null;
   let diagAge       = null;
@@ -179,7 +180,7 @@ export function calcLawnScore({ weather, profile, history = [], month, diagnosti
 
   if (lastDiag?.analysis?.score_visuel !== undefined) {
     const scoreVisuel  = lastDiag.analysis.score_visuel;
-    diagAge            = daysSinceISO(lastDiag.date);
+    diagAge            = daysSinceISO(lastDiag.date, ref);
     diagEmoji          = lastDiag.analysis.emoji;
     const poids        = Math.max(0, 1 - diagAge / DIAG_MAX_AGE);
     const scoreCombine = Math.round(scoreAvantDiag * (1 - 0.3 * poids) + scoreVisuel * 0.3 * poids);
