@@ -37,43 +37,8 @@ function zoneFromLatLon(lat, lon) {
 // après finOptimal → bloqué (trop tard). La temp. sol (si dispo) peut rétrograder
 // un feu vert en avertissement, jamais débloquer hors-saison.
 // Bornes = DÉBUT des fourchettes fournies (choix : permissif).
-const ZONES = {
-  nord_est: {
-    label: "Nord-Est", soilMin: 8, soilMax: 25,
-    automne:   { debutPossible: [8, 15],  debutOptimal: [8, 25], finOptimal: [10, 5] },
-    printemps: { debutPossible: [3, 25],  debutOptimal: [4, 1],  finOptimal: [5, 15] },
-  },
-  nord: {
-    label: "Nord", soilMin: 8, soilMax: 25,
-    automne:   { debutPossible: [8, 15],  debutOptimal: [8, 25], finOptimal: [10, 5] },
-    printemps: { debutPossible: [3, 25],  debutOptimal: [4, 1],  finOptimal: [5, 15] },
-  },
-  ouest: {
-    label: "Ouest", soilMin: 8, soilMax: 26,
-    automne:   { debutPossible: [8, 20],  debutOptimal: [8, 28], finOptimal: [10, 15] },
-    printemps: { debutPossible: [3, 15],  debutOptimal: [3, 25], finOptimal: [5, 15] },
-  },
-  centre: {
-    label: "Centre", soilMin: 8, soilMax: 26,
-    automne:   { debutPossible: [8, 20],  debutOptimal: [8, 28], finOptimal: [10, 15] },
-    printemps: { debutPossible: [3, 15],  debutOptimal: [3, 25], finOptimal: [5, 15] },
-  },
-  sud_ouest: {
-    label: "Sud-Ouest", soilMin: 8, soilMax: 27,
-    automne:   { debutPossible: [8, 25],  debutOptimal: [9, 1],  finOptimal: [10, 15] },
-    printemps: { debutPossible: [3, 15],  debutOptimal: [3, 25], finOptimal: [5, 5] },
-  },
-  sud: {
-    label: "Sud", soilMin: 8, soilMax: 28,
-    automne:   { debutPossible: [9, 1],   debutOptimal: [9, 1],  finOptimal: [10, 31] },
-    printemps: { debutPossible: [3, 1],   debutOptimal: [3, 15], finOptimal: [4, 30] },
-  },
-  corse: {
-    label: "Corse", soilMin: 8, soilMax: 28,
-    automne:   { debutPossible: [9, 1],   debutOptimal: [9, 1],  finOptimal: [10, 31] },
-    printemps: { debutPossible: [3, 1],   debutOptimal: [3, 15], finOptimal: [4, 30] },
-  },
-};
+// Données dans src/lib/zonesGazon.json, partagées avec l'app (compte à rebours du printemps).
+const ZONES = require("../src/lib/zonesGazon.json");
 
 // Convertit [mois, jour] en "jour de l'année" (1-366) pour comparaisons, année de réf.
 function dayOfYear(month, day, year = 2026) {

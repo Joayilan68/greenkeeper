@@ -15,6 +15,7 @@ import { useReminders } from "../lib/useReminders";
 import AlertBanner from "../components/AlertBanner";
 import OnboardingModal from "../components/OnboardingModal";
 import GreenScoreModal from "../components/GreenScoreModal";
+import CompteARebours from "../components/CompteARebours";
 import { card, cardTitle, btn, scroll } from "../lib/styles";
 import { useState, useEffect } from "react";
 import { useGreenPoints } from "../lib/useGreenPoints";
@@ -237,6 +238,9 @@ export default function Dashboard() {
 
         {/* ── PARCOURS (Semis / Regarnissage en cours) ──────────────────── */}
         <CarteParcours />
+
+        {/* ── COMPTE À REBOURS DU PRINTEMPS (1er novembre → 1re tonte) ──────── */}
+        <CompteARebours profile={profile} soilTemp={weather?.soil_temp} isPaid={isPaid} />
 
         {/* ── LIGNE 1 : SCORE + MÉTÉO ────────────────────────────────────── */}
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:4, alignItems:"stretch" }}>
