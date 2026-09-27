@@ -6,7 +6,9 @@ import { trackAmazonClick } from "../lib/useAmazonProducts";
 import AMAZON_PRODUCTS from "../lib/amazonProducts";
 import { card, btn, scroll } from "../lib/styles";
 import { ajouterAchat, achatsAnnee } from "../lib/depenses";
+import { getBudgetTier, selectProduit, quantitePour } from "../lib/selectionProduits";
 import BudgetDepenses from "../components/BudgetDepenses";
+import KitSaison from "../components/KitSaison";
 
 // ════════════════════════════════════════════════════════════════════════════
 // PRODUCTS — Catalogue de produits Amazon partenaire
@@ -23,41 +25,6 @@ const CATEGORIES = [
   { id:"materiel",   label:"Matériel",          icon:"🛠️", keys:["desherbage","tonte"] },
 ];
 
-const getBudgetTier = (budget) => {
-  if (budget === "0-50" || budget === "inconnu") return "eco";
-  if (budget === "50-150")  return "standard";
-  if (budget === "150-300") return "qualite";
-  if (budget === "300-600" || budget === "600+") return "premium";
-  return "standard";
-};
-
-const calcQuantite = (surface, ratio, cond) => {
-  if (!surface || !ratio || !cond) return 1;
-  return Math.max(1, Math.ceil((surface * ratio) / cond));
-};
-
-const selectProduit = (key, tier, profile) => {
-  const cat = AMAZON_PRODUCTS[key];
-  if (!cat) return null;
-  if (key === "regarnissage" && tier === "qualite") {
-    const variante =
-      profile?.pelouse === "sport" ? "sport"
-      : (profile?.exposition === "ombrage" || profile?.exposition === "mi-ombre") ? "ombre"
-      : (profile?.zone === "sud" || profile?.zone === "sud_ouest") ? "secheresse"
-      : "universel";
-    return cat.tiers.qualite?.[variante] ?? cat.tiers.standard;
-  }
-  if (key === "tonte") {
-    const surface  = profile?.surface || 100;
-    const tierData = cat.tiers[tier] ?? cat.tiers.standard;
-    if (Array.isArray(tierData)) {
-      return tierData.find(p => (!p.surfaceMin || surface >= p.surfaceMin) && (!p.surfaceMax || surface <= p.surfaceMax)) || tierData[0];
-    }
-    return tierData;
-  }
-  return cat.tiers[tier] ?? cat.tiers.standard ?? cat.tiers.eco;
-};
-
 // ── 1 ligne par type de produit, sélection auto selon budget ──────────────────
 function ProductRow({ amazonKey, tier, profile, saveProfile }) {
   const [prixAchat, setPrixAchat] = useState(null); // saisie « Je l'ai acheté » ouverte
@@ -65,10 +32,8 @@ function ProductRow({ amazonKey, tier, profile, saveProfile }) {
   const produit = selectProduit(amazonKey, tier, profile);
   if (!cat || !produit) return null;
 
-  const surface = profile?.surface || 100;
-  let quantite  = 1;
-  if (cat.ratioGM2  && cat.conditionnement) quantite = calcQuantite(surface, cat.ratioGM2,  cat.conditionnement);
-  if (cat.ratioMlM2 && cat.conditionnement) quantite = calcQuantite(surface, cat.ratioMlM2, cat.conditionnement);
+  const surface  = profile?.surface || 100;
+  const quantite = quantitePour(cat, surface);
 
   const dejaNote = achatsAnnee(profile).some(a => a.cle === amazonKey);
   const noter = () => {
@@ -187,6 +152,7 @@ export default function Products() {
           </div>
         )}
 
+        <KitSaison profile={profile} saveProfile={saveProfile} tier={tier} />
         <BudgetDepenses profile={profile} saveProfile={saveProfile} />
 
         {/* ── Tabs catégories ── */}

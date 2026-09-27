@@ -157,7 +157,8 @@ si une fonction n'existe pas, dis simplement que ce n'est pas encore possible) :
 - Parcours guidés « Création de gazon » et « Regarnissage » : fenêtre de semis selon la température du sol, étapes
   et arrosages jour par jour.
 - Notifications (ou emails) de conseils, jusqu'à 2 par jour ; alertes gel et canicule.
-- Onglet « Produits » : produits recommandés, et suivi des dépenses de l'année (achats notés par l'utilisateur,
+- Onglet « Produits » : kit de la saison en cours (produits utiles, quantités pour sa surface, gamme selon son
+  budget, noté en un clic dans ses dépenses), produits recommandés, et suivi des dépenses de l'année (achats notés par l'utilisateur,
   comparés à son budget, remis à zéro le 1er janvier ; chaque achat est gardé avec son prix, détaillé dans son
   dossier ci-dessous) ; onglet « Classement » : GreenPoints et ligues.
 - Arrosage calculé au millimètre selon l'évaporation et la pluie (Premium).
