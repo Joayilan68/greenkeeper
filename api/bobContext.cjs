@@ -1,15 +1,28 @@
 // api/bobContext.cjs
 // Dossier de l'utilisateur lu par Bob avant de répondre (api/ai-assistant.js), construit côté serveur :
-// profil, équipement et dépenses gazon de l'année, dernières actions, dernier diagnostic photo, parcours
-// en cours, météo des 5 jours (température du sol et évaporation pour Premium). Texte compact pour limiter
-// les jetons.
+// profil, zone climatique (climat, gazons adaptés, calendrier), équipement et dépenses gazon de l'année,
+// dernières actions, dernier diagnostic photo, parcours en cours, météo des 5 jours (température du sol et
+// évaporation pour Premium). Texte compact pour limiter les jetons.
 
-const { currentPhase } = require("./parcoursEngine.cjs");
+const { currentPhase, zoneFromLatLon, ZONES } = require("./parcoursEngine.cjs");
 
 const DIAG_MAX_JOURS = 60; // un diagnostic plus ancien ne décrit plus l'état actuel
 // Valeurs stockées sans accents → libellés lisibles
 const LIBELLES = { elevee: "élevée", ensoleille: "ensoleillé", ombrage: "ombragé", electrique_batterie: "électrique sur batterie",
   electrique_filaire: "électrique filaire", thermique: "thermique", robot: "robot", naturel: "naturel", parfait: "parfait" };
+// Climat et gazons adaptés de chaque zone climatique (mêmes zones que le plan et les parcours)
+const CLIMATS = {
+  nord_est:  ["continental : hivers froids avec gelées fréquentes, étés chauds, saison de pousse courte", "ray-grass anglais et fétuques"],
+  nord:      ["océanique frais et humide : mousse fréquente, sécheresses rares", "ray-grass anglais et fétuques ; fétuque rouge à l'ombre"],
+  ouest:     ["océanique doux et humide : pousse longue, mousse et maladies liées à l'humidité", "ray-grass anglais et fétuques"],
+  centre:    ["océanique dégradé : hivers frais, étés parfois secs", "ray-grass anglais et fétuques ; fétuque élevée si étés secs"],
+  sud_ouest: ["océanique chaud : étés chauds et secs, arrosage important", "fétuque élevée, résistante à la sécheresse"],
+  sud:       ["méditerranéen : étés très chauds et secs, restrictions d'eau fréquentes", "fétuque élevée, ou gazons de climat chaud (bermuda, zoysia) qui jaunissent l'hiver"],
+  corse:     ["méditerranéen : étés très chauds et secs, restrictions d'eau fréquentes", "fétuque élevée, ou gazons de climat chaud (bermuda, zoysia) qui jaunissent l'hiver"],
+};
+const MOIS_COURTS = ["", "janv.", "févr.", "mars", "avril", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
+const jourMois = ([m, j]) => `${j === 1 ? "1er" : j} ${MOIS_COURTS[m]}`;
+
 // Plafond de chaque tranche de budget du profil (même règle que src/lib/depenses.js)
 const PLAFONDS = { "0-50": 50, "50-150": 150, "150-300": 300, "300-600": 600 };
 const euros = (n) => { const v = Math.round(n * 100) / 100; return `${Number.isInteger(v) ? v : v.toFixed(2).replace(".", ",")} €`; };
@@ -52,6 +65,12 @@ async function buildBobContext(supabase, { userId, premium, clientProfile = {}, 
 
   l.push(`Date du jour : ${today.split("-").reverse().join("/")} (${MOIS[month] || ""}) · Score de santé du gazon dans l'app : ${score}/100`);
   l.push(`Gazon : ${lisible(p.pelouse) || "non renseigné"} · sol : ${lisible(p.sol) || "?"} · surface : ${p.surface ? p.surface + " m²" : "?"} · exposition : ${lisible(p.exposition) || "?"}`);
+  if (typeof p.lat === "number" && typeof p.lon === "number") {
+    const cle = zoneFromLatLon(p.lat, p.lon), z = ZONES[cle];
+    l.push(`Zone climatique ${z.label} — climat ${CLIMATS[cle][0]} ; gazons adaptés : ${CLIMATS[cle][1]}. ` +
+      `Calendrier indicatif : 1re tonte vers le ${jourMois(z.premiereTonte)}, semis de printemps ${jourMois(z.printemps.debutOptimal)} → ${jourMois(z.printemps.finOptimal)}, ` +
+      `semis d'automne ${jourMois(z.automne.debutOptimal)} → ${jourMois(z.automne.finOptimal)}`);
+  }
   l.push(`Ville : ${p.ville || "?"} · objectif : ${lisible(p.objectif) || "?"} · usages : ${lisible(p.usages) || "?"}`);
   const GAMME = { "0-50": "eco", inconnu: "eco", "50-150": "standard", "150-300": "qualite", "300-600": "premium", "600+": "premium" };
   if (p.budget) l.push(`Budget entretien annuel : ${p.budget === "inconnu" ? "non précisé" : p.budget + " €"} (gamme de produits conseillée : ${GAMME[p.budget] || "standard"})`);
