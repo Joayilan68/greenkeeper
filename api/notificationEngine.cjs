@@ -9,7 +9,7 @@
 // hiérarchie 6 priorités, N08 (regroupement), N10 (arrosage quantitatif ET₀).
 // Itération 2b : type de gazon (synthétique, bermuda en dormance, rustique), risques
 // de maladie, astuces de saison, anti-fatigue selon les jours sans visite.
-// Travaux d'hiver : feuilles, dernière tonte, purge de l'arrosage, pH, révision et 1re tonte
+// Travaux d'hiver : feuilles, dernière tonte, purge de l'arrosage, pH (automne, onglet pH de la base), révision et 1re tonte
 // aux dates de la zone climatique (src/lib/zonesGazon.json, comme le compte à rebours du printemps).
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -321,9 +321,9 @@ function checkTravauxHiver(profile, weather, month, notifLog, today) {
       type: "hiver_derniere_tonte", title: "✂️ Dernière tonte de l'année",
       body: "Temps sec et doux : une dernière tonte à 5-6 cm aide le gazon à passer l'hiver.",
       url: "/conseils/preparer-gazon-hiver" },
-    month === 1 && new Date(t).getUTCDate() >= 10 && new Date(t).getUTCDate() <= 20 && profile?.sol !== "calcaire" && {
+    month === 10 && new Date(t).getUTCDate() >= 1 && new Date(t).getUTCDate() <= 12 && profile?.sol !== "calcaire" && {
       type: "hiver_ph", title: "🧪 Mesure le pH de ton sol",
-      body: "Sous pH 6, un chaulage en fin d'hiver aide à chasser la mousse. Un test de jardinerie suffit.",
+      body: "Sous pH 6, le sol est acide : l'automne est le moment de chauler (chaux, ou chaux dolomitique entre 5 et 6). Un test de jardinerie suffit.",
       url: "/conseils/chaulage-ph-pelouse" },
     ecart(z.premiereTonte) >= -21 && ecart(z.premiereTonte) <= -14 && {
       type: "printemps_revision", title: robot ? "🤖 Prépare ton robot tondeuse" : "🔧 Révise ta tondeuse",
@@ -334,7 +334,7 @@ function checkTravauxHiver(profile, weather, month, notifLog, today) {
       type: "printemps_premiere_tonte", title: robot ? "🤖 Remets ton robot en route" : "✂️ C'est le moment de la 1re tonte",
       body: robot
         ? "L'herbe repart : relance le robot avec une hauteur de coupe haute, puis descends par paliers."
-        : "Herbe sèche et douceur : 1re tonte haute (6-7 cm), sans couper plus d'un tiers.",
+        : "Herbe sèche et douceur : 1re tonte en haut de la fourchette de printemps (6 cm pour un gazon universel), sans couper plus d'un tiers.",
       url: "/conseils/premiere-tonte-printemps" },
   ].filter(Boolean);
 
