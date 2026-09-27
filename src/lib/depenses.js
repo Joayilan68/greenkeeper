@@ -23,13 +23,14 @@ export const euros = (n) => {
   return `${v.toLocaleString("fr-FR", { minimumFractionDigits: dec, maximumFractionDigits: dec })} €`;
 };
 
-export function ajouterAchat(profile, { label, prix, cle = null }) {
+export function ajouterAchat(profile, { label, prix, cle = null, kit = null }) {
   const achat = {
     id: `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
     date: new Date().toLocaleDateString("fr-CA"), // AAAA-MM-JJ, heure locale
     label: String(label).trim().slice(0, 80),
     prix: Math.round(Number(prix) * 100) / 100,
     ...(cle ? { cle } : {}),
+    ...(kit ? { kit } : {}), // saison du kit de saison noté d'un clic
   };
   return { ...profile, achats: [...achatsAnnee(profile), achat] };
 }
