@@ -16,7 +16,7 @@ import AlertBanner from "../components/AlertBanner";
 import OnboardingModal from "../components/OnboardingModal";
 import GreenScoreModal from "../components/GreenScoreModal";
 import CompteARebours from "../components/CompteARebours";
-import { anneeDuBilan, bilanDisponible } from "../lib/bilanSaison";
+import { anneeDuBilan, bilanDisponible, compterActions, TYPES_ACTIONS } from "../lib/bilanSaison";
 import { card, cardTitle, btn, scroll } from "../lib/styles";
 import { useState, useEffect } from "react";
 import { useGreenPoints } from "../lib/useGreenPoints";
@@ -131,15 +131,12 @@ export default function Dashboard() {
     }
     return pts;
   })();
-  const tontes        = history.filter(h => h.action?.toLowerCase().includes("tonte")).length;
-  const arrosages     = history.filter(h => h.action?.toLowerCase().includes("arrosage")).length;
-  const engrais       = history.filter(h => h.action?.toLowerCase().includes("engrais")).length;
-  const desherbages   = history.filter(h => h.action?.toLowerCase().includes("désherb") || h.action?.toLowerCase().includes("desherb")).length;
-  const biostimulants = history.filter(h => h.action?.toLowerCase().includes("biostimulant")).length;
-  const aerations     = history.filter(h => h.action?.toLowerCase().includes("aération") || h.action?.toLowerCase().includes("aeration")).length;
-  const scarifs       = history.filter(h => h.action?.toLowerCase().includes("scarif") || h.action?.toLowerCase().includes("verticut")).length;
-  const regarnissages = history.filter(h => h.action?.toLowerCase().includes("regarnissage") || h.action?.toLowerCase().includes("semences")).length;
-  const antimousses   = history.filter(h => h.action?.toLowerCase().includes("anti-mousse") || h.action?.toLowerCase().includes("antimousse")).length;
+  // Compteurs d'actions sur la période affichée (7 ou 30 jours), mêmes types que le bilan de saison
+  const debutPeriode = new Date(); debutPeriode.setHours(0, 0, 0, 0); debutPeriode.setDate(debutPeriode.getDate() - (period === "30j" ? 30 : 7));
+  const compteurs = compterActions(history.filter(e => {
+    const [dd, mm, yy] = (e.date || "").split("/");
+    return new Date(yy, mm - 1, dd) >= debutPeriode;
+  }));
   const minScore  = Math.min(...scoreHistory.map(p => p.score));
   const maxScore  = Math.max(...scoreHistory.map(p => p.score));
   const scoreRange = maxScore - minScore || 1;
@@ -239,18 +236,6 @@ export default function Dashboard() {
 
         {/* ── PARCOURS (Semis / Regarnissage en cours) ──────────────────── */}
         <CarteParcours />
-
-        {/* ── BILAN DE SAISON (15 novembre → fin février) ───────────────────── */}
-        {bilanDisponible() && (
-          <div role="button" onClick={() => navigate("/bilan")} style={{ ...card(), display:"flex", alignItems:"center", gap:12, cursor:"pointer", background:"linear-gradient(135deg,rgba(249,168,37,0.18),rgba(13,43,26,0.6))", border:"1px solid rgba(249,168,37,0.35)" }}>
-            <span style={{ fontSize:26 }}>🏆</span>
-            <div style={{ flex:1 }}>
-              <div style={{ fontSize:14, fontWeight:800, color:"#F1F8F2" }}>Ton bilan de saison {anneeDuBilan()} est prêt</div>
-              <div style={{ fontSize:11, color:"#a5d6a7" }}>Tontes, arrosages, badges… et une image à partager</div>
-            </div>
-            <span style={{ color:"#f9a825", fontSize:18 }}>›</span>
-          </div>
-        )}
 
         {/* ── COMPTE À REBOURS DU PRINTEMPS (1er novembre → 1re tonte) ──────── */}
         <CompteARebours profile={profile} soilTemp={weather?.soil_temp} isPaid={isPaid} />
@@ -471,23 +456,24 @@ export default function Dashboard() {
           </div>
 
           <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:4 }}>
-            {[
-              { icon:"✂️",  val:tontes,        label:"Tontes" },
-              { icon:"💧",  val:arrosages,      label:"Arrosages" },
-              { icon:"🌱",  val:engrais,        label:"Engrais" },
-              { icon:"🪴",  val:desherbages,    label:"Désherb." },
-              { icon:"🌿",  val:biostimulants,  label:"Biostim." },
-              { icon:"🌀",  val:aerations,      label:"Aérations" },
-              { icon:"🔧",  val:scarifs,        label:"Scarif." },
-              { icon:"🌾",  val:regarnissages,  label:"Semences" },
-              { icon:"💊",  val:antimousses,    label:"Anti-m." },
-            ].map(({ icon, val, label }) => (
-              <div key={label} style={{ flexShrink:0, minWidth:56, background:"rgba(255,255,255,0.05)", borderRadius:10, padding:"8px 6px", textAlign:"center" }}>
-                <div style={{ fontSize:16 }}>{icon}</div>
-                <div style={{ fontSize:16, fontWeight:800, color:"#a5d6a7" }}>{val}</div>
-                <div style={{ fontSize:9, color:"#81c784" }}>{label}</div>
+            {TYPES_ACTIONS.map(({ cle, icone, court }) => (
+              <div key={cle} style={{ flexShrink:0, minWidth:56, background:"rgba(255,255,255,0.05)", borderRadius:10, padding:"8px 6px", textAlign:"center" }}>
+                <div style={{ fontSize:16 }}>{icone}</div>
+                <div style={{ fontSize:16, fontWeight:800, color:"#a5d6a7" }}>{compteurs[cle]}</div>
+                <div style={{ fontSize:9, color:"#81c784" }}>{court}</div>
               </div>
             ))}
+          </div>
+
+          {/* Bilan de saison : toute l'année, mis en avant du 15 novembre à fin février */}
+          <div role="button" onClick={() => navigate("/bilan")} style={{ marginTop:10, display:"flex", alignItems:"center", justifyContent:"space-between", gap:8, cursor:"pointer",
+            borderRadius:10, padding:"9px 12px", ...(bilanDisponible()
+              ? { background:"linear-gradient(135deg,rgba(249,168,37,0.22),rgba(13,43,26,0.4))", border:"1px solid rgba(249,168,37,0.45)" }
+              : { background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)" }) }}>
+            <span style={{ fontSize:12, fontWeight:700, color: bilanDisponible() ? "#f9a825" : "#a5d6a7" }}>
+              🏆 {bilanDisponible() ? `Ton bilan de saison ${anneeDuBilan()} est prêt` : `Mon bilan de saison ${anneeDuBilan()} (toute l'année)`}
+            </span>
+            <span style={{ color: bilanDisponible() ? "#f9a825" : "#81c784" }}>›</span>
           </div>
         </div>
 

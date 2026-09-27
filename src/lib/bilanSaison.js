@@ -8,28 +8,37 @@ import { totalAnnee } from "./depenses";
 // Saison affichée : l'année en cours, sauf en janvier-février (bilan de l'année écoulée)
 export const anneeDuBilan = (now = new Date()) => now.getMonth() < 2 ? now.getFullYear() - 1 : now.getFullYear();
 
-// Période où le tableau de bord propose le bilan : du 15 novembre au 28 février
+// Période où le tableau de bord met le bilan en avant : du 15 novembre à fin février
 export function bilanDisponible(now = new Date()) {
   const m = now.getMonth() + 1, j = now.getDate();
   return (m === 11 && j >= 15) || m === 12 || m <= 2;
 }
 
-const TYPES = [
-  { cle: "tontes",      label: "tontes",      icone: "✂️", motif: /tonte/ },
-  { cle: "arrosages",   label: "arrosages",   icone: "💧", motif: /arros/ },
-  { cle: "engrais",     label: "engrais",     icone: "🌱", motif: /engrais/ },
-  { cle: "desherbages", label: "désherbages", icone: "🪴", motif: /d[ée]sherb/ },
-  { cle: "soinsSol",    label: "aérations et scarifications", icone: "🌀", motif: /a[ée]ration|scarif|verticut/ },
-  { cle: "semis",       label: "semis et regarnissages", icone: "🌾", motif: /semis|semence|regarn/ },
+// Types d'action notés dans l'app : mêmes compteurs dans la tuile « Évolution du score » et dans le bilan
+export const TYPES_ACTIONS = [
+  { cle: "tontes",        icone: "✂️", court: "Tontes",    label: "tontes",           motif: /tonte/ },
+  { cle: "arrosages",     icone: "💧", court: "Arrosages", label: "arrosages",        motif: /arrosage/ },
+  { cle: "engrais",       icone: "🌱", court: "Engrais",   label: "engrais",          motif: /engrais/ },
+  { cle: "desherbages",   icone: "🪴", court: "Désherb.",  label: "désherbages",      motif: /d[ée]sherb/ },
+  { cle: "biostimulants", icone: "🌿", court: "Biostim.",  label: "biostimulants",    motif: /biostimulant/ },
+  { cle: "aerations",     icone: "🌀", court: "Aérations", label: "aérations",        motif: /a[ée]ration/ },
+  { cle: "scarifs",       icone: "🔧", court: "Scarif.",   label: "scarifications",   motif: /scarif|verticut/ },
+  { cle: "semis",         icone: "🌾", court: "Semences",  label: "semis et regarnissages", motif: /regarnissage|semence|semis/ },
+  { cle: "antimousses",   icone: "💊", court: "Anti-m.",   label: "anti-mousses",     motif: /anti-?mousse/ },
 ];
 
-export function calculerBilan({ annee, actions = [], diagnostics = [], profile = {}, greenPoints = 0, streakRecord = 0 }) {
-  const compte = Object.fromEntries(TYPES.map(t => [t.cle, 0]));
+export function compterActions(actions) {
+  const compte = Object.fromEntries(TYPES_ACTIONS.map(t => [t.cle, 0]));
   for (const a of actions) {
     const texte = String(a.action || "").toLowerCase();
-    const type = TYPES.find(t => t.motif.test(texte));
+    const type = TYPES_ACTIONS.find(t => t.motif.test(texte));
     if (type) compte[type.cle]++;
   }
+  return compte;
+}
+
+export function calculerBilan({ annee, actions = [], diagnostics = [], profile = {}, greenPoints = 0, streakRecord = 0 }) {
+  const compte = compterActions(actions);
   const diagsAnnee = diagnostics
     .filter(d => String(d.date || "").startsWith(String(annee)) && typeof d.analysis?.score_visuel === "number")
     .sort((a, b) => String(a.date).localeCompare(String(b.date)));
@@ -40,7 +49,7 @@ export function calculerBilan({ annee, actions = [], diagnostics = [], profile =
   return {
     annee,
     actions: actions.length,
-    lignes: TYPES.map(t => ({ ...t, n: compte[t.cle] })).filter(t => t.n > 0),
+    lignes: TYPES_ACTIONS.map(t => ({ ...t, n: compte[t.cle] })).filter(t => t.n > 0),
     diagnostics: diagsAnnee.length,
     scorePhoto: diagsAnnee.length >= 2
       ? { debut: diagsAnnee[0].analysis.score_visuel, fin: diagsAnnee[diagsAnnee.length - 1].analysis.score_visuel } : null,
