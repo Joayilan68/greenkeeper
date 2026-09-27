@@ -345,6 +345,18 @@ function checkTravauxHiver(profile, weather, month, notifLog, today) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// NIVEAU 4 ter — Bilan de saison prêt (page /bilan) : une fois, entre le 15 et le 28 novembre
+// ─────────────────────────────────────────────────────────────────────────────
+function checkBilanSaison(month, today, notifLog) {
+  const jour = Number(String(today || "").slice(8, 10));
+  if (month !== 11 || jour < 15 || jour > 28) return null;
+  const h = (notifLog && Array.isArray(notifLog.history)) ? notifLog.history : [];
+  if (h.some(e => e.type === "bilan_saison")) return null;
+  return { priority: 4, type: "bilan_saison", title: `🏆 Ton bilan de saison ${today.slice(0, 4)} est prêt`,
+    body: "Tontes, arrosages, badges : découvre ton année au jardin et partage-la avec tes proches.", url: "/bilan" };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // NIVEAU 6 — Éducatif (dernier filet) et socle quotidien de send.js : astuces de Bob,
 // filtrées par saison (mois), rotation déterministe par jour.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -454,6 +466,7 @@ function decideNotification(ctx) {
   const candidates = [
     checkEntretienDu(profile, reminderPrefs, history, month), // 3 (N08)
     checkMaladie(weather, profile, month, notifLog, today),   // 3 bis
+    checkBilanSaison(month, today, notifLog),         // 4 (bilan de saison, novembre)
     checkTravauxHiver(profile, weather, month, notifLog, today), // 4 (travaux d'hiver)
     checkConseilMeteo(weather),                       // 4
     ...(fatigue ? [] : [
