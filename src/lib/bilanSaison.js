@@ -32,7 +32,7 @@ export const TYPES_ACTIONS = [
 export async function actionsDeLAnnee(userId, annee) {
   const lignes = [];
   for (let de = 0; de < 5000; de += 1000) {
-    const { data, error } = await supabase.from("histories").select("action")
+    const { data, error } = await supabase.from("histories").select("action, date")
       .eq("user_id", userId).gte("created_at", `${annee}-01-01`).lt("created_at", `${annee + 1}-01-01`)
       .order("created_at").range(de, de + 999);
     if (error) throw error;

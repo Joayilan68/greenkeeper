@@ -4,6 +4,7 @@ import { useWeather } from "../lib/useWeather";
 import { useProfile } from "../lib/useProfile";
 import { useParcours, phaseParcours } from "../lib/useParcours";
 import { useHistory } from "../lib/useHistory";
+import { useDiagnostics } from "../lib/useDiagnostics";
 import { useAuth } from "@clerk/clerk-react";
 import { useSubscription } from "../lib/useSubscription";
 import { MONTHLY_PLAN, MONTHS_FR, calcArrosage, calcArrosageSemis, getWMO, getDebitMmH } from "../lib/lawn";
@@ -126,6 +127,7 @@ export default function Today() {
   const { parcours }        = useParcours();
   const phaseP              = phaseParcours(parcours); // { phase, jour, nom } ou null
   const { history, addEntry } = useHistory();
+  const { diagnostics = [] } = useDiagnostics() || {};
   const { getToken, isLoaded: clerkLoaded } = useAuth();
   const { isPaid, isAdmin, isFree } = useSubscription();
   const [aiReco, setAiReco]       = useState("");
@@ -225,7 +227,7 @@ export default function Today() {
   const arrosSemisOk = arrosSemis && !arrosSemis.skip;
 
   // ── Score et zone ─────────────────────────────────────────────────────────
-  const score = profile ? calcLawnScore(profile, history, weather) : 70;
+  const score = profile ? calcLawnScore({ weather, profile, history, month, diagnostics }).score : 70;
   const zone  = zoneClimatique(profile);
 
   const { mois } = useSaison();
