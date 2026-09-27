@@ -3,6 +3,7 @@ title: Préparer son gazon pour l'hiver : la check-list complète
 description: Dernière tonte, feuilles, engrais, aération, arrosage : les gestes d'octobre à décembre pour que votre pelouse passe l'hiver sans dégâts et reparte vite au printemps.
 saison: hiver
 date: 2026-09-25
+maj: 2026-09-27
 produits: engraisAutomne
 ---
 
@@ -25,19 +26,19 @@ Un tapis de feuilles prive l'herbe de lumière et entretient une humidité propi
 
 ## 3. Nourrir avec un engrais d'automne
 
-Jusqu'à mi-novembre environ, un **engrais d'automne riche en potassium** renforce les racines et la résistance au froid. Évitez les engrais riches en azote, qui font pousser une herbe tendre et fragile en plein hiver (voir [engrais gazon d'automne](/conseils/engrais-gazon-automne)).
+En septembre-octobre, l'**engrais d'automne**, puis en novembre un **engrais d'hiver riche en potassium**, renforcent les racines et la résistance au froid. Évitez les engrais riches en azote, qui font pousser une herbe tendre et fragile en plein hiver (voir [engrais gazon d'automne](/conseils/engrais-gazon-automne)).
 
 ## 4. Aérer un sol tassé
 
-Si l'eau stagne après la pluie ou si le sol est dur, **aérez en octobre**, tant que le sol n'est ni gelé ni gorgé d'eau. Un aérateur à carottes ou une simple fourche-bêche enfoncée tous les 10 à 15 cm améliore le drainage pour tout l'hiver. C'est la meilleure prévention contre la mousse.
+Si l'eau stagne après la pluie ou si le sol est argileux ou tassé, **aérez en septembre ou octobre**, tant que le sol n'est ni gelé ni gorgé d'eau. Un aérateur à carottes ou une simple fourche-bêche enfoncée tous les 10 à 15 cm améliore le drainage pour tout l'hiver. C'est la meilleure prévention contre la mousse.
 
 ## 5. Terminer les regarnissages à temps
 
-Les dernières zones clairsemées doivent être regarnies **tant que le sol dépasse 10 °C**, en général avant fin octobre. Plus tard, les graines ne germent plus ou les jeunes pousses ne passent pas l'hiver (voir le [guide du regarnissage](/conseils/regarnir-gazon-automne)).
+Les dernières zones clairsemées doivent être regarnies **tant que le sol dépasse 10 à 12 °C**, avant la fin de la fenêtre d'automne de votre région : dès début septembre dans le nord et l'est, jusqu'à fin octobre dans le sud-ouest, début novembre dans le sud. Plus tard, les graines ne germent plus ou les jeunes pousses ne passent pas l'hiver (voir le [guide du regarnissage](/conseils/regarnir-gazon-automne)).
 
 ## 6. Traiter la mousse et corriger le sol
 
-L'automne est la saison de la mousse. Si elle est bien présente, traitez-la puis retirez-la, et profitez de l'hiver pour **corriger l'acidité du sol par un chaulage** si le pH est bas (voir [mousse dans la pelouse](/conseils/mousse-pelouse) et [chaulage et pH du sol](/conseils/chaulage-ph-pelouse)).
+L'automne est la saison de la mousse. Si elle est bien présente, traitez-la puis retirez-la, et **corrigez l'acidité du sol par un chaulage** à l'automne si le pH est bas (voir [mousse dans la pelouse](/conseils/mousse-pelouse) et [chaulage et pH du sol](/conseils/chaulage-ph-pelouse)).
 
 ## 7. Mettre l'arrosage et le matériel à l'abri
 
@@ -58,10 +59,10 @@ Tout est détaillé dans notre article [hiverner sa tondeuse, son robot et son a
 
 | Mois | À faire |
 |---|---|
-| **Octobre** | Tontes espacées · feuilles chaque semaine · engrais d'automne · aération · derniers regarnissages · traitement de la mousse |
-| **Novembre** | Dernière tonte (5-6 cm) · feuilles · purge de l'arrosage · hivernage du matériel |
-| **Décembre à février** | Chaulage si besoin · ne pas marcher sur le gazon gelé · rien sur la pelouse · préparer le plan du printemps |
+| **Octobre** | Tontes espacées · feuilles chaque semaine · engrais d'automne · aération (sol argileux ou tassé) · chaulage si pH bas · derniers regarnissages dans le sud |
+| **Novembre** | Dernière tonte (5-6 cm) · engrais d'hiver au potassium · feuilles · purge de l'arrosage · hivernage du matériel |
+| **Décembre à février** | Pas de tonte · ne pas marcher sur le gazon gelé · rien sur la pelouse · préparer le plan du printemps |
 
 ## Mongazon360 vous guide tout l'hiver
 
-Le plan d'entretien de Mongazon360 suit la saison et la météo de votre commune : rythme de tonte, engrais d'automne, chaulage en hiver. Vous recevez une **alerte la veille de chaque gel annoncé**, le bon signal pour purger l'arrosage si ce n'est pas encore fait. Et le diagnostic photo de Bob vous aide à comprendre les plaques suspectes au printemps.
+Le plan d'entretien de Mongazon360 suit la saison et la météo de votre commune : rythme de tonte, engrais d'automne et d'hiver, rappel du pH à l'automne. Vous recevez une **alerte la veille de chaque gel annoncé**, le bon signal pour purger l'arrosage si ce n'est pas encore fait. Et le diagnostic photo de Bob vous aide à comprendre les plaques suspectes au printemps.

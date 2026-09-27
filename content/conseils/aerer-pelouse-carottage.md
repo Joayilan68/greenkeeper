@@ -3,6 +3,7 @@ title: Aérer sa pelouse (carottage) : pourquoi, quand et comment
 description: Flaques qui stagnent, sol dur, mousse et pâquerettes ? Votre pelouse étouffe. L'aération par carottage décompacte le sol et relance le gazon. Méthode, outils et bonne période.
 saison: printemps
 date: 2026-09-25
+maj: 2026-09-27
 produits: aeration
 ---
 
@@ -31,12 +32,14 @@ Les deux se complètent très bien : on aère, puis on scarifie si besoin.
 
 Il faut aérer quand le gazon pousse activement, pour qu'il comble vite les trous :
 
-- **au printemps**, d'avril à début juin ;
-- **en automne**, de septembre à octobre, souvent avant un regarnissage.
+- **en mars**, et jusqu'en avril sur un sol argileux ou tassé ;
+- **en septembre**, et jusqu'en octobre sur un sol argileux ou tassé, souvent avant un regarnissage.
+
+Laissez au moins **90 jours** entre deux aérations, et ne faites **jamais aération et scarification le même jour** : c'est l'une ou l'autre.
 
 Le sol doit être **humide mais ressuyé** : un ou deux jours après une pluie, ou après un arrosage copieux la veille. Un sol sec et dur résiste aux outils, un sol détrempé se tasse encore plus sous les pas.
 
-À éviter : les **périodes de sécheresse ou de canicule**, le gel, et les pelouses semées depuis moins d'un an.
+À éviter : les **périodes de sécheresse ou de canicule**, le gel, et les pelouses semées depuis moins de 3 mois.
 
 ## Quel outil choisir ?
 

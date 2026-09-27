@@ -3,6 +3,7 @@ title: Scarifier sa pelouse : quand, comment et pourquoi
 description: Mousse, feutre, gazon spongieux ? La scarification redonne de l'air à la pelouse. Signes qui ne trompent pas, meilleures périodes, méthode et soins après le passage.
 saison: automne
 date: 2026-09-25
+maj: 2026-09-27
 produits: verticut
 ---
 
@@ -38,10 +39,12 @@ De nombreux appareils combinent un rouleau défeutreur et un rouleau scarificate
 
 Il y a **deux périodes idéales**, quand le gazon pousse activement et pourra se refaire rapidement :
 
-- **au printemps**, d'avril à mai, une fois que le sol s'est réchauffé ;
-- **en automne**, de mi-septembre à mi-octobre, souvent le meilleur moment car on peut regarnir juste après.
+- **au printemps**, en mars-avril, une fois que le sol s'est réchauffé ;
+- **en automne**, en septembre, souvent le meilleur moment car on peut regarnir juste après.
 
-À éviter absolument : les **périodes de sécheresse ou de canicule**, le gel, un sol détrempé, et une pelouse semée depuis **moins d'un an**.
+Laissez **6 mois** entre deux scarifications (2 par an au plus, si le gazon est dense ou sujet à la mousse), et ne scarifiez **jamais le même jour qu'une aération**. À l'ombre, la scarification est déconseillée.
+
+À éviter absolument : les **périodes de sécheresse ou de canicule**, le gel, un sol détrempé, et une pelouse semée depuis **moins de 3 mois**.
 
 ## La méthode pas à pas
 

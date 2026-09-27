@@ -3,6 +3,7 @@ title: Mousse dans la pelouse : causes et solutions durables
 description: La mousse envahit votre gazon ? Elle n'est que le symptôme d'un problème de sol, d'ombre ou de tonte. Comment la supprimer et surtout l'empêcher de revenir.
 saison: automne
 date: 2026-09-25
+maj: 2026-09-27
 produits: antiMousse, engraisHiver
 ---
 
@@ -29,7 +30,7 @@ Souvent, plusieurs causes s'additionnent.
 
 Le traitement le plus répandu est l'**anti-mousse à base de sulfate de fer** :
 
-- appliquez-le quand la mousse est active, **en automne ou au début du printemps** ;
+- appliquez-le quand la mousse est active : **en septembre, ou en mars-avril** ;
 - sur un gazon humide, sans pluie forte annoncée dans les heures qui suivent, et hors période de gel ;
 - respectez la dose indiquée sur l'emballage : un surdosage brûle le gazon ;
 - en 1 à 2 semaines, **la mousse noircit** : elle est morte.
@@ -42,15 +43,15 @@ La mousse morte reste en place et étouffe toujours le gazon. **2 à 3 semaines 
 
 ## Étape 3 : regarnir les trous
 
-Là où la mousse était dense, le sol est souvent nu après le passage du râteau. **Regarnissez sans attendre**, sinon la mousse ou les mauvaises herbes reprendront la place. En automne, tant que le sol dépasse 10 °C, c'est la période idéale (voir notre [guide du regarnissage](/conseils/regarnir-gazon-automne)). À l'ombre, choisissez un mélange riche en fétuque rouge.
+Là où la mousse était dense, le sol est souvent nu après le passage du râteau. **Regarnissez sans attendre**, sinon la mousse ou les mauvaises herbes reprendront la place. En automne, tant que le sol dépasse 10 à 12 °C, c'est la période idéale (voir notre [guide du regarnissage](/conseils/regarnir-gazon-automne)). À l'ombre, choisissez un mélange riche en fétuque rouge.
 
 ## Étape 4 : corriger la cause (le plus important)
 
-- **Sol acide** : faites un **chaulage** (chaux calcaire ou magnésienne) en automne ou en hiver, à la dose correspondant au pH mesuré. Espacez chaulage et sulfate de fer d'au moins 3 à 4 semaines.
+- **Sol acide** : faites un **chaulage** (chaux calcaire, ou dolomitique pour un pH entre 5 et 6) à l'automne, à la dose correspondant au pH mesuré. Espacez chaulage et sulfate de fer d'au moins 3 à 4 semaines.
 - **Sol tassé** : aérez avec un aérateur à carottes ou une fourche-bêche, puis étalez un peu de sable ou de terreau.
 - **Mauvais drainage** : sablage régulier, et dans les cas sérieux, drain ou reprofilage des zones en creux.
-- **Ombre** : éclaircissez les arbres ou les haies si possible, remontez la hauteur de tonte à 6-7 cm et semez des variétés adaptées à l'ombre. Sous un couvert très dense, un couvre-sol sera plus réaliste que le gazon.
-- **Tonte trop basse** : ne descendez jamais sous 4 à 5 cm, et ne retirez jamais plus d'un tiers de la hauteur en une fois.
+- **Ombre** : éclaircissez les arbres ou les haies si possible, remontez la hauteur de tonte à 6-8 cm et semez des variétés adaptées à l'ombre. Sous un couvert très dense, un couvre-sol sera plus réaliste que le gazon.
+- **Tonte trop basse** : ne descendez jamais sous 4 cm pour un gazon universel (5 cm à l'ombre), et ne retirez jamais plus d'un tiers de la hauteur en une fois.
 - **Gazon affamé** : apportez un engrais adapté au printemps et à l'automne. Un gazon dense ne laisse pas de place à la mousse.
 
 ## Les erreurs classiques
