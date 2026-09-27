@@ -1,30 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth, useUser } from "@clerk/clerk-react";
-import { supabase } from "../lib/supabase";
 import { useProfile } from "../lib/useProfile";
 import { useDiagnostics } from "../lib/useDiagnostics";
 import { useGreenPoints } from "../lib/useGreenPoints";
 import { useStreak } from "../lib/useStreak";
-import { anneeDuBilan, calculerBilan, imageBilan } from "../lib/bilanSaison";
+import { anneeDuBilan, calculerBilan, imageBilan, actionsDeLAnnee } from "../lib/bilanSaison";
 import { euros } from "../lib/depenses";
 import { card, scroll } from "../lib/styles";
 
 const LIEN = "https://mongazon360.fr/?utm_source=bilan&utm_medium=partage";
-
-// Toutes les actions notées de l'année (l'historique de l'app n'en garde que 60)
-async function actionsDeLAnnee(userId, annee) {
-  const lignes = [];
-  for (let de = 0; de < 5000; de += 1000) {
-    const { data, error } = await supabase.from("histories").select("action")
-      .eq("user_id", userId).gte("created_at", `${annee}-01-01`).lt("created_at", `${annee + 1}-01-01`)
-      .order("created_at").range(de, de + 999);
-    if (error) throw error;
-    lignes.push(...data);
-    if (data.length < 1000) break;
-  }
-  return lignes;
-}
 
 export default function Bilan() {
   const navigate = useNavigate();

@@ -16,7 +16,7 @@ import AlertBanner from "../components/AlertBanner";
 import OnboardingModal from "../components/OnboardingModal";
 import GreenScoreModal from "../components/GreenScoreModal";
 import CompteARebours from "../components/CompteARebours";
-import { anneeDuBilan, bilanDisponible, compterActions, TYPES_ACTIONS } from "../lib/bilanSaison";
+import { anneeDuBilan, bilanDisponible, compterActions, actionsDeLAnnee, TYPES_ACTIONS } from "../lib/bilanSaison";
 import { card, cardTitle, btn, scroll } from "../lib/styles";
 import { useState, useEffect } from "react";
 import { useGreenPoints } from "../lib/useGreenPoints";
@@ -118,6 +118,11 @@ export default function Dashboard() {
   };
 
   const [period, setPeriod] = useState("7j");
+  const [actionsAnnee, setActionsAnnee] = useState(null);
+  useEffect(() => {
+    if (!user?.id) return;
+    actionsDeLAnnee(user.id, new Date().getFullYear()).then(setActionsAnnee).catch(() => {});
+  }, [user?.id, history.length]);
   const scoreHistory = (() => {
     const days = period === "30j" ? 30 : 7;
     const pts = [];
@@ -131,12 +136,10 @@ export default function Dashboard() {
     }
     return pts;
   })();
-  // Compteurs d'actions sur la période affichée (7 ou 30 jours), mêmes types que le bilan de saison
-  const debutPeriode = new Date(); debutPeriode.setHours(0, 0, 0, 0); debutPeriode.setDate(debutPeriode.getDate() - (period === "30j" ? 30 : 7));
-  const compteurs = compterActions(history.filter(e => {
-    const [dd, mm, yy] = (e.date || "").split("/");
-    return new Date(yy, mm - 1, dd) >= debutPeriode;
-  }));
+  // Compteurs d'actions depuis le 1er janvier : mêmes chiffres que le bilan de saison (toutes les actions de
+  // l'année en base ; en attendant, celles de l'historique local de l'année)
+  const anneeEnCours = new Date().getFullYear();
+  const compteurs = compterActions(actionsAnnee || history.filter(e => (e.date || "").endsWith(`/${anneeEnCours}`)));
   const minScore  = Math.min(...scoreHistory.map(p => p.score));
   const maxScore  = Math.max(...scoreHistory.map(p => p.score));
   const scoreRange = maxScore - minScore || 1;
@@ -455,6 +458,7 @@ export default function Dashboard() {
             <span>Aujourd'hui</span>
           </div>
 
+          <div style={{ fontSize:10, color:"#81c784", marginBottom:6 }}>Actions depuis le 1er janvier {anneeEnCours}</div>
           <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:4 }}>
             {TYPES_ACTIONS.map(({ cle, icone, court }) => (
               <div key={cle} style={{ flexShrink:0, minWidth:56, background:"rgba(255,255,255,0.05)", borderRadius:10, padding:"8px 6px", textAlign:"center" }}>

@@ -2,6 +2,7 @@
 // Bilan de saison (page /bilan) : ce que l'utilisateur a fait pour son gazon pendant l'année, à partir de
 // ses actions notées (table histories, toute l'année), de ses diagnostics photo, badges et dépenses,
 // et image à partager.
+import { supabase } from "./supabase";
 import { BADGES } from "./useBadges";
 import { totalAnnee } from "./depenses";
 
@@ -26,6 +27,20 @@ export const TYPES_ACTIONS = [
   { cle: "semis",         icone: "🌾", court: "Semences",  label: "semis et regarnissages", motif: /regarnissage|semence|semis/ },
   { cle: "antimousses",   icone: "💊", court: "Anti-m.",   label: "anti-mousses",     motif: /anti-?mousse/ },
 ];
+
+// Toutes les actions notées de l'année (l'historique de l'app n'en garde que 60)
+export async function actionsDeLAnnee(userId, annee) {
+  const lignes = [];
+  for (let de = 0; de < 5000; de += 1000) {
+    const { data, error } = await supabase.from("histories").select("action")
+      .eq("user_id", userId).gte("created_at", `${annee}-01-01`).lt("created_at", `${annee + 1}-01-01`)
+      .order("created_at").range(de, de + 999);
+    if (error) throw error;
+    lignes.push(...data);
+    if (data.length < 1000) break;
+  }
+  return lignes;
+}
 
 export function compterActions(actions) {
   const compte = Object.fromEntries(TYPES_ACTIONS.map(t => [t.cle, 0]));
