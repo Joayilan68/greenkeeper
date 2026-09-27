@@ -67,6 +67,7 @@ const SOURCE_META = {
   email:     { icon: "✉️", label: "Email",     color: "#ce93d8" },
   linkedin:  { icon: "💼", label: "LinkedIn",  color: "#9fa8da" },
   conseils:  { icon: "📚", label: "Articles Conseils", color: "#c5e1a5" },
+  bilan:     { icon: "🏆", label: "Bilans partagés", color: "#ffe082" },
   autre:     { icon: "🌐", label: "Autre",     color: "#bcaaa4" },
 };
 
