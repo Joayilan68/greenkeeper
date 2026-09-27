@@ -3,6 +3,7 @@ title: Robot tondeuse : bien le régler et l'entretenir pour une belle pelouse
 description: Hauteur de coupe, horaires, lames, nettoyage, hérissons : les réglages et l'entretien qui font la différence entre un robot tondeuse qui abîme la pelouse et un gazon impeccable.
 saison: ete
 date: 2026-09-25
+maj: 2026-09-27
 ---
 
 Le robot tondeuse a conquis les jardins : il tond un peu chaque jour, sans bruit, et la pelouse n'a jamais l'air négligée. Mais un robot mal réglé ou mal entretenu peut aussi **abîmer le gazon**, laisser des zones oubliées ou tomber en panne en pleine saison. Voici les bons réglages et l'entretien à prévoir.
@@ -19,7 +20,7 @@ Le robot tondeuse a conquis les jardins : il tond un peu chaque jour, sans bruit
 
 ### La hauteur de coupe
 
-- **En saison**, 4 à 6 cm selon l'usage (voir [à quelle hauteur tondre](/conseils/hauteur-tonte-gazon)).
+- **En saison**, 5 à 6 cm pour un gazon universel, davantage à l'ombre, selon le type de gazon (voir [à quelle hauteur tondre](/conseils/hauteur-tonte-gazon)).
 - **En été**, remontez d'1 à 2 cm pendant les fortes chaleurs.
 - **À la remise en route au printemps**, commencez haut et descendez par paliers sur deux à trois semaines.
 

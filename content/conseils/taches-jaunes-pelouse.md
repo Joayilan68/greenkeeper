@@ -3,6 +3,7 @@ title: Taches jaunes sur la pelouse : trouver la cause et y remédier
 description: Sécheresse, urine de chien, engrais, maladie, larves ? Une tache jaune ne se soigne pas toujours de la même façon. Le guide pour identifier la cause et sauver votre gazon.
 saison: printemps
 date: 2026-09-25
+maj: 2026-09-27
 produits: biostimulant
 ---
 
@@ -27,7 +28,7 @@ Une tache jaune qui apparaît sur la pelouse inquiète toujours. Pourtant, **les
 
 En été, le gazon entre en **dormance** pour se protéger : il jaunit, mais ses racines restent vivantes. Avant de jaunir, l'herbe prend une teinte **gris-bleu** et garde la trace des pas : c'est le moment d'arroser.
 
-**Que faire** : arroser **copieusement et rarement** (1 à 2 fois par semaine, en profondeur, tôt le matin), plutôt qu'un peu chaque jour. Même jauni, le gazon reverdit généralement avec les pluies d'automne.
+**Que faire** : arroser **copieusement et rarement** (environ 2 fois par semaine selon le sol, en profondeur, tôt le matin), plutôt qu'un peu chaque jour. Même jauni, le gazon reverdit généralement avec les pluies d'automne.
 
 ## Urine de chien
 
@@ -47,7 +48,7 @@ Elles dévorent les racines : l'herbe jaunit, puis **se soulève à la main comm
 
 **Le test** : soulevez l'herbe sur une zone jaune. Si vous voyez plusieurs vers blancs en forme de C (hannetons) ou des larves grises (tipules), le diagnostic est fait.
 
-**Que faire** : traitement biologique par **nématodes** (vers microscopiques qui parasitent les larves), à appliquer à la bonne période sur sol humide et tiède, souvent en fin d'été ou au printemps. Puis regarnissage.
+**Que faire** : traitement biologique par **nématodes** (vers microscopiques qui parasitent les larves), à appliquer en **septembre** (la période efficace), sur sol humide et tiède. Puis regarnissage.
 
 ## Les maladies
 

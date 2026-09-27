@@ -3,6 +3,7 @@ title: Engrais gazon d'automne : lequel choisir et quand l'épandre
 description: L'engrais d'automne prépare le gazon à l'hiver et au printemps. Pourquoi privilégier le potassium, quelle période choisir, comment l'épandre et les erreurs à éviter.
 saison: automne
 date: 2026-09-25
+maj: 2026-09-27
 produits: engraisAutomne
 ---
 
@@ -24,8 +25,8 @@ Au printemps, on cherche la pousse et la couleur : l'azote domine. **En automne,
 
 ## Quand l'épandre ?
 
-- **De mi-septembre à mi-novembre** selon les régions : plus tôt dans le nord et l'est, plus tard dans l'ouest et le sud.
-- **Tant que le sol est encore tiède (au-dessus de 8 à 10 °C)** : les racines absorbent les éléments, et les engrais organiques ont besoin de l'activité du sol pour se décomposer.
+- **En septembre et octobre**, quand le gazon repart après l'été. En **novembre**, place à l'engrais d'hiver riche en potassium, qui renforce la résistance au gel. Laissez au moins 45 jours entre deux apports.
+- **Tant que le sol est encore tiède (au-dessus de 8 °C)** : les racines absorbent les éléments, et les engrais organiques ont besoin de l'activité du sol pour se décomposer.
 - **Idéalement juste avant une pluie** annoncée, qui fera pénétrer les granulés.
 
 À éviter : un sol gelé, détrempé ou couvert de feuilles, et les périodes de forte chaleur si l'automne est tardif et sec.
@@ -51,7 +52,7 @@ Sur les zones regarnies, utilisez un **engrais « spécial semis » ou « starte
 
 ## Engrais, mousse et chaulage : ne pas tout mélanger
 
-Si votre pelouse souffre de mousse, l'engrais seul ne suffit pas. Traitez la mousse, corrigez l'acidité du sol par un chaulage si le pH est bas, et **espacez chaulage et engrais d'au moins deux à trois semaines**. Tout est détaillé dans notre article [mousse dans la pelouse](/conseils/mousse-pelouse).
+Si votre pelouse souffre de mousse, l'engrais seul ne suffit pas. Traitez la mousse, corrigez l'acidité du sol par un chaulage si le pH est bas, et **espacez chaulage et engrais d'au moins trois à quatre semaines**. Tout est détaillé dans notre article [mousse dans la pelouse](/conseils/mousse-pelouse).
 
 ## Les erreurs les plus fréquentes
 

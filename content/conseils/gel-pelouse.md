@@ -3,6 +3,7 @@ title: Gel et pelouse : les erreurs à éviter en hiver
 description: Marcher sur le gazon gelé, tondre, saler, laisser la neige tassée : les erreurs qui abîment la pelouse en hiver, et comment la protéger jusqu'au printemps.
 saison: hiver
 date: 2026-09-25
+maj: 2026-09-27
 ---
 
 Le gazon supporte bien le froid : les graminées de nos pelouses sont faites pour passer l'hiver. Ce qui abîme vraiment une pelouse en hiver, ce sont surtout **quelques erreurs** faites pendant les périodes de gel, de givre ou de neige. Voici lesquelles, et comment les éviter.
@@ -50,7 +51,7 @@ Les gazons semés tardivement sont les plus exposés : le gel peut **soulever la
 1. **Attendez que le sol se ressuie** avant de marcher ou de tondre.
 2. **Retirez les feuilles et débris** apportés par le vent.
 3. **Observez les plaques suspectes** : une plaque ronde et feutrée après la neige signale souvent une fusariose. Ratissez-la légèrement pour l'aérer.
-4. **Ne vous précipitez pas sur l'engrais** : le premier apport de printemps se fait quand le gazon repart vraiment, en général en mars ou en avril.
+4. **Ne vous précipitez pas sur l'engrais** : le premier apport de printemps se fait quand le gazon repart vraiment : en mars, parfois dès février quand le sol se réchauffe tôt (sud, ouest), sol au-dessus de 8 °C et sans gel annoncé.
 
 ## Mongazon360 vous prévient avant le gel
 
