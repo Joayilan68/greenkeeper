@@ -25,6 +25,12 @@
   plutôt qu'un simple `console.error`.
 - Côté app : erreurs globales et plantages d'écran remontés automatiquement (`usePilotage.js`, `ErrorBoundary`).
 
+## Base de connaissances (agronomie)
+- Référence unique : `docs/kb/Knowledge_et_cas_test_ENRICHI.xlsx` (voir `docs/kb/README.md`). Toute règle, date, seuil
+  ou conseil donné aux utilisateurs (app, notifications, Bob, diagnostic, articles) en vient et ne la contredit jamais.
+- Besoin non couvert : proposer l'ajout, le faire valider, l'ajouter à la base, puis coder. Base mise à jour :
+  remplacer le fichier et aligner le code dans le même changement.
+
 ## SEO et contenus
 - Pages publiques (titre, description, canonique) : `src/lib/seoPages.json`, pré-générées au build par
   `scripts/seo-build.mjs` (+ `sitemap.xml`). Toute nouvelle page publique : l'ajouter au JSON **et** à la règle

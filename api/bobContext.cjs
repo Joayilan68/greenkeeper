@@ -1,6 +1,6 @@
 // api/bobContext.cjs
 // Dossier de l'utilisateur lu par Bob avant de répondre (api/ai-assistant.js), construit côté serveur :
-// profil, zone climatique (climat, gazons adaptés, calendrier), équipement et dépenses gazon de l'année,
+// profil, zone climatique, hauteurs de tonte et arrosage selon le sol (base de connaissances), équipement et dépenses gazon de l'année,
 // dernières actions, dernier diagnostic photo, parcours en cours, météo des 5 jours (température du sol et
 // évaporation pour Premium). Texte compact pour limiter les jetons.
 
@@ -10,18 +10,34 @@ const DIAG_MAX_JOURS = 60; // un diagnostic plus ancien ne décrit plus l'état 
 // Valeurs stockées sans accents → libellés lisibles
 const LIBELLES = { elevee: "élevée", ensoleille: "ensoleillé", ombrage: "ombragé", electrique_batterie: "électrique sur batterie",
   electrique_filaire: "électrique filaire", thermique: "thermique", robot: "robot", naturel: "naturel", parfait: "parfait" };
-// Climat et gazons adaptés de chaque zone climatique (mêmes zones que le plan et les parcours)
+// Base de connaissances Mongazon360 (docs/kb) — onglet « Fenêtres Semis par Zone » : note agronomique et
+// contraintes de chaque zone ; onglet « Gazons Spécifiques » : bermuda déconseillé en Nord-Est
 const CLIMATS = {
-  nord_est:  ["continental : hivers froids avec gelées fréquentes, étés chauds, saison de pousse courte", "ray-grass anglais et fétuques"],
-  nord:      ["océanique frais et humide : mousse fréquente, sécheresses rares", "ray-grass anglais et fétuques ; fétuque rouge à l'ombre"],
-  ouest:     ["océanique doux et humide : pousse longue, mousse et maladies liées à l'humidité", "ray-grass anglais et fétuques"],
-  centre:    ["océanique dégradé : hivers frais, étés parfois secs", "ray-grass anglais et fétuques ; fétuque élevée si étés secs"],
-  sud_ouest: ["océanique chaud : étés chauds et secs, arrosage important", "fétuque élevée, résistante à la sécheresse"],
-  sud:       ["méditerranéen : étés très chauds et secs, restrictions d'eau fréquentes", "fétuque élevée, ou gazons de climat chaud (bermuda, zoysia) qui jaunissent l'hiver"],
-  corse:     ["méditerranéen : étés très chauds et secs, restrictions d'eau fréquentes", "fétuque élevée, ou gazons de climat chaud (bermuda, zoysia) qui jaunissent l'hiver"],
+  nord_est:  "semi-continental : printemps tardif, automne court mais fiable ; contraintes : canicule juil.-août, gel dès novembre ; semis à privilégier en automne ; bermuda déconseillé",
+  nord:      "été doux, refroidissement rapide en automne ; contraintes : chaleur juil.-août, gel précoce en novembre ; semis à privilégier en automne",
+  ouest:     "océanique doux et humide : large fenêtre de semis, surveiller les maladies fongiques (excès d'humidité) ; contraintes : sécheresse possible en août, gel rare ; semis à privilégier en automne (fenêtre longue)",
+  centre:    "tempéré : deux fenêtres de semis équilibrées ; contraintes : sécheresse juil.-août, gel déc.-janv. ; semis au printemps et à l'automne",
+  sud_ouest: "sol qui se réchauffe tôt (printemps précoce), automne long et favorable ; contraintes : chaleur et sécheresse dès juin, hiver doux ; semis à privilégier en automne, jamais l'été",
+  sud:       "méditerranéen : semer avant la chaleur ou en automne, jamais l'été (canicule = échec) ; contraintes : canicule mai→sept., hiver très doux ; semis à privilégier en automne (fenêtre très longue)",
+  corse:     "méditerranéen insulaire : automne privilégié, arrosage indispensable au printemps ; contraintes : sécheresse marquée l'été, hiver doux",
 };
-const MOIS_COURTS = ["", "janv.", "févr.", "mars", "avril", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
-const jourMois = ([m, j]) => `${j === 1 ? "1er" : j} ${MOIS_COURTS[m]}`;
+// Onglet « Tonte Précise » : hauteurs (cm) printemps / été / canicule / automne et minimum absolu, par type de gazon
+const TONTE = {
+  universel: "5-6 / 6-7 / 7-8 / 5-6, jamais sous 4", sport: "3,5-4,5 / 3-4 / 4-5 / 4-5, jamais sous 2,5",
+  ombre: "6-8 / 7-8 / 8-9 / 6-7, jamais sous 5", rustique: "7-10 / 8-10 / 10-12 / 7-9, jamais sous 6",
+  ornement: "2,5-3,5 / 2-3 / 3-4 / 3-4, jamais sous 1,5", bermuda: "3-4 / 2,5-3,5 / 3-4 / 4-5, jamais sous 2 ; dormance nov.-mars",
+};
+// Onglet « Arrosage Précis » : volume par session, fréquence et heure selon le sol
+const ARROSAGE = {
+  sableux: "15-20 mm tous les 2-3 jours, quotidien en canicule, 5h-7h le matin obligatoirement",
+  limoneux: "10-15 mm tous les 3-4 jours, tous les 2 jours en canicule, 5h-8h le matin (soir déconseillé : champignons)",
+  argileux: "8-12 mm en 2 passages tous les 4-5 jours, tous les 3 jours en canicule, 6h-8h le matin (soir interdit)",
+  calcaire: "10-14 mm tous les 3-4 jours, tous les 2-3 jours en canicule, 5h-8h le matin",
+  humifere: "8-10 mm tous les 4-5 jours, tous les 3 jours en canicule, 5h-8h le matin",
+  compacte: "6-8 mm en 2 passages tous les 3-4 jours après aération, 6h-8h le matin (soir interdit)",
+};
+const TYPE_TONTE = { universel: "universel", inconnu: "universel", sport: "sport", ombre: "ombre", rustique: "rustique",
+  ornemental: "ornement", ornement: "ornement", bermuda: "bermuda", chaud: "bermuda" };
 
 // Plafond de chaque tranche de budget du profil (même règle que src/lib/depenses.js)
 const PLAFONDS = { "0-50": 50, "50-150": 150, "150-300": 300, "300-600": 600 };
@@ -66,11 +82,13 @@ async function buildBobContext(supabase, { userId, premium, clientProfile = {}, 
   l.push(`Date du jour : ${today.split("-").reverse().join("/")} (${MOIS[month] || ""}) · Score de santé du gazon dans l'app : ${score}/100`);
   l.push(`Gazon : ${lisible(p.pelouse) || "non renseigné"} · sol : ${lisible(p.sol) || "?"} · surface : ${p.surface ? p.surface + " m²" : "?"} · exposition : ${lisible(p.exposition) || "?"}`);
   if (typeof p.lat === "number" && typeof p.lon === "number") {
-    const cle = zoneFromLatLon(p.lat, p.lon), z = ZONES[cle];
-    l.push(`Zone climatique ${z.label} — climat ${CLIMATS[cle][0]} ; gazons adaptés : ${CLIMATS[cle][1]}. ` +
-      `Calendrier indicatif : 1re tonte vers le ${jourMois(z.premiereTonte)}, semis de printemps ${jourMois(z.printemps.debutOptimal)} → ${jourMois(z.printemps.finOptimal)}, ` +
-      `semis d'automne ${jourMois(z.automne.debutOptimal)} → ${jourMois(z.automne.finOptimal)}`);
+    const cle = zoneFromLatLon(p.lat, p.lon);
+    l.push(`Zone climatique ${ZONES[cle].label} : ${CLIMATS[cle]}`);
   }
+  const sol = String(p.sol || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  if (ARROSAGE[sol]) l.push(`Arrosage pour son sol (${lisible(p.sol)}) : ${ARROSAGE[sol]}`);
+  const typeTonte = TYPE_TONTE[p.pelouse];
+  if (typeTonte) l.push(`Hauteurs de tonte de son gazon (${typeTonte}) — printemps / été / canicule / automne en cm : ${TONTE[typeTonte]}`);
   l.push(`Ville : ${p.ville || "?"} · objectif : ${lisible(p.objectif) || "?"} · usages : ${lisible(p.usages) || "?"}`);
   const GAMME = { "0-50": "eco", inconnu: "eco", "50-150": "standard", "150-300": "qualite", "300-600": "premium", "600+": "premium" };
   if (p.budget) l.push(`Budget entretien annuel : ${p.budget === "inconnu" ? "non précisé" : p.budget + " €"} (gamme de produits conseillée : ${GAMME[p.budget] || "standard"})`);
