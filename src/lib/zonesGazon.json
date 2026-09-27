@@ -1,0 +1,114 @@
+{
+  "nord_est": {
+    "label": "Nord-Est",
+    "soilMin": 8,
+    "soilMax": 25,
+    "automne": {
+      "debutPossible": [8, 15],
+      "debutOptimal": [8, 25],
+      "finOptimal": [10, 5]
+    },
+    "printemps": {
+      "debutPossible": [3, 25],
+      "debutOptimal": [4, 1],
+      "finOptimal": [5, 15]
+    },
+    "premiereTonte": [4, 1]
+  },
+  "nord": {
+    "label": "Nord",
+    "soilMin": 8,
+    "soilMax": 25,
+    "automne": {
+      "debutPossible": [8, 15],
+      "debutOptimal": [8, 25],
+      "finOptimal": [10, 5]
+    },
+    "printemps": {
+      "debutPossible": [3, 25],
+      "debutOptimal": [4, 1],
+      "finOptimal": [5, 15]
+    },
+    "premiereTonte": [3, 25]
+  },
+  "ouest": {
+    "label": "Ouest",
+    "soilMin": 8,
+    "soilMax": 26,
+    "automne": {
+      "debutPossible": [8, 20],
+      "debutOptimal": [8, 28],
+      "finOptimal": [10, 15]
+    },
+    "printemps": {
+      "debutPossible": [3, 15],
+      "debutOptimal": [3, 25],
+      "finOptimal": [5, 15]
+    },
+    "premiereTonte": [3, 15]
+  },
+  "centre": {
+    "label": "Centre",
+    "soilMin": 8,
+    "soilMax": 26,
+    "automne": {
+      "debutPossible": [8, 20],
+      "debutOptimal": [8, 28],
+      "finOptimal": [10, 15]
+    },
+    "printemps": {
+      "debutPossible": [3, 15],
+      "debutOptimal": [3, 25],
+      "finOptimal": [5, 15]
+    },
+    "premiereTonte": [3, 20]
+  },
+  "sud_ouest": {
+    "label": "Sud-Ouest",
+    "soilMin": 8,
+    "soilMax": 27,
+    "automne": {
+      "debutPossible": [8, 25],
+      "debutOptimal": [9, 1],
+      "finOptimal": [10, 15]
+    },
+    "printemps": {
+      "debutPossible": [3, 15],
+      "debutOptimal": [3, 25],
+      "finOptimal": [5, 5]
+    },
+    "premiereTonte": [3, 10]
+  },
+  "sud": {
+    "label": "Sud",
+    "soilMin": 8,
+    "soilMax": 28,
+    "automne": {
+      "debutPossible": [9, 1],
+      "debutOptimal": [9, 1],
+      "finOptimal": [10, 31]
+    },
+    "printemps": {
+      "debutPossible": [3, 1],
+      "debutOptimal": [3, 15],
+      "finOptimal": [4, 30]
+    },
+    "premiereTonte": [3, 1]
+  },
+  "corse": {
+    "label": "Corse",
+    "soilMin": 8,
+    "soilMax": 28,
+    "automne": {
+      "debutPossible": [9, 1],
+      "debutOptimal": [9, 1],
+      "finOptimal": [10, 31]
+    },
+    "printemps": {
+      "debutPossible": [3, 1],
+      "debutOptimal": [3, 15],
+      "finOptimal": [4, 30]
+    },
+    "premiereTonte": [3, 1]
+  }
+}
