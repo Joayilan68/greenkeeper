@@ -24,7 +24,7 @@ export function compteARebours(profile, today = new Date()) {
 
   const jalons = [
     { icone: "🔧", label: "Révision de la tondeuse, lame affûtée", date: date(z.premiereTonte, -21) },
-    { icone: "✂️", label: "Première tonte, haute (6-7 cm)", date: tonte },
+    { icone: "✂️", label: "Première tonte (6 cm pour un gazon universel)", date: tonte },
     { icone: "🧹", label: "Scarification si feutre ou mousse", date: scarif },
     { icone: "🌾", label: "Regarnissage et engrais de démarrage", date: regarnissage },
   ].filter(j => j.date >= minuit(today)).sort((a, b) => a.date - b.date).slice(0, 3);
