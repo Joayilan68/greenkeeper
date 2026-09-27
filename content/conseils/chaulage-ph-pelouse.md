@@ -3,6 +3,7 @@ title: Chaulage et pH du sol : faut-il chauler sa pelouse ?
 description: Mousse qui revient chaque année, gazon qui végète ? Un sol trop acide est souvent en cause. Comment mesurer le pH, quand et comment chauler, et quelle chaux choisir.
 saison: hiver
 date: 2026-09-25
+maj: 2026-09-27
 produits: engraisHiver
 ---
 
@@ -51,7 +52,7 @@ Pour une pelouse, privilégiez un **amendement calcique ou magnésien en granul�
 
 ## Quand chauler ?
 
-- **De la fin de l'automne à la fin de l'hiver** (novembre à février) : la chaux agit lentement, les pluies la font pénétrer et le sol est corrigé pour le printemps.
+- **À l'automne** : la chaux agit lentement, les pluies d'automne et d'hiver la font pénétrer et le sol est corrigé pour le printemps. Pour un pH entre 5 et 6, un apport au **printemps** est aussi possible.
 - Sur un **sol ni gelé, ni détrempé, ni couvert de neige**.
 - **Séparément des autres apports** : espacez le chaulage d'au moins **3 à 4 semaines** d'un engrais azoté ou d'un anti-mousse au sulfate de fer. Mélangés, ils perdent en efficacité.
 
@@ -59,8 +60,13 @@ Pour une pelouse, privilégiez un **amendement calcique ou magnésien en granul�
 
 La dose dépend du pH mesuré, de la texture du sol et du produit choisi. **Suivez l'emballage ou l'analyse de sol.** À titre indicatif :
 
-- **Entretien** d'un sol proche de 6 : de l'ordre de 100 g/m² par an ;
-- **Correction** d'un sol nettement acide : doses plus élevées, **à fractionner sur plusieurs années**, car on remonte le pH progressivement, d'environ un demi-point par an.
+| pH mesuré | Produit | Dose indicative |
+|---|---|---|
+| Moins de 5 (très acide) | Chaux agricole (carbonate de calcium) | 80 à 100 g/m², une fois par an, à l'automne |
+| 5 à 5,9 (acide) | Chaux dolomitique (calcium + magnésium) | 40 à 60 g/m², une fois par an, à l'automne ou au printemps |
+| 6 à 7 (optimal) | Aucun amendement | Contrôle annuel du pH |
+
+On remonte le pH **progressivement**, d'environ un demi-point par an : une forte correction se fait sur plusieurs années.
 
 Un sol argileux demande plus de chaux qu'un sol sableux pour le même résultat.
 
@@ -77,4 +83,4 @@ Chauler corrige une cause de la mousse, mais pas les autres : ombre, sol tassé,
 
 ## Mongazon360 et votre sol
 
-Dans Mongazon360, renseignez votre type de sol : votre plan d'entretien en tient compte et vous rappelle le chaulage en hiver. Le diagnostic photo de Bob repère la mousse et les signes d'un gazon affaibli pour vous orienter vers la bonne cause.
+Dans Mongazon360, renseignez votre type de sol : votre plan d'entretien en tient compte et vous invite à mesurer le pH à l'automne, le bon moment pour chauler. Le diagnostic photo de Bob repère la mousse et les signes d'un gazon affaibli pour vous orienter vers la bonne cause.

@@ -3,6 +3,7 @@ title: Regarnir son gazon en automne : le guide étape par étape
 description: Pelouse clairsemée après l'été ? L'automne est la meilleure saison pour regarnir. Période idéale, préparation du sol, dose de semis, arrosage et première tonte.
 saison: automne
 date: 2026-09-25
+maj: 2026-09-27
 produits: regarnissage, engraisStarter
 ---
 
@@ -15,7 +16,17 @@ Après un été sec, une pelouse présente souvent des zones clairsemées, des t
 - **Moins de concurrence** : les mauvaises herbes annuelles ralentissent, les jeunes pousses de gazon prennent la place.
 - **Les racines ont le temps de s'installer** avant l'hiver, puis le gazon repart très vite au printemps.
 
-> **Quand exactement ?** En général de mi-septembre à mi-octobre dans la moitié nord de la France, jusqu'à fin octobre dans l'ouest et le sud. Le bon repère n'est pas la date mais la **température du sol** : tant qu'elle reste au-dessus de 10 °C et que les gelées ne sont pas annoncées dans les 6 semaines, c'est le moment.
+> **Quand exactement ?** Le bon repère n'est pas la date mais la **température du sol** (10 à 12 °C minimum selon la région) et l'absence de gel dans les semaines qui suivent. En moyenne :
+
+| Région | Fenêtre d'automne |
+|---|---|
+| Nord | Mi-août à début septembre |
+| Nord-Est | Fin août à mi-septembre |
+| Centre, Île-de-France | Fin août à fin septembre |
+| Ouest | Début septembre à mi-octobre |
+| Sud-Ouest | Mi-septembre à fin octobre |
+| Sud | Fin septembre à début novembre |
+| Corse | Octobre à mi-novembre |
 
 ## Le matériel nécessaire
 
@@ -51,8 +62,8 @@ Pour un regarnissage, choisissez de préférence un mélange **spécial regarnis
 
 ## Étape 4 : semer à la bonne dose
 
-- **Regarnissage** : 20 à 30 g de graines par m² sur les zones clairsemées.
-- **Zones totalement nues** : 30 à 40 g/m², comme pour un semis complet.
+- **Regarnissage** : environ 25 g de graines par m² sur les zones clairsemées.
+- **Zones totalement nues** : environ 35 g/m², comme pour un semis complet.
 
 Semez **en deux passages croisés** (une moitié dans un sens, l'autre moitié perpendiculairement) pour une répartition homogène. Semer plus dense n'aide pas : les jeunes pousses se concurrencent et deviennent fragiles.
 
@@ -82,7 +93,7 @@ Un engrais « spécial semis » ou « starter », riche en phosphore, favorise l
 
 ## Les erreurs à éviter
 
-1. **Semer trop tard** : sous 10 °C au sol, la germination s'arrête et les jeunes pousses ne passent pas l'hiver.
+1. **Semer trop tard** : sous 10 à 12 °C au sol selon la région, la germination s'arrête et les jeunes pousses ne passent pas l'hiver.
 2. **Semer sur le feutre ou la mousse** sans griffer.
 3. **Laisser sécher** la surface pendant la germination.
 4. **Enterrer les graines** trop profondément.

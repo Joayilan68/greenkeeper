@@ -3,6 +3,7 @@ title: Semer un gazon au printemps : le calendrier et la méthode
 description: Créer une pelouse ou regarnir au printemps : la bonne période selon la température du sol, la préparation du terrain, la dose de semis et l'arrosage jusqu'à la première tonte.
 saison: printemps
 date: 2026-09-25
+maj: 2026-09-27
 produits: regarnissage, engraisStarter
 ---
 
@@ -10,15 +11,18 @@ L'automne est la saison idéale pour semer un gazon, mais **le printemps est la 
 
 ## La bonne période
 
-Les graines de gazon germent quand **la température du sol dépasse 10 à 12 °C**, de façon durable. En France, cela correspond en général à :
+Les graines de gazon germent quand **la température du sol dépasse 10 à 12 °C** (12 °C dans le nord et l'est), de façon durable. En France, cela correspond en général à :
 
-| Région | Période de semis |
+| Région | Fenêtre de printemps |
 |---|---|
-| Sud, façade atlantique | Fin mars à fin avril |
-| Centre, nord, Île-de-France | Mi-avril à mi-mai |
-| Est, montagne | Fin avril à fin mai |
+| Sud, Corse | Fin février à début avril |
+| Sud-Ouest | Début mars à mi-avril |
+| Ouest | Début avril à mi-mai |
+| Centre, Île-de-France | Mi-avril à fin mai |
+| Nord-Est | Mi-avril à fin mai |
+| Nord | Fin avril à début juin |
 
-**Semer trop tôt**, dans un sol froid, ralentit la germination et laisse le temps aux oiseaux et aux mauvaises herbes. **Semer trop tard**, fin mai ou en juin, expose les jeunes pousses à la chaleur et à la sécheresse avant qu'elles n'aient des racines profondes, et demande beaucoup d'arrosage.
+**Semer trop tôt**, dans un sol froid, ralentit la germination et laisse le temps aux oiseaux et aux mauvaises herbes. **Semer trop tard**, après la fin de la fenêtre de votre région, expose les jeunes pousses à la chaleur et à la sécheresse avant qu'elles n'aient des racines profondes, et demande beaucoup d'arrosage.
 
 ## Préparer le terrain (pour une création)
 
@@ -40,7 +44,7 @@ Choisissez un mélange adapté à l'usage et à l'exposition : ray-grass anglais
 
 ## Semer
 
-- **Dose** : **35 à 40 g/m²** pour une création, 20 à 30 g/m² pour un regarnissage.
+- **Dose** : **environ 35 g/m²** pour une création, environ 25 g/m² pour un regarnissage.
 - **Deux passages croisés**, avec la moitié de la dose à chaque passage.
 - **Choisissez un jour sans vent**.
 - **Enfouissez légèrement** d'un coup de râteau retourné : les graines doivent être couvertes d'**à peine 0,5 cm** de terre.

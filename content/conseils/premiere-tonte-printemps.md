@@ -3,6 +3,7 @@ title: Première tonte de printemps : quand et à quelle hauteur ?
 description: Trop tôt, trop court, sur gazon mouillé : la première tonte conditionne toute la saison. Le bon moment, la bonne hauteur et les gestes pour bien redémarrer la pelouse.
 saison: printemps
 date: 2026-09-25
+maj: 2026-09-27
 produits: engraisStarter
 ---
 
@@ -13,7 +14,7 @@ Aux premiers beaux jours, l'envie de sortir la tondeuse est forte. Pourtant, **l
 Ce n'est pas une date fixe, mais une question de **pousse** :
 
 - **l'herbe a repris sa croissance** : elle mesure **8 à 10 cm** et pousse visiblement d'une semaine à l'autre ;
-- **le sol s'est réchauffé** : le gazon redémarre quand la température du sol dépasse durablement 6 à 8 °C ;
+- **le sol s'est réchauffé** : sous 5 °C le gazon dort, et il repart quand la température du sol dépasse durablement 8 °C ;
 - **les fortes gelées sont passées**.
 
 En pratique, cela tombe le plus souvent **de mi-mars à mi-avril** : plus tôt dans l'ouest et le sud, plus tard dans l'est, en montagne et après un hiver long.
@@ -36,14 +37,16 @@ En pratique, cela tombe le plus souvent **de mi-mars à mi-avril** : plus tôt d
 
 C'est la règle d'or de la première tonte : **ne jamais couper plus d'un tiers de la hauteur de l'herbe**.
 
-- Première tonte à **6 ou 7 cm**, en réglant la tondeuse sur l'une des positions les plus hautes.
+- Première tonte à **6 cm environ** (pour un gazon universel), le haut de la fourchette de printemps.
 - Puis **descendez progressivement**, d'environ 1 cm par tonte, jusqu'à la hauteur d'entretien :
 
-| Type de pelouse | Hauteur d'entretien au printemps |
+| Type de gazon | Hauteur d'entretien au printemps |
 |---|---|
-| Pelouse d'agrément soignée | 4 à 5 cm |
-| Jardin familial, jeux | 5 à 6 cm |
-| Zones ombragées | 6 à 7 cm |
+| Universel (mélange courant) | 5 à 6 cm |
+| Sport | 3,5 à 4,5 cm |
+| Ornement (gazon fin) | 2,5 à 3,5 cm |
+| Ombre | 6 à 8 cm |
+| Rustique | 7 à 10 cm |
 
 Tondre ras dès la première fois « pour avoir moins à tondre ensuite » est l'erreur classique : le gazon jaunit, s'éclaircit, et la mousse en profite.
 
@@ -53,10 +56,10 @@ Pour la **première tonte, ramassez** : l'herbe coupée est plus longue et humid
 
 ## Et ensuite ?
 
-- **Rythme** : une tonte tous les 10 à 15 jours en début de printemps, puis **une fois par semaine** dès que la pousse s'accélère, en général en mai.
-- **Engrais de printemps** : apportez-le après la première ou la deuxième tonte, quand le gazon est bien reparti et que les températures se maintiennent.
-- **Scarification et aération** : si la pelouse est feutrée ou tassée, avril-mai est une bonne période (voir [scarifier sa pelouse](/conseils/scarifier-pelouse) et [aérer sa pelouse](/conseils/aerer-pelouse-carottage)).
-- **Regarnissage** des zones abîmées par l'hiver, dès que le sol dépasse 10 °C (voir [semer un gazon au printemps](/conseils/semer-gazon-printemps)).
+- **Rythme** : **1 à 2 tontes par semaine** en mars-avril, puis **2 à 3 par semaine** en pleine pousse, à partir de mai.
+- **Engrais de démarrage** : en mars, parfois dès février quand le sol se réchauffe tôt (sud, ouest), dès que le sol dépasse 8 °C, sans gel annoncé et avec au moins 10 °C l'après-midi.
+- **Scarification ou aération** (jamais les deux le même jour) : si la pelouse est feutrée ou tassée, mars-avril est une bonne période (voir [scarifier sa pelouse](/conseils/scarifier-pelouse) et [aérer sa pelouse](/conseils/aerer-pelouse-carottage)).
+- **Regarnissage** des zones abîmées par l'hiver, dès que le sol dépasse 10 à 12 °C selon votre région (voir [semer un gazon au printemps](/conseils/semer-gazon-printemps)).
 
 ## Et le robot tondeuse ?
 
