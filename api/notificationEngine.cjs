@@ -9,7 +9,11 @@
 // hiérarchie 6 priorités, N08 (regroupement), N10 (arrosage quantitatif ET₀).
 // Itération 2b : type de gazon (synthétique, bermuda en dormance, rustique), risques
 // de maladie, astuces de saison, anti-fatigue selon les jours sans visite.
+// Travaux d'hiver : feuilles, dernière tonte, purge de l'arrosage, pH, révision et 1re tonte
+// aux dates de la zone climatique (src/lib/zonesGazon.json, comme le compte à rebours du printemps).
 // ─────────────────────────────────────────────────────────────────────────────
+
+const { zoneFromLatLon, ZONES } = require("./parcoursEngine.cjs");
 
 // Intervalles d'entretien (jours) — alignés sur send.js / useReminders KB v4
 const INTERVALLES = { tonte: 5, arrosage: 3, engrais: 45, fongicide: 14, aeration: 90, desherbage: 21 };
@@ -288,6 +292,59 @@ function checkMaladie(weather, profile, month, notifLog, today) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// NIVEAU 4 bis — Travaux d'hiver et reprise du printemps (octobre → avril). Matin.
+// Chaque travail repart au plus tous les 14 jours (journal notif_log) ; les fenêtres courtes
+// (pH, révision, 1re tonte) ne le déclenchent donc qu'une fois par saison.
+// ─────────────────────────────────────────────────────────────────────────────
+function checkTravauxHiver(profile, weather, month, notifLog, today) {
+  if (!weather || !today) return null;
+  const { temp_min, temp_max, precip, wind } = weather;
+  const sec = (precip || 0) < 1 && (wind || 0) < 30;
+  const robot = hasRobotTondeuse(profile);
+  const t = Date.parse(today);
+  const z = ZONES[zoneFromLatLon(profile?.lat, profile?.lon)];
+  const an = new Date(t).getUTCFullYear();
+  const ecart = ([m, j]) => Math.round((t - Date.UTC(an, m - 1, j)) / 86400000); // jours depuis la date de la zone
+  const dateTonte = `${z.premiereTonte[1]} ${["", "janvier", "février", "mars", "avril"][z.premiereTonte[0]]}`;
+
+  const travaux = [
+    [10, 11, 12].includes(month) && typeof temp_min === "number" && temp_min > 2 && temp_min <= 5 && {
+      type: "hiver_arrosage", title: "🚿 Premières gelées en vue",
+      body: hasArrosageAuto(profile)
+        ? "Coupe l'eau, purge le programmateur et les tuyaux enterrés avant le gel."
+        : "Vide et range le tuyau, l'arroseur et le programmateur à l'abri du gel." },
+    [10, 11, 12].includes(month) && sec && {
+      type: "hiver_feuilles", title: "🍂 Journée sèche : ramasse les feuilles",
+      body: "Sous un tapis de feuilles, le gazon s'asphyxie et la mousse s'installe. Tondeuse en ramassage ou râteau.",
+      url: "/conseils/feuilles-mortes-pelouse" },
+    month === 11 && !robot && sec && (temp_max || 0) >= 10 && {
+      type: "hiver_derniere_tonte", title: "✂️ Dernière tonte de l'année",
+      body: "Temps sec et doux : une dernière tonte à 5-6 cm aide le gazon à passer l'hiver.",
+      url: "/conseils/preparer-gazon-hiver" },
+    month === 1 && new Date(t).getUTCDate() >= 10 && new Date(t).getUTCDate() <= 20 && profile?.sol !== "calcaire" && {
+      type: "hiver_ph", title: "🧪 Mesure le pH de ton sol",
+      body: "Sous pH 6, un chaulage en fin d'hiver aide à chasser la mousse. Un test de jardinerie suffit.",
+      url: "/conseils/chaulage-ph-pelouse" },
+    ecart(z.premiereTonte) >= -21 && ecart(z.premiereTonte) <= -14 && {
+      type: "printemps_revision", title: robot ? "🤖 Prépare ton robot tondeuse" : "🔧 Révise ta tondeuse",
+      body: robot
+        ? `Remise en route vers le ${dateTonte} : nettoyage, lames neuves, mise à jour et hauteur haute.`
+        : `1re tonte vers le ${dateTonte} : fais affûter la lame et réviser la tondeuse avant le rush du printemps.` },
+    ecart(z.premiereTonte) >= -3 && ecart(z.premiereTonte) <= 7 && sec && (temp_max || 0) >= 10 && {
+      type: "printemps_premiere_tonte", title: robot ? "🤖 Remets ton robot en route" : "✂️ C'est le moment de la 1re tonte",
+      body: robot
+        ? "L'herbe repart : relance le robot avec une hauteur de coupe haute, puis descends par paliers."
+        : "Herbe sèche et douceur : 1re tonte haute (6-7 cm), sans couper plus d'un tiers.",
+      url: "/conseils/premiere-tonte-printemps" },
+  ].filter(Boolean);
+
+  const h = (notifLog && Array.isArray(notifLog.history)) ? notifLog.history : [];
+  const quinzaine = new Date(t - 14 * 86400000).toISOString().slice(0, 10);
+  const travail = travaux.find(x => !h.some(e => e.type === x.type && e.date > quinzaine));
+  return travail ? { priority: 4, ...travail } : null;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // NIVEAU 6 — Éducatif (dernier filet) et socle quotidien de send.js : astuces de Bob,
 // filtrées par saison (mois), rotation déterministe par jour.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -314,6 +371,9 @@ const CONSEILS_QUOTIDIENS = [
   { title:"❄️ Conseil d'hiver",        body:"Gazon gelé ou givré ? N'y marche pas : les brins cassent et laissent des traces brunes.", mois:[11, ...HIVER, 3] },
   { title:"🧪 Bob te conseille",       body:"L'hiver est le bon moment pour mesurer le pH et chauler si ton sol est acide (pH sous 6).", mois:[11, ...HIVER] },
   { title:"🔧 Astuce matériel",        body:"Profite de la pause d'hiver pour faire affûter la lame et réviser ta tondeuse.", mois:[11, ...HIVER] },
+  { title:"🐾 Taupinières",            body:"Étale la terre des taupinières au râteau dès qu'elles apparaissent : sinon l'herbe dessous meurt.", mois:[11, ...HIVER, 3] },
+  { title:"🌨️ Neige sur le gazon",     body:"La neige protège le gazon du froid : laisse-la fondre, mais évite de la tasser en marchant dessus.", mois:HIVER },
+  { title:"💧 Flaques qui restent",    body:"L'eau stagne sur ta pelouse ? Sol tassé : note l'endroit, une aération au printemps le fera respirer.", mois:[11, ...HIVER] },
 ];
 
 // Astuce du jour pour le mois donné (rotation déterministe par jour)
@@ -394,6 +454,7 @@ function decideNotification(ctx) {
   const candidates = [
     checkEntretienDu(profile, reminderPrefs, history, month), // 3 (N08)
     checkMaladie(weather, profile, month, notifLog, today),   // 3 bis
+    checkTravauxHiver(profile, weather, month, notifLog, today), // 4 (travaux d'hiver)
     checkConseilMeteo(weather),                       // 4
     ...(fatigue ? [] : [
       checkGamification(gami),                        // 5
@@ -415,7 +476,7 @@ function finalize(notif, slot) {
     title: notif.title,
     body: notif.body,
     tag: `mg360-${notif.type}`,
-    url: "/today",
+    url: notif.url || "/today",
     slot,
   };
 }

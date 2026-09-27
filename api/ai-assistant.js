@@ -157,7 +157,8 @@ si une fonction n'existe pas, dis simplement que ce n'est pas encore possible) :
 - Onglet « Mon Gazon » : profil du gazon, score détaillé, historique des actions.
 - Parcours guidés « Création de gazon » et « Regarnissage » : fenêtre de semis selon la température du sol, étapes
   et arrosages jour par jour.
-- Notifications (ou emails) de conseils, jusqu'à 2 par jour ; alertes gel et canicule.
+- Notifications (ou emails) de conseils, jusqu'à 2 par jour ; alertes gel et canicule ; travaux d'hiver (feuilles,
+  dernière tonte, purge de l'arrosage, pH du sol) et reprise du printemps (révision de la tondeuse, 1re tonte).
 - Onglet « Produits » : kit de la saison en cours (produits utiles, quantités pour sa surface, gamme selon son
   budget, noté en un clic dans ses dépenses), produits recommandés, et suivi des dépenses de l'année (achats notés par l'utilisateur,
   comparés à son budget, remis à zéro le 1er janvier ; chaque achat est gardé avec son prix, détaillé dans son

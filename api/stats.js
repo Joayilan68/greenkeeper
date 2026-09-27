@@ -689,7 +689,7 @@ async function fetchNotifStats() {
       if (h.channel === "email") { emails++; continue; }
       push++;
       if (h.opened) ouvertes++;
-      const t = String(h.type || "autre").replace(/^(entretien|maladie|urgence|conseil|gami|relance)_.*/, "$1");
+      const t = String(h.type || "autre").replace(/^(entretien|maladie|urgence|conseil|gami|relance|hiver|printemps)_.*/, "$1");
       types[t] = types[t] || { envoyees: 0, ouvertes: 0 };
       types[t].envoyees++;
       if (h.opened) types[t].ouvertes++;
