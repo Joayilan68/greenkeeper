@@ -288,6 +288,9 @@ export default function Diagnostic() {
               <div style={{ fontSize:16, fontWeight:800, color:"#F1F8F2", marginBottom:8 }}>Photographiez votre gazon</div>
               <div style={{ fontSize:12, color:"#81c784", lineHeight:1.6, marginBottom:20 }}>
                 Prenez une photo en pleine lumière à environ 1m du sol pour un diagnostic précis.
+                {[11, 12, 1, 2].includes(new Date().getMonth() + 1) && (
+                  <><br />❄️ En hiver, Bob repère aussi la mousse, la moisissure des neiges, les taupinières et l'eau qui stagne : photographiez les zones qui vous inquiètent.</>
+                )}
               </div>
               {photoButtons()}
             </div>

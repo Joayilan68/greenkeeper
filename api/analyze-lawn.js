@@ -229,6 +229,7 @@ Problèmes synthétique à détecter : granulats tassés, drainage obstrué, dé
       : `Expert agronome gazon pour Mongazon360. Analyse cette photo et fournis un diagnostic.
 Contexte: ${profileCtx}. ${weatherCtx}. Score actuel: ${score}/100.
 ${reglesProfil ? `RÈGLES KB OBLIGATOIRES: ${reglesProfil}` : ""}
+${reglesSaison(moisActuel)}
 BARÈME score_visuel (échelle EXIGEANTE, à respecter strictement) : 90-100 exceptionnel (green de golf, aucun défaut visible, TRÈS RARE) · 75-89 excellent (dense et homogène, défauts mineurs seulement) · 60-74 bon (sain avec imperfections visibles = un BEAU GAZON ORDINAIRE bien entretenu) · 45-59 moyen (zones clairsemées, jaunissements, stress marqué) · 30-44 mauvais (zones mortes, maladie, mauvaises herbes) · 0-29 critique (très dégradé ou quasi inexistant).
 CALIBRAGE OBLIGATOIRE : (1) note ≥80 = RARE ; un beau gazon vert et dense "normal" est 60-74, PAS 90. (2) Ne pénalise QUE les défauts clairement VISIBLES sur la photo — n'invente jamais un défaut supposé. (3) La météo (chaleur, sécheresse, pluie) n'est PAS un défaut du gazon. (4) Exigeant mais juste : ni trop sévère ni trop généreux.
 Réponds UNIQUEMENT en JSON valide (sans markdown, sans texte autour), 3 problèmes MAXIMUM, descriptions courtes :
@@ -433,6 +434,17 @@ async function groqChatWithRetryAnon(groqBody, maxAttempts = 3) {
   return { res, raw };
 }
 
+// Consignes de saison et de conformité ajoutées aux deux analyses (avec et sans profil)
+function reglesSaison(mois) {
+  const hiver = [11, 12, 1, 2].includes(mois)
+    ? "HIVER (novembre-février) : un gazon qui pousse peu, plus terne ou plus clair est NORMAL (repos hivernal), ne le pénalise pas. " +
+      "Problèmes d'hiver à rechercher en plus : mousse, moisissure des neiges ou fusariose (plaques rondes beige-rosé, duvet blanc après la neige), " +
+      "taupinières (monticules de terre), eau stagnante ou sol détrempé (drainage), feuilles mortes qui étouffent le gazon, traces brunes de pas sur gazon gelé. " +
+      "Solutions d'hiver : ramasser les feuilles, étaler les taupinières au râteau, ne pas marcher sur le gazon gelé ou détrempé, noter les zones à aérer au printemps ; pas d'engrais azoté en hiver.\n"
+    : "";
+  return hiver + "CONFORMITÉ : ne recommande jamais de fongicide ni de désherbant chimique (interdits aux particuliers depuis 2019) : solutions mécaniques, préventives ou produits de biocontrôle.";
+}
+
 // Analyse générique (sans profil — le visiteur anonyme n'en a pas encore).
 async function runAnonDiagnostic({ imageBase64, mimeType = "image/jpeg", weather = {}, score = 0 }) {
   const { imageUrl, publicId } = await uploadToCloudinaryAnon(imageBase64, mimeType);
@@ -442,6 +454,7 @@ async function runAnonDiagnostic({ imageBase64, mimeType = "image/jpeg", weather
     : "Météo indisponible";
   const prompt = `Expert agronome gazon pour Mongazon360. Analyse cette photo et fournis un diagnostic.
 ${weatherCtx}. Score de référence: ${score}/100.
+${reglesSaison(new Date().getMonth() + 1)}
 BARÈME score_visuel (échelle EXIGEANTE) : 90-100 exceptionnel (green de golf, aucun défaut, TRÈS RARE) · 75-89 excellent (dense, homogène, défauts mineurs) · 60-74 bon (sain avec imperfections = un beau gazon ordinaire bien entretenu) · 45-59 moyen (zones clairsemées, jaunissements, stress) · 30-44 mauvais (zones mortes, maladie, herbes) · 0-29 critique.
 CALIBRAGE : (1) note ≥80 = RARE ; un beau gazon normal est 60-74, pas 90. (2) Ne pénalise QUE les défauts clairement visibles, n'invente rien. (3) La météo n'est PAS un défaut du gazon. (4) Exigeant mais juste.
 Réponds UNIQUEMENT en JSON valide (sans markdown), 3 problèmes MAXIMUM, descriptions courtes :
