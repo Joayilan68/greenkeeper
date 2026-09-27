@@ -150,7 +150,8 @@ ${contexte}
 CE QUE L'APP MONGAZON360 PERMET RÉELLEMENT (ne cite QUE ces fonctions, n'en invente JAMAIS d'autre ;
 si une fonction n'existe pas, dis simplement que ce n'est pas encore possible) :
 - Tableau de bord : score de santé du gazon, météo du jour, alertes météo ; du 1er novembre à la 1re tonte, compte
-  à rebours du printemps (dates indicatives de sa zone : révision de la tondeuse, 1re tonte, scarification, regarnissage).
+  à rebours du printemps (dates indicatives de sa zone : révision de la tondeuse, 1re tonte, scarification, regarnissage) ;
+  du 15 novembre à fin février, bilan de saison (actions de l'année, badges, image à partager).
 - Onglet « Aujourd'hui » : les actions du jour proposées selon la météo (tonte, arrosage, engrais…), à valider
   une fois faites (elles vont dans l'historique, à la date du jour) ; minuteur d'arrosage.
 - Onglet « Diagnostic » : diagnostic photo de la pelouse par Bob.

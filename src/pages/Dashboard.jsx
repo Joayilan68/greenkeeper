@@ -16,6 +16,7 @@ import AlertBanner from "../components/AlertBanner";
 import OnboardingModal from "../components/OnboardingModal";
 import GreenScoreModal from "../components/GreenScoreModal";
 import CompteARebours from "../components/CompteARebours";
+import { anneeDuBilan, bilanDisponible } from "../lib/bilanSaison";
 import { card, cardTitle, btn, scroll } from "../lib/styles";
 import { useState, useEffect } from "react";
 import { useGreenPoints } from "../lib/useGreenPoints";
@@ -238,6 +239,18 @@ export default function Dashboard() {
 
         {/* ── PARCOURS (Semis / Regarnissage en cours) ──────────────────── */}
         <CarteParcours />
+
+        {/* ── BILAN DE SAISON (15 novembre → fin février) ───────────────────── */}
+        {bilanDisponible() && (
+          <div role="button" onClick={() => navigate("/bilan")} style={{ ...card(), display:"flex", alignItems:"center", gap:12, cursor:"pointer", background:"linear-gradient(135deg,rgba(249,168,37,0.18),rgba(13,43,26,0.6))", border:"1px solid rgba(249,168,37,0.35)" }}>
+            <span style={{ fontSize:26 }}>🏆</span>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:14, fontWeight:800, color:"#F1F8F2" }}>Ton bilan de saison {anneeDuBilan()} est prêt</div>
+              <div style={{ fontSize:11, color:"#a5d6a7" }}>Tontes, arrosages, badges… et une image à partager</div>
+            </div>
+            <span style={{ color:"#f9a825", fontSize:18 }}>›</span>
+          </div>
+        )}
 
         {/* ── COMPTE À REBOURS DU PRINTEMPS (1er novembre → 1re tonte) ──────── */}
         <CompteARebours profile={profile} soilTemp={weather?.soil_temp} isPaid={isPaid} />
