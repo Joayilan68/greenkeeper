@@ -5,7 +5,7 @@
 // (cœur de l'hiver), le kit prépare le premier mois qui en a.
 import AMAZON_PRODUCTS from "./amazonProducts";
 import { ACTIONS_PLAN, zoneClimatique } from "./planEntretien";
-import { selectProduit, quantitePour } from "./selectionProduits";
+import { selectProduit, quantiteKit } from "./selectionProduits";
 
 // Produit du catalogue → action du plan d'entretien, dans l'ordre d'affichage
 const PRODUIT_ACTION = [
@@ -15,8 +15,6 @@ const PRODUIT_ACTION = [
 ];
 const MAX_PRODUITS = 4;
 const ENGRAIS_SYNTHESE = ["engraisStarter", "engraisEte", "engraisAutomne"];
-// Produits appliqués seulement sur les zones abîmées (regarnissage, mousse) : ~30 % de la surface
-const ZONES_A_TRAITER = { regarnissage: 0.3, antiMousse: 0.3 };
 
 const SAISONS = {
   printemps: { icone: "🌱", titre: "Kit de printemps" }, ete: { icone: "☀️", titre: "Kit d'été" },
@@ -46,13 +44,12 @@ export function kitDuMois(profile, tier, month = new Date().getMonth() + 1) {
     const cat = AMAZON_PRODUCTS[cle];
     const produit = selectProduit(cle, tier, profile);
     if (!cat || !produit) return null;
-    const part = ZONES_A_TRAITER[cle];
-    const quantite = quantitePour(cat, Math.round(surface * (part || 1)));
-    return { cle, cat, produit, quantite, zones: !!part, prix: Math.round((produit.prix || 0) * quantite * 100) / 100 };
+    const { quantite, zones } = quantiteKit(cle, cat, surface);
+    return { cle, cat, produit, quantite, zones, prix: Math.round((produit.prix || 0) * quantite * 100) / 100 };
   }).filter(Boolean);
   const total = Math.round(items.reduce((t, i) => t + i.prix, 0) * 100) / 100;
   return {
-    saison: `${saison}-${mois}`, ...SAISONS[saison], surface, items, total,
+    saison: `${saison}-${mois}`, ...SAISONS[saison], surface, items, total, aPreparer: mois !== month,
     sousTitre: mois === month ? `Les produits de saison en ${MOIS[mois]} dans votre zone` : `À préparer pour ${MOIS[mois]}`,
   };
 }

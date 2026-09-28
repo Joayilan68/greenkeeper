@@ -7,6 +7,9 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import { MONTHLY_PLAN } from "./lawn";
+import CALENDRIER from "./calendrierActions.json";
+import ZONES from "./zonesGazon.json";
+import TONTE from "./tonteGazon.json";
 
 // ── Équipement déclaré (profil) — adapte les recommandations ─────────────────
 // Robot tondeuse → la tonte est gérée par le robot (on retire l'action tonte).
@@ -99,6 +102,33 @@ export function daysSince(history, keywords) {
 // Alignées sur la matrice Excel v4 "Zones x Mois"
 // ══════════════════════════════════════════════════════════════════════════════
 
+// Avant la 1re tonte de la zone (3 jours de marge, comme la notification), on ne tond pas,
+// sauf si la température réelle du sol (Premium) montre que l'herbe repart plus tôt
+export function avantPremiereTonte(w, zone, today = new Date()) {
+  const z = ZONES[zone] || ZONES.centre;
+  const [m, j] = z.premiereTonte;
+  if (today.getMonth() >= 5 || today >= new Date(today.getFullYear(), m - 1, j - 3)) return null;
+  if (typeof w?.soil_temp === "number" && w.soil_temp >= z.soilMin) return null;
+  return new Date(2000, m - 1, j).toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
+}
+
+// Hauteur de tonte du type de gazon et de la saison : base de connaissances, onglet « Tonte Précise »
+function conseilTonte(profile, month) {
+  const t = TONTE.types[TONTE.alias[profile?.pelouse] || "universel"];
+  const h = month >= 6 && month <= 8 ? t.ete : month >= 9 ? t.automne : t.printemps;
+  return `Hauteur ${h} cm${profile?.objectif === "naturel" ? " (+1 cm en objectif naturel)" : ""} · jamais plus d'un tiers de la hauteur`;
+}
+
+// Mois où une action est proposée : src/lib/calendrierActions.json (base de connaissances, onglet « Zones x Mois »),
+// partagé avec les notifications ; exception du type de gazon, sinon du sol, sinon de la zone
+export function moisCalendrier(id, zone, profile, sol = profile?.sol) {
+  const c = CALENDRIER[id];
+  if (!c) return [];
+  const gazon = Object.keys(c.gazons || {}).find(g => profile?.pelouse === g || (Array.isArray(profile?.gazons) && profile.gazons.includes(g)));
+  if (gazon) return c.gazons[gazon];
+  return c.sols?.[sol] || c.zones?.[zone] || c.mois;
+}
+
 export const ACTIONS_PLAN = [
 
   // ── 1. TONTE ✂️ ──────────────────────────────────────────────────────────
@@ -106,15 +136,13 @@ export const ACTIONS_PLAN = [
     id:    "tonte",
     label: "Tonte ✂️",
     gp:    "tonte",
-    // Mars → Novembre. Fév inclus en zone Sud/SO/Corse si repousse.
-    getMois: (zone, sol, isSynth, profile) => {
-      const base = [3,4,5,6,7,8,9,10,11];
-      return (zone === "sud" || zone === "sud_ouest" || zone === "corse")
-        ? [2, ...base] : base;
-    },
+    // Mars → novembre, jamais en février (base) ; pas avant la 1re tonte de la zone
+    getMois: (zone, sol, isSynth, profile) => moisCalendrier("tonte", zone, profile, sol),
     // Intervalle : printemps=5j, été=4j, automne=7j
     getInterval: (month) => month >= 6 && month <= 8 ? 4 : month >= 3 && month <= 5 ? 5 : 7,
-    getBlocked: (w, profile) => {
+    getBlocked: (w, profile, zone) => {
+      const premiere = avantPremiereTonte(w, zone);
+      if (premiere) return { blocked: true, raison: `Trop tôt : 1re tonte vers le ${premiere} dans ta zone, quand l'herbe repart` };
       if (pluiePrevue(w, 5)) return { blocked: true, raison: "Pluie prévue (>5mm) — gazon glissant, risque fongique" };
       if (ventFort(w))       return { blocked: true, raison: "Vents forts (≥40km/h) — reporter" };
       if (w?.temp_min !== undefined && w.temp_min <= 0) return { blocked: true, raison: "Gel — ne pas tondre le gazon gelé" };
@@ -123,9 +151,9 @@ export const ACTIONS_PLAN = [
     keywords:     ["tonte"],
     // Robot déclaré → on transforme en SUPERVISION (filet de sécurité : si le robot
     // ne tond pas — panne, débranché, non connecté — l'utilisateur est quand même invité à vérifier).
-    detail:       (plan, arros, profile) => hasRobotTondeuse(profile)
+    detail:       (plan, arros, profile, month) => hasRobotTondeuse(profile)
       ? "🤖 Robot : vérifiez que la tonte a bien eu lieu (lame, hauteur)"
-      : (plan?.tonte || "Hauteur adaptée à la saison"),
+      : conseilTonte(profile, month),
     needsProduct: false,
     exclusive:    [],
   },
@@ -136,11 +164,7 @@ export const ACTIONS_PLAN = [
     label: "Arrosage 💧",
     gp:    "arrosage",
     // Zone Sud/SO/Corse : dès février (~65x/an). Autres : mars-octobre (~50x/an)
-    getMois: (zone, sol, isSynth, profile) => {
-      const base = [3,4,5,6,7,8,9,10];
-      return (zone === "sud" || zone === "sud_ouest" || zone === "corse")
-        ? [2, ...base] : base;
-    },
+    getMois: (zone, sol, isSynth, profile) => moisCalendrier("arrosage", zone, profile, sol),
     // Intervalle = floor(7 / fréquence_mensuelle) jours
     getInterval: (month) => {
       const freq = MONTHLY_PLAN[month]?.arrosage_freq || 2;
@@ -170,9 +194,7 @@ export const ACTIONS_PLAN = [
     id:    "engrais_starter",
     label: "Engrais Starter 🌱",
     gp:    "engrais",
-    getMois: (zone, sol, isSynth, profile) => {
-      return (zone === "nord_est" || zone === "nord") ? [3] : [2, 3];
-    },
+    getMois: (zone, sol, isSynth, profile) => moisCalendrier("engrais_starter", zone, profile, sol),
     getInterval: () => 45,
     getBlocked: (w, profile, zone) => {
       if (isObjectifNaturel(profile)) return { blocked: true, raison: "Objectif Naturel — utilisez un engrais organique (farine de corne, guano)" };
@@ -195,9 +217,7 @@ export const ACTIONS_PLAN = [
     id:    "engrais_ete",
     label: "Engrais Été ☀️",
     gp:    "engrais",
-    getMois: (zone, sol, isSynth, profile) => {
-      return [5, 6];
-    },
+    getMois: (zone, sol, isSynth, profile) => moisCalendrier("engrais_ete", zone, profile, sol),
     getInterval: () => 45,
     getBlocked: (w, profile) => {
       if (isObjectifNaturel(profile)) return { blocked: true, raison: "Objectif Naturel — utilisez un engrais organique d'été (algues marines, acides humiques)", alternative: "organique" };
@@ -217,9 +237,7 @@ export const ACTIONS_PLAN = [
     id:    "engrais_automne",
     label: "Engrais Automne 🍂",
     gp:    "engrais",
-    getMois: (zone, sol, isSynth, profile) => {
-      return [9, 10];
-    },
+    getMois: (zone, sol, isSynth, profile) => moisCalendrier("engrais_automne", zone, profile, sol),
     getInterval: () => 45,
     getBlocked: (w, profile) => {
       if (isObjectifNaturel(profile)) return { blocked: true, raison: "Objectif Naturel — utilisez un engrais organique d'automne" };
@@ -240,9 +258,7 @@ export const ACTIONS_PLAN = [
     id:    "engrais_hiver",
     label: "Engrais Hiver ❄️",
     gp:    "engrais",
-    getMois: (zone, sol, isSynth, profile) => {
-      return [11];
-    },
+    getMois: (zone, sol, isSynth, profile) => moisCalendrier("engrais_hiver", zone, profile, sol),
     getInterval: () => 45,
     getBlocked: () => ({ blocked: false }),
     keywords:     ["engrais hiver", "engrais ❄️", "chaux", "engrais"],
@@ -253,15 +269,13 @@ export const ACTIONS_PLAN = [
   },
 
   // ── 7. VERTICUT 🔧 ────────────────────────────────────────────────────────
-  // Avr-Mai-Juin (verticut:true dans MONTHLY_PLAN)
+  // Avr-Mai-Juin
   // ⚠️ MUTUELLEMENT EXCLUSIF avec Aération (l'un OU l'autre)
   {
     id:    "verticut",
     label: "Verticut 🔧",
     gp:    "verticut",
-    getMois: (zone, sol, isSynth, profile) => {
-      return Object.entries(MONTHLY_PLAN).filter(([,p]) => p.verticut).map(([m]) => +m);
-    },
+    getMois: (zone, sol, isSynth, profile) => moisCalendrier("verticut", zone, profile, sol),
     getInterval: () => 180,
     getBlocked: (w) => {
       if (pluiePrevue(w, 3)) return { blocked: true, raison: "Pluie prévue — reporter" };
@@ -284,11 +298,7 @@ export const ACTIONS_PLAN = [
     id:    "aeration",
     label: "Aération 🌀",
     gp:    "aeration",
-    getMois: (zone, sol, isSynth, profile) => {
-      const base = [3, 9];
-      return (sol === "argileux" || sol === "compacte")
-        ? [3, 4, 9, 10] : base;
-    },
+    getMois: (zone, sol, isSynth, profile) => moisCalendrier("aeration", zone, profile, sol),
     getInterval: () => 90,
     getBlocked: (w, profile) => {
       if (solDetrempé(w)) return { blocked: true, raison: "Sol détrempé — attendre que ça sèche" };
@@ -314,10 +324,7 @@ export const ACTIONS_PLAN = [
     id:    "scarification",
     label: "Scarification 🔩",
     gp:    "scarification",
-    getMois: (zone, sol, isSynth, profile) => {
-      if (isGazonOmbre(profile)) return []; // Ombre : scarification déconseillée
-      return [3, 4, 9];
-    },
+    getMois: (zone, sol, isSynth, profile) => moisCalendrier("scarification", zone, profile, sol),
     getInterval: () => 180,
     getBlocked: (w, profile) => {
       if (pluiePrevue(w, 3)) return { blocked: true, raison: "Pluie prévue — reporter" };
@@ -340,10 +347,7 @@ export const ACTIONS_PLAN = [
     id:    "desherbage",
     label: "Désherbage 🪴",
     gp:    "desherbage",
-    getMois: (zone, sol, isSynth, profile) => {
-      if (isGazonRustique(profile)) return []; // Rustique : trèfle protégé — toujours bloqué
-      return [4, 5, 6, 7, 8, 9, 10];
-    },
+    getMois: (zone, sol, isSynth, profile) => moisCalendrier("desherbage", zone, profile, sol),
     getInterval: () => 14,
     // Désherbage MANUEL pour tous (désherbants chimiques interdits aux particuliers depuis 2019) ;
     // un semis récent est protégé par le parcours (Today.jsx)
@@ -363,9 +367,7 @@ export const ACTIONS_PLAN = [
     id:    "antimousse",
     label: "Anti-mousse 💊",
     gp:    "anti_mousse",
-    getMois: (zone, sol, isSynth, profile) => {
-      return [3, 4, 9];
-    },
+    getMois: (zone, sol, isSynth, profile) => moisCalendrier("antimousse", zone, profile, sol),
     getInterval: () => 30,
     getBlocked: (w, profile) => {
       return { blocked: false };
@@ -396,9 +398,7 @@ export const ACTIONS_PLAN = [
     id:    "biostimulant",
     label: "Biostimulant 🌿",
     gp:    "biostimulant",
-    getMois: (zone, sol, isSynth, profile) => {
-      return [3,4,5,6,7,8,9,10];
-    },
+    getMois: (zone, sol, isSynth, profile) => moisCalendrier("biostimulant", zone, profile, sol),
     getInterval: () => 30,
     getBlocked: (w, profile) => {
       if (gelPossible(w)) return { blocked: true, raison: "Gel possible — biostimulant non absorbé" };
@@ -430,7 +430,7 @@ export const ACTIONS_PLAN = [
     id:    "regarnissage",
     label: "Regarnissage 🌾",
     gp:    "semences",
-    getMois: () => [3, 4, 5, 8, 9],
+    getMois: (zone, sol, isSynth, profile) => moisCalendrier("regarnissage", zone, profile, sol),
     getInterval: () => 60,
     getBlocked: (w, profile, zone, score) => {
       if ((w?.temp_max || 0) > 28) return { blocked: true, raison: "Trop chaud (>28°C) — germination compromise" };

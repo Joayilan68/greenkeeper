@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { card } from "../lib/styles";
 import { compteARebours } from "../lib/printemps";
 
@@ -5,6 +6,7 @@ const dateCourte = (d) => d.toLocaleDateString("fr-FR", { day: "numeric", month:
 
 // Tableau de bord, du 1er novembre à la 1re tonte : garder le lien avec son gazon pendant l'hiver
 export default function CompteARebours({ profile, soilTemp, isPaid }) {
+  const navigate = useNavigate();
   const c = compteARebours(profile);
   if (!c) return null;
 
@@ -35,6 +37,9 @@ export default function CompteARebours({ profile, soilTemp, isPaid }) {
           : isPaid ? "🌡️ Température du sol indisponible pour le moment."
           : "🌡️ En Premium, suis la température réelle de ton sol pour savoir quand l'herbe repart."}
       </div>
+      <button onClick={() => navigate("/printemps")} style={{ marginTop:10, width:"100%", background:"rgba(67,160,71,0.25)", border:"1px solid rgba(129,199,132,0.4)", borderRadius:10, padding:"9px 12px", color:"#e8f5e9", fontSize:12, fontWeight:700, cursor:"pointer" }}>
+        📋 Mon plan de printemps et ma liste d'achats →
+      </button>
     </div>
   );
 }

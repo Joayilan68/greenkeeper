@@ -3,7 +3,7 @@
 // Les diagnostics sont désormais passés en paramètre depuis le hook useDiagnostics
 // qui les charge depuis Supabase (source de vérité unique multi-device).
 // ─────────────────────────────────────────────────────────────────────────────
-import { MONTHLY_PLAN } from "./lawn";
+import { ACTIONS_PLAN, zoneClimatique, moisCalendrier, avantPremiereTonte } from "./planEntretien";
 
 const DIAG_MAX_AGE = 7;
 
@@ -50,7 +50,9 @@ function pickLastDiagnostic(diagnostics, ref) {
 }
 
 export function calcLawnScore({ weather, profile, history = [], month, diagnostics = [], ref = Date.now() }) {
-  const plan      = MONTHLY_PLAN[month];
+  // Actions jugées seulement pendant leurs mois (même calendrier que « Aujourd'hui »)
+  const zone      = zoneClimatique(profile);
+  const deSaison  = (...ids) => ids.some(id => moisCalendrier(id, zone, profile).includes(month));
   const issues    = [];
   const strengths = [];
   // Gazon synthétique supprimé de l'app — aucune branche spéciale nécessaire
@@ -60,10 +62,12 @@ export function calcLawnScore({ weather, profile, history = [], month, diagnosti
   let deductMeteo      = 0;
   let deductSol        = 0;
 
-  // ── 1. TONTE — KB v4 : été=4j, printemps=5j, hiver=14j ─────────────────
+  // ── 1. TONTE — rythme d'« Aujourd'hui » : printemps=5j, été=4j, automne=7j ──
   // Robot tondeuse déclaré → tonte gérée automatiquement : on ne pénalise pas.
-  if (!hasRobotTondeuse(profile)) {
-    const tonteFreq     = month >= 5 && month <= 8 ? 4 : month >= 3 && month <= 10 ? 5 : 14;
+  if (!deSaison("tonte") || avantPremiereTonte(weather, zone, new Date(ref))) {
+    // hors saison de tonte ou avant la 1re tonte de la zone : rien à juger
+  } else if (!hasRobotTondeuse(profile)) {
+    const tonteFreq     = ACTIONS_PLAN.find(a => a.id === "tonte").getInterval(month);
     const derniereTonte = lastAction(history, "tonte", ref);
     if (derniereTonte > tonteFreq * 3)      { deductEntretien += 25; issues.push({ icon:"✂️", label: derniereTonte >= JAMAIS ? "Aucune tonte enregistrée" : `Tonte abandonnée depuis ${derniereTonte}j`, impact:-25 }); }
     else if (derniereTonte > tonteFreq * 2) { deductEntretien += 18; issues.push({ icon:"✂️", label: derniereTonte >= JAMAIS ? "Aucune tonte enregistrée" : `Tonte très en retard (${derniereTonte}j)`, impact:-18 }); }
@@ -74,7 +78,7 @@ export function calcLawnScore({ weather, profile, history = [], month, diagnosti
   }
 
   // ── 2. ENGRAIS — KB v4 : bloqué >90j, alerte >45j ──────────────────────
-  if (plan?.engrais) {
+  if (deSaison("engrais_starter", "engrais_ete", "engrais_automne", "engrais_hiver")) {
     const dernierEngrais = lastAction(history, "engrais", ref);
     if (dernierEngrais > 90)      { deductNutriments += 15; issues.push({ icon:"🌱", label: dernierEngrais >= JAMAIS ? "Aucun engrais enregistré" : `Aucun engrais depuis ${dernierEngrais}j`, impact:-15 }); }
     else if (dernierEngrais > 45) { deductNutriments += 8;  issues.push({ icon:"🌱", label:"Engrais en retard (délai 45j min)", impact:-8 }); }
@@ -82,7 +86,7 @@ export function calcLawnScore({ weather, profile, history = [], month, diagnosti
   }
 
   // ── 3. AÉRATION — KB v4 : délai min 90j ─────────────────────────────────
-  if (plan?.aeration) {
+  if (deSaison("aeration")) {
     const derniereAeration = lastAction(history, "aération", ref);
     if (derniereAeration > 90)      { deductEntretien += 10; issues.push({ icon:"🌀", label:"Aération recommandée — sol compacté", impact:-10 }); }
     else if (derniereAeration > 60) { deductEntretien += 5;  issues.push({ icon:"🌀", label:"Aération à prévoir", impact:-5 }); }
@@ -90,7 +94,7 @@ export function calcLawnScore({ weather, profile, history = [], month, diagnosti
   }
 
   // ── 4. VERTICUT — KB v4 ──────────────────────────────────────────────────
-  if (plan?.verticut) {
+  if (deSaison("verticut")) {
     const dernierVerticut = lastAction(history, "verticut", ref);
     if (dernierVerticut > 120)      { deductEntretien += 7; issues.push({ icon:"🔧", label:"Verticut recommandé ce mois", impact:-7 }); }
     else if (dernierVerticut > 90)  { deductEntretien += 3; issues.push({ icon:"🔧", label:"Verticut à prévoir", impact:-3 }); }
@@ -100,7 +104,7 @@ export function calcLawnScore({ weather, profile, history = [], month, diagnosti
   // ── 5. ARROSAGE ──────────────────────────────────────────────────────────
   // Ne pas pénaliser si l'utilisateur a déclaré ne pas arroser (choix assumé)
   // ni s'il a un arrosage automatique/programmateur (géré par le matériel).
-  if (plan?.arrosage_base > 0) {
+  if (deSaison("arrosage")) {
     const skipArrosage = profile?.arrosage === "aucun" || profile?.arrosage === "rarement" || hasArrosageAuto(profile);
     if (!skipArrosage) {
       const dernierArrosage = lastAction(history, "arrosage", ref);
@@ -124,12 +128,13 @@ export function calcLawnScore({ weather, profile, history = [], month, diagnosti
   }
 
   // ── 7. SOL ───────────────────────────────────────────────────────────────
+  // Sol argileux ou compacté : l'aération n'est reprochée que pendant ses mois (mars-avril, septembre-octobre)
   if (profile?.sol) {
-    if (profile.sol === "argileux") {
+    if (profile.sol === "argileux" && deSaison("aeration")) {
       if (lastAction(history, "aération", ref) > 60) { deductSol += 8;  issues.push({ icon:"🏔️", label:"Sol argileux — compaction sans aération récente", impact:-8 }); }
       else strengths.push({ icon:"🌀", label:"Aération récente — compaction compensée ✓" });
     }
-    if (profile.sol === "compacte") {
+    if (profile.sol === "compacte" && deSaison("aeration")) {
       if (lastAction(history, "aération", ref) > 45) { deductSol += 10; issues.push({ icon:"🧱", label:"Sol compacté — aération urgente", impact:-10 }); }
       else strengths.push({ icon:"🌀", label:"Aération récente sur sol compacté ✓" });
     }
@@ -141,7 +146,9 @@ export function calcLawnScore({ weather, profile, history = [], month, diagnosti
   const actions30j = (Array.isArray(history) ? history : []).filter(h => daysSince(h.date, ref) <= 30).length;
   const actions14j = (Array.isArray(history) ? history : []).filter(h => daysSince(h.date, ref) <= 14).length;
   const actions7j  = (Array.isArray(history) ? history : []).filter(h => daysSince(h.date, ref) <= 7).length;
-  if (actions30j === 0)     { deductEntretien += 12; issues.push({ icon:"📋", label:"Aucune intervention ce mois", impact:-12 }); }
+  if (!deSaison(...ACTIONS_PLAN.map(a => a.id))) {
+    // cœur de l'hiver : aucune action au calendrier, rien à reprocher
+  } else if (actions30j === 0)     { deductEntretien += 12; issues.push({ icon:"📋", label:"Aucune intervention ce mois", impact:-12 }); }
   else if (actions14j === 0){ deductEntretien += 6;  issues.push({ icon:"📋", label:"Aucune intervention ces 14 derniers jours", impact:-6 }); }
   else if (actions7j >= 3)  strengths.push({ icon:"✅", label:"Entretien très régulier cette semaine ✓" });
   else if (actions14j >= 3) strengths.push({ icon:"✅", label:"Entretien régulier ✓" });
