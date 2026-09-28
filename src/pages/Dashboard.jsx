@@ -28,7 +28,7 @@ import { useDiagnostics } from "../lib/useDiagnostics";
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useUser();
-  const { weather, location, locationName, alerts = [], loading, locLoading, refreshLocation } = useWeather() || {};
+  const { weather, station, location, locationName, alerts = [], loading, locLoading, refreshLocation } = useWeather() || {};
   const { profile, saveProfile, synced } = useProfile();
   const { history = [] } = useHistory();
   const { isPaid = false, isAdmin = false, isTrial = false, isLoading: subLoading = true } = useSubscription() || {};
@@ -321,7 +321,7 @@ export default function Dashboard() {
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
                 <div>
                   <div style={{ fontSize:10, color:"#81c784", fontWeight:700 }}>📍 {locationName || "Localisation"}</div>
-                  <div style={{ fontSize:10, color:"#81c784", opacity:0.7 }}>{MONTHS_FR[month]} — {plan.label}</div>
+                  <div style={{ fontSize:10, color:"#81c784", opacity:0.7 }}>{station ? "📡 Mesures de ta station" : `${MONTHS_FR[month]} — ${plan.label}`}</div>
                 </div>
                 <button onClick={refreshLocation} style={{ background:"rgba(255,255,255,0.1)", border:"1px solid rgba(255,255,255,0.2)", borderRadius:8, padding:"4px 8px", color:"#e8f5e9", fontSize:11, cursor:"pointer" }}>
                   {locLoading ? "⌛" : "🔄"}
@@ -330,7 +330,9 @@ export default function Dashboard() {
               {weather ? (
                 <div style={{ display:"flex", flexDirection:"column", gap:6, flex:1 }}>
                   {[
-                    { icon:getWMO(weather.code).icon, val:`${Math.round(weather.temp_max)}°C`, label:getWMO(weather.code).label },
+                    typeof station?.temp === "number"
+                      ? { icon:"🌡️", val:`${Math.round(station.temp)}°C`, label:"Au jardin, maintenant" }
+                      : { icon:getWMO(weather.code).icon, val:`${Math.round(weather.temp_max)}°C`, label:getWMO(weather.code).label },
                     { icon:"💨", val:`${weather.wind}km/h`, label:"Vent" },
                     { icon:"💧", val:`${weather.precip}mm`, label:"Pluie" },
                   ].map(({ icon, val, label }) => (

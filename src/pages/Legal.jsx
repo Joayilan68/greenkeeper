@@ -148,7 +148,7 @@ export function MentionsLegales() {
 export function Confidentialite() {
   return (
     <div>
-      <PageHeader emoji="🔒" title="Politique de confidentialité" subtitle="Mise à jour : 24 septembre 2026" />
+      <PageHeader emoji="🔒" title="Politique de confidentialité" subtitle="Mise à jour : 28 septembre 2026" />
       <div style={scroll}>
 
         <Section title="1. Préambule">
@@ -190,6 +190,7 @@ export function Confidentialite() {
             • <strong>Envoi d'emails de prospection commerciale</strong> — Base légale : consentement (case optionnelle à l'inscription)<br/>
             • <strong>Notifications push</strong> — Base légale : consentement<br/>
             • <strong>Géolocalisation</strong> (météo locale) — Base légale : consentement<br/>
+            • <strong>Connexion d'équipements</strong> (station météo, à la demande de l'utilisateur dans « Mes équipements ») — Base légale : exécution du contrat<br/>
             • <strong>Partage de données anonymisées avec partenaires jardinage</strong> — Base légale : consentement<br/>
             • <strong>Mesure d'audience anonyme</strong> (Vercel Web Analytics et compteurs internes, sans cookie) — Base légale : intérêt légitime<br/>
             • <strong>Mesure de l'efficacité de nos publicités</strong> (Meta Pixel, cf. Politique de cookies) — Base légale : consentement<br/>
@@ -203,7 +204,8 @@ export function Confidentialite() {
             <strong>Données d'activité :</strong> historique des interventions, GreenPoints, streak, classement, photos de diagnostic.<br/><br/>
             <strong>Données techniques :</strong> identifiants techniques, journaux de connexion, adresse IP, type de navigateur et d'appareil (iPhone, Android ou ordinateur), langue.<br/><br/>
             <strong>Données de paiement :</strong> en cas d'abonnement Premium, les données de paiement sont traitées directement par Stripe — Mongazon360 n'a pas accès aux numéros de carte bancaire.<br/><br/>
-            <strong>Données de géolocalisation :</strong> coordonnées GPS approximatives (avec votre consentement uniquement).
+            <strong>Données de géolocalisation :</strong> coordonnées GPS approximatives (avec votre consentement uniquement).<br/><br/>
+            <strong>Données d'équipements connectés</strong> (seulement si vous en connectez un) : marque, nom et identifiant de l'appareil, clés d'accès à votre compte chez le fabricant (conservées chiffrées) et dernière mesure relevée (température, humidité, pluie, vent, humidité du sol).
           </SubSection>
 
           <SubSection title="5.3 Durées de conservation des données">
@@ -213,6 +215,7 @@ export function Confidentialite() {
             • <strong>Données de prospection commerciale :</strong> 3 ans à compter du dernier contact<br/>
             • <strong>Logs techniques :</strong> 1 an<br/>
             • <strong>Photos de diagnostic :</strong> 90 jours, puis suppression automatique (le résultat de l'analyse reste attaché au compte)<br/>
+            • <strong>Équipements connectés :</strong> jusqu'à leur déconnexion ou la suppression du compte ; seule la dernière mesure est conservée (chaque relevé remplace le précédent)<br/>
             • <strong>Statistiques de mesure d'audience (anonymes) :</strong> 25 mois<br/>
             • <strong>Cookies et choix de consentement :</strong> cookies Meta 90 jours maximum, choix concernant les cookies de mesure 6 mois (cf. Politique de cookies)
           </SubSection>
@@ -245,12 +248,16 @@ export function Confidentialite() {
             Mongazon360 ne reçoit d'Amazon aucune donnée personnelle relative aux achats effectués par l'utilisateur sur le site Amazon.fr. Les seules données communiquées par Amazon à Mongazon360 sont des rapports de commissions agrégés (montants, nombre de clics, taux de conversion), qui ne constituent pas des données personnelles.
           </SubSection>
 
-          <SubSection title="6.3 Meta Platforms Ireland Limited (Meta Pixel)">
+          <SubSection title="6.3 Fabricants des équipements connectés">
+            Si vous connectez un équipement (par exemple une station météo <strong style={{ color:"#a5d6a7" }}>Ecowitt</strong>), Mongazon360 interroge le service en ligne du fabricant avec les clés d'accès que vous avez créées sur votre compte chez lui, pour lire les mesures de votre appareil. Le fabricant traite les données de votre appareil en qualité de responsable de traitement indépendant, selon sa propre politique de confidentialité, et ses serveurs peuvent être situés hors de l'Union européenne. Vous pouvez déconnecter l'équipement à tout moment dans « Mes équipements » : ses clés d'accès sont alors effacées ; vous pouvez aussi les révoquer directement sur votre compte chez le fabricant.
+          </SubSection>
+
+          <SubSection title="6.4 Meta Platforms Ireland Limited (Meta Pixel)">
             Uniquement si vous l'avez accepté via le bandeau cookies, l'application transmet à <strong style={{ color:"#a5d6a7" }}>Meta Platforms Ireland Limited</strong> des données de navigation (identifiant du cookie Meta, page visitée, adresse IP, informations sur le navigateur et l'appareil) ainsi que les événements « début d'inscription » et « inscription finalisée », afin de mesurer l'efficacité de nos publicités sur Facebook et Instagram. Aucune donnée de votre compte (nom, email, profil gazon) n'est transmise.<br/><br/>
             Mongazon360 et Meta sont responsables conjoints de la collecte et de la transmission de ces données ; Meta en est seul responsable pour tout traitement ultérieur, conformément à sa propre politique de confidentialité. Vous pouvez retirer votre consentement à tout moment depuis <em>Paramètres → Mes consentements</em> (détails dans la Politique de cookies).
           </SubSection>
 
-          <SubSection title="6.4 Autorités compétentes">
+          <SubSection title="6.5 Autorités compétentes">
             En cas d'obligation légale, vos données peuvent être communiquées aux autorités compétentes, notamment l'administration fiscale, les juridictions, les forces de l'ordre et la Commission Nationale de l'Informatique et des Libertés (CNIL).
           </SubSection>
         </Section>

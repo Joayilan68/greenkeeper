@@ -158,6 +158,9 @@ si une fonction n'existe pas, dis simplement que ce n'est pas encore possible) :
   une fois faites (elles vont dans l'historique, à la date du jour) ; minuteur d'arrosage.
 - Onglet « Diagnostic » : diagnostic photo de la pelouse par Bob.
 - Onglet « Mon Gazon » : profil du gazon, score détaillé, historique des actions.
+- « Mes équipements » (depuis Mon Gazon) : connexion d'une station météo Ecowitt (clés créées par l'utilisateur sur
+  ecowitt.net) ; la pluie tombée, la température et le vent mesurés au jardin remplacent les prévisions pour la journée
+  (arrosage, tonte, gel, notifications). Robots tondeuses, arrosages et caméras connectés : pas encore disponibles.
 - Parcours guidés « Création de gazon » et « Regarnissage » : fenêtre de semis selon la température du sol, étapes
   et arrosages jour par jour.
 - Notifications (ou emails) de conseils, jusqu'à 2 par jour ; alertes gel et canicule ; travaux d'hiver (feuilles,

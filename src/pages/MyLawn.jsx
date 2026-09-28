@@ -373,6 +373,16 @@ export default function MyLawn() {
           </div>
         )}
 
+        {/* ── MES ÉQUIPEMENTS (station météo connectée ; robots, arrosages, caméras à venir) ── */}
+        <div onClick={() => navigate("/equipements")} style={{ ...card(), cursor:"pointer", display:"flex", alignItems:"center", gap:12 }}>
+          <span style={{ fontSize:24 }}>📡</span>
+          <div style={{ flex:1 }}>
+            <div style={{ fontSize:13, fontWeight:800, color:"#F1F8F2" }}>Mes équipements</div>
+            <div style={{ fontSize:11, color:"#81c784", marginTop:2 }}>Connecte ta station météo : l'app décide avec la météo de ton jardin</div>
+          </div>
+          <span style={{ color:"#a5d6a7", fontSize:16 }}>→</span>
+        </div>
+
         {/* ── BOUTON COMPLÉTER PROFIL ── */}
         <div style={{ marginBottom:12, display:"flex", alignItems:"center", justifyContent:"space-between", background:"rgba(255,255,255,0.05)", border:`1px solid ${completion < 90 ? "rgba(244,162,97,0.25)" : "rgba(82,183,136,0.25)"}`, borderRadius:14, padding:"10px 14px" }}>
           <div>
