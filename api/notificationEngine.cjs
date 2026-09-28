@@ -14,6 +14,35 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 const { zoneFromLatLon, ZONES } = require("./parcoursEngine.cjs");
+const CALENDRIER = require("../src/lib/calendrierActions.json");
+
+// Mois où une action est proposée : même calendrier et mêmes exceptions que le plan d'entretien de l'app
+// (moisCalendrier de src/lib/planEntretien.js) — une notification ne propose jamais une action hors saison
+function moisCalendrier(id, zone, profile) {
+  const c = CALENDRIER[id];
+  if (!c) return [];
+  const gazon = Object.keys(c.gazons || {}).find(g => aType(profile, g));
+  if (gazon) return c.gazons[gazon];
+  return c.sols?.[profile?.sol] || c.zones?.[zone] || c.mois;
+}
+const deSaison = (ids, profile, month) =>
+  ids.some(id => moisCalendrier(id, zoneFromLatLon(profile?.lat, profile?.lon), profile).includes(month));
+
+// Avant la 1re tonte de la zone (3 jours de marge), pas de tonte, sauf sol déjà réchauffé (même règle que l'app)
+function avantPremiereTonte(profile, weather, today) {
+  const z = ZONES[zoneFromLatLon(profile?.lat, profile?.lon)] || ZONES.centre;
+  const t = new Date(Date.parse(today || new Date().toISOString().slice(0, 10)));
+  const [m, j] = z.premiereTonte;
+  if (t.getUTCMonth() >= 5 || t >= new Date(Date.UTC(t.getUTCFullYear(), m - 1, j - 3))) return false;
+  return !(typeof weather?.soil_temp === "number" && weather.soil_temp >= z.soilMin);
+}
+
+// Rappel d'entretien → actions du calendrier ; prévention maladies : mois des risques suivis par checkMaladie
+const SAISON_RAPPEL = {
+  tonte: ["tonte"], engrais: ["engrais_starter", "engrais_ete", "engrais_automne", "engrais_hiver"],
+  aeration: ["aeration"], desherbage: ["desherbage"],
+};
+const MOIS_MALADIES = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 
 // Intervalles d'entretien (jours) — alignés sur send.js / useReminders KB v4
 const INTERVALLES = { tonte: 5, arrosage: 3, engrais: 45, fongicide: 14, aeration: 90, desherbage: 21 };
@@ -185,7 +214,7 @@ function decideArrosageSoir(weather, profile) {
 // ─────────────────────────────────────────────────────────────────────────────
 // NIVEAU 3 — Rappels entretien dus (intervalles KB). N08 : regroupement. Matin.
 // ─────────────────────────────────────────────────────────────────────────────
-function checkEntretienDu(profile, reminderPrefs, history, month) {
+function checkEntretienDu(profile, reminderPrefs, history, month, weather, today) {
   const prefs = reminderPrefs || {};
   const dus = [];
 
@@ -195,6 +224,9 @@ function checkEntretienDu(profile, reminderPrefs, history, month) {
     if (id === "arrosage") continue;
     // Gazon rustique : trèfle et fleurs font partie du gazon → pas de désherbage
     if (id === "desherbage" && isGazonRustique(profile)) continue;
+    // Hors saison dans sa zone (calendrier de l'app), ou tonte avant la 1re tonte de la zone : pas de rappel
+    if (id === "fongicide" ? !MOIS_MALADIES.includes(month) : !SAISON_RAPPEL[id] || !deSaison(SAISON_RAPPEL[id], profile, month)) continue;
+    if (id === "tonte" && avantPremiereTonte(profile, weather, today)) continue;
     // Robot déclaré → on ne rappelle pas "tondez" mais une SUPERVISION espacée (14j) :
     // filet de sécurité si le robot ne tond pas (panne / débranché / non connecté).
     const robotTonte = id === "tonte" && hasRobotTondeuse(profile);
@@ -218,27 +250,27 @@ function checkEntretienDu(profile, reminderPrefs, history, month) {
       ? "Votre robot tondeuse a-t-il bien tondu ? Vérifiez la lame et la hauteur de coupe."
       : CORPS[a.id] || `Il est temps de faire votre ${a.label.toLowerCase()}.`;
     return { priority: 3, type: `entretien_${a.id}`,
-      title: `${a.icon} ${a.label}`, body };
+      title: `${a.icon} ${a.label}`, body, rappels: [a.id] };
   }
   const noms = dus.slice(0, 3).map(a => a.label.toLowerCase());
   const reste = dus.length > 3 ? ` et ${dus.length - 3} autre(s)` : "";
   return { priority: 3, type: "entretien_groupe",
     title: "🌿 Plusieurs entretiens à prévoir",
-    body: `Aujourd'hui : ${noms.join(", ")}${reste}. Ouvrez l'app pour le détail.` };
+    body: `Aujourd'hui : ${noms.join(", ")}${reste}. Ouvrez l'app pour le détail.`, rappels: dus.map(a => a.id) };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // NIVEAU 4 — Conseil météo du jour. Matin. (pertinent seulement si météo dispo)
 // ─────────────────────────────────────────────────────────────────────────────
-function checkConseilMeteo(weather) {
+function checkConseilMeteo(weather, profile, month) {
   if (!weather) return null;
   const { temp_max, soil_temp } = weather;
   if (typeof temp_max === "number" && temp_max >= 26) {
     return { priority: 4, type: "conseil_chaleur",
       title: `☀️ ${temp_max}°C aujourd'hui`,
-      body: "Arrosez tôt le matin ou en soirée pour limiter l'évaporation." };
+      body: "Arrosez tôt le matin, jamais en plein soleil : moins d'évaporation, et le soir favorise les maladies." };
   }
-  if (typeof soil_temp === "number" && soil_temp >= 10 && soil_temp <= 14) {
+  if (typeof soil_temp === "number" && soil_temp >= 10 && soil_temp <= 14 && deSaison(["regarnissage"], profile, month)) {
     return { priority: 4, type: "conseil_sol_semis",
       title: "🌱 Sol favorable au semis",
       body: `Température du sol ~${soil_temp.toFixed(0)}°C : conditions idéales pour semer ou regarnir.` };
@@ -455,7 +487,7 @@ function decideNotification(ctx) {
     const parcours = checkParcoursActif(parcoursState, weather, "soir");
     if (parcours) return finalize(parcours, "soir");
     if (fatigue) return null;
-    const ars = decideArrosageSoir(weather, profile);
+    const ars = deSaison(["arrosage"], profile, month) ? decideArrosageSoir(weather, profile) : null;
     if (ars) return finalize({ priority: 2, type: "arrosage_soir", title: ars.title, body: ars.body }, "soir");
     return null; // rien de pertinent le soir → on n'envoie pas pour envoyer
   }
@@ -468,11 +500,11 @@ function decideNotification(ctx) {
   if (fatigue === 2 && recentNonUrgent) return null;
 
   const candidates = [
-    checkEntretienDu(profile, reminderPrefs, history, month), // 3 (N08)
+    checkEntretienDu(profile, reminderPrefs, history, month, weather, today), // 3 (N08)
     checkMaladie(weather, profile, month, notifLog, today),   // 3 bis
     checkBilanSaison(month, today, notifLog),         // 4 (bilan de saison, novembre)
     checkTravauxHiver(profile, weather, month, notifLog, today), // 4 (travaux d'hiver)
-    checkConseilMeteo(weather),                       // 4
+    checkConseilMeteo(weather, profile, month),       // 4
     ...(fatigue ? [] : [
       checkGamification(gami),                        // 5
       checkEducatif(today, month),                    // 6 (toujours dispo = filet ultime)
@@ -495,6 +527,7 @@ function finalize(notif, slot) {
     tag: `mg360-${notif.type}`,
     url: notif.url || "/today",
     slot,
+    ...(notif.rappels ? { rappels: notif.rappels } : {}), // rappels d'entretien envoyés (send.js met à jour lastSent)
   };
 }
 

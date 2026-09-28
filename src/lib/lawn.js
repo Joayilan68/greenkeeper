@@ -1,18 +1,18 @@
 // arrosage_base = besoin HEBDOMADAIRE total en mm (agronomique)
 // arrosage_freq = nombre de sessions d'arrosage par semaine recommandées
 export const MONTHLY_PLAN = {
-  1:  { tonte:"Aucune",             engrais:null,                                  verticut:false, arrosage_base:0,  arrosage_freq:0, aeration:false, label:"Repos hivernal",       hauteur:null },
-  2:  { tonte:"35 mm si repousse",  engrais:null,                                  verticut:false, arrosage_base:3,  arrosage_freq:1, aeration:true,  label:"Réveil de la pelouse", hauteur:35 },
-  3:  { tonte:"30 mm · 1-2x/sem",  engrais:"NPK 12-5-5 organo-minéral · 30-40 g/m²", verticut:false, arrosage_base:10, arrosage_freq:2, aeration:true,  label:"Reprise printanière",  hauteur:30 },
-  4:  { tonte:"25-30 mm · 2x/sem", engrais:"NPK 15-5-10 · 30-40 g/m²",           verticut:true,  arrosage_base:13, arrosage_freq:2, aeration:false, label:"Croissance active",     hauteur:28 },
-  5:  { tonte:"25 mm · 2-3x/sem",  engrais:"NPK 15-5-10 · 30 g/m²",              verticut:true,  arrosage_base:15, arrosage_freq:3, aeration:false, label:"Pleine saison",         hauteur:25 },
-  6:  { tonte:"28-30 mm · 2x/sem", engrais:"NPK 10-5-15 équilibré · 25-30 g/m²", verticut:true,  arrosage_base:17, arrosage_freq:3, aeration:false, label:"Surveillance chaleur",  hauteur:29 },
-  7:  { tonte:"30-35 mm · 1-2x/sem",engrais:"NPK 8-0-20 riche K · 20-25 g/m²",  verticut:false, arrosage_base:22, arrosage_freq:3, aeration:false, label:"Protection estivale",   hauteur:32 },
-  8:  { tonte:"30-35 mm · 1-2x/sem",engrais:"NPK 8-0-20 · 20 g/m²",             verticut:false, arrosage_base:20, arrosage_freq:3, aeration:false, label:"Stress hydrique",       hauteur:32 },
-  9:  { tonte:"28-30 mm · 1-2x/sem",engrais:"NPK 5-10-25 automne · 40 g/m²",    verticut:false, arrosage_base:16, arrosage_freq:2, aeration:true,  label:"Rénovation automnale",  hauteur:29 },
-  10: { tonte:"30 mm · 1x/sem",    engrais:null,                                  verticut:false, arrosage_base:10, arrosage_freq:1, aeration:false, label:"Préparation hiver",     hauteur:30 },
-  11: { tonte:"35 mm si pousse",   engrais:"Chaux magnésienne si pH<6 · 150-200 g/m²", verticut:false, arrosage_base:0, arrosage_freq:0, aeration:false, label:"Fin de saison",  hauteur:35 },
-  12: { tonte:"Aucune",            engrais:null,                                   verticut:false, arrosage_base:0,  arrosage_freq:0, aeration:false, label:"Repos complet",        hauteur:null },
+  1:  { engrais:null,                                  arrosage_base:0,  arrosage_freq:0, label:"Repos hivernal" },
+  2:  { engrais:null,                                  arrosage_base:3,  arrosage_freq:1, label:"Réveil de la pelouse" },
+  3:  { engrais:"NPK 12-5-5 organo-minéral · 30-40 g/m²", arrosage_base:10, arrosage_freq:2, label:"Reprise printanière" },
+  4:  { engrais:"NPK 15-5-10 · 30-40 g/m²",           arrosage_base:13, arrosage_freq:2, label:"Croissance active" },
+  5:  { engrais:"NPK 15-5-10 · 30 g/m²",              arrosage_base:15, arrosage_freq:3, label:"Pleine saison" },
+  6:  { engrais:"NPK 10-5-15 équilibré · 25-30 g/m²", arrosage_base:17, arrosage_freq:3, label:"Surveillance chaleur" },
+  7:  { engrais:"NPK 8-0-20 riche K · 20-25 g/m²",  arrosage_base:22, arrosage_freq:3, label:"Protection estivale" },
+  8:  { engrais:"NPK 8-0-20 · 20 g/m²",             arrosage_base:20, arrosage_freq:3, label:"Stress hydrique" },
+  9:  { engrais:"NPK 5-10-25 automne · 40 g/m²",    arrosage_base:16, arrosage_freq:2, label:"Rénovation automnale" },
+  10: { engrais:null,                                  arrosage_base:10, arrosage_freq:1, label:"Préparation hiver" },
+  11: { engrais:"Chaux magnésienne si pH<6 · 150-200 g/m²", arrosage_base:0, arrosage_freq:0, label:"Fin de saison" },
+  12: { engrais:null,                                   arrosage_base:0,  arrosage_freq:0, label:"Repos complet" },
 };
 
 export const MONTHS_FR = ["","Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];

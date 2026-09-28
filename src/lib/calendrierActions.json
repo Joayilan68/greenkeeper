@@ -1,0 +1,16 @@
+{
+  "_source": "Base de connaissances, onglet « Zones x Mois » : mois où chaque action est proposée. Partagé par le plan d'entretien (src/lib/planEntretien.js) et les notifications (api/notificationEngine.cjs). Exceptions par zone, sol ou type de gazon.",
+  "tonte": { "mois": [3, 4, 5, 6, 7, 8, 9, 10, 11] },
+  "arrosage": { "mois": [3, 4, 5, 6, 7, 8, 9, 10], "zones": { "sud": [2, 3, 4, 5, 6, 7, 8, 9, 10], "sud_ouest": [2, 3, 4, 5, 6, 7, 8, 9, 10], "corse": [2, 3, 4, 5, 6, 7, 8, 9, 10] } },
+  "engrais_starter": { "mois": [2, 3], "zones": { "nord_est": [3], "nord": [3] } },
+  "engrais_ete": { "mois": [5, 6] },
+  "engrais_automne": { "mois": [9, 10] },
+  "engrais_hiver": { "mois": [11] },
+  "verticut": { "mois": [4, 5, 6] },
+  "aeration": { "mois": [3, 9], "sols": { "argileux": [3, 4, 9, 10], "compacte": [3, 4, 9, 10] } },
+  "scarification": { "mois": [3, 4, 9], "gazons": { "ombre": [] } },
+  "desherbage": { "mois": [4, 5, 6, 7, 8, 9, 10], "gazons": { "rustique": [] } },
+  "antimousse": { "mois": [3, 4, 9] },
+  "biostimulant": { "mois": [3, 4, 5, 6, 7, 8, 9, 10] },
+  "regarnissage": { "mois": [3, 4, 5, 8, 9] }
+}
