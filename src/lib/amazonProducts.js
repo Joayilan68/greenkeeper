@@ -353,7 +353,7 @@ const AMAZON_PRODUCTS = {
       },
       standard: {
         asin: 'B0721LYLZK',
-        label: 'Semences gazon universel résistant — sac 5kg',
+        label: 'Semences gazon universel résistant',
         marque: 'Vilmorin',
         prix: 14.9,
         commission: 0.04,

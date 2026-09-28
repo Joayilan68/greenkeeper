@@ -294,7 +294,7 @@ function checkMaladie(weather, profile, month, notifLog, today) {
 // ─────────────────────────────────────────────────────────────────────────────
 // NIVEAU 4 bis — Travaux d'hiver et reprise du printemps (octobre → avril). Matin.
 // Chaque travail repart au plus tous les 14 jours (journal notif_log) ; les fenêtres courtes
-// (pH, révision, 1re tonte) ne le déclenchent donc qu'une fois par saison.
+// (pH, plan de printemps, révision, 1re tonte) ne le déclenchent donc qu'une fois par saison.
 // ─────────────────────────────────────────────────────────────────────────────
 function checkTravauxHiver(profile, weather, month, notifLog, today) {
   if (!weather || !today) return null;
@@ -325,6 +325,10 @@ function checkTravauxHiver(profile, weather, month, notifLog, today) {
       type: "hiver_ph", title: "🧪 Mesure le pH de ton sol",
       body: "Sous pH 6, le sol est acide : l'automne est le moment de chauler (chaux, ou chaux dolomitique entre 5 et 6). Un test de jardinerie suffit.",
       url: "/conseils/chaulage-ph-pelouse" },
+    ecart(z.premiereTonte) >= -35 && ecart(z.premiereTonte) <= -22 && {
+      type: "printemps_liste", title: "🌱 Ton plan de printemps est prêt",
+      body: "Le calendrier de ta zone et ta liste d'achats (engrais, semences, matériel) calculée pour ta surface.",
+      url: "/printemps" },
     ecart(z.premiereTonte) >= -21 && ecart(z.premiereTonte) <= -14 && {
       type: "printemps_revision", title: robot ? "🤖 Prépare ton robot tondeuse" : "🔧 Révise ta tondeuse",
       body: robot

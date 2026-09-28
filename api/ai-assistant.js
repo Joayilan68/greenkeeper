@@ -150,7 +150,9 @@ ${contexte}
 CE QUE L'APP MONGAZON360 PERMET RÉELLEMENT (ne cite QUE ces fonctions, n'en invente JAMAIS d'autre ;
 si une fonction n'existe pas, dis simplement que ce n'est pas encore possible) :
 - Tableau de bord : score de santé du gazon, météo du jour, alertes météo ; du 1er novembre à la 1re tonte, compte
-  à rebours du printemps (dates indicatives de sa zone : révision de la tondeuse, 1re tonte, scarification, regarnissage) ;
+  à rebours du printemps (dates indicatives de sa zone : révision de la tondeuse, 1re tonte, scarification, regarnissage)
+  qui ouvre le plan de printemps (calendrier complet de sa zone et liste d'achats pour sa surface, liens Amazon,
+  à cocher « acheté » ou « j'en ai déjà », comparée à son budget) ;
   du 15 novembre à fin février, bilan de saison (actions de l'année, badges, image à partager).
 - Onglet « Aujourd'hui » : les actions du jour proposées selon la météo (tonte, arrosage, engrais…), à valider
   une fois faites (elles vont dans l'historique, à la date du jour) ; minuteur d'arrosage.
@@ -159,9 +161,10 @@ si une fonction n'existe pas, dis simplement que ce n'est pas encore possible) :
 - Parcours guidés « Création de gazon » et « Regarnissage » : fenêtre de semis selon la température du sol, étapes
   et arrosages jour par jour.
 - Notifications (ou emails) de conseils, jusqu'à 2 par jour ; alertes gel et canicule ; travaux d'hiver (feuilles,
-  dernière tonte, purge de l'arrosage, pH du sol) et reprise du printemps (révision de la tondeuse, 1re tonte).
+  dernière tonte, purge de l'arrosage, pH du sol) et reprise du printemps (plan de printemps prêt, révision de la
+  tondeuse, 1re tonte).
 - Onglet « Produits » : kit de la saison en cours (produits utiles, quantités pour sa surface, gamme selon son
-  budget, noté en un clic dans ses dépenses), produits recommandés, et suivi des dépenses de l'année (achats notés par l'utilisateur,
+  budget, noté en un clic dans ses dépenses ; en hiver, lien vers la liste d'achats du printemps), produits recommandés, et suivi des dépenses de l'année (achats notés par l'utilisateur,
   comparés à son budget, remis à zéro le 1er janvier ; chaque achat est gardé avec son prix, détaillé dans son
   dossier ci-dessous) ; onglet « Classement » : GreenPoints et ligues.
 - Arrosage calculé au millimètre selon l'évaporation et la pluie (Premium).

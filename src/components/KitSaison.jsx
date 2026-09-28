@@ -1,12 +1,25 @@
+import { useNavigate } from "react-router-dom";
 import { card } from "../lib/styles";
 import { kitDuMois } from "../lib/kitSaison";
+import { compteARebours } from "../lib/printemps";
 import { ajouterAchat, achatsAnnee, euros } from "../lib/depenses";
 import { trackAmazonClick } from "../lib/useAmazonProducts";
 
-// Onglet Produits : kit de la saison en cours, calculé pour la surface et le budget de l'utilisateur
+// Onglet Produits : kit de la saison en cours, calculé pour la surface et le budget de l'utilisateur ;
+// en hiver, quand rien n'est de saison, la liste d'achats du plan de printemps prend sa place
 export default function KitSaison({ profile, saveProfile, tier }) {
+  const navigate = useNavigate();
   const kit = kitDuMois(profile, tier);
   if (!kit.items.length) return null;
+
+  if (kit.aPreparer && compteARebours(profile)) return (
+    <div onClick={() => navigate("/printemps")} style={{ ...card(), cursor:"pointer", background:"linear-gradient(135deg,rgba(76,175,80,0.14),rgba(13,43,26,0.6))", border:"1px solid rgba(76,175,80,0.35)" }}>
+      <div style={{ fontSize:15, fontWeight:800, color:"#F1F8F2" }}>🌱 Ta liste d'achats du printemps</div>
+      <div style={{ fontSize:12, color:"#a5d6a7", margin:"4px 0 0", lineHeight:1.5 }}>
+        Engrais, semences et matériel pour tes {kit.surface} m², avec le calendrier de ta zone. Voir mon plan de printemps →
+      </div>
+    </div>
+  );
 
   const dejaNote = achatsAnnee(profile).some(a => a.kit === kit.saison);
   const noterKit = () => {
