@@ -518,10 +518,14 @@ module.exports = async function handler(req, res) {
           }
         }
 
-        // Persister le notif_log si modifié
+        // Persister le notif_log si modifié ; rappels d'entretien envoyés : lastSent à jour (intervalles KB)
         if (logUpdated !== notif_log) {
+          const maintenant = new Date().toISOString();
+          const prefsMaj = decision.rappels
+            ? { ...prefs, ...Object.fromEntries(decision.rappels.map(id => [id, { ...prefs[id], lastSent: maintenant }])) }
+            : prefs;
           await supabase.from("reminders")
-            .update({ notif_log: logUpdated, updated_at: new Date().toISOString() })
+            .update({ notif_log: logUpdated, preferences: prefsMaj, updated_at: maintenant })
             .eq("user_id", user_id);
         }
       }
