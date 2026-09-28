@@ -5,6 +5,7 @@
 // évaporation pour Premium). Texte compact pour limiter les jetons.
 
 const { currentPhase, zoneFromLatLon, ZONES } = require("./parcoursEngine.cjs");
+const TONTE_GAZON = require("../src/lib/tonteGazon.json");
 
 const DIAG_MAX_JOURS = 60; // un diagnostic plus ancien ne décrit plus l'état actuel
 // Valeurs stockées sans accents → libellés lisibles
@@ -21,12 +22,6 @@ const CLIMATS = {
   sud:       "méditerranéen : semer avant la chaleur ou en automne, jamais l'été (canicule = échec) ; contraintes : canicule mai→sept., hiver très doux ; semis à privilégier en automne (fenêtre très longue)",
   corse:     "méditerranéen insulaire : automne privilégié, arrosage indispensable au printemps ; contraintes : sécheresse marquée l'été, hiver doux",
 };
-// Onglet « Tonte Précise » : hauteurs (cm) printemps / été / canicule / automne et minimum absolu, par type de gazon
-const TONTE = {
-  universel: "5-6 / 6-7 / 7-8 / 5-6, jamais sous 4", sport: "3,5-4,5 / 3-4 / 4-5 / 4-5, jamais sous 2,5",
-  ombre: "6-8 / 7-8 / 8-9 / 6-7, jamais sous 5", rustique: "7-10 / 8-10 / 10-12 / 7-9, jamais sous 6",
-  ornement: "2,5-3,5 / 2-3 / 3-4 / 3-4, jamais sous 1,5", bermuda: "3-4 / 2,5-3,5 / 3-4 / 4-5, jamais sous 2 ; dormance nov.-mars",
-};
 // Onglet « Arrosage Précis » : volume par session, fréquence et heure selon le sol
 const ARROSAGE = {
   sableux: "15-20 mm tous les 2-3 jours, quotidien en canicule, 5h-7h le matin obligatoirement",
@@ -36,8 +31,10 @@ const ARROSAGE = {
   humifere: "8-10 mm tous les 4-5 jours, tous les 3 jours en canicule, 5h-8h le matin",
   compacte: "6-8 mm en 2 passages tous les 3-4 jours après aération, 6h-8h le matin (soir interdit)",
 };
-const TYPE_TONTE = { universel: "universel", inconnu: "universel", sport: "sport", ombre: "ombre", rustique: "rustique",
-  ornemental: "ornement", ornement: "ornement", bermuda: "bermuda", chaud: "bermuda" };
+// Onglet « Tonte Précise » (src/lib/tonteGazon.json, partagé avec le plan de printemps) : hauteurs (cm)
+// printemps / été / canicule / automne et minimum absolu, par type de gazon
+const TONTE = Object.fromEntries(Object.entries(TONTE_GAZON.types).map(([type, t]) =>
+  [type, `${t.printemps} / ${t.ete} / ${t.canicule} / ${t.automne}, jamais sous ${t.min}${t.note ? ` ; ${t.note}` : ""}`]));
 
 // Plafond de chaque tranche de budget du profil (même règle que src/lib/depenses.js)
 const PLAFONDS = { "0-50": 50, "50-150": 150, "150-300": 300, "300-600": 600 };
@@ -87,7 +84,7 @@ async function buildBobContext(supabase, { userId, premium, clientProfile = {}, 
   }
   const sol = String(p.sol || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   if (ARROSAGE[sol]) l.push(`Arrosage pour son sol (${lisible(p.sol)}) : ${ARROSAGE[sol]}`);
-  const typeTonte = TYPE_TONTE[p.pelouse];
+  const typeTonte = TONTE_GAZON.alias[p.pelouse];
   if (typeTonte) l.push(`Hauteurs de tonte de son gazon (${typeTonte}) — printemps / été / canicule / automne en cm : ${TONTE[typeTonte]}`);
   l.push(`Ville : ${p.ville || "?"} · objectif : ${lisible(p.objectif) || "?"} · usages : ${lisible(p.usages) || "?"}`);
   const GAMME = { "0-50": "eco", inconnu: "eco", "50-150": "standard", "150-300": "qualite", "300-600": "premium", "600+": "premium" };

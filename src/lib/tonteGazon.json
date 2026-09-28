@@ -1,0 +1,14 @@
+{
+  "types": {
+    "universel": { "printemps": "5-6", "ete": "6-7", "canicule": "7-8", "automne": "5-6", "min": "4" },
+    "sport": { "printemps": "3,5-4,5", "ete": "3-4", "canicule": "4-5", "automne": "4-5", "min": "2,5" },
+    "ombre": { "printemps": "6-8", "ete": "7-8", "canicule": "8-9", "automne": "6-7", "min": "5" },
+    "rustique": { "printemps": "7-10", "ete": "8-10", "canicule": "10-12", "automne": "7-9", "min": "6" },
+    "ornement": { "printemps": "2,5-3,5", "ete": "2-3", "canicule": "3-4", "automne": "3-4", "min": "1,5" },
+    "bermuda": { "printemps": "3-4", "ete": "2,5-3,5", "canicule": "3-4", "automne": "4-5", "min": "2", "note": "dormance nov.-mars" }
+  },
+  "alias": {
+    "universel": "universel", "inconnu": "universel", "sport": "sport", "ombre": "ombre", "rustique": "rustique",
+    "ornemental": "ornement", "ornement": "ornement", "bermuda": "bermuda", "chaud": "bermuda"
+  }
+}

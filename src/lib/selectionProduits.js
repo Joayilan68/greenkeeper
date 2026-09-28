@@ -44,3 +44,15 @@ export function quantitePour(cat, surface) {
   if (cat?.ratioMlM2 && cat.conditionnement) return calcQuantite(surface, cat.ratioMlM2, cat.conditionnement);
   return 1;
 }
+
+// Produits appliqués seulement sur les zones abîmées (regarnissage, mousse) : ~30 % de la surface ;
+// semences de regarnissage à ~25 g/m² (base de connaissances, onglet « Parcours Semis »)
+const ZONES_A_TRAITER = { regarnissage: 0.3, antiMousse: 0.3 };
+const DOSE = { regarnissage: 25 };
+
+// Quantité d'un kit ou d'une liste d'achats : { quantite, zones } (zones = produit pour les zones abîmées)
+export function quantiteKit(cle, cat, surface) {
+  const part = ZONES_A_TRAITER[cle];
+  const dose = DOSE[cle] ? { ...cat, ratioGM2: DOSE[cle] } : cat;
+  return { quantite: quantitePour(dose, Math.round(surface * (part || 1))), zones: !!part };
+}
