@@ -167,6 +167,7 @@ module.exports = async function handler(req, res) {
         parcoursRes,
         classementRes,
         dauRes,
+        equipementsRes,
       ] = await Promise.allSettled([
         supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle(),
         supabase.from("histories").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
@@ -180,6 +181,7 @@ module.exports = async function handler(req, res) {
         supabase.from("parcours").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
         supabase.from("classement").select("*").eq("user_id", userId).maybeSingle(),
         supabase.from("daily_active_users").select("*").eq("user_id", userId).order("day", { ascending: false }),
+        supabase.from("equipements").select("type, marque, nom, statut, mesures, mesures_at, created_at").eq("user_id", userId),
       ]);
 
       const getData = (r) => (r.status === "fulfilled" ? r.value?.data : null);
@@ -221,6 +223,7 @@ module.exports = async function handler(req, res) {
         parcours:            getData(parcoursRes) || [],
         classement:          getData(classementRes) || null,
         jours_actifs:        getData(dauRes) || [],
+        equipements_connectes: getData(equipementsRes) || [], // clés d'accès chiffrées non exportées
         abonnement_push:     getData(pushSubRes) ? "Présent (détails masqués pour sécurité)" : "Aucun",
       });
     } catch (e) {
@@ -261,6 +264,7 @@ module.exports = async function handler(req, res) {
         "parcours",            // ajout 21/08 — programme gazon (donnée perso)
         "classement",          // ajout 21/08 — ligue / classement
         "daily_active_users",  // ajout 21/08 — journal d'activité
+        "equipements",         // ajout 28/09 — équipements connectés et leurs clés d'accès chiffrées
       ];
 
       const tableResults = await Promise.allSettled(

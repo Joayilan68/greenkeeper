@@ -12,6 +12,11 @@
 // Les nouveaux champs (soil_temp, soil_moisture, et0) s'AJOUTENT à daily.
 // Tout est défensif : si le cache échoue OU si l'agrégation échoue, on
 // retombe sur un appel direct / la donnée de base. Jamais de blocage.
+// Station météo connectée (api/equipements.cjs) : ses mesures corrigent le jour 0 pour l'utilisateur
+// connecté qui en a une ; la réponse porte alors aussi « station » (dernière mesure).
+
+const { verifiedUserId } = require("./auth.cjs");
+const { mesuresStation, appliquerStation } = require("./equipements.cjs");
 
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // sécurité : borne max même si fenêtre longue
 
@@ -121,6 +126,20 @@ function aggregateHourlyToDaily(data) {
   }
 }
 
+// Station météo connectée de l'utilisateur (jeton Clerk présent) : mesures du jardin appliquées au jour 0.
+// Jamais mis en cache (le cache est partagé par coordonnées) ; sans station ou en cas d'erreur, météo inchangée.
+async function avecStation(req, supabase, data) {
+  if (!req.headers.authorization || !supabase || !data?.daily) return data;
+  try {
+    const userId = await verifiedUserId(req);
+    const m = userId && await mesuresStation(supabase, userId);
+    return m ? { ...data, daily: appliquerStation(data.daily, m), station: m } : data;
+  } catch (e) {
+    console.warn("weather.js station :", e.message);
+    return data;
+  }
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
 
@@ -151,7 +170,7 @@ module.exports = async function handler(req, res) {
         .maybeSingle();
 
       if (row && row.expires_at && new Date(row.expires_at) > new Date() && row.data) {
-        return res.status(200).json({ ...row.data, cached: true });
+        return res.status(200).json({ ...(await avecStation(req, supabase, row.data)), cached: true });
       }
     } catch (e) {
       console.error("weather.js cache read:", e.message);
@@ -213,7 +232,7 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    return res.status(200).json({ ...data, cached: false });
+    return res.status(200).json({ ...(await avecStation(req, supabase, data)), cached: false });
   } catch (e) {
     await require("./alerting.cjs").reportServerError("Météo en échec", e);
     return res.status(500).json({ error: e.message });

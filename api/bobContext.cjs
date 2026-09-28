@@ -6,6 +6,7 @@
 
 const { currentPhase, zoneFromLatLon, ZONES } = require("./parcoursEngine.cjs");
 const TONTE_GAZON = require("../src/lib/tonteGazon.json");
+const { mesuresStation } = require("./equipements.cjs");
 
 const DIAG_MAX_JOURS = 60; // un diagnostic plus ancien ne décrit plus l'état actuel
 // Valeurs stockées sans accents → libellés lisibles
@@ -127,6 +128,13 @@ async function buildBobContext(supabase, { userId, premium, clientProfile = {}, 
 
   const m = await meteo(p, premium);
   l.push(m?.length ? `Météo des 5 prochains jours : ${m.join(" | ")}` : "Météo : non disponible.");
+  const st = await mesuresStation(supabase, userId).catch(() => null);
+  if (st) {
+    const v = (x, u) => typeof x === "number" ? `${String(x).replace(".", ",")} ${u}` : null;
+    const mesures = [v(st.temp, "°C"), st.humidite !== null && `humidité ${v(st.humidite, "%")}`, st.pluie_jour !== null && `pluie tombée aujourd'hui ${v(st.pluie_jour, "mm")}`,
+      st.vent !== null && `vent ${v(st.vent, "km/h")}`, st.sol_humidite !== null && `humidité du sol ${v(st.sol_humidite, "%")}`].filter(Boolean);
+    l.push(`Station météo connectée dans son jardin (mesure de ${new Date(st.at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" })}) : ${mesures.join(", ")} — plus fiable que les prévisions pour ce qui s'est passé aujourd'hui`);
+  }
 
   return l.map(x => `- ${x}`).join("\n");
 }
