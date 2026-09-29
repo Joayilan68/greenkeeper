@@ -926,6 +926,12 @@ module.exports = async function handler(req, res) {
         } catch (e) { await require("./alerting.cjs").reportServerError("IA Groq indisponible", e); }
       }
 
+      // ── Veille de marque — créneau SOIR : noms de domaine proches de Mongazon360 (veilleMarque.cjs) ──
+      if (slot === "soir") {
+        try { await require("./veilleMarque.cjs").veilleDomaines(today); }
+        catch (e) { await require("./alerting.cjs").reportServerError("Veille de marque en échec", e); }
+      }
+
       // ── Signal de vie + contrôle : le soir, vérifier que la tâche du matin a tourné ──
       const alerting = require("./alerting.cjs");
       if (slot === "soir") {
