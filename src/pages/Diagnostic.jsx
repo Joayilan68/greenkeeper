@@ -83,7 +83,8 @@ export default function Diagnostic() {
   useEffect(() => {
     if (!user?.id) return;
     setHistoLoading(true);
-    fetch(`/api/diagnostics?userId=${user.id}`)
+    getToken()
+      .then(token => fetch("/api/diagnostics", { headers: { Authorization: `Bearer ${token}` } }))
       .then(r => r.json())
       .then(d => { if (Array.isArray(d)) setHistoSupabase(d); })
       .catch(() => {})

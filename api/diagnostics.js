@@ -1,17 +1,14 @@
 // api/diagnostics.js
-// GET /api/diagnostics?userId=xxx → historique des diagnostics d'un utilisateur
+// GET /api/diagnostics → historique des diagnostics de l'utilisateur connecté (jeton Clerk obligatoire)
 
 const { createClient } = require("@supabase/supabase-js");
+const { verifiedUserId } = require("./auth.cjs");
 
 module.exports = async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "GET") return res.status(405).end();
 
-  const { userId } = req.query;
-  if (!userId) return res.status(400).json({ error: "userId manquant" });
+  const userId = await verifiedUserId(req);
+  if (!userId) return res.status(401).json({ error: "Connexion requise" });
 
   try {
     const supabase = createClient(
@@ -30,7 +27,7 @@ module.exports = async function handler(req, res) {
     return res.json(data || []);
 
   } catch (e) {
-    console.error("diagnostics:", e.message);
+    await require("./alerting.cjs").reportServerError("Historique des diagnostics en échec", e, { "Utilisateur": userId });
     return res.status(500).json({ error: e.message });
   }
 };
