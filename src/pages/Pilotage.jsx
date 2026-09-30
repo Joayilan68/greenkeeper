@@ -978,6 +978,35 @@ export default function Pilotage() {
               {cronLine("Tâche du soir (arrosage)", soir, new Date().getUTCHours() >= 16)}
             </div>
 
+            {(() => {
+              const v = errorsData?.status?.veille_domaines;
+              const noms = Object.entries(v?.domaines || {});
+              const nouveaux = noms.filter(([, d]) => d > v.reference).sort((a, b) => b[1].localeCompare(a[1]));
+              const date = (d) => new Date(d).toLocaleDateString("fr-FR");
+              return (
+                <div style={card()}>
+                  <div style={cardTitle}><span>🛡️ Veille de marque — noms de domaine</span></div>
+                  {!v ? (
+                    <div style={{ fontSize:12, color:"#81c784" }}>Premier relevé ce soir (tâche du soir).</div>
+                  ) : (
+                    <>
+                      <div style={{ fontSize:11, color:"#81c784", lineHeight:1.6 }}>
+                        Noms commençant par mongazon, mon-gazon, mongason ou gazon360 ayant un certificat HTTPS · {noms.length} connus depuis le {date(v.reference)} · vérifié le {date(v.verifie_le)}
+                      </div>
+                      {nouveaux.length === 0 ? (
+                        <div style={{ fontSize:12, color:"#81c784", marginTop:6 }}>✅ Aucun nouveau nom depuis le premier relevé</div>
+                      ) : nouveaux.map(([nom, d]) => (
+                        <div key={nom} style={{ display:"flex", justifyContent:"space-between", fontSize:12, padding:"4px 0", borderBottom:"1px solid rgba(255,255,255,0.06)" }}>
+                          <a href={`https://${nom}`} target="_blank" rel="noopener noreferrer" style={{ color:"#ffcc80" }}>⚠️ {nom}</a>
+                          <span style={{ color:"#81c784" }}>{date(d)}</span>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                </div>
+              );
+            })()}
+
             <div style={card()}>
               <div style={cardTitle}><span>🐛 Problèmes — 30 derniers jours</span><span style={{ fontSize:11, color:"#81c784" }}>tous utilisateurs</span></div>
               {!errorsData ? (

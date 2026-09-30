@@ -284,36 +284,42 @@ module.exports = async function handler(req, res) {
       } catch (e) { console.warn("[cron] activité Clerk indisponible :", e.message); }
 
       // Cache météo par zone arrondie (1 fetch/zone/exécution → protège le quota)
-      const weatherCache = {};
-      async function getWeatherForUser(profile) {
+      const weatherCache = {}; // séries Open-Meteo par coordonnées (partagées entre utilisateurs)
+      // Utilisateurs ayant une station météo connectée : mesures du jardin appliquées au jour 0
+      const { data: stationsData } = await supabase.from("equipements").select("user_id").eq("type", "station");
+      const avecStation = new Set((stationsData || []).map(e => e.user_id));
+      const { mesuresStation, appliquerStation } = require("./equipements.cjs");
+      async function getWeatherForUser(profile, userId) {
         const lat = profile && profile.lat;
         const lon = profile && profile.lon;
         if (typeof lat !== "number" || typeof lon !== "number") return null;
         const key = `${lat.toFixed(2)}_${lon.toFixed(2)}`;
-        if (key in weatherCache) return weatherCache[key];
-        try {
-          const base = process.env.SELF_BASE_URL || "https://mongazon360.fr";
-          const r = await fetch(`${base}/api/weather?lat=${lat}&lon=${lon}&premium=true`);
-          if (!r.ok) { weatherCache[key] = null; return null; }
-          const data = await r.json();
-          const d = data.daily || {};
-          // On expose au moteur la météo du JOUR (index 0)
-          const w = {
-            temp_min: d.temperature_2m_min ? d.temperature_2m_min[0] : null,
-            temp_max: d.temperature_2m_max ? d.temperature_2m_max[0] : null,
-            precip:   d.precipitation_sum  ? d.precipitation_sum[0]  : null,
-            wind:     d.windspeed_10m_max  ? d.windspeed_10m_max[0]  : null,
-            humidity: d.relative_humidity_2m_mean ? d.relative_humidity_2m_mean[0] : null,
-            soil_temp: d.soil_temp ? d.soil_temp[0] : null,
-            et0:      d.et0 ? d.et0[0] : null,
-          };
-          weatherCache[key] = w;
-          return w;
-        } catch (e) {
-          require("./alerting.cjs").reportServerError("Tâche planifiée — météo", e);
-          weatherCache[key] = null;
-          return null;
+        if (!(key in weatherCache)) {
+          try {
+            const base = process.env.SELF_BASE_URL || "https://mongazon360.fr";
+            const r = await fetch(`${base}/api/weather?lat=${lat}&lon=${lon}&premium=true`);
+            weatherCache[key] = r.ok ? ((await r.json()).daily || {}) : null;
+          } catch (e) {
+            require("./alerting.cjs").reportServerError("Tâche planifiée — météo", e);
+            weatherCache[key] = null;
+          }
         }
+        let d = weatherCache[key];
+        if (!d) return null;
+        if (avecStation.has(userId)) {
+          const m = await mesuresStation(supabase, userId).catch(() => null);
+          if (m) d = appliquerStation(d, m);
+        }
+        // On expose au moteur la météo du JOUR (index 0)
+        return {
+          temp_min: d.temperature_2m_min ? d.temperature_2m_min[0] : null,
+          temp_max: d.temperature_2m_max ? d.temperature_2m_max[0] : null,
+          precip:   d.precipitation_sum  ? d.precipitation_sum[0]  : null,
+          wind:     d.windspeed_10m_max  ? d.windspeed_10m_max[0]  : null,
+          humidity: d.relative_humidity_2m_mean ? d.relative_humidity_2m_mean[0] : null,
+          soil_temp: d.soil_temp ? d.soil_temp[0] : null,
+          et0:      d.et0 ? d.et0[0] : null,
+        };
       }
 
       let pushSent = 0, emailSent = 0, skipped = 0;
@@ -362,7 +368,7 @@ module.exports = async function handler(req, res) {
             const parcoursRow = parcoursMap[u.id];
             const parcoursState = parcoursRow ? currentPhase({ type: parcoursRow.type, dateSemis: parcoursRow.date_semis, today }) : null;
             const action = profilComplet && decideNotification({
-              profile, weather: await getWeatherForUser(profile),
+              profile, weather: await getWeatherForUser(profile, u.id),
               reminderPrefs: remMap[u.id]?.preferences || {},
               history: Array.isArray(profile.history) ? profile.history : [],
               notifLog: remMap[u.id]?.notif_log, month, slot, today,
@@ -424,7 +430,7 @@ module.exports = async function handler(req, res) {
 
         const contact = emailConseilMap[user_id];
         const weather = (userConsents.notifications && (sub || contact)) || (userConsents.marketing && email)
-          ? await getWeatherForUser(profile)
+          ? await getWeatherForUser(profile, user_id)
           : null;
 
         // ── État réel du parcours actif — MÊME source que Today.jsx (phaseParcours/useParcours) ──
@@ -918,6 +924,12 @@ module.exports = async function handler(req, res) {
           const missing = [VISION_MODEL, TEXT_MODEL].filter(m => !ids.has(m));
           if (missing.length) throw new Error(`Modèle(s) retiré(s) par Groq : ${missing.join(", ")} — mettre à jour api/aiModels.cjs`);
         } catch (e) { await require("./alerting.cjs").reportServerError("IA Groq indisponible", e); }
+      }
+
+      // ── Veille de marque — créneau SOIR : noms de domaine proches de Mongazon360 (veilleMarque.cjs) ──
+      if (slot === "soir") {
+        try { await require("./veilleMarque.cjs").veilleDomaines(today); }
+        catch (e) { await require("./alerting.cjs").reportServerError("Veille de marque en échec", e); }
       }
 
       // ── Signal de vie + contrôle : le soir, vérifier que la tâche du matin a tourné ──

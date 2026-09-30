@@ -9,6 +9,7 @@ export function WeatherProvider({ children, isPaid }) {
   });
   const [locationName, setLocName]  = useState(() => localStorage.getItem("gk_location_name") || "");
   const [weather, setWeather]       = useState(null);
+  const [station, setStation]       = useState(null); // dernière mesure de la station connectée (Mes équipements)
   const [weekWeather, setWeek]      = useState([]);
   const [alerts, setAlerts]         = useState([]);
   const [loading, setLoading]       = useState(false);
@@ -59,8 +60,12 @@ export function WeatherProvider({ children, isPaid }) {
     setLoading(true); setError(null);
     const { lat, lon } = loc;
     try {
-      const r = await fetch(`/api/weather?lat=${lat}&lon=${lon}&premium=${isPaid ? "true" : "false"}`);
+      // Jeton Clerk : le serveur applique les mesures de la station connectée de l'utilisateur au jour 0
+      const token = await window.Clerk?.session?.getToken().catch(() => null);
+      const r = await fetch(`/api/weather?lat=${lat}&lon=${lon}&premium=${isPaid ? "true" : "false"}`,
+        token ? { headers: { Authorization: `Bearer ${token}` } } : undefined);
       const d = await r.json();
+      setStation(d.station || null);
       const daily = d.daily;
       const days = daily.time.map((date, i) => ({
         date,
@@ -92,7 +97,7 @@ export function WeatherProvider({ children, isPaid }) {
 
   return (
     <WeatherContext.Provider value={{
-      location, locationName, weather, weekWeather, alerts,
+      location, locationName, weather, weekWeather, alerts, station,
       loading, locLoading, error, fetchLocation, refreshLocation, isPaid
     }}>
       {children}
