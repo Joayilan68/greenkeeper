@@ -148,7 +148,7 @@ export function MentionsLegales() {
 export function Confidentialite() {
   return (
     <div>
-      <PageHeader emoji="🔒" title="Politique de confidentialité" subtitle="Mise à jour : 2 octobre 2026" />
+      <PageHeader emoji="🔒" title="Politique de confidentialité" subtitle="Mise à jour : 3 octobre 2026" />
       <div style={scroll}>
 
         <Section title="1. Préambule">
@@ -205,7 +205,7 @@ export function Confidentialite() {
             <strong>Données techniques :</strong> identifiants techniques, journaux de connexion, adresse IP, type de navigateur et d'appareil (iPhone, Android ou ordinateur), langue.<br/><br/>
             <strong>Données de paiement :</strong> en cas d'abonnement Premium, les données de paiement sont traitées directement par Stripe — Mongazon360 n'a pas accès aux numéros de carte bancaire.<br/><br/>
             <strong>Données de géolocalisation :</strong> coordonnées GPS approximatives (avec votre consentement uniquement).<br/><br/>
-            <strong>Données d'équipements connectés</strong> (seulement si vous en connectez un) : marque, nom et identifiant de l'appareil, clés ou jetons d'accès à votre compte chez le fabricant (conservés chiffrés) et dernier relevé (température, humidité, pluie, vent, humidité du sol ; pour un robot : activité, batterie, prochaine tonte, hauteur de coupe).
+            <strong>Données d'équipements connectés</strong> (seulement si vous en connectez un) : marque, nom et identifiant de l'appareil, clés ou jetons d'accès à votre compte chez le fabricant (conservés chiffrés) et dernier relevé (température, humidité, pluie, vent, humidité du sol ; pour un robot : activité, batterie, prochaine tonte, hauteur de coupe ; pour un arrosage : nom et état des zones).
           </SubSection>
 
           <SubSection title="5.3 Durées de conservation des données">
@@ -249,7 +249,7 @@ export function Confidentialite() {
           </SubSection>
 
           <SubSection title="6.3 Fabricants des équipements connectés">
-            Si vous connectez un équipement (par exemple une station météo <strong style={{ color:"#a5d6a7" }}>Ecowitt</strong> ou un robot tondeuse <strong style={{ color:"#a5d6a7" }}>Husqvarna</strong>), Mongazon360 interroge le service en ligne du fabricant avec l'accès que vous lui avez donné (clés créées sur votre compte, ou connexion sur le site du fabricant), pour lire l'état et les mesures de votre appareil et, pour un robot, lui transmettre les commandes que vous validez (mise au repos, reprise du planning). Le fabricant traite les données de votre appareil en qualité de responsable de traitement indépendant, selon sa propre politique de confidentialité, et ses serveurs peuvent être situés hors de l'Union européenne. Vous pouvez déconnecter l'équipement à tout moment dans « Mes équipements » : ses clés d'accès sont alors effacées ; vous pouvez aussi les révoquer directement sur votre compte chez le fabricant.
+            Si vous connectez un équipement (par exemple une station météo <strong style={{ color:"#a5d6a7" }}>Ecowitt</strong> , un robot tondeuse <strong style={{ color:"#a5d6a7" }}>Husqvarna</strong> ou un arrosage <strong style={{ color:"#a5d6a7" }}>Gardena</strong> ou <strong style={{ color:"#a5d6a7" }}>Rachio</strong>), Mongazon360 interroge le service en ligne du fabricant avec l'accès que vous lui avez donné (clés créées sur votre compte, ou connexion sur le site du fabricant), pour lire l'état et les mesures de votre appareil et, pour un robot ou un arrosage, lui transmettre les commandes que vous validez (mise au repos ou reprise du robot ; arrosage d'une zone, suspension ou reprise des programmes). Le fabricant traite les données de votre appareil en qualité de responsable de traitement indépendant, selon sa propre politique de confidentialité, et ses serveurs peuvent être situés hors de l'Union européenne. Vous pouvez déconnecter l'équipement à tout moment dans « Mes équipements » : ses clés d'accès sont alors effacées ; vous pouvez aussi les révoquer directement sur votre compte chez le fabricant.
           </SubSection>
 
           <SubSection title="6.4 Meta Platforms Ireland Limited (Meta Pixel)">

@@ -8,7 +8,7 @@ const { currentPhase, zoneFromLatLon, ZONES } = require("./parcoursEngine.cjs");
 const TONTE_GAZON = require("../src/lib/tonteGazon.json");
 // Onglet « Arrosage Précis » (src/lib/arrosageSol.json, partagé avec le plan annuel) : volume, fréquence et heure selon le sol
 const ARROSAGE = require("../src/lib/arrosageSol.json");
-const { mesuresStation, etatRobot } = require("./equipements.cjs");
+const { mesuresStation, etatRobot, etatArrosage } = require("./equipements.cjs");
 
 const DIAG_MAX_JOURS = 60; // un diagnostic plus ancien ne décrit plus l'état actuel
 // Valeurs stockées sans accents → libellés lisibles
@@ -121,7 +121,10 @@ async function buildBobContext(supabase, { userId, premium, clientProfile = {}, 
 
   const m = await meteo(p, premium);
   l.push(m?.length ? `Météo des 5 prochains jours : ${m.join(" | ")}` : "Météo : non disponible.");
-  const [st, robot] = await Promise.all([mesuresStation(supabase, userId).catch(() => null), etatRobot(supabase, userId).catch(() => null)]);
+  const [st, robot, arrosage] = await Promise.all([mesuresStation(supabase, userId).catch(() => null),
+    etatRobot(supabase, userId).catch(() => null), etatArrosage(supabase, userId).catch(() => null)]);
+  if (arrosage) l.push(`Arrosage connecté ${arrosage.marque === "gardena" ? "Gardena" : "Rachio"} (${arrosage.nom}, zones : ${arrosage.zones.map(z => z.nom).join(", ")})`
+    + `${arrosage.suspendu === "veille" ? ", en veille" : arrosage.suspendu ? ", programmes suspendus" : ""} — pour lancer une zone ou suspendre, l'utilisateur valide la proposition dans « Aujourd'hui »`);
   if (robot) {
     const ACT = { mowing: "en train de tondre", going_home: "rentre à sa base", charging: "en charge", leaving: "part tondre",
       parked_in_cs: "garé à sa base", stopped_in_garden: "arrêté sur la pelouse" };

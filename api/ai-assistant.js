@@ -163,11 +163,13 @@ si une fonction n'existe pas, dis simplement que ce n'est pas encore possible) :
   ecowitt.net) ; la pluie tombée, la température et le vent mesurés au jardin remplacent les prévisions pour la journée
   (arrosage, tonte, gel, notifications). Connexion d'un robot Husqvarna Automower : état du robot, et dans « Aujourd'hui »
   proposition de le mettre au repos (pluie, gel, vent, semis en cours, avant la 1re tonte, hors saison) ou de relancer son
-  planning, envoyée au robot seulement si l'utilisateur valide. Autres robots, arrosages et caméras : pas encore disponibles.
+  planning, envoyée au robot seulement si l'utilisateur valide. Connexion d'un arrosage Gardena ou Rachio : dans « Aujourd'hui »,
+  proposition d'arroser chaque zone à la dose du jour (le matin seulement), de suspendre les programmes quand la pluie suffit
+  ou de mettre en veille l'hiver, envoyée seulement si l'utilisateur valide. Autres marques et caméras : pas encore disponibles.
 - Parcours guidés « Création de gazon » et « Regarnissage » : fenêtre de semis selon la température du sol, étapes
   et arrosages jour par jour.
 - Notifications (ou emails) de conseils, jusqu'à 2 par jour ; alertes gel et canicule ; travaux d'hiver (feuilles,
-  dernière tonte, purge de l'arrosage, pH du sol) et reprise du printemps (plan de printemps prêt, révision de la
+  dernière tonte, purge de l'arrosage, pH du sol, hivernage de la tondeuse ou du robot) et reprise du printemps (plan de printemps prêt, révision de la
   tondeuse, 1re tonte).
 - Onglet « Produits » : kit de la saison en cours (produits utiles, quantités pour sa surface, gamme selon son
   budget, noté en un clic dans ses dépenses ; en hiver, lien vers la liste d'achats du printemps), produits recommandés, et suivi des dépenses de l'année (achats notés par l'utilisateur,

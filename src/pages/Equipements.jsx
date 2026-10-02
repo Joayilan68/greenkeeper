@@ -3,8 +3,9 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { card, scroll } from "../lib/styles";
 import { useEquipements } from "../lib/useEquipements";
 import { useProfile } from "../lib/useProfile";
-import { hasRobotTondeuse } from "../lib/planEntretien";
+import { hasRobotTondeuse, hasArrosageAuto } from "../lib/planEntretien";
 import CarteRobot from "../components/CarteRobot";
+import CarteArrosage from "../components/CarteArrosage";
 
 const nombre = (v, u) => typeof v === "number" ? `${v.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} ${u}` : "—";
 const champ = { width:"100%", boxSizing:"border-box", background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:8, padding:"9px 10px", color:"#e8f5e9", fontSize:12, marginTop:4 };
@@ -18,13 +19,20 @@ const RETOURS_HUSQVARNA = {
   erreur: "La connexion Husqvarna a échoué, réessaie plus tard.",
 };
 
+// Retour de la connexion Gardena (même compte Husqvarna Group : api/objets.js → /equipements?gardena=…)
+const RETOURS_GARDENA = {
+  ok: "✅ Arrosage Gardena connecté : « Aujourd'hui » te proposera d'arroser à la bonne dose le matin, ou de suspendre les programmes quand il pleut.",
+  aucun: "Aucun programmateur Gardena trouvé sur ce compte.",
+  expire: "La connexion a pris trop de temps, recommence.",
+  erreur: "La connexion Gardena a échoué : l'accès Gardena n'est peut-être pas encore ouvert, réessaie plus tard.",
+};
+
 const A_VENIR = [
-  { icone:"💧", titre:"Arrosage connecté", texte:"Arrosage lancé au bon moment, à la bonne dose, annulé s'il pleut." },
   { icone:"📷", titre:"Caméra", texte:"Une photo de ta pelouse chaque semaine, analysée comme un diagnostic." },
 ];
 
-// Mes équipements (depuis Mon Gazon) : station météo Ecowitt et robot Husqvarna connectés ;
-// arrosages et caméras à venir
+// Mes équipements (depuis Mon Gazon) : station météo Ecowitt, robot Husqvarna et arrosage Gardena ou Rachio
+// connectés ; caméras à venir
 export default function Equipements() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
@@ -32,7 +40,9 @@ export default function Equipements() {
   const { donnees, erreur, setErreur, envoi, charger, action } = useEquipements();
   const [cles, setCles] = useState({ applicationKey:"", apiKey:"" });
   const [stations, setStations] = useState(null);
-  const retourHq = RETOURS_HUSQVARNA[params.get("husqvarna")];
+  const retourHq = RETOURS_HUSQVARNA[params.get("husqvarna")] || RETOURS_GARDENA[params.get("gardena")];
+  const [cleRachio, setCleRachio] = useState("");
+  const [programmateurs, setProgrammateurs] = useState(null);
 
   const chercher = async () => {
     const d = await action({ action:"stations", ...cles });
@@ -49,17 +59,36 @@ export default function Equipements() {
     const d = await action({ action:"husqvarna" });
     if (d?.url) window.location.href = d.url;
   };
+  const connecterGardena = async () => {
+    const d = await action({ action:"gardena" });
+    if (d?.url) window.location.href = d.url;
+  };
+  const chercherRachio = async () => {
+    const d = await action({ action:"rachio_programmateurs", apiKey: cleRachio });
+    if (!d) return;
+    setProgrammateurs(d.programmateurs);
+    if (!d.programmateurs.length) setErreur("Aucun programmateur sur ce compte Rachio.");
+  };
+  const connecterRachio = async (p) => {
+    if (!await action({ action:"rachio", apiKey: cleRachio, programmateur: p.id })) return;
+    setCleRachio(""); setProgrammateurs(null); charger();
+  };
 
-  // Robot connecté : déclaré aussi dans le profil (rappels et conseils adaptés au robot)
+  // Robot ou arrosage connecté : déclaré aussi dans le profil (rappels et conseils adaptés à l'équipement)
   const robot = donnees?.robot;
+  const arrosage = donnees?.arrosage;
   useEffect(() => {
-    if (robot && profile && !hasRobotTondeuse(profile)) {
+    if (!profile) return;
+    if (robot && !hasRobotTondeuse(profile)) {
       saveProfile({ ...profile, tondeuse: [...(profile.tondeuse || []).filter(t => t !== "aucun"), "robot"] });
+    } else if (arrosage && !hasArrosageAuto(profile)) {
+      saveProfile({ ...profile, arrosage: "automatique" });
     }
-  }, [robot, profile]); // eslint-disable-line
+  }, [robot, arrosage, profile]); // eslint-disable-line
 
   const eq = donnees?.equipements?.find(e => e.type === "station");
   const eqRobot = donnees?.equipements?.find(e => e.type === "robot");
+  const eqArrosage = donnees?.equipements?.find(e => e.type === "arrosage");
   const m = donnees?.station || eq?.mesures;
 
   return (
@@ -175,6 +204,48 @@ export default function Equipements() {
           )}
         </div>
 
+        {eqArrosage && arrosage && <CarteArrosage arrosage={arrosage} />}
+        <div style={card()}>
+          <div style={{ fontSize:14, fontWeight:800, color:"#F1F8F2" }}>💧 Arrosage connecté</div>
+          {eqArrosage ? (
+            <>
+              <div style={{ fontSize:12, color: eqArrosage.statut === "erreur" ? "#f9a825" : "#a5d6a7", margin:"6px 0 8px" }}>
+                {eqArrosage.nom} · {eqArrosage.marque === "gardena" ? "Gardena" : "Rachio"} · {eqArrosage.statut === "erreur" ? `⚠️ ${eqArrosage.erreur}` : "✓ connecté"}
+              </div>
+              <div style={{ fontSize:11, color:"#a5d6a7", lineHeight:1.6, marginBottom:10 }}>
+                Dans « Aujourd'hui », l'app te propose d'arroser chaque zone à la dose du jour (le matin seulement), de suspendre les programmes quand la pluie suffit, ou de mettre l'arrosage en veille l'hiver : rien n'est envoyé sans ta validation.
+              </div>
+              {eqArrosage.statut === "erreur" && eqArrosage.marque === "gardena" && (
+                <button onClick={connecterGardena} disabled={envoi} style={{ ...bouton, marginBottom:10 }}>Reconnecter Gardena</button>
+              )}
+              <button onClick={() => retirer(eqArrosage.id)} disabled={envoi} style={{ background:"none", border:"none", padding:0, color:"#81c784", fontSize:11, cursor:"pointer", textDecoration:"underline" }}>
+                Déconnecter l'arrosage (l'accès est effacé)
+              </button>
+            </>
+          ) : donnees && (
+            <>
+              <div style={{ fontSize:12, color:"#a5d6a7", lineHeight:1.6, margin:"6px 0 10px" }}>
+                Connecte ton programmateur : l'app te propose d'arroser à la bonne dose le matin et de suspendre les programmes quand il pleut.
+              </div>
+              <div style={{ fontSize:11, fontWeight:700, color:"#e8f5e9", marginBottom:6 }}>Gardena smart system (Water Control, Smart Irrigation Control)</div>
+              <button onClick={connecterGardena} disabled={envoi} style={bouton}>{envoi ? "Ouverture…" : "Connecter mon arrosage Gardena"}</button>
+              <div style={{ fontSize:11, fontWeight:700, color:"#e8f5e9", margin:"14px 0 4px" }}>Rachio</div>
+              <div style={{ fontSize:11, color:"#81c784", lineHeight:1.6 }}>
+                Sur <a href="https://app.rach.io" target="_blank" rel="noopener noreferrer" style={{ color:"#a5d6a7" }}>app.rach.io</a>, ouvre les réglages de ton compte et copie ta clé API (« Get API Key »).
+              </div>
+              <input value={cleRachio} onChange={e => setCleRachio(e.target.value)} autoComplete="off" placeholder="Clé API Rachio" style={champ} />
+              {!programmateurs?.length ? (
+                <button onClick={chercherRachio} disabled={envoi || !cleRachio} style={{ ...bouton, marginTop:10, opacity: cleRachio ? 1 : 0.5 }}>Trouver mon programmateur</button>
+              ) : programmateurs.map(p => (
+                <button key={p.id} onClick={() => connecterRachio(p)} disabled={envoi} style={{ ...bouton, display:"block", width:"100%", marginTop:8 }}>💧 {p.nom}</button>
+              ))}
+              <div style={{ fontSize:10, color:"#4a7c5c", lineHeight:1.5, marginTop:10 }}>
+                Gardena : connexion sur le site du groupe Husqvarna, Mongazon360 ne voit jamais ton mot de passe. Rachio : clé chiffrée, révocable sur app.rach.io. Autres marques : en préparation.
+              </div>
+            </>
+          )}
+        </div>
+
         <div style={card()}>
           <div style={{ fontSize:14, fontWeight:800, color:"#F1F8F2", marginBottom:4 }}>🔜 En préparation</div>
           {A_VENIR.map(a => (
@@ -187,7 +258,7 @@ export default function Equipements() {
             </div>
           ))}
           <div style={{ fontSize:11, color:"#a5d6a7", lineHeight:1.6, marginTop:8 }}>
-            En attendant, indique ton arrosage automatique dans ton profil : l'app adapte déjà ses conseils.{" "}
+            En attendant, indique ton équipement dans ton profil : l'app adapte déjà ses conseils.{" "}
             <span onClick={() => navigate("/setup")} style={{ textDecoration:"underline", cursor:"pointer" }}>Mon profil →</span>
           </div>
         </div>

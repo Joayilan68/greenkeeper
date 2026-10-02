@@ -326,7 +326,7 @@ function checkMaladie(weather, profile, month, notifLog, today) {
 // ─────────────────────────────────────────────────────────────────────────────
 // NIVEAU 4 bis — Travaux d'hiver et reprise du printemps (octobre → avril). Matin.
 // Chaque travail repart au plus tous les 14 jours (journal notif_log) ; les fenêtres courtes
-// (pH, plan de printemps, révision, 1re tonte) ne le déclenchent donc qu'une fois par saison.
+// (pH, hivernage du matériel, plan de printemps, révision, 1re tonte) ne le déclenchent donc qu'une fois par saison.
 // ─────────────────────────────────────────────────────────────────────────────
 function checkTravauxHiver(profile, weather, month, notifLog, today) {
   if (!weather || !today) return null;
@@ -353,6 +353,12 @@ function checkTravauxHiver(profile, weather, month, notifLog, today) {
       type: "hiver_derniere_tonte", title: "✂️ Dernière tonte de l'année",
       body: "Temps sec et doux : une dernière tonte à 5-6 cm aide le gazon à passer l'hiver.",
       url: "/conseils/preparer-gazon-hiver" },
+    month === 11 && new Date(t).getUTCDate() >= 15 && {
+      type: "hiver_materiel", title: robot ? "🧰 Hiverne ton robot tondeuse" : "🧰 Hiverne ta tondeuse",
+      body: robot
+        ? "La saison de tonte est finie : robot nettoyé sans jet d'eau, lames contrôlées, batterie chargée selon la notice, rangé au sec et hors gel."
+        : "La saison de tonte est finie : carter nettoyé, lame vérifiée, batterie rentrée hors gel, tondeuse rangée au sec.",
+      url: "/conseils/hiverner-tondeuse-robot-arrosage" },
     month === 10 && new Date(t).getUTCDate() >= 1 && new Date(t).getUTCDate() <= 12 && profile?.sol !== "calcaire" && {
       type: "hiver_ph", title: "🧪 Mesure le pH de ton sol",
       body: "Sous pH 6, le sol est acide : l'automne est le moment de chauler (chaux, ou chaux dolomitique entre 5 et 6). Un test de jardinerie suffit.",

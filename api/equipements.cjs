@@ -1,6 +1,6 @@
 // api/equipements.cjs
 // Équipements connectés (table equipements, accès serveur uniquement) : clés d'accès chiffrées,
-// connecteurs Ecowitt (station météo) et Husqvarna Automower (robot tondeuse), application des mesures
+// connecteurs Ecowitt (station météo), Husqvarna Automower (robot tondeuse), Gardena et Rachio (arrosage), application des mesures
 // du jardin à la météo du jour.
 // Utilisé par api/objets.js (écran « Mes équipements »), api/weather.js (app), api/send.js
 // (notifications) et api/bobContext.cjs (Bob). Aucune donnée n'est gardée au-delà de la dernière mesure.
@@ -116,8 +116,8 @@ const HQ_API = "https://api.amc.husqvarna.dev/v1";
 const ETAT_ROBOT_MS = 5 * 60 * 1000; // état du robot relu au plus toutes les 5 minutes
 
 // Paramètre « state » signé : identifie l'utilisateur au retour de Husqvarna (valable 15 minutes)
-function etatSigne(userId) {
-  const corps = Buffer.from(JSON.stringify({ u: userId, e: Date.now() + 15 * 60 * 1000 })).toString("base64url");
+function etatSigne(userId, objet) {
+  const corps = Buffer.from(JSON.stringify({ u: userId, o: objet, e: Date.now() + 15 * 60 * 1000 })).toString("base64url");
   return `${corps}.${crypto.createHmac("sha256", cle()).update(corps).digest("base64url")}`;
 }
 function verifierEtat(etat) {
@@ -125,13 +125,14 @@ function verifierEtat(etat) {
   if (!corps || !sig) return null;
   const attendu = crypto.createHmac("sha256", cle()).update(corps).digest("base64url");
   if (sig.length !== attendu.length || !crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(attendu))) return null;
-  const { u, e } = JSON.parse(Buffer.from(corps, "base64url").toString("utf8"));
-  return e > Date.now() ? u : null;
+  const { u, o, e } = JSON.parse(Buffer.from(corps, "base64url").toString("utf8"));
+  return e > Date.now() ? { userId: u, objet: o || "robot" } : null;
 }
 
-function urlConnexionHusqvarna(userId, redirectUri) {
+// Connexion au compte Husqvarna Group : robot Automower (objet « robot ») ou arrosage Gardena (objet « gardena »)
+function urlConnexionHusqvarna(userId, redirectUri, objet = "robot") {
   return `${HQ_AUTH}/authorize?${new URLSearchParams({
-    client_id: process.env.HUSQVARNA_CLIENT_ID, redirect_uri: redirectUri, response_type: "code", state: etatSigne(userId),
+    client_id: process.env.HUSQVARNA_CLIENT_ID, redirect_uri: redirectUri, response_type: "code", state: etatSigne(userId, objet),
   })}`;
 }
 
@@ -147,7 +148,7 @@ async function jetonsHusqvarna(params) {
 }
 
 // Jeton d'accès valable (renouvelé et réenregistré s'il expire dans moins de 2 minutes)
-async function accesHusqvarna(supabase, eq) {
+async function accesHusqvarna(supabase, eq) { // jetons Husqvarna Group : robot Automower et arrosage Gardena
   const j = dechiffrer(eq.secret);
   if (j.expire - Date.now() > 120000) return j.access;
   if (!j.refresh) throw new Error("Connexion Husqvarna expirée : reconnecte ton robot");
@@ -235,8 +236,120 @@ async function revoquerHusqvarna(eq) {
   } catch { /* la suppression des jetons chez nous suffit */ }
 }
 
+// ── Arrosage connecté : Gardena smart system (compte Husqvarna Group) et Rachio (clé API de l'utilisateur) ──
+// Lecture des zones à l'affichage (au plus toutes les 10 min : Gardena limite à 700 requêtes par semaine pour
+// toute l'application) ; commandes envoyées seulement après validation de l'utilisateur (mode Proposition).
+const GARDENA = "https://api.smart.gardena.dev/v2";
+const RACHIO = "https://api.rach.io/1/public";
+const ETAT_ARROSAGE_MS = 10 * 60 * 1000;
+
+async function appelGardena(acces, chemin, corps) {
+  const r = await fetch(`${GARDENA}/${chemin}`, {
+    method: corps ? "PUT" : "GET", signal: AbortSignal.timeout(8000),
+    headers: { Authorization: `Bearer ${acces}`, "Authorization-Provider": "husqvarna", "X-Api-Key": process.env.HUSQVARNA_CLIENT_ID,
+      "Content-Type": "application/vnd.api+json" },
+    ...(corps ? { body: JSON.stringify(corps) } : {}),
+  });
+  if (r.status === 401 || r.status === 403) throw new Error("Gardena refuse l'accès : reconnecte ton arrosage");
+  if (r.status === 429) throw new Error("Trop de demandes envoyées à Gardena, réessaie plus tard");
+  if (!r.ok) throw new Error(`Gardena : erreur ${r.status}`);
+  return r.status === 202 ? null : r.json().catch(() => null);
+}
+
+// Jardins Gardena et leurs vannes (programmateurs Water Control, Smart Irrigation Control)
+async function jardinsGardena(acces) {
+  const jardins = [];
+  for (const loc of (await appelGardena(acces, "locations"))?.data || []) {
+    const d = await appelGardena(acces, `locations/${loc.id}`);
+    const val = (a) => typeof a?.value === "string" ? a.value.toLowerCase() : a?.value ?? null;
+    const zones = (d?.included || []).filter(x => x.type === "VALVE").map(v => ({
+      id: v.id, nom: v.attributes?.name?.value || "Vanne", activite: val(v.attributes?.activity), etat: val(v.attributes?.state),
+    }));
+    jardins.push({ id: loc.id, nom: loc.attributes?.name || "Mon jardin", zones });
+  }
+  return jardins;
+}
+
+async function appelRachio(apiKey, chemin, corps) {
+  const r = await fetch(`${RACHIO}/${chemin}`, {
+    method: corps ? "PUT" : "GET", signal: AbortSignal.timeout(8000),
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    ...(corps ? { body: JSON.stringify(corps) } : {}),
+  });
+  if (r.status === 401 || r.status === 403) throw new Error("Clé API Rachio refusée");
+  if (r.status === 429) throw new Error("Trop de demandes envoyées à Rachio, réessaie plus tard");
+  if (!r.ok) throw new Error(`Rachio : erreur ${r.status}`);
+  return r.status === 204 ? null : r.json().catch(() => null);
+}
+
+// Programmateurs Rachio du compte et leurs zones actives
+async function programmateursRachio(apiKey) {
+  const { id } = await appelRachio(apiKey, "person/info");
+  return ((await appelRachio(apiKey, `person/${id}`))?.devices || []).map(d => ({
+    id: d.id, nom: d.name || "Rachio", enLigne: d.status === "ONLINE",
+    zones: (d.zones || []).filter(z => z.enabled).sort((a, b) => a.zoneNumber - b.zoneNumber).map(z => ({ id: z.id, nom: z.name || `Zone ${z.zoneNumber}` })),
+  }));
+}
+
+// Arrosage de l'utilisateur : zones (relues si elles ont plus de 10 minutes) ; « suspendu » = pause envoyée par l'app
+async function etatArrosage(supabase, userId) {
+  const { data: eq } = await supabase.from("equipements").select("*").eq("user_id", userId).eq("type", "arrosage").maybeSingle();
+  if (!eq) return null;
+  const age = eq.mesures_at ? Date.now() - Date.parse(eq.mesures_at) : Infinity;
+  if (eq.mesures && age < ETAT_ARROSAGE_MS) return { ...eq.mesures, marque: eq.marque, at: eq.mesures_at };
+  try {
+    const lu = eq.marque === "gardena"
+      ? (await jardinsGardena(await accesHusqvarna(supabase, eq))).find(j => j.id === eq.appareil)
+      : (await programmateursRachio(dechiffrer(eq.secret).apiKey)).find(d => d.id === eq.appareil);
+    if (!lu) throw new Error("Programmateur introuvable sur le compte");
+    const mesures = { ...lu, suspendu: eq.mesures?.suspendu || null };
+    const at = new Date().toISOString();
+    await supabase.from("equipements").update({ mesures, mesures_at: at, statut: "connecte", erreur: null }).eq("id", eq.id);
+    return { ...mesures, marque: eq.marque, at };
+  } catch (e) {
+    await supabase.from("equipements").update({ statut: "erreur", erreur: e.message.slice(0, 200) }).eq("id", eq.id);
+    return null;
+  }
+}
+
+// Commandes validées par l'utilisateur : arroser une zone (minutes), suspendre (pluie), veille (hors saison), reprendre
+async function commandeArrosage(supabase, userId, { commande, zone, minutes }) {
+  const { data: eq } = await supabase.from("equipements").select("*").eq("user_id", userId).eq("type", "arrosage").maybeSingle();
+  if (!eq) throw new Error("Aucun arrosage connecté");
+  const zones = eq.mesures?.zones || [];
+  let suspendu = eq.mesures?.suspendu || null;
+  if (eq.marque === "gardena") {
+    const acces = await accesHusqvarna(supabase, eq);
+    const valve = (id, attributes) => appelGardena(acces, `command/${id}`, { data: { id: crypto.randomUUID(), type: "VALVE_CONTROL", attributes } });
+    if (commande === "arroser") {
+      if (!zones.some(z => z.id === zone)) throw new Error("Zone inconnue");
+      await valve(zone, { command: "START_SECONDS_TO_OVERRIDE", seconds: Math.min(60, Math.max(1, Math.round(minutes))) * 60 });
+    } else if (commande === "suspendre" || commande === "veille") {
+      for (const z of zones) await valve(z.id, { command: "PAUSE" });
+      suspendu = commande;
+    } else if (commande === "reprendre") {
+      for (const z of zones) await valve(z.id, { command: "UNPAUSE" });
+      suspendu = null;
+    } else throw new Error("Commande inconnue");
+  } else {
+    const apiKey = dechiffrer(eq.secret).apiKey;
+    if (commande === "arroser") {
+      if (!zones.some(z => z.id === zone)) throw new Error("Zone inconnue");
+      await appelRachio(apiKey, "zone/start", { id: zone, duration: Math.min(60, Math.max(1, Math.round(minutes))) * 60 });
+    } else if (commande === "suspendre") {
+      await appelRachio(apiKey, "device/rain_delay", { id: eq.appareil, duration: 86400 }); // reprise automatique après 24 h
+    } else if (commande === "veille") {
+      await appelRachio(apiKey, "device/off", { id: eq.appareil }); suspendu = "veille";
+    } else if (commande === "reprendre") {
+      await appelRachio(apiKey, "device/on", { id: eq.appareil }); suspendu = null;
+    } else throw new Error("Commande inconnue");
+  }
+  await supabase.from("equipements").update({ mesures: { ...eq.mesures, suspendu }, mesures_at: null }).eq("id", eq.id);
+}
+
 module.exports = {
   chiffrer, dechiffrer, stationsEcowitt, mesuresEcowitt, mesuresStation, appliquerStation,
   urlConnexionHusqvarna, verifierEtat, jetonsHusqvarna, robotsHusqvarna, etatRobot, commandeRobot, revoquerHusqvarna,
+  jardinsGardena, programmateursRachio, etatArrosage, commandeArrosage,
   minutesJusquaDemain7h,
 };
