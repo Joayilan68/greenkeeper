@@ -8,10 +8,12 @@ import { useDiagnostics } from "../lib/useDiagnostics";
 import { useAuth } from "@clerk/clerk-react";
 import { useSubscription } from "../lib/useSubscription";
 import { MONTHLY_PLAN, MONTHS_FR, calcArrosage, calcArrosageSemis, getWMO, getDebitMmH } from "../lib/lawn";
-import { buildActions, zoneClimatique, ZONE_LABELS, hasRobotTondeuse } from "../lib/planEntretien";
+import { buildActions, zoneClimatique, ZONE_LABELS, hasRobotTondeuse, hasArrosageAuto, moisCalendrier } from "../lib/planEntretien";
 import { useEquipements } from "../lib/useEquipements";
 import { propositionRobot } from "../lib/robot";
 import CarteRobot from "../components/CarteRobot";
+import CarteArrosage from "../components/CarteArrosage";
+import { propositionsArrosage } from "../lib/arrosageConnecte";
 import { calcLawnScore } from "../lib/lawnScore";
 import AlertBanner from "../components/AlertBanner";
 import ProductCard from "../components/ProductCard";
@@ -127,8 +129,8 @@ export default function Today() {
   const { weather, alerts: rawAlerts } = useWeather();
   const alerts = Array.isArray(rawAlerts) ? rawAlerts : [];
   const { profile }         = useProfile();
-  // Robot connecté (Mes équipements) : lu seulement si le profil déclare un robot tondeuse
-  const robotEq             = useEquipements(hasRobotTondeuse(profile));
+  // Équipements connectés (Mes équipements) : lus seulement si le profil déclare un robot ou un arrosage automatique
+  const robotEq             = useEquipements(hasRobotTondeuse(profile) || hasArrosageAuto(profile));
   const { parcours }        = useParcours();
   const phaseP              = phaseParcours(parcours); // { phase, jour, nom } ou null
   const { history, addEntry } = useHistory();
@@ -675,9 +677,19 @@ export default function Today() {
                 const d = await robotEq.action({ action:"robot", commande });
                 if (d) robotEq.charger();
               }} />
-            {robotEq.erreur && <div style={{ ...card(), color:"#ef9a9a", fontSize:12 }}>⚠️ {robotEq.erreur}</div>}
           </>
         )}
+        {/* ── ARROSAGE CONNECTÉ : propositions issues du calcul d'arrosage du jour ─── */}
+        {robotEq.donnees?.arrosage && (
+          <CarteArrosage arrosage={robotEq.donnees.arrosage} envoi={robotEq.envoi}
+            proposition={propositionsArrosage(robotEq.donnees.arrosage, {
+              arros, arrosSkip, sol: profile?.sol, horsSaison: !moisCalendrier("arrosage", zone, profile).includes(month) })}
+            onCommande={async ({ commande, zone: z, minutes }) => {
+              const d = await robotEq.action({ action:"arrosage", commande, zone: z, minutes });
+              if (d) robotEq.charger();
+            }} />
+        )}
+        {robotEq.erreur && <div style={{ ...card(), color:"#ef9a9a", fontSize:12 }}>⚠️ {robotEq.erreur}</div>}
 
         {/* ── JOURNALISER ─────────────────────────────────────────────────── */}
         <div style={{ ...card(), background:"rgba(15,47,31,0.95)", border:"1px solid rgba(102,187,106,0.25)" }}>

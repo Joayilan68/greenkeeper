@@ -1,0 +1,9 @@
+{
+  "_source": "Base de connaissances, onglet « Arrosage Précis » : volume par session, fréquence et heure selon le sol. Partagé par Bob (api/bobContext.cjs) et le plan annuel (src/lib/planAnnuel.js).",
+  "sableux": "15-20 mm tous les 2-3 jours, quotidien en canicule, 5h-7h le matin obligatoirement",
+  "limoneux": "10-15 mm tous les 3-4 jours, tous les 2 jours en canicule, 5h-8h le matin (soir déconseillé : champignons)",
+  "argileux": "8-12 mm en 2 passages tous les 4-5 jours, tous les 3 jours en canicule, 6h-8h le matin (soir interdit)",
+  "calcaire": "10-14 mm tous les 3-4 jours, tous les 2-3 jours en canicule, 5h-8h le matin",
+  "humifere": "8-10 mm tous les 4-5 jours, tous les 3 jours en canicule, 5h-8h le matin",
+  "compacte": "6-8 mm en 2 passages tous les 3-4 jours après aération, 6h-8h le matin (soir interdit)"
+}

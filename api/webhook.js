@@ -1,6 +1,6 @@
 // api/webhook.js
 // ─────────────────────────────────────────────────────────────────────────────
-// Stripe webhook — vérification signature + activation/désactivation Premium
+// Stripe webhook — vérification signature + activation/désactivation Premium + achat du plan annuel
 // Events : checkout.session.completed · subscription.updated · subscription.deleted
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -43,11 +43,17 @@ module.exports = async function handler(req, res) {
   try {
     switch (event.type) {
 
-      // Paiement checkout réussi → activer Premium
+      // Paiement checkout réussi → plan annuel acheté, sinon activer Premium
       case "checkout.session.completed": {
         const session = event.data.object;
         const userId  = session.metadata?.userId;
         if (!userId) break;
+
+        if (session.metadata?.type === "plan_annuel") {
+          if (session.payment_status !== "paid") break;
+          await enregistrerPlanAnnuel(userId, Number(session.metadata.annee), session.customer_details?.email || session.customer_email);
+          break;
+        }
 
         await clerk.users.updateUserMetadata(userId, {
           publicMetadata: { isSubscribed: true, subscriptionStatus: "active" },
@@ -94,6 +100,35 @@ module.exports = async function handler(req, res) {
 
   res.json({ received: true });
 };
+
+// ── Plan annuel acheté : année ajoutée à publicMetadata.plansAnnuels (lu par la page /plan-annuel) + email ──
+async function enregistrerPlanAnnuel(userId, annee, email) {
+  const u = await clerk.users.getUser(userId);
+  const plans = Array.isArray(u.publicMetadata?.plansAnnuels) ? u.publicMetadata.plansAnnuels : [];
+  if (!plans.includes(annee)) {
+    await clerk.users.updateUserMetadata(userId, { publicMetadata: { plansAnnuels: [...plans, annee] } });
+  }
+  console.log(`[Webhook] Plan annuel ${annee} acheté — user ${userId}`);
+  if (!email) return;
+  try {
+    const r = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
+      body: JSON.stringify({
+        from: "Mongazon360 <bonjour@mongazon360.fr>", to: [email],
+        subject: `🌿 Ton plan gazon ${annee} est prêt`,
+        html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#1b3a24">
+          <h2 style="color:#2e7d32">Merci ${u.firstName || ""} !</h2>
+          <p>Ton plan annuel personnalisé ${annee} est prêt : les 12 mois d'entretien de ton gazon, selon ta zone, ton sol et ton type de gazon.</p>
+          <p><a href="https://mongazon360.fr/plan-annuel" style="background:#2e7d32;color:#fff;padding:12px 20px;border-radius:10px;text-decoration:none;font-weight:bold">Voir mon plan ${annee}</a></p>
+          <p style="font-size:12px;color:#4a7c5c">Dans l'app, le bouton « Enregistrer en PDF » te permet de le garder ou de l'imprimer.</p></div>`,
+      }),
+    });
+    if (!r.ok) throw new Error(`Resend ${r.status}`);
+  } catch (e) {
+    await require("./alerting.cjs").reportServerError("Plan annuel — email de confirmation non envoyé", e, { "Utilisateur": userId });
+  }
+}
 
 // ── Helper : retrouver le userId Clerk depuis un customer Stripe ──────────────
 async function getUserIdFromCustomer(customerId) {
