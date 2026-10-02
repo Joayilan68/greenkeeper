@@ -24,6 +24,7 @@ import Parcours from "./pages/Parcours";
 import Bilan from "./pages/Bilan";
 import Printemps from "./pages/Printemps";
 import Equipements from "./pages/Equipements";
+import PlanAnnuel from "./pages/PlanAnnuel";
 import { MentionsLegales, Confidentialite, CGU, CGV, Cookies } from "./pages/Legal";
 import Layout from "./components/Layout";
 import { WeatherProvider } from "./lib/WeatherContext";
@@ -244,6 +245,7 @@ function AppRoutes() {
       <Route path="/bilan"             element={<PrivateRoute><Layout><Bilan /></Layout></PrivateRoute>} />
       <Route path="/printemps"         element={<PrivateRoute><Layout><Printemps /></Layout></PrivateRoute>} />
       <Route path="/equipements"       element={<PrivateRoute><Layout><Equipements /></Layout></PrivateRoute>} />
+      <Route path="/plan-annuel"       element={<PrivateRoute><Layout><PlanAnnuel /></Layout></PrivateRoute>} />
       <Route path="*"                  element={<SignedOut><RedirectToSignIn /></SignedOut>} />
     </Routes>
   );

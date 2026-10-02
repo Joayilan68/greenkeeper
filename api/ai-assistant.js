@@ -157,7 +157,8 @@ si une fonction n'existe pas, dis simplement que ce n'est pas encore possible) :
 - Onglet « Aujourd'hui » : les actions du jour proposées selon la météo (tonte, arrosage, engrais…), à valider
   une fois faites (elles vont dans l'historique, à la date du jour) ; minuteur d'arrosage.
 - Onglet « Diagnostic » : diagnostic photo de la pelouse par Bob.
-- Onglet « Mon Gazon » : profil du gazon, score détaillé, historique des actions.
+- Onglet « Mon Gazon » : profil du gazon, score détaillé, historique des actions ; « Mon plan gazon » : plan annuel
+  personnalisé (12 mois d'entretien selon sa zone, son sol, son gazon et son équipement), achat unique à 0,99 €, en PDF.
 - « Mes équipements » (depuis Mon Gazon) : connexion d'une station météo Ecowitt (clés créées par l'utilisateur sur
   ecowitt.net) ; la pluie tombée, la température et le vent mesurés au jardin remplacent les prévisions pour la journée
   (arrosage, tonte, gel, notifications). Connexion d'un robot Husqvarna Automower : état du robot, et dans « Aujourd'hui »

@@ -6,6 +6,8 @@
 
 const { currentPhase, zoneFromLatLon, ZONES } = require("./parcoursEngine.cjs");
 const TONTE_GAZON = require("../src/lib/tonteGazon.json");
+// Onglet « Arrosage Précis » (src/lib/arrosageSol.json, partagé avec le plan annuel) : volume, fréquence et heure selon le sol
+const ARROSAGE = require("../src/lib/arrosageSol.json");
 const { mesuresStation, etatRobot } = require("./equipements.cjs");
 
 const DIAG_MAX_JOURS = 60; // un diagnostic plus ancien ne décrit plus l'état actuel
@@ -22,15 +24,6 @@ const CLIMATS = {
   sud_ouest: "sol qui se réchauffe tôt (printemps précoce), automne long et favorable ; contraintes : chaleur et sécheresse dès juin, hiver doux ; semis à privilégier en automne, jamais l'été",
   sud:       "méditerranéen : semer avant la chaleur ou en automne, jamais l'été (canicule = échec) ; contraintes : canicule mai→sept., hiver très doux ; semis à privilégier en automne (fenêtre très longue)",
   corse:     "méditerranéen insulaire : automne privilégié, arrosage indispensable au printemps ; contraintes : sécheresse marquée l'été, hiver doux",
-};
-// Onglet « Arrosage Précis » : volume par session, fréquence et heure selon le sol
-const ARROSAGE = {
-  sableux: "15-20 mm tous les 2-3 jours, quotidien en canicule, 5h-7h le matin obligatoirement",
-  limoneux: "10-15 mm tous les 3-4 jours, tous les 2 jours en canicule, 5h-8h le matin (soir déconseillé : champignons)",
-  argileux: "8-12 mm en 2 passages tous les 4-5 jours, tous les 3 jours en canicule, 6h-8h le matin (soir interdit)",
-  calcaire: "10-14 mm tous les 3-4 jours, tous les 2-3 jours en canicule, 5h-8h le matin",
-  humifere: "8-10 mm tous les 4-5 jours, tous les 3 jours en canicule, 5h-8h le matin",
-  compacte: "6-8 mm en 2 passages tous les 3-4 jours après aération, 6h-8h le matin (soir interdit)",
 };
 // Onglet « Tonte Précise » (src/lib/tonteGazon.json, partagé avec le plan de printemps) : hauteurs (cm)
 // printemps / été / canicule / automne et minimum absolu, par type de gazon

@@ -16,6 +16,27 @@ module.exports = async function handler(req, res) {
     // ── Extraire userId depuis le token Clerk ─────────────────────────────
     const userId = await verifiedUserId(req);
 
+    // Plan annuel personnalisé : achat unique (0,99 €), plan de l'année suivante à partir d'octobre
+    // (même règle que src/lib/planAnnuel.js) ; enregistré par le webhook, sans toucher à l'abonnement
+    if (plan === "plan_annuel") {
+      if (!userId) return res.status(401).json({ error: "Connexion requise" });
+      const now = new Date();
+      const annee = now.getMonth() >= 9 ? now.getFullYear() + 1 : now.getFullYear();
+      const metadata = { userId, type: "plan_annuel", annee: String(annee) };
+      const achat = await stripe.checkout.sessions.create({
+        mode: "payment",
+        payment_method_types: ["card"],
+        line_items: [{ quantity: 1, price_data: { currency: "eur", unit_amount: 99,
+          product_data: { name: `Plan annuel personnalisé Mongazon360 ${annee}` } } }],
+        customer_email: email,
+        metadata,
+        payment_intent_data: { metadata },
+        success_url: `${process.env.VITE_APP_URL}/plan-annuel?achat=ok`,
+        cancel_url:  `${process.env.VITE_APP_URL}/plan-annuel`,
+      });
+      return res.json({ url: achat.url });
+    }
+
     const PRICES = {
       monthly: process.env.STRIPE_PRICE_MONTHLY,
       yearly:  process.env.STRIPE_PRICE_YEARLY,
