@@ -13,6 +13,7 @@ import { card, cardTitle, btn, scroll, header } from "../lib/styles";
 import ProductCard from "../components/ProductCard";
 import { useStreak } from "../lib/useStreak";
 import { useBadges } from "../lib/useBadges";
+import { anneePlan, PRIX_PLAN_ANNUEL } from "../lib/planAnnuel";
 import BadgesGallery from "../components/BadgesGallery";
 
 // Mapping action.id → clé amazonProducts.js
@@ -373,12 +374,22 @@ export default function MyLawn() {
           </div>
         )}
 
-        {/* ── MES ÉQUIPEMENTS (station météo et robot connectés ; arrosages, caméras à venir) ── */}
+        {/* ── MES ÉQUIPEMENTS (station météo, robot et arrosage connectés ; caméras à venir) ── */}
         <div onClick={() => navigate("/equipements")} style={{ ...card(), cursor:"pointer", display:"flex", alignItems:"center", gap:12 }}>
           <span style={{ fontSize:24 }}>📡</span>
           <div style={{ flex:1 }}>
             <div style={{ fontSize:13, fontWeight:800, color:"#F1F8F2" }}>Mes équipements</div>
-            <div style={{ fontSize:11, color:"#81c784", marginTop:2 }}>Station météo, robot tondeuse : l'app décide avec ton jardin</div>
+            <div style={{ fontSize:11, color:"#81c784", marginTop:2 }}>Station météo, robot, arrosage : l'app décide avec ton jardin</div>
+          </div>
+          <span style={{ color:"#a5d6a7", fontSize:16 }}>→</span>
+        </div>
+
+        {/* ── PLAN ANNUEL PERSONNALISÉ (achat unique) ── */}
+        <div onClick={() => navigate("/plan-annuel")} style={{ ...card(), cursor:"pointer", display:"flex", alignItems:"center", gap:12 }}>
+          <span style={{ fontSize:24 }}>📅</span>
+          <div style={{ flex:1 }}>
+            <div style={{ fontSize:13, fontWeight:800, color:"#F1F8F2" }}>Mon plan gazon {anneePlan()}</div>
+            <div style={{ fontSize:11, color:"#81c784", marginTop:2 }}>Les 12 mois d'entretien de ton gazon, en PDF · {PRIX_PLAN_ANNUEL}</div>
           </div>
           <span style={{ color:"#a5d6a7", fontSize:16 }}>→</span>
         </div>
