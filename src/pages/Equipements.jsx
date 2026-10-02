@@ -1,53 +1,65 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@clerk/clerk-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { card, scroll } from "../lib/styles";
+import { useEquipements } from "../lib/useEquipements";
+import { useProfile } from "../lib/useProfile";
+import { hasRobotTondeuse } from "../lib/planEntretien";
+import CarteRobot from "../components/CarteRobot";
 
 const nombre = (v, u) => typeof v === "number" ? `${v.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} ${u}` : "—";
 const champ = { width:"100%", boxSizing:"border-box", background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:8, padding:"9px 10px", color:"#e8f5e9", fontSize:12, marginTop:4 };
 const bouton = { background:"linear-gradient(135deg,#43a047,#2e7d32)", color:"#fff", border:"none", borderRadius:10, padding:"10px 16px", fontSize:13, fontWeight:800, cursor:"pointer" };
 
+// Retour de la connexion Husqvarna (api/objets.js → /equipements?husqvarna=…)
+const RETOURS_HUSQVARNA = {
+  ok: "✅ Robot connecté : « Aujourd'hui » te proposera de le mettre au repos ou de le relancer selon la météo et tes conseils.",
+  aucun: "Aucun robot trouvé sur ce compte Husqvarna.",
+  expire: "La connexion a pris trop de temps, recommence.",
+  erreur: "La connexion Husqvarna a échoué, réessaie plus tard.",
+};
+
 const A_VENIR = [
-  { icone:"🤖", titre:"Robot tondeuse", texte:"Pause automatique en cas de pluie, de gel ou pendant un semis, hauteur de coupe selon la saison." },
   { icone:"💧", titre:"Arrosage connecté", texte:"Arrosage lancé au bon moment, à la bonne dose, annulé s'il pleut." },
   { icone:"📷", titre:"Caméra", texte:"Une photo de ta pelouse chaque semaine, analysée comme un diagnostic." },
 ];
 
-// Mes équipements (depuis Mon Gazon) : station météo Ecowitt connectée ; robots, arrosages et caméras à venir
+// Mes équipements (depuis Mon Gazon) : station météo Ecowitt et robot Husqvarna connectés ;
+// arrosages et caméras à venir
 export default function Equipements() {
   const navigate = useNavigate();
-  const { getToken } = useAuth();
-  const [donnees, setDonnees] = useState(null);
-  const [erreur, setErreur] = useState("");
+  const [params] = useSearchParams();
+  const { profile, saveProfile } = useProfile();
+  const { donnees, erreur, setErreur, envoi, charger, action } = useEquipements();
   const [cles, setCles] = useState({ applicationKey:"", apiKey:"" });
   const [stations, setStations] = useState(null);
-  const [envoi, setEnvoi] = useState(false);
+  const retourHq = RETOURS_HUSQVARNA[params.get("husqvarna")];
 
-  const appel = async (options) => {
-    const r = await fetch("/api/objets", { ...options, headers: { "Content-Type":"application/json", Authorization:`Bearer ${await getToken()}` } });
-    const d = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(d.error || "Erreur, réessaie plus tard");
-    return d;
-  };
-  const charger = () => appel({ method:"GET" }).then(setDonnees).catch(e => setErreur(e.message));
-  useEffect(() => { charger(); }, []); // eslint-disable-line
-
-  const action = async (corps, suite) => {
-    setErreur(""); setEnvoi(true);
-    try { suite(await appel({ method:"POST", body: JSON.stringify(corps) })); }
-    catch (e) { setErreur(e.message); }
-    setEnvoi(false);
-  };
-  const chercher = () => action({ action:"stations", ...cles }, d => {
+  const chercher = async () => {
+    const d = await action({ action:"stations", ...cles });
+    if (!d) return;
     setStations(d.stations);
     if (!d.stations.length) setErreur("Aucune station météo sur ce compte Ecowitt.");
-  });
-  const connecter = (s) => action({ action:"ajouter", ...cles, mac: s.mac, nom: s.nom }, () => {
+  };
+  const connecter = async (s) => {
+    if (!await action({ action:"ajouter", ...cles, mac: s.mac, nom: s.nom })) return;
     setCles({ applicationKey:"", apiKey:"" }); setStations(null); charger();
-  });
-  const retirer = (id) => action({ action:"retirer", id }, () => charger());
+  };
+  const retirer = async (id) => { if (await action({ action:"retirer", id })) charger(); };
+  const connecterRobot = async () => {
+    const d = await action({ action:"husqvarna" });
+    if (d?.url) window.location.href = d.url;
+  };
+
+  // Robot connecté : déclaré aussi dans le profil (rappels et conseils adaptés au robot)
+  const robot = donnees?.robot;
+  useEffect(() => {
+    if (robot && profile && !hasRobotTondeuse(profile)) {
+      saveProfile({ ...profile, tondeuse: [...(profile.tondeuse || []).filter(t => t !== "aucun"), "robot"] });
+    }
+  }, [robot, profile]); // eslint-disable-line
 
   const eq = donnees?.equipements?.find(e => e.type === "station");
+  const eqRobot = donnees?.equipements?.find(e => e.type === "robot");
   const m = donnees?.station || eq?.mesures;
 
   return (
@@ -57,6 +69,7 @@ export default function Equipements() {
         <div style={{ fontSize:12, color:"#66BB6A", marginTop:2 }}>Tes appareils au service de ta pelouse</div>
       </div>
       <div style={scroll}>
+        {retourHq && <div style={{ ...card(), color:"#a5d6a7", fontSize:12, lineHeight:1.6 }}>{retourHq}</div>}
         {erreur && <div style={{ ...card(), color:"#ef9a9a", fontSize:12 }}>⚠️ {erreur}</div>}
 
         <div style={card()}>
@@ -128,6 +141,40 @@ export default function Equipements() {
           )}
         </div>
 
+        {eqRobot && robot && <CarteRobot robot={robot} profile={profile} />}
+        <div style={card()}>
+          <div style={{ fontSize:14, fontWeight:800, color:"#F1F8F2" }}>🤖 Robot tondeuse</div>
+          {eqRobot ? (
+            <>
+              <div style={{ fontSize:12, color: eqRobot.statut === "erreur" ? "#f9a825" : "#a5d6a7", margin:"6px 0 8px" }}>
+                {eqRobot.nom} · Husqvarna Automower · {eqRobot.statut === "erreur" ? `⚠️ ${eqRobot.erreur}` : "✓ connecté"}
+              </div>
+              <div style={{ fontSize:11, color:"#a5d6a7", lineHeight:1.6, marginBottom:10 }}>
+                Dans « Aujourd'hui », l'app te propose de mettre ton robot au repos (pluie, gel, vent, semis en cours, hors saison) ou de relancer son planning : rien n'est envoyé au robot sans ta validation.
+              </div>
+              {eqRobot.statut === "erreur" && (
+                <button onClick={connecterRobot} disabled={envoi} style={{ ...bouton, marginBottom:10 }}>Reconnecter mon robot</button>
+              )}
+              <div>
+                <button onClick={() => retirer(eqRobot.id)} disabled={envoi} style={{ background:"none", border:"none", padding:0, color:"#81c784", fontSize:11, cursor:"pointer", textDecoration:"underline" }}>
+                  Déconnecter le robot (l'accès est révoqué)
+                </button>
+              </div>
+            </>
+          ) : donnees && (
+            <>
+              <div style={{ fontSize:12, color:"#a5d6a7", lineHeight:1.6, margin:"6px 0 10px" }}>
+                Connecte ton robot : l'app te propose de le mettre au repos quand il pleut, gèle ou pendant un semis, et de le relancer quand les conditions sont bonnes.
+              </div>
+              <div style={{ fontSize:11, fontWeight:700, color:"#e8f5e9", marginBottom:8 }}>Compatible : Husqvarna Automower (application Automower Connect)</div>
+              <button onClick={connecterRobot} disabled={envoi} style={bouton}>{envoi ? "Ouverture…" : "Connecter mon Automower"}</button>
+              <div style={{ fontSize:10, color:"#4a7c5c", lineHeight:1.5, marginTop:10 }}>
+                Tu te connectes sur le site de Husqvarna : Mongazon360 ne voit jamais ton mot de passe. Autres marques de robots : en préparation.
+              </div>
+            </>
+          )}
+        </div>
+
         <div style={card()}>
           <div style={{ fontSize:14, fontWeight:800, color:"#F1F8F2", marginBottom:4 }}>🔜 En préparation</div>
           {A_VENIR.map(a => (
@@ -140,7 +187,7 @@ export default function Equipements() {
             </div>
           ))}
           <div style={{ fontSize:11, color:"#a5d6a7", lineHeight:1.6, marginTop:8 }}>
-            En attendant, indique ton robot tondeuse ou ton arrosage automatique dans ton profil : l'app adapte déjà ses conseils.{" "}
+            En attendant, indique ton arrosage automatique dans ton profil : l'app adapte déjà ses conseils.{" "}
             <span onClick={() => navigate("/setup")} style={{ textDecoration:"underline", cursor:"pointer" }}>Mon profil →</span>
           </div>
         </div>

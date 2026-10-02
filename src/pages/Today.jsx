@@ -8,7 +8,10 @@ import { useDiagnostics } from "../lib/useDiagnostics";
 import { useAuth } from "@clerk/clerk-react";
 import { useSubscription } from "../lib/useSubscription";
 import { MONTHLY_PLAN, MONTHS_FR, calcArrosage, calcArrosageSemis, getWMO, getDebitMmH } from "../lib/lawn";
-import { buildActions, zoneClimatique, ZONE_LABELS } from "../lib/planEntretien";
+import { buildActions, zoneClimatique, ZONE_LABELS, hasRobotTondeuse } from "../lib/planEntretien";
+import { useEquipements } from "../lib/useEquipements";
+import { propositionRobot } from "../lib/robot";
+import CarteRobot from "../components/CarteRobot";
 import { calcLawnScore } from "../lib/lawnScore";
 import AlertBanner from "../components/AlertBanner";
 import ProductCard from "../components/ProductCard";
@@ -124,6 +127,8 @@ export default function Today() {
   const { weather, alerts: rawAlerts } = useWeather();
   const alerts = Array.isArray(rawAlerts) ? rawAlerts : [];
   const { profile }         = useProfile();
+  // Robot connecté (Mes équipements) : lu seulement si le profil déclare un robot tondeuse
+  const robotEq             = useEquipements(hasRobotTondeuse(profile));
   const { parcours }        = useParcours();
   const phaseP              = phaseParcours(parcours); // { phase, jour, nom } ou null
   const { history, addEntry } = useHistory();
@@ -660,6 +665,19 @@ export default function Today() {
             </div>
           );
         })()}
+
+        {/* ── ROBOT CONNECTÉ : état et proposition alignée sur la tonte du jour ─── */}
+        {robotEq.donnees?.robot && (
+          <>
+            <CarteRobot robot={robotEq.donnees.robot} profile={profile} envoi={robotEq.envoi}
+              proposition={propositionRobot(robotEq.donnees.robot, actionStatuses.find(a => a?.action?.id === "tonte"))}
+              onCommande={async (commande) => {
+                const d = await robotEq.action({ action:"robot", commande });
+                if (d) robotEq.charger();
+              }} />
+            {robotEq.erreur && <div style={{ ...card(), color:"#ef9a9a", fontSize:12 }}>⚠️ {robotEq.erreur}</div>}
+          </>
+        )}
 
         {/* ── JOURNALISER ─────────────────────────────────────────────────── */}
         <div style={{ ...card(), background:"rgba(15,47,31,0.95)", border:"1px solid rgba(102,187,106,0.25)" }}>
