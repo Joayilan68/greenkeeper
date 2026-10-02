@@ -1,6 +1,7 @@
 // api/equipements.cjs
 // Équipements connectés (table equipements, accès serveur uniquement) : clés d'accès chiffrées,
-// connecteur Ecowitt (station météo) et application des mesures du jardin à la météo du jour.
+// connecteurs Ecowitt (station météo) et Husqvarna Automower (robot tondeuse), application des mesures
+// du jardin à la météo du jour.
 // Utilisé par api/objets.js (écran « Mes équipements »), api/weather.js (app), api/send.js
 // (notifications) et api/bobContext.cjs (Bob). Aucune donnée n'est gardée au-delà de la dernière mesure.
 
@@ -107,4 +108,135 @@ function appliquerStation(daily, m) {
   return d;
 }
 
-module.exports = { chiffrer, dechiffrer, stationsEcowitt, mesuresEcowitt, mesuresStation, appliquerStation };
+// ── Husqvarna Automower Connect (developer.husqvarnagroup.cloud) ─────────────────────────────
+// Connexion OAuth « Authorization Code » : l'utilisateur se connecte chez Husqvarna, qui renvoie vers
+// /api/objets avec un code ; jetons (accès + renouvellement) chiffrés dans equipements.secret.
+const HQ_AUTH = "https://api.authentication.husqvarnagroup.dev/v1/oauth2";
+const HQ_API = "https://api.amc.husqvarna.dev/v1";
+const ETAT_ROBOT_MS = 5 * 60 * 1000; // état du robot relu au plus toutes les 5 minutes
+
+// Paramètre « state » signé : identifie l'utilisateur au retour de Husqvarna (valable 15 minutes)
+function etatSigne(userId) {
+  const corps = Buffer.from(JSON.stringify({ u: userId, e: Date.now() + 15 * 60 * 1000 })).toString("base64url");
+  return `${corps}.${crypto.createHmac("sha256", cle()).update(corps).digest("base64url")}`;
+}
+function verifierEtat(etat) {
+  const [corps, sig] = String(etat || "").split(".");
+  if (!corps || !sig) return null;
+  const attendu = crypto.createHmac("sha256", cle()).update(corps).digest("base64url");
+  if (sig.length !== attendu.length || !crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(attendu))) return null;
+  const { u, e } = JSON.parse(Buffer.from(corps, "base64url").toString("utf8"));
+  return e > Date.now() ? u : null;
+}
+
+function urlConnexionHusqvarna(userId, redirectUri) {
+  return `${HQ_AUTH}/authorize?${new URLSearchParams({
+    client_id: process.env.HUSQVARNA_CLIENT_ID, redirect_uri: redirectUri, response_type: "code", state: etatSigne(userId),
+  })}`;
+}
+
+async function jetonsHusqvarna(params) {
+  const r = await fetch(`${HQ_AUTH}/token`, {
+    method: "POST", signal: AbortSignal.timeout(8000),
+    headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
+    body: new URLSearchParams({ client_id: process.env.HUSQVARNA_CLIENT_ID, client_secret: process.env.HUSQVARNA_CLIENT_SECRET, ...params }),
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok || !d.access_token) throw new Error(`Husqvarna : connexion refusée (${d.error_description || d.error || r.status})`);
+  return { access: d.access_token, refresh: d.refresh_token, expire: Date.now() + (Number(d.expires_in) || 3600) * 1000 };
+}
+
+// Jeton d'accès valable (renouvelé et réenregistré s'il expire dans moins de 2 minutes)
+async function accesHusqvarna(supabase, eq) {
+  const j = dechiffrer(eq.secret);
+  if (j.expire - Date.now() > 120000) return j.access;
+  if (!j.refresh) throw new Error("Connexion Husqvarna expirée : reconnecte ton robot");
+  const neuf = await jetonsHusqvarna({ grant_type: "refresh_token", refresh_token: j.refresh });
+  neuf.refresh = neuf.refresh || j.refresh;
+  await supabase.from("equipements").update({ secret: chiffrer(neuf) }).eq("id", eq.id);
+  return neuf.access;
+}
+
+async function appelHusqvarna(acces, chemin, corps) {
+  const r = await fetch(`${HQ_API}/${chemin}`, {
+    method: corps ? "POST" : "GET", signal: AbortSignal.timeout(8000),
+    headers: { Authorization: `Bearer ${acces}`, "Authorization-Provider": "husqvarna", "X-Api-Key": process.env.HUSQVARNA_CLIENT_ID,
+      "Content-Type": "application/vnd.api+json" },
+    ...(corps ? { body: JSON.stringify(corps) } : {}),
+  });
+  if (r.status === 401 || r.status === 403) throw new Error("Husqvarna refuse l'accès au robot : reconnecte-le");
+  if (r.status === 429) throw new Error("Trop de demandes envoyées à Husqvarna, réessaie dans quelques minutes");
+  if (!r.ok) throw new Error(`Husqvarna : erreur ${r.status}`);
+  return r.status === 202 || r.status === 204 ? null : r.json().catch(() => null);
+}
+
+// Robot ramené à l'essentiel (valeurs de l'API en minuscules)
+function robotLisible(m) {
+  const a = m?.attributes || {};
+  const bas = (v) => typeof v === "string" ? v.toLowerCase() : null;
+  return {
+    id: m.id, nom: a.system?.name || a.system?.model || "Automower", modele: a.system?.model || null,
+    activite: bas(a.mower?.activity), etat: bas(a.mower?.state), batterie: a.battery?.batteryPercent ?? null,
+    erreur: a.mower?.errorCode || 0, force: bas(a.planner?.override?.action), restriction: bas(a.planner?.restrictedReason),
+    prochaine_tonte: a.planner?.nextStartTimestamp || null, hauteur: a.settings?.cuttingHeight ?? null,
+    connecte: a.metadata?.connected !== false,
+  };
+}
+
+async function robotsHusqvarna(acces) {
+  return ((await appelHusqvarna(acces, "mowers"))?.data || []).map(robotLisible);
+}
+
+// Robot de l'utilisateur : état (relu s'il a plus de 5 minutes)
+async function etatRobot(supabase, userId) {
+  const { data: eq } = await supabase.from("equipements").select("*").eq("user_id", userId).eq("type", "robot").maybeSingle();
+  if (!eq) return null;
+  const age = eq.mesures_at ? Date.now() - Date.parse(eq.mesures_at) : Infinity;
+  if (eq.mesures && age < ETAT_ROBOT_MS) return { ...eq.mesures, at: eq.mesures_at };
+  try {
+    const robot = (await robotsHusqvarna(await accesHusqvarna(supabase, eq))).find(r => r.id === eq.appareil);
+    if (!robot) throw new Error("Robot introuvable sur le compte Husqvarna");
+    const at = new Date().toISOString();
+    await supabase.from("equipements").update({ mesures: robot, mesures_at: at, statut: "connecte", erreur: null }).eq("id", eq.id);
+    return { ...robot, at };
+  } catch (e) {
+    await supabase.from("equipements").update({ statut: "erreur", erreur: e.message.slice(0, 200) }).eq("id", eq.id);
+    return null;
+  }
+}
+
+// Minutes jusqu'à demain 7 h (heure de Paris) : repos du robot pour le reste de la journée
+function minutesJusquaDemain7h(now = new Date()) {
+  const paris = new Date(now.toLocaleString("en-US", { timeZone: "Europe/Paris" }));
+  const cible = new Date(paris); cible.setDate(cible.getDate() + 1); cible.setHours(7, 0, 0, 0);
+  return Math.round((cible - paris) / 60000);
+}
+
+// Commandes validées par l'utilisateur (mode Proposition)
+const COMMANDES = {
+  repos_journee: () => ({ data: { type: "Park", attributes: { duration: minutesJusquaDemain7h() } } }),
+  repos_long: () => ({ data: { type: "ParkUntilFurtherNotice" } }),
+  reprendre: () => ({ data: { type: "ResumeSchedule" } }),
+};
+
+async function commandeRobot(supabase, userId, commande) {
+  if (!COMMANDES[commande]) throw new Error("Commande inconnue");
+  const { data: eq } = await supabase.from("equipements").select("*").eq("user_id", userId).eq("type", "robot").maybeSingle();
+  if (!eq) throw new Error("Aucun robot connecté");
+  await appelHusqvarna(await accesHusqvarna(supabase, eq), `mowers/${eq.appareil}/actions`, COMMANDES[commande]());
+  await supabase.from("equipements").update({ mesures_at: null }).eq("id", eq.id); // état relu au prochain affichage
+}
+
+async function revoquerHusqvarna(eq) {
+  try {
+    await fetch(`${HQ_AUTH}/revoke`, { method: "POST", signal: AbortSignal.timeout(5000),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ token: dechiffrer(eq.secret).refresh || "", client_id: process.env.HUSQVARNA_CLIENT_ID }) });
+  } catch { /* la suppression des jetons chez nous suffit */ }
+}
+
+module.exports = {
+  chiffrer, dechiffrer, stationsEcowitt, mesuresEcowitt, mesuresStation, appliquerStation,
+  urlConnexionHusqvarna, verifierEtat, jetonsHusqvarna, robotsHusqvarna, etatRobot, commandeRobot, revoquerHusqvarna,
+  minutesJusquaDemain7h,
+};

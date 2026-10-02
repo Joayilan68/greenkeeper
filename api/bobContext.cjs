@@ -6,7 +6,7 @@
 
 const { currentPhase, zoneFromLatLon, ZONES } = require("./parcoursEngine.cjs");
 const TONTE_GAZON = require("../src/lib/tonteGazon.json");
-const { mesuresStation } = require("./equipements.cjs");
+const { mesuresStation, etatRobot } = require("./equipements.cjs");
 
 const DIAG_MAX_JOURS = 60; // un diagnostic plus ancien ne décrit plus l'état actuel
 // Valeurs stockées sans accents → libellés lisibles
@@ -128,7 +128,14 @@ async function buildBobContext(supabase, { userId, premium, clientProfile = {}, 
 
   const m = await meteo(p, premium);
   l.push(m?.length ? `Météo des 5 prochains jours : ${m.join(" | ")}` : "Météo : non disponible.");
-  const st = await mesuresStation(supabase, userId).catch(() => null);
+  const [st, robot] = await Promise.all([mesuresStation(supabase, userId).catch(() => null), etatRobot(supabase, userId).catch(() => null)]);
+  if (robot) {
+    const ACT = { mowing: "en train de tondre", going_home: "rentre à sa base", charging: "en charge", leaving: "part tondre",
+      parked_in_cs: "garé à sa base", stopped_in_garden: "arrêté sur la pelouse" };
+    l.push(`Robot tondeuse Husqvarna connecté (${robot.nom}${robot.modele ? `, ${robot.modele}` : ""}) : ${robot.erreur ? `en erreur (code ${robot.erreur})` : ACT[robot.activite] || robot.etat || "état inconnu"}`
+      + `${robot.force === "force_park" || robot.restriction === "park_override" ? ", mis au repos" : ""}${typeof robot.hauteur === "number" ? `, hauteur de coupe au niveau ${robot.hauteur}` : ""}`
+      + " — pour le mettre au repos ou le relancer, l'utilisateur valide la proposition dans « Aujourd'hui »");
+  }
   if (st) {
     const v = (x, u) => typeof x === "number" ? `${String(x).replace(".", ",")} ${u}` : null;
     const mesures = [v(st.temp, "°C"), st.humidite !== null && `humidité ${v(st.humidite, "%")}`, st.pluie_jour !== null && `pluie tombée aujourd'hui ${v(st.pluie_jour, "mm")}`,
