@@ -186,7 +186,7 @@ export function Confidentialite() {
             • <strong>Création et gestion du compte utilisateur</strong> — Base légale : exécution du contrat (CGU/CGV)<br/>
             • <strong>Souscription et gestion de l'abonnement Premium</strong> — Base légale : exécution du contrat<br/>
             • <strong>Fourniture des fonctionnalités d'entretien du gazon</strong> (journal, GreenScore, recommandations) — Base légale : exécution du contrat<br/>
-            • <strong>Envoi d'emails transactionnels</strong> (confirmation, rappels, alertes météo) — Base légale : exécution du contrat<br/>
+            • <strong>Envoi d'emails liés au service</strong> (bienvenue, confirmation, conseils et rappels d'entretien, alertes météo ; désactivables dans Paramètres ou depuis chaque email) — Base légale : exécution du contrat<br/>
             • <strong>Envoi d'emails de prospection commerciale</strong> — Base légale : consentement (case optionnelle à l'inscription)<br/>
             • <strong>Notifications push</strong> — Base légale : consentement<br/>
             • <strong>Géolocalisation</strong> (météo locale) — Base légale : consentement<br/>
