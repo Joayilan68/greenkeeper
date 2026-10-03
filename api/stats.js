@@ -591,9 +591,7 @@ async function fetchFunnel() {
   const empty = {
     landing_view: 0, cta_click: 0, auth_screen_view: 0, signup_completed: 0,
     anon_diag_started: 0, anon_diag_result: 0, demo_view: 0, signup_from_teaser: 0,
-    rateClick: null, rateAuth: null, rateSignup: null, rateGlobal: null,
-    rateDiagResult: null, rateTeaserSignup: null,
-    hasData: false,
+    rateGlobal: null, rateEssaiClic: null,
   };
   try {
     if (!SB_URL || !SB_KEY) return empty;
@@ -612,13 +610,9 @@ async function fetchFunnel() {
     const pct = (a, b) => (b > 0 ? Math.round((a / b) * 1000) / 10 : null);
     return {
       ...c,
-      rateClick:  pct(c.cta_click,        c.landing_view),     // landing → clic
-      rateAuth:   pct(c.auth_screen_view, c.cta_click),        // clic → écran compte
-      rateSignup: pct(c.signup_completed, c.auth_screen_view), // écran compte → inscrit
-      rateGlobal: pct(c.signup_completed, c.landing_view),     // visite → inscrit (global)
-      rateDiagResult:   pct(c.anon_diag_result, c.anon_diag_started),  // diag lancé → résultat vu
-      rateTeaserSignup: pct(c.signup_from_teaser, c.anon_diag_result), // résultat vu → clic inscription
-      hasData: (rows || []).length > 0,
+      rateGlobal:    pct(c.signup_completed, c.landing_view), // visite → inscrit (global)
+      // essai → clic inscription : les clics viennent du diagnostic d'essai ET de la démo, rapportés aux deux essais
+      rateEssaiClic: pct(c.signup_from_teaser, c.anon_diag_started + c.demo_view),
     };
   } catch (e) {
     console.warn("stats-users funnel:", e.message);
