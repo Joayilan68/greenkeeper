@@ -583,12 +583,12 @@ export default function Pilotage() {
                     <div style={{ fontSize:18, fontWeight:800, color:"#8BE28F" }}>{users.funnel.rateGlobal != null ? `${users.funnel.rateGlobal}%` : "—"}</div>
                   </div>
                   <div style={{ flex:1, background:"rgba(249,168,37,0.1)", border:"1px solid rgba(249,168,37,0.28)", borderRadius:10, padding:"8px 10px", textAlign:"center" }}>
-                    <div style={{ fontSize:10.5, color:"#f0d68a" }}>Aha → inscription</div>
-                    <div style={{ fontSize:18, fontWeight:800, color:"#f9a825" }}>{users.funnel.rateTeaserSignup != null ? `${users.funnel.rateTeaserSignup}%` : "—"}</div>
+                    <div style={{ fontSize:10.5, color:"#f0d68a" }}>Essai → clic inscription</div>
+                    <div style={{ fontSize:18, fontWeight:800, color:"#f9a825" }}>{users.funnel.rateEssaiClic != null ? `${users.funnel.rateEssaiClic}%` : "—"}</div>
                   </div>
                 </div>
                 <div style={{ fontSize:10, color:"#4a7c5c", marginTop:8, lineHeight:1.5 }}>
-                  « Diagnostic lancé » et « Visite app » sont deux façons parallèles d'essayer (compare les volumes, pas une cascade). « Premium payant » = abonnés actifs actuels (Stripe). Comptage démarré aujourd'hui.
+                  « Diagnostic lancé » et « Visite app » sont deux façons parallèles d'essayer (compare les volumes, pas une cascade). « Essai → clic inscription » = part des essais (diagnostic + démo) suivis d'un clic sur « Créer mon compte ». « Premium payant » = abonnés actifs actuels (Stripe).
                 </div>
               </div>
             )}
