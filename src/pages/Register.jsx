@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
 import { useConsents } from "../lib/useConsents";
 import { usePushNotifications } from "../lib/usePushNotifications";
+import { useReminders } from "../lib/useReminders";
 import { card, btn } from "../lib/styles";
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -19,14 +20,15 @@ import { card, btn } from "../lib/styles";
 
 export default function Register() {
   const navigate = useNavigate();
-  const { consents: existingConsents, updateConsents } = useConsents();
+  const { consents: existingConsents, updateConsents, syncFromReminders } = useConsents();
+  const { enableAll } = useReminders(syncFromReminders);
   const { user } = useUser();
   const { subscribe: subscribePush } = usePushNotifications(user?.id);
 
   const [consents, setConsents] = useState({
     cgu_cgv:         false,  // case 1 — obligatoire (CGU + CGV combinées)
     confidentialite: false,  // case 2 — obligatoire (Politique de confidentialité)
-    notifications:   false,  // optionnel
+    notifications:   true,   // conseils de Bob : service (email, base contrat), push après autorisation du téléphone ; décochable
     dataResale:      false,  // optionnel (partage données anonymisées)
     marketing:       false,  // optionnel (prospection commerciale — mention 9 avocat)
   });
@@ -68,10 +70,13 @@ export default function Register() {
     setError("");
     setLoading(true);
 
-    // Case « conseils quotidiens » cochée → demande d'autorisation PENDANT le clic
+    // Case « conseils de Bob » cochée → demande d'autorisation PENDANT le clic
     // (geste utilisateur requis par le navigateur). Sans autorisation, pas d'abonnement :
-    // le consentement reste enregistré et les conseils partent alors par email.
-    if (consents.notifications) await subscribePush();
+    // les conseils et rappels d'entretien partent alors par email.
+    if (consents.notifications) {
+      await subscribePush();
+      enableAll();
+    }
 
     // ── Payload Supabase : UNIQUEMENT les colonnes réelles de user_consents ──
     // La table user_consents contient : cgu, confidentialite, notifications,
@@ -118,6 +123,12 @@ export default function Register() {
         return;
       }
     }
+
+    // Email de bienvenue (une seule fois par compte, garanti côté serveur)
+    try {
+      const token = await window.Clerk?.session?.getToken();
+      if (token) fetch("/api/send?type=bienvenue", { method: "POST", headers: { Authorization: `Bearer ${token}` }, keepalive: true }).catch(() => {});
+    } catch {}
 
     setLoading(false);
     navigate("/");
@@ -204,10 +215,10 @@ export default function Register() {
               style={{ marginTop:3, width:18, height:18, cursor:"pointer", flexShrink:0 }} />
             <div>
               <div style={{ fontSize:13, fontWeight:700, color:"#e8f5e9" }}>
-                🔔 Recevoir les conseils quotidiens de Bob <span style={{ color:"#81c784", fontSize:11 }}>(optionnel)</span>
+                🔔 Recevoir les conseils de Bob pour mon gazon <span style={{ color:"#f9a825", fontSize:11 }}>(recommandé)</span>
               </div>
               <div style={{ fontSize:11, color:"#81c784", marginTop:4, lineHeight:1.5 }}>
-                Météo, arrosage, tonte, alertes gel ou canicule — jusqu'à 2 par jour, par notification sur mon téléphone ou, à défaut, par email.
+                Le bon moment pour tondre, arroser, nourrir ; alertes gel ou canicule. Jusqu'à 2 par jour, par notification (ton téléphone te demandera l'autorisation : accepte-la) ou, à défaut, par email. <strong style={{ color:"#a5d6a7" }}>Sans cela, l'app ne peut pas te prévenir au bon moment.</strong> Désactivable à tout moment dans Paramètres ou depuis chaque email.
               </div>
             </div>
           </label>

@@ -1085,6 +1085,48 @@ module.exports = async function handler(req, res) {
   }
 
   // ════════════════════════════════════════════════════════════════════════
+  // BIENVENUE — email de bienvenue après l'inscription (transactionnel, une seule fois)
+  // POST /api/send?type=bienvenue — Bearer Clerk obligatoire ; envoi marqué dans privateMetadata
+  // ════════════════════════════════════════════════════════════════════════
+  if (type === "bienvenue") {
+    try {
+      const userId = await require("./auth.cjs").verifiedUserId(req);
+      if (!userId) return res.status(401).json({ error: "Connexion requise" });
+      const { createClerkClient } = require("@clerk/backend");
+      const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
+      const u = await clerk.users.getUser(userId);
+      const email = u.primaryEmailAddress?.emailAddress || u.emailAddresses?.[0]?.emailAddress;
+      // Comptes de moins de 7 jours seulement, et jamais deux fois
+      if (!email || u.privateMetadata?.bienvenueAt || Date.now() - u.createdAt > 7 * 86400000) return res.status(204).end();
+      await clerk.users.updateUserMetadata(userId, { privateMetadata: { bienvenueAt: new Date().toISOString() } });
+      const lien = (chemin, texte) => `<a href="https://mongazon360.fr${chemin}" style="color:#2e7d32;font-weight:700;">${texte}</a>`;
+      const r = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
+        body: JSON.stringify({
+          from: "Bob de Mongazon360 <bonjour@mongazon360.fr>", to: [email],
+          subject: "Bienvenue sur Mongazon360 🌿 voici comment bien démarrer",
+          html: buildOffreEmailHtml(u.firstName || "jardinier", "Bienvenue sur Mongazon360 !", [
+            "Je suis Bob, ton coach gazon. Voici ce que tu peux faire dès maintenant :",
+            `📅 ${lien("/today", "Aujourd'hui")} : chaque jour, ce qu'il faut faire (ou ne pas faire) pour ton gazon, selon la météo chez toi.`,
+            `🔬 ${lien("/diagnostic", "Diagnostic")} : une photo de ton gazon, et je te dis ce qui ne va pas et comment le soigner.`,
+            `🌿 ${lien("/my-lawn", "Mon Gazon")} : complète ton profil (sol, type de gazon, matériel). Plus il est précis, plus mes conseils le sont.`,
+            "🤖 Une question ? Appuie sur le petit robot en bas à droite de l'écran, je te réponds.",
+            `🔔 Pour être prévenu au bon moment (tonte, arrosage, gel), autorise les notifications : bouton « Activer » sur l'${lien("/", "accueil")}.`,
+            "À très vite au jardin,<br/>Bob",
+          ], "Voir ce que je fais aujourd'hui", "https://mongazon360.fr/today"),
+        }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || d.error) throw new Error("Resend : " + (d.error?.message || r.status));
+      return res.status(204).end();
+    } catch (e) {
+      await require("./alerting.cjs").reportServerError("Email de bienvenue en échec", e);
+      return res.status(500).json({ error: "Envoi impossible" });
+    }
+  }
+
+  // ════════════════════════════════════════════════════════════════════════
   // CUSTOMER-PORTAL — Lien Stripe Customer Portal (mention 10 avocat)
   // POST /api/send?type=customer-portal — Bearer Clerk obligatoire
   // ════════════════════════════════════════════════════════════════════════
