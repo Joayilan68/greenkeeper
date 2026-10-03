@@ -10,6 +10,8 @@ import { calcLawnScore } from "../lib/lawnScore";
 import { useHistory } from "../lib/useHistory";
 import { card, cardTitle, btn, scroll, header } from "../lib/styles";
 import ComparatifPremium from "../components/ComparatifPremium";
+import { useParcours } from "../lib/useParcours";
+import { moisCalendrier, zoneClimatique } from "../lib/planEntretien";
 
 const SEV_COLORS = {
   faible:   { bg:"rgba(76,175,80,0.15)",   border:"rgba(76,175,80,0.4)",   text:"#a5d6a7", badge:"#2e7d32" },
@@ -63,6 +65,7 @@ export default function Diagnostic() {
   const { user }   = useUser();
   const { getToken } = useAuth();
   const { profile }  = useProfile();
+  const { aUnParcoursActif } = useParcours();
   const { weather }  = useWeather() || {};
   const { isPaid, isAdmin, isLoading: subLoading } = useSubscription() || {};
   const { history = [] } = useHistory();
@@ -448,6 +451,24 @@ export default function Diagnostic() {
               })}
             </div>
           )}
+
+          {/* Gazon clairsemé ou sol nu détecté → parcours Regarnissage (la page Parcours vérifie la fenêtre de semis) */}
+          {!aUnParcoursActif && analysis.problemes?.some(p => /sol.?nu|clairsem|d[ée]garn|trou|pelad|mort|densit/i.test(`${p.id} ${p.nom}`)) && (() => {
+            const enSaison = moisCalendrier("regarnissage", zoneClimatique(profile), profile, profile?.sol).includes(new Date().getMonth() + 1);
+            return (
+              <div style={{ ...card(), background:"rgba(67,160,71,0.12)", border:"1px solid rgba(102,187,106,0.4)" }}>
+                <div style={{ fontSize:14, fontWeight:800, color:"#F1F8F2", marginBottom:4 }}>🌾 Des zones à regarnir</div>
+                <div style={{ fontSize:12, color:"#a5d6a7", lineHeight:1.6, marginBottom:10 }}>
+                  {enSaison
+                    ? "C'est la bonne période pour semer : je te guide jour par jour, de la préparation du sol à la première tonte."
+                    : "Ce n'est pas encore la période de semis dans ta zone : prépare ton regarnissage, je te préviens dès que la fenêtre s'ouvre."}
+                </div>
+                <button onClick={() => navigate("/parcours?type=regarnissage")} style={{ ...btn.primary, fontSize:14 }}>
+                  {enSaison ? "Lancer mon regarnissage" : "Préparer mon regarnissage"}
+                </button>
+              </div>
+            );
+          })()}
 
           {analysis.actions_urgentes?.length > 0 && (
             <div style={{ ...card(), background:"rgba(198,40,40,0.08)", border:"1px solid rgba(198,40,40,0.25)" }}>
