@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useUser } from "@clerk/clerk-react";
+import { useUser, useAuth } from "@clerk/clerk-react";
 import { useConsents } from "../lib/useConsents";
 import { usePushNotifications } from "../lib/usePushNotifications";
 import { useReminders } from "../lib/useReminders";
+import { codeRecu, oublierCode, normCode, appelParrainage } from "../lib/codeParrainage";
 import { card, btn } from "../lib/styles";
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -23,6 +24,7 @@ export default function Register() {
   const { consents: existingConsents, updateConsents, syncFromReminders } = useConsents();
   const { enableAll } = useReminders(syncFromReminders);
   const { user } = useUser();
+  const { getToken } = useAuth();
   const { subscribe: subscribePush } = usePushNotifications(user?.id);
 
   const [consents, setConsents] = useState({
@@ -32,6 +34,7 @@ export default function Register() {
     dataResale:      false,  // optionnel (partage données anonymisées)
     marketing:       false,  // optionnel (prospection commerciale — mention 9 avocat)
   });
+  const [code,    setCode]    = useState(() => codeRecu() || ""); // parrainage ou créateur, reçu par lien ou saisi
   const [error,   setError]   = useState("");
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true); // Vérification consentements existants au mount
@@ -69,6 +72,18 @@ export default function Register() {
 
     setError("");
     setLoading(true);
+
+    // Code de parrainage ou créateur : appliqué d'abord (1 mois offert) ; code refusé → message, rien d'autre n'est enregistré
+    if (normCode(code)) {
+      try {
+        await appelParrainage(getToken, { action: "utiliser", code });
+        oublierCode();
+      } catch (e) {
+        setLoading(false);
+        setError(`Code ${normCode(code)} : ${e.message}. Corrige-le ou vide le champ pour continuer.`);
+        return;
+      }
+    }
 
     // Case « conseils de Bob » cochée → demande d'autorisation PENDANT le clic
     // (geste utilisateur requis par le navigateur). Sans autorisation, pas d'abonnement :
@@ -260,6 +275,19 @@ export default function Register() {
               </div>
             </div>
           </label>
+        </div>
+
+        {/* ════════════════════════════════════════════════════════════════ */}
+        {/* CODE DE PARRAINAGE OU CRÉATEUR (facultatif)                     */}
+        {/* ════════════════════════════════════════════════════════════════ */}
+        <div style={{ ...card(), marginBottom:16 }}>
+          <div style={{ fontSize:13, fontWeight:700, color:"#e8f5e9", marginBottom:6 }}>
+            🎁 Code de parrainage ou créateur <span style={{ color:"#81c784", fontSize:11 }}>(facultatif)</span>
+          </div>
+          <input value={code} onChange={e => setCode(e.target.value.toUpperCase())} placeholder="Ex. DRGAZON" maxLength={16}
+            style={{ width:"100%", boxSizing:"border-box", background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.15)", borderRadius:10,
+              padding:"10px 12px", color:"#e8f5e9", fontSize:14, fontFamily:"inherit", letterSpacing:1 }} />
+          <div style={{ fontSize:11, color:"#81c784", marginTop:6, lineHeight:1.5 }}>Avec un code : 1 mois de Premium offert.</div>
         </div>
 
         {/* ── Erreur affichée ─────────────────────────────────────────────── */}

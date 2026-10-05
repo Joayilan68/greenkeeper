@@ -168,6 +168,8 @@ module.exports = async function handler(req, res) {
         classementRes,
         dauRes,
         equipementsRes,
+        codeRes,
+        parrainageRes,
       ] = await Promise.allSettled([
         supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle(),
         supabase.from("histories").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
@@ -182,6 +184,8 @@ module.exports = async function handler(req, res) {
         supabase.from("classement").select("*").eq("user_id", userId).maybeSingle(),
         supabase.from("daily_active_users").select("*").eq("user_id", userId).order("day", { ascending: false }),
         supabase.from("equipements").select("type, marque, nom, statut, mesures, mesures_at, created_at").eq("user_id", userId),
+        supabase.from("codes").select("code, created_at").eq("user_id", userId).maybeSingle(),
+        supabase.from("parrainages").select("code, created_at").eq("filleul_id", userId).maybeSingle(),
       ]);
 
       const getData = (r) => (r.status === "fulfilled" ? r.value?.data : null);
@@ -224,6 +228,8 @@ module.exports = async function handler(req, res) {
         classement:          getData(classementRes) || null,
         jours_actifs:        getData(dauRes) || [],
         equipements_connectes: getData(equipementsRes) || [], // clés d'accès chiffrées non exportées
+        code_parrainage:     getData(codeRes) || null,
+        inscrit_avec_le_code: getData(parrainageRes) || null,
         abonnement_push:     getData(pushSubRes) ? "Présent (détails masqués pour sécurité)" : "Aucun",
       });
     } catch (e) {
@@ -265,11 +271,13 @@ module.exports = async function handler(req, res) {
         "classement",          // ajout 21/08 — ligue / classement
         "daily_active_users",  // ajout 21/08 — journal d'activité
         "equipements",         // ajout 28/09 — équipements connectés et leurs clés d'accès chiffrées
+        "codes",               // ajout 05/10 — code de parrainage (ses filleuls sont détachés en cascade)
+        "parrainages",         // ajout 05/10 — code utilisé à l'inscription (colonne filleul_id)
       ];
 
       const tableResults = await Promise.allSettled(
         supabaseTables.map(table =>
-          supabase.from(table).delete().eq("user_id", userId)
+          supabase.from(table).delete().eq(table === "parrainages" ? "filleul_id" : "user_id", userId)
         )
       );
 

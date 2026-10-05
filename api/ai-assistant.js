@@ -159,6 +159,9 @@ si une fonction n'existe pas, dis simplement que ce n'est pas encore possible) :
 - Onglet « Diagnostic » : diagnostic photo de la pelouse par Bob.
 - Onglet « Mon Gazon » : profil du gazon, score détaillé, historique des actions ; « Mon plan gazon » : plan annuel
   personnalisé (12 mois d'entretien selon sa zone, son sol, son gazon et son équipement), achat unique à 0,99 €, en PDF.
+  « Parraine tes amis » (Mon Gazon) : code et lien à partager ; l'ami a 1 mois de Premium offert à l'inscription, le
+  parrain 1 mois offert dès que l'ami utilise l'app (12 par an au plus ; crédit sur la facture s'il est abonné). Un code
+  reçu (ami ou créateur) se saisit à l'inscription ou dans les 7 jours, dans la même carte.
 - « Mes équipements » (depuis Mon Gazon) : connexion d'une station météo Ecowitt (clés créées par l'utilisateur sur
   ecowitt.net) ; la pluie tombée, la température et le vent mesurés au jardin remplacent les prévisions pour la journée
   (arrosage, tonte, gel, notifications). Connexion d'un robot Husqvarna Automower : état du robot, et dans « Aujourd'hui »

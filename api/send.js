@@ -842,6 +842,13 @@ module.exports = async function handler(req, res) {
         } catch (e) { await require("./alerting.cjs").reportServerError("Tâche planifiée — relance Bob (3/3)", e); }
       }
 
+      // ── RÉCOMPENSES DE PARRAINAGE — créneau MATIN (filleul actif 2 jours → 1 mois au parrain) ──
+      let parrainsRecompenses = 0;
+      if (slot === "matin") {
+        try { parrainsRecompenses = await require("./parrainage.cjs").recompenserParrains(supabase); }
+        catch (e) { await require("./alerting.cjs").reportServerError("Tâche planifiée — récompenses de parrainage", e); }
+      }
+
       // ── FIN DES PREMIUM OFFERTS À DATE (bêta…) — créneau MATIN ─────────────
       // Date de fin dépassée → user_access repasse en "approved" et Clerk perd
       // guestAccess/guestUntil. Les accès sans date (famille) ne sont jamais touchés.
@@ -943,8 +950,8 @@ module.exports = async function handler(req, res) {
       }
       await alerting.setStatus(`cron_${slot}`, { date: today, at: new Date().toISOString(), pushSent, emailSent, emailFallbackSent, photosPurgees });
 
-      console.log(`[CRON ${slot}] reminders:`, remindersData?.length || 0, "pushSent:", pushSent, "emailSent:", emailSent, "emailFallbackSent:", emailFallbackSent, "skipped:", skipped, "parcoursSent:", parcoursSent, "parcoursTermines:", parcoursTermines, "trialRelances:", trialRelances, "baselineSent:", baselineSent, "premiumOffertsExpires:", premiumOffertsExpires, "offreEmails:", offreEmails, "relancesPush:", relancesPush, "relancesEmail:", relancesEmail, "relancesBob:", relancesBob, "photosPurgees:", photosPurgees);
-      return res.json({ success: true, date: today, slot, pushSent, emailSent, emailFallbackSent, skipped, parcoursSent, parcoursTermines, trialRelances, baselineSent, premiumOffertsExpires, offreEmails, relancesPush, relancesEmail, relancesBob, photosPurgees, reminders: remindersData?.length || 0 });
+      console.log(`[CRON ${slot}] reminders:`, remindersData?.length || 0, "pushSent:", pushSent, "emailSent:", emailSent, "emailFallbackSent:", emailFallbackSent, "skipped:", skipped, "parcoursSent:", parcoursSent, "parcoursTermines:", parcoursTermines, "trialRelances:", trialRelances, "baselineSent:", baselineSent, "premiumOffertsExpires:", premiumOffertsExpires, "offreEmails:", offreEmails, "relancesPush:", relancesPush, "relancesEmail:", relancesEmail, "relancesBob:", relancesBob, "photosPurgees:", photosPurgees, "parrainsRecompenses:", parrainsRecompenses);
+      return res.json({ success: true, date: today, slot, pushSent, emailSent, emailFallbackSent, skipped, parcoursSent, parcoursTermines, trialRelances, baselineSent, premiumOffertsExpires, offreEmails, relancesPush, relancesEmail, relancesBob, photosPurgees, parrainsRecompenses, reminders: remindersData?.length || 0 });
     } catch (e) {
       await require("./alerting.cjs").reportServerError("Tâche planifiée en échec", e, { "Créneau": req.query.slot || "matin" });
       return res.status(500).json({ error: e.message });
@@ -1081,6 +1088,34 @@ module.exports = async function handler(req, res) {
     } catch (e) {
       console.error("[send] validate-guest:", e.message);
       return res.status(500).json({ ok: false, error: e.message });
+    }
+  }
+
+  // ════════════════════════════════════════════════════════════════════════
+  // PARRAINAGE — code de l'utilisateur et code utilisé à l'inscription (api/parrainage.cjs)
+  // POST /api/send?type=parrainage  { action: "mon-code" } | { action: "utiliser", code }   Bearer Clerk
+  // ════════════════════════════════════════════════════════════════════════
+  if (type === "parrainage") {
+    const userId = await require("./auth.cjs").verifiedUserId(req);
+    if (!userId) return res.status(401).json({ error: "Connexion requise" });
+    const P = require("./parrainage.cjs");
+    const { createClient } = require("@supabase/supabase-js");
+    const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+    const { action, code } = req.body || {};
+    try {
+      if (action === "mon-code") return res.json(await P.monCode(sb, userId));
+      if (action === "utiliser") {
+        try {
+          return res.json(await P.utiliserCode(sb, userId, code));
+        } catch (e) {
+          if (e.code) throw e; // erreur de base → alerte ; sinon message lisible pour l'utilisateur
+          return res.status(400).json({ error: e.message });
+        }
+      }
+      return res.status(400).json({ error: "Action inconnue" });
+    } catch (e) {
+      await require("./alerting.cjs").reportServerError("Parrainage en échec", e, { "Utilisateur": userId, "Action": action || "?" });
+      return res.status(500).json({ error: "Erreur serveur, réessaie plus tard" });
     }
   }
 
