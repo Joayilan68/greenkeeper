@@ -19,3 +19,7 @@ Onglets les plus utilisés par le code :
 | pH & Amendements | notifications (pH), kits (chaulage), articles |
 | Règles Notifications | `api/notificationEngine.cjs` |
 | Parcours Semis | `api/parcoursEngine.cjs`, `src/pages/Parcours.jsx` |
+| Température Sol & ET0 | `src/lib/zonesGazon.json` (semis 10 °C, pousse 8 °C), `api/parcoursEngine.cjs` |
+| Règles complémentaires | 1re tonte, reprise du printemps, notifications d'hiver, kits, relances, anti-fatigue |
+
+L'onglet « Journal » trace chaque évolution de la base.

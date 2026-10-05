@@ -25,7 +25,7 @@ Au printemps, on cherche la pousse et la couleur : l'azote domine. **En automne,
 
 ## Quand l'épandre ?
 
-- **En septembre et octobre**, quand le gazon repart après l'été. En **novembre**, place à l'engrais d'hiver riche en potassium, qui renforce la résistance au gel. Laissez au moins 45 jours entre deux apports.
+- **En septembre et octobre**, quand le gazon repart après l'été. En **novembre**, l'engrais d'hiver riche en potassium renforce la résistance au gel, seulement si aucun engrais n'a été apporté depuis 90 jours. Laissez toujours au moins 90 jours entre deux apports : un engrais par saison, quatre au plus par an.
 - **Tant que le sol est encore tiède (au-dessus de 8 °C)** : les racines absorbent les éléments, et les engrais organiques ont besoin de l'activité du sol pour se décomposer.
 - **Idéalement juste avant une pluie** annoncée, qui fera pénétrer les granulés.
 

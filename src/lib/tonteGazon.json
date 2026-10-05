@@ -9,6 +9,6 @@
   },
   "alias": {
     "universel": "universel", "inconnu": "universel", "sport": "sport", "ombre": "ombre", "rustique": "rustique",
-    "ornemental": "ornement", "ornement": "ornement", "bermuda": "bermuda", "chaud": "bermuda"
+    "ornemental": "ornement", "ornement": "ornement", "bermuda": "bermuda", "chaud": "bermuda", "sec": "rustique"
   }
 }

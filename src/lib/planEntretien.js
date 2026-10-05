@@ -108,7 +108,7 @@ export function avantPremiereTonte(w, zone, today = new Date()) {
   const z = ZONES[zone] || ZONES.centre;
   const [m, j] = z.premiereTonte;
   if (today.getMonth() >= 5 || today >= new Date(today.getFullYear(), m - 1, j - 3)) return null;
-  if (typeof w?.soil_temp === "number" && w.soil_temp >= z.soilMin) return null;
+  if (typeof w?.soil_temp === "number" && w.soil_temp >= z.solPousse) return null;
   return new Date(2000, m - 1, j).toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
 }
 
@@ -195,7 +195,7 @@ export const ACTIONS_PLAN = [
     label: "Engrais Starter 🌱",
     gp:    "engrais",
     getMois: (zone, sol, isSynth, profile) => moisCalendrier("engrais_starter", zone, profile, sol),
-    getInterval: () => 45,
+    getInterval: () => 90,
     getBlocked: (w, profile, zone) => {
       if (isObjectifNaturel(profile)) return { blocked: true, raison: "Objectif Naturel — utilisez un engrais organique (farine de corne, guano)" };
       if (gelPossible(w))   return { blocked: true, raison: "Gel possible — engrais brûlerait le gazon" };
@@ -218,7 +218,7 @@ export const ACTIONS_PLAN = [
     label: "Engrais Été ☀️",
     gp:    "engrais",
     getMois: (zone, sol, isSynth, profile) => moisCalendrier("engrais_ete", zone, profile, sol),
-    getInterval: () => 45,
+    getInterval: () => 90,
     getBlocked: (w, profile) => {
       if (isObjectifNaturel(profile)) return { blocked: true, raison: "Objectif Naturel — utilisez un engrais organique d'été (algues marines, acides humiques)", alternative: "organique" };
       if (solDetrempé(w)) return { blocked: true, raison: "Sol détrempé (>15mm) — lessivage immédiat" };
@@ -238,7 +238,7 @@ export const ACTIONS_PLAN = [
     label: "Engrais Automne 🍂",
     gp:    "engrais",
     getMois: (zone, sol, isSynth, profile) => moisCalendrier("engrais_automne", zone, profile, sol),
-    getInterval: () => 45,
+    getInterval: () => 90,
     getBlocked: (w, profile) => {
       if (isObjectifNaturel(profile)) return { blocked: true, raison: "Objectif Naturel — utilisez un engrais organique d'automne" };
       if (gelPossible(w)) return { blocked: true, raison: "Gel possible — engrais non absorbé" };
@@ -259,7 +259,7 @@ export const ACTIONS_PLAN = [
     label: "Engrais Hiver ❄️",
     gp:    "engrais",
     getMois: (zone, sol, isSynth, profile) => moisCalendrier("engrais_hiver", zone, profile, sol),
-    getInterval: () => 45,
+    getInterval: () => 90,
     getBlocked: () => ({ blocked: false }),
     keywords:     ["engrais hiver", "engrais ❄️", "chaux", "engrais"],
     detail:       (plan) => MONTHLY_PLAN[11]?.engrais || "Chaux magnésienne si pH<6 · 150-200 g/m²",

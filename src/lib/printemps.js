@@ -49,7 +49,7 @@ export function compteARebours(profile, today = new Date()) {
 
   const debut = new Date(d.an - 1, 10, 1); // 1er novembre
   const progression = Math.min(1, Math.max(0, (today - debut) / (d.tonte - debut)));
-  return { zone: d.z.label, soilMin: d.z.soilMin, jours, tonte: d.tonte, jalons, progression };
+  return { zone: d.z.label, solPousse: d.z.solPousse, jours, tonte: d.tonte, jalons, progression };
 }
 
 // ─── Plan de printemps ─────────────────────────────────────────────────────────

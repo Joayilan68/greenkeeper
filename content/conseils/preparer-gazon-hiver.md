@@ -34,7 +34,7 @@ Si l'eau stagne après la pluie ou si le sol est argileux ou tassé, **aérez en
 
 ## 5. Terminer les regarnissages à temps
 
-Les dernières zones clairsemées doivent être regarnies **tant que le sol dépasse 10 à 12 °C**, avant la fin de la fenêtre d'automne de votre région : dès début septembre dans le nord et l'est, jusqu'à fin octobre dans le sud-ouest, début novembre dans le sud. Plus tard, les graines ne germent plus ou les jeunes pousses ne passent pas l'hiver (voir le [guide du regarnissage](/conseils/regarnir-gazon-automne)).
+Les dernières zones clairsemées doivent être regarnies **tant que le sol dépasse 10 °C**, avant la fin de la fenêtre d'automne de votre région : dès début septembre dans le nord et l'est, jusqu'à fin octobre dans le sud-ouest, début novembre dans le sud. Plus tard, les graines ne germent plus ou les jeunes pousses ne passent pas l'hiver (voir le [guide du regarnissage](/conseils/regarnir-gazon-automne)).
 
 ## 6. Traiter la mousse et corriger le sol
 
