@@ -34,7 +34,7 @@ function avantPremiereTonte(profile, weather, today) {
   const t = new Date(Date.parse(today || new Date().toISOString().slice(0, 10)));
   const [m, j] = z.premiereTonte;
   if (t.getUTCMonth() >= 5 || t >= new Date(Date.UTC(t.getUTCFullYear(), m - 1, j - 3))) return false;
-  return !(typeof weather?.soil_temp === "number" && weather.soil_temp >= z.soilMin);
+  return !(typeof weather?.soil_temp === "number" && weather.soil_temp >= z.solPousse);
 }
 
 // Rappel d'entretien → actions du calendrier ; prévention maladies : mois des risques suivis par checkMaladie
@@ -45,7 +45,7 @@ const SAISON_RAPPEL = {
 const MOIS_MALADIES = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 
 // Intervalles d'entretien (jours) — alignés sur send.js / useReminders KB v4
-const INTERVALLES = { tonte: 5, arrosage: 3, engrais: 45, fongicide: 14, aeration: 90, desherbage: 21 };
+const INTERVALLES = { tonte: 5, arrosage: 3, engrais: 90, fongicide: 14, aeration: 90, desherbage: 21 };
 
 const LABELS = {
   tonte:      { icon: "✂️", label: "Tonte" },

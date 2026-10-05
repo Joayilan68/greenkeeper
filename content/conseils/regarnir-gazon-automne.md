@@ -11,12 +11,12 @@ Après un été sec, une pelouse présente souvent des zones clairsemées, des t
 
 ## Pourquoi regarnir en automne plutôt qu'au printemps ?
 
-- **Le sol est chaud** : les graines de gazon germent dès que la température du sol dépasse 10 à 12 °C. En septembre et octobre, le sol a accumulé la chaleur de l'été.
+- **Le sol est chaud** : les graines de gazon germent dès que la température du sol dépasse 10 °C. En septembre et octobre, le sol a accumulé la chaleur de l'été.
 - **L'humidité revient** : les rosées et les pluies d'automne limitent les arrosages.
 - **Moins de concurrence** : les mauvaises herbes annuelles ralentissent, les jeunes pousses de gazon prennent la place.
 - **Les racines ont le temps de s'installer** avant l'hiver, puis le gazon repart très vite au printemps.
 
-> **Quand exactement ?** Le bon repère n'est pas la date mais la **température du sol** (10 à 12 °C minimum selon la région) et l'absence de gel dans les semaines qui suivent. En moyenne :
+> **Quand exactement ?** Le bon repère n'est pas la date mais la **température du sol** (10 °C minimum) et l'absence de gel dans les semaines qui suivent. En moyenne :
 
 | Région | Fenêtre d'automne |
 |---|---|
@@ -93,7 +93,7 @@ Un engrais « spécial semis » ou « starter », riche en phosphore, favorise l
 
 ## Les erreurs à éviter
 
-1. **Semer trop tard** : sous 10 à 12 °C au sol selon la région, la germination s'arrête et les jeunes pousses ne passent pas l'hiver.
+1. **Semer trop tard** : sous 10 °C au sol, la germination s'arrête et les jeunes pousses ne passent pas l'hiver.
 2. **Semer sur le feutre ou la mousse** sans griffer.
 3. **Laisser sécher** la surface pendant la germination.
 4. **Enterrer les graines** trop profondément.

@@ -59,7 +59,7 @@ Pour la **première tonte, ramassez** : l'herbe coupée est plus longue et humid
 - **Rythme** : **1 à 2 tontes par semaine** en mars-avril, puis **2 à 3 par semaine** en pleine pousse, à partir de mai.
 - **Engrais de démarrage** : en mars, parfois dès février quand le sol se réchauffe tôt (sud, ouest), dès que le sol dépasse 8 °C, sans gel annoncé et avec au moins 10 °C l'après-midi.
 - **Scarification ou aération** (jamais les deux le même jour) : si la pelouse est feutrée ou tassée, mars-avril est une bonne période (voir [scarifier sa pelouse](/conseils/scarifier-pelouse) et [aérer sa pelouse](/conseils/aerer-pelouse-carottage)).
-- **Regarnissage** des zones abîmées par l'hiver, dès que le sol dépasse 10 à 12 °C selon votre région (voir [semer un gazon au printemps](/conseils/semer-gazon-printemps)).
+- **Regarnissage** des zones abîmées par l'hiver, dès que le sol dépasse 10 °C (voir [semer un gazon au printemps](/conseils/semer-gazon-printemps)).
 
 ## Et le robot tondeuse ?
 
