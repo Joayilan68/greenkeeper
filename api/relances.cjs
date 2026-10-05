@@ -4,8 +4,8 @@
 // février, où le gazon demande peu), puis silence jusqu'au retour. Historique dans Clerk,
 // private_metadata.relances (6 dernières) : { p: palier, at: AAAA-MM-JJ, canal, retour? },
 // qui sert aussi au taux de retour de Pilotage.
-// Séquence de démarrage : un inscrit qui n'est pas revenu depuis le jour de son inscription reçoit un
-// message à J+2 puis à J+5 (avant la relance de J+7), historique dans private_metadata.demarrage.
+// Séquence de démarrage : la première semaine (J+1 à J+6), un message par jour à l'inscrit qui n'est pas
+// venu dans l'app la veille ni le jour même ; historique dans private_metadata.demarrage (jours envoyés).
 
 const JOUR = 86400000;
 const SEUILS = [7, 21, 45];
@@ -89,41 +89,53 @@ function statsRelances(users, now = Date.now()) {
   return { inactifs, envoyees, parCanal, mesurables, retours };
 }
 
-// Séquence de démarrage : étape due aujourd'hui (2 ou 5) ou null. Seulement si aucune visite depuis
-// le jour de l'inscription ; une étape dépassée sans envoi est sautée (jamais deux messages le même jour).
-const ETAPES_DEMARRAGE = [2, 5];
+// Séquence de démarrage : jour dû aujourd'hui (1 à 6) ou null. Rien si l'inscrit est venu dans l'app la veille
+// ou le jour même (il est actif), ni deux fois le même jour.
 function etapeDemarrage(u, now = Date.now()) {
   if (!u.created_at) return null;
-  const age = Math.floor((now - u.created_at) / JOUR);
-  if (age < ETAPES_DEMARRAGE[0] || age >= SEUILS[0]) return null;
+  const jour = Math.round((Date.parse(jourDe(now)) - Date.parse(jourDe(u.created_at))) / JOUR); // jours calendaires
+  if (jour < 1 || jour >= SEUILS[0]) return null;
   const visite = derniereVisite(u);
-  if (visite && jourDe(visite) > jourDe(u.created_at)) return null;
-  const envoyees = Array.isArray(u.private_metadata?.demarrage) ? u.private_metadata.demarrage : [];
-  const etape = Math.max(...ETAPES_DEMARRAGE.filter(e => age >= e));
-  return envoyees.includes(etape) ? null : etape;
+  if (visite && jourDe(visite) >= jourDe(now - JOUR) && jourDe(visite) > jourDe(u.created_at)) return null;
+  const envoyes = Array.isArray(u.private_metadata?.demarrage) ? u.private_metadata.demarrage : [];
+  return envoyes.includes(jour) ? null : jour;
 }
 
-// Messages de démarrage : J+2 = finir ce qui a été commencé (profil, problème du diagnostic) ;
-// J+5 = l'action utile de la semaine (moteur de notifications) ou le conseil du jour
-function messageDemarrage(etape, { ville, probleme, action, conseil, profilComplet }) {
-  if (etape === 2) {
-    if (!profilComplet) return {
-      title: "⏱️ Ton plan d'entretien est à 2 minutes",
-      body: "Indique ton type de gazon et ton sol : Bob te prépare un plan mois par mois, calé sur la météo de chez toi.",
-      url: "/setup",
-    };
-    if (probleme) return {
-      title: `🔬 ${probleme.nom} : voici quoi faire`,
-      body: `${probleme.solution || "Ton diagnostic a repéré ce problème."} Ton plan d'action t'attend dans l'app.`,
-      url: "/today",
-    };
-  }
+// Messages de démarrage, un thème par jour (fonctions réelles de l'app) ; repli sur l'action utile du moment.
+// Le premier message envoyé traite d'abord le profil à compléter ou le problème du dernier diagnostic.
+function messageDemarrage(jour, { ville, probleme, action, conseil, profilComplet, premier }) {
   const chez = ville ? ` à ${ville}` : "";
-  return {
-    title: action ? `🌿 Cette semaine${chez} : ${sansEmoji(action.title)}` : `🌿 Ton gazon${chez} cette semaine`,
+  const actionSemaine = {
+    title: action ? `🌿 Aujourd'hui${chez} : ${sansEmoji(action.title)}` : `🌿 Ton gazon${chez} aujourd'hui`,
     body: `${action ? action.body : conseil.body} Chaque jour, « Aujourd'hui » te dit quoi faire selon la météo.`,
     url: "/today",
   };
+  if (!profilComplet && (jour <= 2 || premier)) return {
+    title: "⏱️ Ton plan d'entretien est à 2 minutes",
+    body: "Indique ton type de gazon et ton sol : Bob te prépare un plan mois par mois, calé sur la météo de chez toi.",
+    url: "/setup",
+  };
+  if ((jour === 1 || premier) && probleme) return {
+    title: `🔬 ${probleme.nom} : voici quoi faire`,
+    body: `${probleme.solution || "Ton diagnostic a repéré ce problème."} Ton plan d'action t'attend dans l'app.`,
+    url: "/today",
+  };
+  if (jour === 3) return {
+    title: "🤖 Une question sur ton gazon ? Demande à Bob",
+    body: "Mousse, jaunissement, quand tondre ou semer : Bob répond en tenant compte de ta météo, de ton sol et de ton gazon.",
+    url: "/today",
+  };
+  if (jour === 4) return {
+    title: "📸 Suis l'évolution de ta pelouse",
+    body: "Une photo suffit : le diagnostic repère mousse, zones sèches ou clairsemées et te dit quoi faire. Compare avec ta première photo.",
+    url: "/diagnostic",
+  };
+  if (jour === 6) return {
+    title: "🔔 Ne rate plus le bon moment",
+    body: "Gel, canicule, arrosage, tonte : autorise les notifications dans l'app et Bob te prévient au bon moment, sans que tu aies à y penser.",
+    url: "/",
+  };
+  return actionSemaine;
 }
 
 const ajouterRelance = (u, entree) => [...historique(u), entree].slice(-6);

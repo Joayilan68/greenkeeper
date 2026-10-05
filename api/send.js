@@ -325,7 +325,7 @@ module.exports = async function handler(req, res) {
       let pushSent = 0, emailSent = 0, skipped = 0;
       const pushedToday = new Set(); // users déjà notifiés ce jour (anti-doublon socle/relance)
 
-      // ── RELANCE DES INACTIFS (J+7, J+21, J+45 sans visite) ET DÉMARRAGE (J+2, J+5 sans retour) — MATIN ──
+      // ── RELANCE DES INACTIFS (J+7, J+21, J+45 sans visite) ET DÉMARRAGE (J+1 à J+6) — MATIN ──
       // Règles et textes : relances.cjs. Push si abonné, sinon email (relances : consentement conseils
       // ou offres ; démarrage : message de service, sans condition) ; admins exclus ; 20 emails par jour au plus (quota Resend). Contenu : la
       // décision du moteur, sinon le conseil du jour. Un compte relancé ne reçoit ni notification du
@@ -355,7 +355,7 @@ module.exports = async function handler(req, res) {
               u.private_metadata = { ...u.private_metadata, relances: retours };
             }
             const palier = palierDu(u);
-            const etape = palier ? null : etapeDemarrage(u); // séquence de démarrage (J+2, J+5) des nouveaux inscrits
+            const etape = palier ? null : etapeDemarrage(u); // séquence de démarrage (J+1 à J+6) des nouveaux inscrits
             if (!palier && !etape) continue;
             const email = primaryEmail(u);
             if (u.banned || ADMIN_EMAILS.includes((email || "").toLowerCase())) continue;
@@ -378,12 +378,13 @@ module.exports = async function handler(req, res) {
               joursInactif: 7, // sans gamification ni astuce : l'action la plus utile
             });
             let probleme = null;
-            if (etape === 2 && profilComplet) {
+            const premier = !!etape && !(u.private_metadata?.demarrage || []).length;
+            if (premier && profilComplet) {
               const { data: diag } = await supabase.from("diagnostics").select("problemes")
                 .eq("user_id", u.id).order("created_at", { ascending: false }).limit(1).maybeSingle();
               probleme = Array.isArray(diag?.problemes) ? diag.problemes[0] || null : null;
             }
-            const contexte = { ville: profile.ville, action, conseil: conseilDuJour(today, month), profilComplet, probleme };
+            const contexte = { ville: profile.ville, action, conseil: conseilDuJour(today, month), profilComplet, probleme, premier };
             const msg = palier ? messageRelance(palier, contexte) : messageDemarrage(etape, contexte);
             const typeMsg = palier ? `relance_${palier}` : `demarrage_${etape}`;
 
