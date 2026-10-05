@@ -148,7 +148,7 @@ export function MentionsLegales() {
 export function Confidentialite() {
   return (
     <div>
-      <PageHeader emoji="🔒" title="Politique de confidentialité" subtitle="Mise à jour : 3 octobre 2026" />
+      <PageHeader emoji="🔒" title="Politique de confidentialité" subtitle="Mise à jour : 5 octobre 2026" />
       <div style={scroll}>
 
         <Section title="1. Préambule">
@@ -205,6 +205,7 @@ export function Confidentialite() {
             <strong>Données techniques :</strong> identifiants techniques, journaux de connexion, adresse IP, type de navigateur et d'appareil (iPhone, Android ou ordinateur), langue.<br/><br/>
             <strong>Données de paiement :</strong> en cas d'abonnement Premium, les données de paiement sont traitées directement par Stripe — Mongazon360 n'a pas accès aux numéros de carte bancaire.<br/><br/>
             <strong>Données de géolocalisation :</strong> coordonnées GPS approximatives (avec votre consentement uniquement).<br/><br/>
+            <strong>Données de parrainage :</strong> votre code de parrainage, le code utilisé à votre inscription et sa date, le nombre de vos filleuls et les mois offerts. Un créateur partenaire ne reçoit que des chiffres globaux (nombre d'inscrits, d'abonnés, montant de sa commission), jamais votre identité.<br/><br/>
             <strong>Données d'équipements connectés</strong> (seulement si vous en connectez un) : marque, nom et identifiant de l'appareil, clés ou jetons d'accès à votre compte chez le fabricant (conservés chiffrés) et dernier relevé (température, humidité, pluie, vent, humidité du sol ; pour un robot : activité, batterie, prochaine tonte, hauteur de coupe ; pour un arrosage : nom et état des zones).
           </SubSection>
 
@@ -215,6 +216,7 @@ export function Confidentialite() {
             • <strong>Données de prospection commerciale :</strong> 3 ans à compter du dernier contact<br/>
             • <strong>Logs techniques :</strong> 1 an<br/>
             • <strong>Photos de diagnostic :</strong> 90 jours, puis suppression automatique (le résultat de l'analyse reste attaché au compte)<br/>
+            • <strong>Parrainage :</strong> tant que le compte est actif (supprimé avec le compte)<br/>
             • <strong>Équipements connectés :</strong> jusqu'à leur déconnexion ou la suppression du compte ; seule la dernière mesure est conservée (chaque relevé remplace le précédent)<br/>
             • <strong>Statistiques de mesure d'audience (anonymes) :</strong> 25 mois<br/>
             • <strong>Cookies et choix de consentement :</strong> cookies Meta 90 jours maximum, choix concernant les cookies de mesure 6 mois (cf. Politique de cookies)
@@ -517,12 +519,12 @@ export function CGV() {
   const navigate = useNavigate();
   return (
     <div>
-      <PageHeader emoji="💳" title="Conditions Générales de Vente" subtitle="Mise à jour : 3 octobre 2026" />
+      <PageHeader emoji="💳" title="Conditions Générales de Vente" subtitle="Mise à jour : 5 octobre 2026" />
       <div style={scroll}>
 
         <div style={{ ...card(), background:"rgba(33,150,243,0.06)", border:"1px solid rgba(33,150,243,0.2)" }}>
           <div style={{ fontSize:12, color:"#90caf9", lineHeight:1.6 }}>
-            ℹ️ Les présentes CGV s'appliquent à la souscription d'un abonnement Premium à l'application Mongazon360<sup style={{ fontSize:7 }}>®</sup> et à l'achat du plan annuel personnalisé (article 7 bis). Elles complètent les{" "}
+            ℹ️ Les présentes CGV s'appliquent à la souscription d'un abonnement Premium à l'application Mongazon360<sup style={{ fontSize:7 }}>®</sup> à l'achat du plan annuel personnalisé (article 7 bis) et au programme de parrainage (article 7 ter). Elles complètent les{" "}
             <span onClick={() => navigate("/cgu")} style={{ color:"#a5d6a7", textDecoration:"underline", cursor:"pointer" }}>
               Conditions Générales d'Utilisation
             </span>{" "}qui restent applicables.
@@ -598,6 +600,13 @@ export function CGV() {
           <strong style={{ color:"#a5d6a7" }}>Prix :</strong> 0,99 € TTC, payé en une fois, sans abonnement ni renouvellement. L'achat est ouvert à tous les Utilisateurs, abonnés Premium compris, et s'effectue depuis le site web ou l'application web (paiement traité par Stripe).<br/><br/>
           <strong style={{ color:"#a5d6a7" }}>Fourniture :</strong> le plan est accessible dans l'Application (Mon Gazon → Mon plan annuel) dès la confirmation du paiement, téléchargeable en PDF, et un lien est adressé par email. Il reste accessible tant que le compte de l'Utilisateur est actif.<br/><br/>
           <strong style={{ color:"#a5d6a7" }}>Rétractation :</strong> le plan étant fourni immédiatement, l'Utilisateur est invité, avant le paiement, à demander expressément cette fourniture immédiate et à reconnaître qu'il perd son droit de rétractation (article L.221-28 du Code de la consommation), selon les modalités de l'article 8.
+        </Section>
+
+        <Section title="7 ter. Parrainage et codes créateurs">
+          Chaque Utilisateur dispose d'un code de parrainage personnel (Mon Gazon → Parraine tes amis). Des créateurs de contenu partenaires peuvent également disposer d'un code.<br/><br/>
+          <strong style={{ color:"#a5d6a7" }}>Filleul :</strong> l'Utilisateur qui s'inscrit avec un code (lien de parrainage ou saisie dans les 7 jours qui suivent l'inscription) bénéficie d'un mois d'accès Premium offert, sans engagement ni moyen de paiement. Un seul code peut être utilisé par compte, et pas son propre code.<br/><br/>
+          <strong style={{ color:"#a5d6a7" }}>Parrain :</strong> le parrain reçoit un mois d'accès Premium offert pour chaque filleul ayant utilisé l'Application au moins deux jours différents, dans la limite de douze mois par période de douze mois. S'il est abonné Premium, ce mois prend la forme d'un crédit équivalent au prix d'un mois d'abonnement, déduit de ses prochaines factures.<br/><br/>
+          Ces avantages ne sont ni cessibles ni convertibles en argent. MONGAZON360 peut annuler un avantage obtenu de manière abusive (comptes multiples, comptes fictifs) et modifier ou arrêter le programme à tout moment, sans effet sur les avantages déjà acquis.
         </Section>
 
         <Section title="8. Droit de rétractation">

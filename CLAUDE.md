@@ -46,6 +46,9 @@
   dans Pilotage → Finances ; retrait automatique par la tâche du matin.
 - Offre saisonnière (annuel à 19,99 € la 1re année, 1/12→25/02 et 1/07→15/08) : `src/lib/offreSaison.json`,
   partagé par l'app et le serveur.
+- Parrainage et codes créateurs : `api/parrainage.cjs` (tables `codes` et `parrainages`, serveur uniquement), conditions
+  dans les CGV (article 7 ter) ; filleul 1 mois offert, parrain 1 mois par filleul actif (tâche du matin) ; codes
+  créateurs et commissions dans Pilotage → Finances. Lien : `https://mongazon360.fr/?p=CODE`.
 
 ## Équipements connectés
 - Table `equipements` (serveur uniquement, RLS sans politique) via `api/objets.js` ; logique et connecteurs dans

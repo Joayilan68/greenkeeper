@@ -4,6 +4,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { trackFunnel, trackFunnelOncePerSession } from "../lib/funnel";
+import { codeRecu } from "../lib/codeParrainage";
 
 const G = {
   bg:      "linear-gradient(165deg,#0F2F1F 0%,#164a2b 45%,#0d2519 100%)",
@@ -52,6 +53,8 @@ function Feature({ icon, title, desc }) {
 export default function Landing() {
   const navigate = useNavigate();
 
+  const code = codeRecu(); // arrivé par un lien de parrainage ou de créateur
+
   // Haut d'entonnoir : le prospect (non connecté) voit la page de présentation.
   useEffect(() => { trackFunnelOncePerSession("landing_view"); }, []);
 
@@ -60,7 +63,7 @@ export default function Landing() {
     trackFunnel("cta_click", { source, dest: "essai" });
     navigate("/essai");
   };
-  // Conservé pour compat éventuelle : inscription directe.
+  // Inscription directe (badge Premium, code de parrainage reçu).
   const goSignup = (source) => {
     trackFunnel("cta_click", { source, dest: "signup" });
     navigate("/signup");
@@ -91,6 +94,15 @@ export default function Landing() {
             Se connecter
           </button>
         </header>
+
+        {/* ── Code de parrainage ou créateur reçu par lien ── */}
+        {code && (
+          <div role="button" onClick={() => goSignup("code")} style={{ marginTop:14, background:"linear-gradient(135deg,rgba(249,168,37,0.22),rgba(13,43,26,0.6))",
+            border:"1px solid rgba(249,168,37,0.45)", borderRadius:14, padding:"12px 14px", cursor:"pointer", textAlign:"center" }}>
+            <div style={{ fontSize:14, fontWeight:800, color:"#ffe082" }}>🎁 Code {code} : 1 mois de Premium offert</div>
+            <div style={{ fontSize:12, color:G.muted, marginTop:3 }}>Crée ton compte, le mois offert s'active tout seul.</div>
+          </div>
+        )}
 
         {/* ── Hero ── */}
         <section style={{ paddingTop:22, textAlign:"center" }}>

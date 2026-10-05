@@ -31,6 +31,7 @@ import { WeatherProvider } from "./lib/WeatherContext";
 import { usePilotage }     from "./lib/usePilotage";
 import { useSubscription } from "./lib/useSubscription"; // ✅ statut Premium → WeatherProvider (ET₀/sol)
 import { useUTMCapture, getCapturedUTM } from "./lib/useUTMCapture"; // ✅ Bloc 1 — capture UTM dès l'arrivée
+import { capturerCode } from "./lib/codeParrainage";
 import { useUTMInjection } from "./lib/useUTMInjection"; // ✅ Bloc 1 — injection Clerk metadata first-touch
 import { trackFunnel }     from "./lib/funnel";          // ✅ suivi d'entonnoir (conversion)
 import { deviceInfo, isRobot } from "./lib/platform";
@@ -91,6 +92,7 @@ function AppWithWeather({ children }) {
   usePageMeta();
   useUTMCapture();   // capte les UTM dès l'arrivée sur le site
   useUTMInjection(); // ✅ FIX 01/06/2026 — injecte les UTM dans Clerk unsafeMetadata (first-touch)
+  useEffect(() => { capturerCode(); }, []); // code de parrainage ou créateur reçu par lien (?p=CODE)
 
   // Meta Pixel : charger dès le démarrage SI le visiteur a déjà accepté les cookies.
   useEffect(() => { if (getCookieConsent() === "granted") loadMetaPixel(); }, []);

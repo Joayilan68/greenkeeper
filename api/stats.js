@@ -6,6 +6,7 @@
 //   GET /api/stats?type=users    → stats Clerk + sources UTM des inscrits
 //   GET /api/stats?type=errors   → erreurs (error_events) regroupées par problème + état des tâches planifiées
 //   GET /api/stats?type=services → vérification en direct des services externes (Pilotage → Services)
+//   GET|POST /api/stats?type=codes → codes créateurs et parrainage (Pilotage → Finances)
 
 // Emails admin — exclus de TOUTES les stats (règle "admins exclus de tout")
 const { verifiedUserId, ADMIN_EMAILS } = require("./auth.cjs");
@@ -41,6 +42,7 @@ module.exports = async function handler(req, res) {
   const { type } = req.query;
 
   if (type === "guests") return handleGuests(req, res);
+  if (type === "codes")  return handleCodes(req, res);
   // Réseaux sociaux : lecture (GET ?type=social) + écriture (POST)
   if (type === "social" || req.method === "POST") return handleSocial(req, res);
   if (type === "revenue") return handleRevenue(req, res);
@@ -48,7 +50,7 @@ module.exports = async function handler(req, res) {
   if (type === "errors")   return handleErrors(req, res);
   if (type === "services") return handleServices(req, res);
 
-  return res.status(400).json({ error: 'Paramètre ?type=revenue|users|social|errors|services|guests requis' });
+  return res.status(400).json({ error: 'Paramètre ?type=revenue|users|social|errors|services|guests|codes requis' });
 };
 
 // ── Réseaux sociaux (followers — saisie manuelle mensuelle) ───────────────────
@@ -366,6 +368,22 @@ async function handleUsers(req, res) {
 // GET  : liste des comptes (Clerk guestAccess ou user_access "guest"), date de fin, dernière activité
 // POST : { action:"add", email, until, label } | { action:"update", userId, until, label } | { action:"remove", userId }
 //        until = "AAAA-MM-JJ" (dernier jour inclus) ou null (à vie). Le compte doit exister.
+// ── Codes créateurs et parrainage (Pilotage → Finances) : liste + résultats, ajout / modification d'un créateur ──
+async function handleCodes(req, res) {
+  const P  = require("./parrainage.cjs");
+  const sb = createClient(SB_URL, SB_KEY);
+  try {
+    if (req.method === "POST") {
+      try { await P.enregistrerCreateur(sb, req.body || {}); }
+      catch (e) { if (e.code) throw e; return res.status(400).json({ success: false, error: e.message }); }
+    }
+    return res.json({ success: true, ...(await P.statsCodes(sb, await fetchAllClerkUsers())) });
+  } catch (e) {
+    await require("./alerting.cjs").reportServerError("Pilotage — codes créateurs en échec", e);
+    return res.status(500).json({ success: false, error: e.message });
+  }
+}
+
 async function handleGuests(req, res) {
   const sb = createClient(SB_URL, SB_KEY);
   const primary = (u) => u.email_addresses?.find(e => e.id === u.primary_email_address_id)?.email_address

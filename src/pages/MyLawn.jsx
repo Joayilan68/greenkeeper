@@ -15,6 +15,7 @@ import { useStreak } from "../lib/useStreak";
 import { useBadges } from "../lib/useBadges";
 import { anneePlan, PRIX_PLAN_ANNUEL } from "../lib/planAnnuel";
 import BadgesGallery from "../components/BadgesGallery";
+import CarteParrainage from "../components/CarteParrainage";
 
 // Mapping action.id → clé amazonProducts.js
 const ACTION_TO_AMAZON = {
@@ -383,6 +384,9 @@ export default function MyLawn() {
           </div>
           <span style={{ color:"#a5d6a7", fontSize:16 }}>→</span>
         </div>
+
+        {/* ── PARRAINAGE (1 mois offert au filleul et au parrain) ── */}
+        <CarteParrainage />
 
         {/* ── PLAN ANNUEL PERSONNALISÉ (achat unique) ── */}
         <div onClick={() => navigate("/plan-annuel")} style={{ ...card(), cursor:"pointer", display:"flex", alignItems:"center", gap:12 }}>
