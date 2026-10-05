@@ -325,9 +325,9 @@ module.exports = async function handler(req, res) {
       let pushSent = 0, emailSent = 0, skipped = 0;
       const pushedToday = new Set(); // users déjà notifiés ce jour (anti-doublon socle/relance)
 
-      // ── RELANCE DES INACTIFS (J+7, J+21, J+45 sans visite) — créneau MATIN ──
-      // Règles et textes : relances.cjs. Push si abonné, sinon email (consentement conseils ou
-      // offres) ; admins exclus ; 20 emails par jour au plus (quota Resend). Contenu : la
+      // ── RELANCE DES INACTIFS (J+7, J+21, J+45 sans visite) ET DÉMARRAGE (J+2, J+5 sans retour) — MATIN ──
+      // Règles et textes : relances.cjs. Push si abonné, sinon email (relances : consentement conseils
+      // ou offres ; démarrage : message de service, sans condition) ; admins exclus ; 20 emails par jour au plus (quota Resend). Contenu : la
       // décision du moteur, sinon le conseil du jour. Un compte relancé ne reçoit ni notification du
       // moteur ni email d'offre ce jour-là.
       const RELANCES_EMAIL_MAX = 20;
@@ -335,15 +335,15 @@ module.exports = async function handler(req, res) {
       let relancesPush = 0, relancesEmail = 0;
       if (slot === "matin") {
         try {
-          const { palierDu, messageRelance, marquerRetours, ajouterRelance } = require("./relances.cjs");
+          const { palierDu, messageRelance, marquerRetours, ajouterRelance, etapeDemarrage, messageDemarrage } = require("./relances.cjs");
           const { ADMIN_EMAILS } = require("./auth.cjs");
           const remMap = {};
           (remindersData || []).forEach(r => { remMap[r.user_id] = r; });
-          const majRelances = async (uid, relances) => {
+          const majRelances = async (uid, relances, cle = "relances") => {
             const r = await fetch(`https://api.clerk.com/v1/users/${uid}/metadata`, {
               method: "PATCH",
               headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}` },
-              body: JSON.stringify({ private_metadata: { relances } }),
+              body: JSON.stringify({ private_metadata: { [cle]: relances } }),
             });
             if (!r.ok) throw new Error(`Clerk : enregistrement de la relance refusé (HTTP ${r.status}) pour ${uid}`);
           };
@@ -355,12 +355,14 @@ module.exports = async function handler(req, res) {
               u.private_metadata = { ...u.private_metadata, relances: retours };
             }
             const palier = palierDu(u);
-            if (!palier) continue;
+            const etape = palier ? null : etapeDemarrage(u); // séquence de démarrage (J+2, J+5) des nouveaux inscrits
+            if (!palier && !etape) continue;
             const email = primaryEmail(u);
             if (u.banned || ADMIN_EMAILS.includes((email || "").toLowerCase())) continue;
             const consent = consentMap[u.id] || {};
+            // Démarrage = message de service (prise en main du compte) : par email même sans les conseils de Bob
             const canal = consent.notifications && subMap[u.id] ? "push"
-              : email && (consent.notifications || consent.marketing) && relancesEmail < RELANCES_EMAIL_MAX ? "email" : null;
+              : email && (etape || consent.notifications || consent.marketing) && relancesEmail < RELANCES_EMAIL_MAX ? "email" : null;
             if (!canal) continue;
 
             const profile = profileMap[u.id] || {};
@@ -375,17 +377,25 @@ module.exports = async function handler(req, res) {
               gami: null, parcours: parcoursState?.termine ? null : parcoursState,
               joursInactif: 7, // sans gamification ni astuce : l'action la plus utile
             });
-            const msg = messageRelance(palier, { ville: profile.ville, action, conseil: conseilDuJour(today, month), profilComplet });
+            let probleme = null;
+            if (etape === 2 && profilComplet) {
+              const { data: diag } = await supabase.from("diagnostics").select("problemes")
+                .eq("user_id", u.id).order("created_at", { ascending: false }).limit(1).maybeSingle();
+              probleme = Array.isArray(diag?.problemes) ? diag.problemes[0] || null : null;
+            }
+            const contexte = { ville: profile.ville, action, conseil: conseilDuJour(today, month), profilComplet, probleme };
+            const msg = palier ? messageRelance(palier, contexte) : messageDemarrage(etape, contexte);
+            const typeMsg = palier ? `relance_${palier}` : `demarrage_${etape}`;
 
             try {
               if (canal === "push") {
                 await webpush.sendNotification(subMap[u.id], JSON.stringify({
                   title: msg.title, body: msg.body, icon: "/icon-192.png", tag: "mg360-relance",
-                  url: msg.url, actionRoute: msg.url, t: jetonOuverture(u.id, today, `relance_${palier}`),
+                  url: msg.url, actionRoute: msg.url, t: jetonOuverture(u.id, today, typeMsg),
                 }));
                 if (remMap[u.id]) {
                   await supabase.from("reminders").update({
-                    notif_log: appendNotifLog(remMap[u.id].notif_log, { date: today, priority: 5, type: `relance_${palier}`, slot }),
+                    notif_log: appendNotifLog(remMap[u.id].notif_log, { date: today, priority: 5, type: typeMsg, slot }),
                     updated_at: new Date().toISOString(),
                   }).eq("user_id", u.id);
                 }
@@ -410,7 +420,8 @@ module.exports = async function handler(req, res) {
               else await require("./alerting.cjs").reportServerError("Tâche planifiée — relance des inactifs", e, { user: u.id });
               continue;
             }
-            await majRelances(u.id, ajouterRelance(u, { p: palier, at: today, canal }));
+            if (palier) await majRelances(u.id, ajouterRelance(u, { p: palier, at: today, canal }));
+            else await majRelances(u.id, [...(u.private_metadata?.demarrage || []), etape], "demarrage");
             relancesDuJour.add(u.id);
             pushedToday.add(u.id);
           }

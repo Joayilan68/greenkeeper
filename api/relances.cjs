@@ -4,6 +4,8 @@
 // février, où le gazon demande peu), puis silence jusqu'au retour. Historique dans Clerk,
 // private_metadata.relances (6 dernières) : { p: palier, at: AAAA-MM-JJ, canal, retour? },
 // qui sert aussi au taux de retour de Pilotage.
+// Séquence de démarrage : un inscrit qui n'est pas revenu depuis le jour de son inscription reçoit un
+// message à J+2 puis à J+5 (avant la relance de J+7), historique dans private_metadata.demarrage.
 
 const JOUR = 86400000;
 const SEUILS = [7, 21, 45];
@@ -87,6 +89,43 @@ function statsRelances(users, now = Date.now()) {
   return { inactifs, envoyees, parCanal, mesurables, retours };
 }
 
+// Séquence de démarrage : étape due aujourd'hui (2 ou 5) ou null. Seulement si aucune visite depuis
+// le jour de l'inscription ; une étape dépassée sans envoi est sautée (jamais deux messages le même jour).
+const ETAPES_DEMARRAGE = [2, 5];
+function etapeDemarrage(u, now = Date.now()) {
+  if (!u.created_at) return null;
+  const age = Math.floor((now - u.created_at) / JOUR);
+  if (age < ETAPES_DEMARRAGE[0] || age >= SEUILS[0]) return null;
+  const visite = derniereVisite(u);
+  if (visite && jourDe(visite) > jourDe(u.created_at)) return null;
+  const envoyees = Array.isArray(u.private_metadata?.demarrage) ? u.private_metadata.demarrage : [];
+  const etape = Math.max(...ETAPES_DEMARRAGE.filter(e => age >= e));
+  return envoyees.includes(etape) ? null : etape;
+}
+
+// Messages de démarrage : J+2 = finir ce qui a été commencé (profil, problème du diagnostic) ;
+// J+5 = l'action utile de la semaine (moteur de notifications) ou le conseil du jour
+function messageDemarrage(etape, { ville, probleme, action, conseil, profilComplet }) {
+  if (etape === 2) {
+    if (!profilComplet) return {
+      title: "⏱️ Ton plan d'entretien est à 2 minutes",
+      body: "Indique ton type de gazon et ton sol : Bob te prépare un plan mois par mois, calé sur la météo de chez toi.",
+      url: "/setup",
+    };
+    if (probleme) return {
+      title: `🔬 ${probleme.nom} : voici quoi faire`,
+      body: `${probleme.solution || "Ton diagnostic a repéré ce problème."} Ton plan d'action t'attend dans l'app.`,
+      url: "/today",
+    };
+  }
+  const chez = ville ? ` à ${ville}` : "";
+  return {
+    title: action ? `🌿 Cette semaine${chez} : ${sansEmoji(action.title)}` : `🌿 Ton gazon${chez} cette semaine`,
+    body: `${action ? action.body : conseil.body} Chaque jour, « Aujourd'hui » te dit quoi faire selon la météo.`,
+    url: "/today",
+  };
+}
+
 const ajouterRelance = (u, entree) => [...historique(u), entree].slice(-6);
 
-module.exports = { palierDu, messageRelance, marquerRetours, ajouterRelance, statsRelances };
+module.exports = { palierDu, messageRelance, marquerRetours, ajouterRelance, statsRelances, etapeDemarrage, messageDemarrage };
