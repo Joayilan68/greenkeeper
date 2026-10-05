@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { useAuth, useUser } from "@clerk/clerk-react";
 import { card, cardTitle } from "../lib/styles";
-import { appelParrainage, normCode, oublierCode } from "../lib/codeParrainage";
+import { appelParrainage, codeRecu, normCode, oublierCode } from "../lib/codeParrainage";
 
 const bouton = { flex:1, border:"none", borderRadius:10, padding:"10px", fontSize:13, fontWeight:800, cursor:"pointer", fontFamily:"inherit" };
 
@@ -12,7 +12,7 @@ export default function CarteParrainage() {
   const { getToken } = useAuth();
   const { user } = useUser();
   const [info, setInfo] = useState(null);
-  const [saisie, setSaisie] = useState("");
+  const [saisie, setSaisie] = useState(() => codeRecu() || ""); // code reçu par lien, à valider ici si l'inscription l'a manqué
   const [msg, setMsg] = useState("");
 
   useEffect(() => {
