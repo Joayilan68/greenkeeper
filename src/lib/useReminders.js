@@ -12,7 +12,7 @@ import { supabase } from "./supabase";
 export const REMINDER_TYPES = [
   { id:"tonte",     icon:"✂️", label:"Tonte",               desc:"Printemps/automne : 5-7j • Été : 4-5j" },
   { id:"arrosage",  icon:"💧", label:"Arrosage",             desc:"Selon météo et type de sol" },
-  { id:"engrais",   icon:"🌱", label:"Engrais",              desc:"Délai min. 45 jours entre applications" },
+  { id:"engrais",   icon:"🌱", label:"Engrais",              desc:"Délai min. 90 jours entre applications (1 par saison)" },
   { id:"fongicide", icon:"🦠", label:"Prévention maladies", desc:"Surveillance si conditions à risque" },
   { id:"aeration",  icon:"🌀", label:"Aération",             desc:"1-2 fois/an • délai min. 90 jours" },
   { id:"desherbage",icon:"🪴", label:"Désherbage",           desc:"Délai min. 21 jours entre traitements" },
@@ -143,7 +143,7 @@ export function useReminders(syncFromReminders) {
     const INTERVALLES = {
       tonte:     5,  // printemps/automne (été géré dynamiquement)
       arrosage:  3,
-      engrais:   45,
+      engrais:   90,
       fongicide: 14,
       aeration:  90,
       desherbage:21,

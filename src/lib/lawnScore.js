@@ -77,11 +77,11 @@ export function calcLawnScore({ weather, profile, history = [], month, diagnosti
     strengths.push({ icon:"🤖", label:"Tonte gérée par robot ✓" });
   }
 
-  // ── 2. ENGRAIS — KB v4 : bloqué >90j, alerte >45j ──────────────────────
+  // ── 2. ENGRAIS — base : 90 j minimum entre deux engrais (1 par saison, 4 au plus par an) ──
   if (deSaison("engrais_starter", "engrais_ete", "engrais_automne", "engrais_hiver")) {
     const dernierEngrais = lastAction(history, "engrais", ref);
-    if (dernierEngrais > 90)      { deductNutriments += 15; issues.push({ icon:"🌱", label: dernierEngrais >= JAMAIS ? "Aucun engrais enregistré" : `Aucun engrais depuis ${dernierEngrais}j`, impact:-15 }); }
-    else if (dernierEngrais > 45) { deductNutriments += 8;  issues.push({ icon:"🌱", label:"Engrais en retard (délai 45j min)", impact:-8 }); }
+    if (dernierEngrais > 150)     { deductNutriments += 15; issues.push({ icon:"🌱", label: dernierEngrais >= JAMAIS ? "Aucun engrais enregistré" : `Aucun engrais depuis ${dernierEngrais}j`, impact:-15 }); }
+    else if (dernierEngrais > 90) { deductNutriments += 8;  issues.push({ icon:"🌱", label:"Engrais de saison à prévoir", impact:-8 }); }
     else                          { strengths.push({ icon:"🌱", label:"Fertilisation à jour ✓" }); }
   }
 

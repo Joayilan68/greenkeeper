@@ -11,7 +11,7 @@ L'automne est la saison idéale pour semer un gazon, mais **le printemps est la 
 
 ## La bonne période
 
-Les graines de gazon germent quand **la température du sol dépasse 10 à 12 °C** (12 °C dans le nord et l'est), de façon durable. En France, cela correspond en général à :
+Les graines de gazon germent quand **la température du sol dépasse 10 °C**, de façon durable. En France, cela correspond en général à :
 
 | Région | Fenêtre de printemps |
 |---|---|

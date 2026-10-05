@@ -162,7 +162,7 @@ const CALENDRIER = {
       if (isObjectifNaturel(profil)) return false; // → organique suggéré ailleurs
       if (gelPossible(meteo)) return false;
       if (tropFroid(meteo, 8)) return false;
-      if (dernierJour(history, "engrais") < 45) return false;
+      if (dernierJour(history, "engrais") < 90) return false;
       const zone = zoneClimatique(profil?.ville, profil?._coords);
       if (zone === "nord_est" || zone === "nord") return score < 80 && (meteo?.temp_max || 0) >= 10;
       return score < 80;
@@ -246,7 +246,7 @@ const CALENDRIER = {
       if (isGazonBermuda(profil)) return false;
       if (isObjectifNaturel(profil)) return false;
       if (solDetrempé(meteo)) return false;
-      if (dernierJour(history, "engrais") < 45) return false;
+      if (dernierJour(history, "engrais") < 90) return false;
       if (profil?.pelouse === "sec" || profil?.pelouse === "chaud") return score < 75;
       const zone = zoneClimatique(profil?.ville, profil?._coords);
       if (zone === "sud" || zone === "sud_ouest") return score < 90;
@@ -359,7 +359,7 @@ const CALENDRIER = {
       if (isObjectifNaturel(profil)) return false;
       if (gelPossible(meteo)) return false;
       if (solDetrempé(meteo)) return false;
-      if (dernierJour(history, "engrais") < 45) return false;
+      if (dernierJour(history, "engrais") < 90) return false;
       return score < 80;
     },
     max_par_an:   1,
@@ -383,7 +383,7 @@ const CALENDRIER = {
       if (isGazonSynth(profil)) return false;
       if (isGazonBermuda(profil)) return false; // dormance
       if (isObjectifNaturel(profil)) return false;
-      if (dernierJour(history, "engrais") < 45) return false;
+      if (dernierJour(history, "engrais") < 45) return false; // exception de la base : 45 j après l'engrais d'automne
       return score < 70;
     },
     max_par_an:   1,

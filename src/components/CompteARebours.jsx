@@ -13,7 +13,7 @@ export default function CompteARebours({ profile, soilTemp, isPaid }) {
   const titre = c.jours <= 0 ? "C'est le moment de la 1re tonte !"
     : c.jours > 30 ? `1re tonte dans ~${Math.round(c.jours / 7)} semaines`
     : `1re tonte dans ~${c.jours} jour${c.jours > 1 ? "s" : ""}`;
-  const solChaud = typeof soilTemp === "number" && soilTemp >= c.soilMin;
+  const solChaud = typeof soilTemp === "number" && soilTemp >= c.solPousse;
 
   return (
     <div style={{ ...card(), background:"linear-gradient(135deg,rgba(129,199,132,0.14),rgba(13,43,26,0.6))", border:"1px solid rgba(129,199,132,0.3)" }}>
@@ -33,7 +33,7 @@ export default function CompteARebours({ profile, soilTemp, isPaid }) {
 
       <div style={{ fontSize:11, color:"#a5d6a7", marginTop:8, lineHeight:1.5 }}>
         {typeof soilTemp === "number"
-          ? `🌡️ Sol aujourd'hui : ${Math.round(soilTemp)}°C — l'herbe repart vers ${c.soilMin}°C.${solChaud && c.jours > 0 && c.jours <= 30 ? " Ça se réchauffe : surveille la pousse, la 1re tonte peut arriver plus tôt." : ""}`
+          ? `🌡️ Sol aujourd'hui : ${Math.round(soilTemp)}°C — l'herbe repart vers ${c.solPousse}°C.${solChaud && c.jours > 0 && c.jours <= 30 ? " Ça se réchauffe : surveille la pousse, la 1re tonte peut arriver plus tôt." : ""}`
           : isPaid ? "🌡️ Température du sol indisponible pour le moment."
           : "🌡️ En Premium, suis la température réelle de ton sol pour savoir quand l'herbe repart."}
       </div>

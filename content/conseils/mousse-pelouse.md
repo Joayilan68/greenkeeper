@@ -43,7 +43,7 @@ La mousse morte reste en place et étouffe toujours le gazon. **2 à 3 semaines 
 
 ## Étape 3 : regarnir les trous
 
-Là où la mousse était dense, le sol est souvent nu après le passage du râteau. **Regarnissez sans attendre**, sinon la mousse ou les mauvaises herbes reprendront la place. En automne, tant que le sol dépasse 10 à 12 °C, c'est la période idéale (voir notre [guide du regarnissage](/conseils/regarnir-gazon-automne)). À l'ombre, choisissez un mélange riche en fétuque rouge.
+Là où la mousse était dense, le sol est souvent nu après le passage du râteau. **Regarnissez sans attendre**, sinon la mousse ou les mauvaises herbes reprendront la place. En automne, tant que le sol dépasse 10 °C, c'est la période idéale (voir notre [guide du regarnissage](/conseils/regarnir-gazon-automne)). À l'ombre, choisissez un mélange riche en fétuque rouge.
 
 ## Étape 4 : corriger la cause (le plus important)
 
