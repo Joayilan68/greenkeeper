@@ -383,7 +383,7 @@ const CALENDRIER = {
       if (isGazonSynth(profil)) return false;
       if (isGazonBermuda(profil)) return false; // dormance
       if (isObjectifNaturel(profil)) return false;
-      if (dernierJour(history, "engrais") < 90) return false;
+      if (dernierJour(history, "engrais") < 45) return false; // exception de la base : 45 j après l'engrais d'automne
       return score < 70;
     },
     max_par_an:   1,
