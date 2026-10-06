@@ -25,9 +25,9 @@ export default function SubscribeSuccess() {
       {/* Liste des bénéfices Premium */}
       <div style={{ background:"rgba(76,175,80,0.08)", border:"1px solid rgba(76,175,80,0.25)", borderRadius:14, padding:"14px 18px", marginBottom:28, textAlign:"left", maxWidth:380, width:"100%" }}>
         {[
-          "🤖 Recommandations IA personnalisées",
+          "🤖 Recommandations personnalisées de Bob",
           "📍 Météo temps réel + alertes",
-          "💧 Calcul d'arrosage intelligent",
+          "💧 Calcul d'arrosage précis",
           "📅 Planning 7 jours adapté météo",
           "✅ Historique illimité",
           "⚠️ Alertes gel, canicule, orages",

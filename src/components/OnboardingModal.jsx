@@ -59,9 +59,9 @@ const USAGES = [
 ];
 
 const FEATURES = [
-  { icon: "📅", title: "Planning intelligent",  desc: "Votre programme d'entretien personnalisé, semaine par semaine.", premium: false },
-  { icon: "🤖", title: "Bob, votre IA gazon",   desc: "Posez toutes vos questions à votre expert pelouse disponible 24h/24.", premium: true },
-  { icon: "📸", title: "Diagnostic photo",       desc: "Photographiez votre gazon — notre IA analyse et ajuste votre score en temps réel. Valide 7 jours.", premium: true },
+  { icon: "📅", title: "Planning personnalisé",  desc: "Votre programme d'entretien personnalisé, semaine par semaine.", premium: false },
+  { icon: "🤖", title: "Bob, votre assistant gazon",   desc: "Posez toutes vos questions à votre expert pelouse disponible 24h/24.", premium: true },
+  { icon: "📸", title: "Diagnostic photo",       desc: "Photographiez votre gazon — Bob l'analyse et ajuste votre score en temps réel. Valide 7 jours.", premium: true },
   { icon: "🌦️", title: "Météo en temps réel",   desc: "Conseils adaptés aux conditions climatiques de votre jardin.", premium: true },
   { icon: "🏆", title: "GreenPoints & Ligues",  desc: "Gagnez des points, montez en ligue et restez motivé toute la saison.", premium: false },
 ];

@@ -152,13 +152,13 @@ module.exports = async function handler(req, res) {
     if (tier === "unknown") {
       return res.status(401).json({
         error:   "Authentification requise",
-        message: "Connectez-vous pour accéder aux recommandations IA.",
+        message: "Connectez-vous pour accéder aux recommandations de Bob.",
       });
     }
     if (tier === "free") {
       return res.status(403).json({
         error:   "Fonctionnalité réservée aux membres Premium",
-        message: "Passez Premium pour débloquer les recommandations IA.",
+        message: "Passez Premium pour débloquer les recommandations de Bob.",
       });
     }
     // Admin et Premium : pas de rate limiting — cache localStorage côté client
