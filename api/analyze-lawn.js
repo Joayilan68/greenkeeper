@@ -292,7 +292,7 @@ Si la photo ne montre pas de gazon : score_visuel 0 et explique dans resume.`;
       // Groq a retourné du texte brut (erreur HTTP, rate limit, etc.)
       await require("./alerting.cjs").reportServerError("Diagnostic photo — réponse Groq illisible",
         new Error(groqRawText.slice(0, 300)), { "Statut HTTP": groqRes.status });
-      const err = new Error("Service IA temporairement indisponible. Réessaie dans quelques secondes.");
+      const err = new Error("Bob est momentanément indisponible. Réessaie dans quelques secondes.");
       err.reported = true;
       throw err;
     }
@@ -308,7 +308,7 @@ Si la photo ne montre pas de gazon : score_visuel 0 et explique dans resume.`;
         { "Statut HTTP": groqRes.status, "Code": groqData.error.code || "—" });
       const err = new Error(isRate
         ? "Nos serveurs d'analyse sont très sollicités en ce moment 😅 Patiente quelques secondes et relance — ce n'est pas lié à toi."
-        : "Service IA temporairement indisponible. Réessaie dans quelques secondes.");
+        : "Bob est momentanément indisponible. Réessaie dans quelques secondes.");
       err.reported = true;
       throw err;
     }
@@ -471,12 +471,12 @@ Si la photo ne montre pas de gazon : score_visuel 0 et explique dans resume.`;
   const { res: groqRes, raw: groqRaw } = await groqChatWithRetryAnon(groqBody);
   let groqData;
   try { groqData = JSON.parse(groqRaw); }
-  catch { throw new Error("Service IA temporairement indisponible. Réessaie dans quelques secondes."); }
+  catch { throw new Error("Bob est momentanément indisponible. Réessaie dans quelques secondes."); }
   if (groqData.error) {
     const isRate = groqRes.status === 429 || /rate.?limit/i.test(groqData.error.message || "");
     throw new Error(isRate
       ? "Nos serveurs d'analyse sont très sollicités 😅 Patiente quelques secondes et relance."
-      : "Service IA temporairement indisponible. Réessaie dans quelques secondes.");
+      : "Bob est momentanément indisponible. Réessaie dans quelques secondes.");
   }
   const rawText = groqData.choices?.[0]?.message?.content || "";
   let analysis;

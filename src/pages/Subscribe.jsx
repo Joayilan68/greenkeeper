@@ -31,9 +31,9 @@ const FEATURES_FREE = [
 ];
 
 const FEATURES_PREMIUM = [
-  "🤖 Recommandations IA personnalisées",
+  "🤖 Recommandations personnalisées de Bob",
   "📍 Météo temps réel + alertes",
-  "💧 Calcul d'arrosage intelligent",
+  "💧 Calcul d'arrosage précis",
   "📅 Planning 7 jours adapté météo",
   "✅ Historique illimité",
   "⚠️ Alertes gel, canicule, orages",

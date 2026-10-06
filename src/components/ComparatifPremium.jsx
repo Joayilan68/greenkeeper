@@ -2,7 +2,7 @@
 // Tableau comparatif Gratuit vs Premium — réutilisable.
 // Utilisé sur : page Diagnostic (utilisateur Free) + page Souscription.
 // Objectif : justifier le prix de l'abonnement par un socle d'arguments concrets
-// (l'IA n'est qu'une ligne parmi d'autres — plus l'unique argument).
+// (Bob n'est qu'une ligne parmi d'autres — plus l'unique argument).
 import React from "react";
 
 const ROWS = [
@@ -15,8 +15,8 @@ const ROWS = [
   { f: "Météo temps réel & alertes",               free: "—",     prem: "✓" },
   { f: "Données agronomiques (ET₀, temp. du sol)", free: "—",     prem: "✓" },
   { f: "Arrosage précis (doses & durées)",         free: "—",     prem: "✓" },
-  { f: "🤖 Bob, l'assistant IA gazon 24/7",        free: "—",     prem: "✓" },
-  { f: "📸 Diagnostic photo par IA",               free: "—",     prem: "✓" },
+  { f: "🤖 Bob, votre assistant gazon 24/7",        free: "—",     prem: "✓" },
+  { f: "📸 Diagnostic photo par Bob",               free: "—",     prem: "✓" },
   { f: "Score maximum atteignable",                free: "90 %",  prem: "100 %" },
 ];
 

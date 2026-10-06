@@ -202,7 +202,7 @@ export default function Diagnostic() {
           <img src="/mg360-mascot-transparent.png" alt="MG360" style={{ width:40, height:40, objectFit:"contain" }} />
           <div>
             <div style={{ fontSize:20, fontWeight:800, color:"#F1F8F2" }}>Diagnostic Photo</div>
-            <div style={{ fontSize:12, color:"#66BB6A", marginTop:2 }}>Analyse IA de votre gazon</div>
+            <div style={{ fontSize:12, color:"#66BB6A", marginTop:2 }}>Bob diagnostique votre gazon</div>
           </div>
         </div>
       </div>
@@ -222,7 +222,7 @@ export default function Diagnostic() {
           <img src="/mg360-mascot-transparent.png" alt="MG360" style={{ width:40, height:40, objectFit:"contain" }} />
           <div>
             <div style={{ fontSize:20, fontWeight:800, color:"#F1F8F2" }}>Diagnostic Photo</div>
-            <div style={{ fontSize:12, color:"#66BB6A", marginTop:2 }}>Analyse IA de votre gazon</div>
+            <div style={{ fontSize:12, color:"#66BB6A", marginTop:2 }}>Bob diagnostique votre gazon</div>
           </div>
         </div>
       </div>
@@ -234,7 +234,7 @@ export default function Diagnostic() {
             <div style={{ fontSize:48, marginBottom:12 }}>🔒</div>
             <div style={{ fontSize:16, fontWeight:800, color:"#66BB6A", marginBottom:8 }}>Diagnostic Photo — Premium</div>
             <div style={{ fontSize:13, color:"#81c784", lineHeight:1.6, marginBottom:16 }}>
-              Prenez une photo de votre gazon et laissez l'IA détecter les maladies, carences et problèmes en quelques secondes.
+              Prenez une photo de votre gazon et laissez Bob détecter les maladies, carences et problèmes en quelques secondes.
             </div>
 
             {/* Avant / Après floutés */}
@@ -256,9 +256,9 @@ export default function Diagnostic() {
               🔒 Résultats réels d'un utilisateur Premium — débloquez le diagnostic pour voir votre gazon évoluer
             </div>
 
-            {/* Arguments IA */}
+            {/* Arguments Premium */}
             <div style={{ background:"rgba(102,187,106,0.08)", border:"1px solid rgba(102,187,106,0.2)", borderRadius:12, padding:"12px 14px", marginBottom:16, textAlign:"left" }}>
-              <div style={{ fontSize:12, fontWeight:700, color:"#66BB6A", marginBottom:8 }}>🤖 Ce que l'IA fait pour vous :</div>
+              <div style={{ fontSize:12, fontWeight:700, color:"#66BB6A", marginBottom:8 }}>🤖 Ce que Bob fait pour vous :</div>
               {[
                 "💡 Recommandations personnalisées selon votre gazon et météo",
                 "🛒 Conseils d'achat optimisés — plus de produits inutiles",
@@ -367,7 +367,7 @@ export default function Diagnostic() {
           </div>
           <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
             <button onClick={analyze} disabled={loading} style={{ ...btn.primary, fontSize:14, padding:"14px", opacity: loading ? 0.7 : 1 }}>
-              {loading ? "🔍 Analyse en cours..." : "🔬 Lancer le diagnostic IA"}
+              {loading ? "🔍 Analyse en cours..." : "🔬 Lancer le diagnostic de Bob"}
             </button>
             <button onClick={() => fileRef.current.click()}    style={{ ...btn.ghost, fontSize:13 }}>📷 Reprendre une photo</button>
             <button onClick={() => galleryRef.current.click()} style={{ ...btn.ghost, fontSize:13 }}>🖼️ Choisir depuis la galerie</button>
@@ -380,7 +380,7 @@ export default function Diagnostic() {
             <div style={{ fontSize:14, fontWeight:700, color:"#a5d6a7", marginBottom:8 }}>Analyse en cours...</div>
             <div style={{ fontSize:12, color:"#81c784", lineHeight:1.8 }}>
               1. Upload de la photo sur le serveur<br/>
-              2. Analyse de la photo par Bob, notre IA<br/>
+              2. Analyse de la photo par Bob<br/>
               3. Génération du rapport
             </div>
           </div>

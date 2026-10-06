@@ -253,7 +253,7 @@ export default function AIAssistant() {
               <div>
                 <div style={{ fontSize:14, fontWeight:800, color:"#a5d6a7" }}>Bob</div>
                 <div style={{ fontSize:10, color:"#81c784" }}>
-                  Assistant gazon IA · Score : {score}/100
+                  Ton assistant gazon · Score : {score}/100
                   {isAdmin && " · 👑 Admin"}
                   {quota && !quota.unlimited && ` · ${quota.remaining}/${quota.limit} question${quota.limit > 1 ? "s" : ""} ${quota.period === "day" ? "aujourd'hui" : "ce mois-ci"}`}
                 </div>

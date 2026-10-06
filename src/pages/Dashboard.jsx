@@ -352,8 +352,19 @@ export default function Dashboard() {
               )}
             </div>
           ) : (
-            <div style={{ ...card(), display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:14 }}>
-              <div style={{ fontSize:12, color:"#81c784", marginBottom:8 }}>🔒 Météo temps réel</div>
+            // Gratuit : le temps du jour ; vent, pluie et alertes détaillées en Premium
+            <div style={{ ...card(), display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:12, textAlign:"center" }}>
+              <div style={{ fontSize:10, color:"#81c784", fontWeight:700, marginBottom:4 }}>📍 {locationName || "Aujourd'hui"}</div>
+              {weather ? (
+                <>
+                  <div style={{ fontSize:34 }}>{getWMO(weather.code).icon}</div>
+                  <div style={{ fontSize:22, fontWeight:800, lineHeight:1.1 }}>{Math.round(weather.temp_max)}°C</div>
+                  <div style={{ fontSize:11, color:"#81c784", marginBottom:8 }}>{getWMO(weather.code).label}</div>
+                </>
+              ) : (
+                <div style={{ fontSize:12, color:"#81c784", margin:"10px 0" }}>{loading || locLoading ? "🌿 Détection..." : "Météo indisponible"}</div>
+              )}
+              <div style={{ fontSize:10, color:"#81c784", marginBottom:6 }}>🔒 Vent, pluie, alertes</div>
               <button onClick={() => navigate("/subscribe")} style={{ background:"linear-gradient(135deg,#F59E0B,#D97706)", color:"#1a1a1a", fontWeight:800, border:"none", borderRadius:8, cursor:"pointer", padding:"6px 14px", fontSize:11 }}>Premium</button>
             </div>
           )}

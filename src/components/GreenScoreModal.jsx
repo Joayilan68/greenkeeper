@@ -87,7 +87,7 @@ export default function GreenScoreModal({ onClose }) {
             📸 Bonus diagnostic photo (Premium)
           </div>
           <div style={{ background:"rgba(255,255,255,0.04)", borderRadius:10, padding:"10px 12px", marginBottom:18, border:"1px solid rgba(255,255,255,0.06)", fontSize:12, color:"#81c784", lineHeight:1.6 }}>
-            Si vous prenez une photo de votre pelouse, notre IA peut ajuster le score jusqu'à <strong style={{ color:"#a5d6a7" }}>± 30 points</strong> pendant <strong style={{ color:"#a5d6a7" }}>7 jours</strong>. Cette analyse est purement indicative.
+            Si vous prenez une photo de votre pelouse, Bob peut ajuster le score jusqu'à <strong style={{ color:"#a5d6a7" }}>± 30 points</strong> pendant <strong style={{ color:"#a5d6a7" }}>7 jours</strong>. Cette analyse est purement indicative.
           </div>
 
           {/* Section 3 — Échelle */}

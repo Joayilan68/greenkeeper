@@ -89,7 +89,7 @@ export default function DemoApp() {
     diagnostic: (
       <div style={{ ...cardStyle, textAlign:"center", padding:24 }}>
         <div style={{ fontSize:48, marginBottom:10 }}>📸</div>
-        <div style={{ fontSize:16, fontWeight:800, color:G.text, marginBottom:8 }}>Diagnostic photo par l'IA</div>
+        <div style={{ fontSize:16, fontWeight:800, color:G.text, marginBottom:8 }}>Diagnostic photo par Bob</div>
         <div style={{ fontSize:13, color:G.soft, lineHeight:1.6, marginBottom:18 }}>
           Prends une photo, Bob détecte maladies, carences et zones à problème, et te donne ton score /100.
         </div>

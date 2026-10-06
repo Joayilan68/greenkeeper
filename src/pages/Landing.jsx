@@ -202,7 +202,7 @@ export default function Landing() {
           <h2 style={{ fontSize:20, fontWeight:800, textAlign:"center", margin:"0 0 18px" }}>Tout pour une belle pelouse</h2>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
             <Feature icon="🔬" title="Le diagnostic de Bob" desc="Il analyse ta photo et identifie les problèmes de ton gazon." />
-            <Feature icon="🌦️" title="Arrosage intelligent" desc="Les bonnes doses au bon moment, calculées avec ta météo réelle." />
+            <Feature icon="🌦️" title="Arrosage au bon moment" desc="Les bonnes doses au bon moment, calculées avec ta météo réelle." />
             <Feature icon="🏆" title="GreenPoints & ligues" desc="L'entretien devient un jeu : badges, séries, classement." />
             <Feature icon="🌱" title="Gratuit, pour de vrai" desc="Après tes 7 jours d'essai, tu gardes une version gratuite : score, planning et conseils. Sans carte, sans piège." />
           </div>

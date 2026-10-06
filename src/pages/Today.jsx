@@ -320,12 +320,12 @@ export default function Today() {
     });
   const pasPrevu    = actionStatuses.filter(a => a?.status === "off_season");
 
-  // ── Clé localStorage IA du jour ─────────────────────────────────────────
+  // ── Clé localStorage de la recommandation du jour ─────────────────────────────────────────
   const AI_RECO_KEY = "mg360_ai_reco_today";
   // Ref : empêche les appels multiples (closure stale proof)
   const aiCalledRef = React.useRef(false);
 
-  // ── Fonction d'appel API IA ───────────────────────────────────────────────
+  // ── Appel de la recommandation de Bob ───────────────────────────────────────────────
   // Pas de useCallback — évite les closures stales sur weather/recommended
   const fetchAI = async () => {
     if (!isPaid) return;
@@ -418,10 +418,10 @@ export default function Today() {
             setAiReco(saved.text);
           } else {
             // Pas de cache → message explicite
-            setAiReco("⏳ Limite quotidienne atteinte. Revenez demain pour une nouvelle recommandation IA.");
+            setAiReco("⏳ Limite quotidienne atteinte. Revenez demain pour une nouvelle recommandation de Bob.");
           }
         } catch {
-          setAiReco("⏳ Limite quotidienne atteinte. Revenez demain pour une nouvelle recommandation IA.");
+          setAiReco("⏳ Limite quotidienne atteinte. Revenez demain pour une nouvelle recommandation de Bob.");
         }
         setAiLoading(false);
         return;
@@ -438,7 +438,7 @@ export default function Today() {
       }
     } catch {
       // Erreur réseau — silencieux si déjà une reco affichée
-      if (!aiReco) setAiReco("Impossible de contacter l'IA.");
+      if (!aiReco) setAiReco("Impossible de contacter Bob.");
     }
     setAiLoading(false);
   };
@@ -518,7 +518,7 @@ export default function Today() {
 
 
 
-        {/* Météo — Premium uniquement */}
+        {/* Météo — Premium complète */}
         {isPaid && weather && (()=>{ const w=getWMO(weather.code); return (
           <div style={{...card(),background:"rgba(76,175,80,0.12)",border:"1px solid rgba(76,175,80,0.25)"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
@@ -535,12 +535,22 @@ export default function Today() {
             </div>
           </div>
         ); })()}
-        {!isPaid && (
-          <div style={{...card(),textAlign:"center",padding:14,background:"rgba(255,255,255,0.03)"}}>
-            <div style={{fontSize:13,color:"#81c784",marginBottom:8}}>🔒 Météo temps réel — Premium uniquement</div>
-            <button onClick={()=>navigate("/subscribe")} style={{background:"linear-gradient(135deg,#F59E0B,#D97706)",color:"#1a1a1a",fontWeight:800,border:"none",borderRadius:10,padding:"8px 20px",fontSize:12,cursor:"pointer",width:"auto"}}>Passer Premium</button>
+        {!isPaid && weather && (()=>{ const w=getWMO(weather.code); return (
+          // Gratuit : le temps du jour ; pluie, humidité et vent en Premium
+          <div style={{...card(),background:"rgba(76,175,80,0.08)",border:"1px solid rgba(76,175,80,0.2)"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div>
+                <div style={{fontSize:32,fontWeight:800}}>{Math.round(weather.temp_max)}°C</div>
+                <div style={{fontSize:13,color:"#81c784"}}>{w.label}</div>
+                <div style={{fontSize:11,color:"#81c784",marginTop:4}}>🔒 Pluie, humidité et vent : <span onClick={()=>navigate("/subscribe")} style={{color:"#F59E0B",cursor:"pointer",fontWeight:700}}>Premium</span></div>
+              </div>
+              <div style={{fontSize:52}}>{w.icon}</div>
+            </div>
+            <div style={{fontSize:10,color:"#81c784",opacity:0.6,marginTop:10,textAlign:"right"}}>
+              Données météo : <a href="https://open-meteo.com" target="_blank" rel="noopener noreferrer" style={{color:"#81c784",textDecoration:"underline"}}>Open-Meteo.com</a> · CC BY 4.0
+            </div>
           </div>
-        )}
+        ); })()}
 
         {/* Alertes météo */}
         {isPaid && alerts.map((a,i) => <AlertBanner key={i} alert={a} />)}
@@ -826,10 +836,10 @@ export default function Today() {
           )}
         </div>
 
-        {/* ── RECOMMANDATIONS IA ───────────────────────────────────────────── */}
+        {/* ── RECOMMANDATION DE BOB ────────────────────────────────────────── */}
         <div style={card()}>
           <div style={cardTitle}>
-            <span>🤖 Recommandations IA</span>
+            <span>🤖 Recommandation Bob</span>
             {isPaid && <button onClick={fetchAI} style={{background:"rgba(76,175,80,0.2)",border:"none",borderRadius:8,padding:"4px 10px",color:"#a5d6a7",fontSize:11,cursor:"pointer"}}>↻</button>}
           </div>
           {!isPaid ? (
