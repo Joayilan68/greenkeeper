@@ -838,6 +838,7 @@ module.exports = async function handler(req, res) {
                   offre
                     ? `Jusqu'au <b>${offre.finLabel}</b> : <b>Premium 1 an à ${euros(OFFRE.prixOffre)}</b> au lieu de ${euros(OFFRE.prixAnnuel)}, sur le site.`
                     : `Premium : ${euros(4.99)} par mois sans engagement, ou ${euros(OFFRE.prixAnnuel)} par an.`,
+                  "🎁 Autre possibilité : <b>parraine un ami</b> depuis Mon Gazon → « Parraine tes amis ». Il a 1 mois de Premium offert, et toi aussi dès qu'il utilise l'app.",
                 ], offre ? `Premium 1 an à ${euros(OFFRE.prixOffre)}` : "Passer Premium"),
               }),
             });

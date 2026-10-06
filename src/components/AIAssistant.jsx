@@ -11,6 +11,7 @@ import { useState, useRef, useEffect } from "react";
 import { useAuth, useUser } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
 import { isAndroidTWA } from "../lib/platform";
+import { OFFRE, offreEnCours } from "../lib/offreSaison";
 import { useProfile } from "../lib/useProfile";
 import { useWeather } from "../lib/useWeather";
 import { useSubscription } from "../lib/useSubscription";
@@ -339,7 +340,8 @@ export default function AIAssistant() {
               {quota.period === "day"
                 ? "Tu as posé toutes tes questions du jour. Bob te retrouve demain ! 🌿"
                 : <>Tes {quota.limit} questions gratuites du mois sont utilisées. Elles reviennent le 1er du mois.
-                    {!isPaid && !isAndroidTWA() && <> <span onClick={() => { setOpen(false); navigate("/subscribe"); }} style={{ color:"#a5d6a7", textDecoration:"underline", cursor:"pointer", fontWeight:700 }}>Passe Premium</span> pour 20 questions par jour.</>}</>}
+                    {!isPaid && !isAndroidTWA() && <> <span onClick={() => { setOpen(false); navigate("/subscribe"); }} style={{ color:"#a5d6a7", textDecoration:"underline", cursor:"pointer", fontWeight:700 }}>Passe Premium</span> pour 20 questions par jour{offreEnCours() ? ` (1re année à ${String(OFFRE.prixOffre).replace(".", ",")} € en ce moment)` : ""}.</>}
+                    {!isPaid && <div style={{ marginTop:6 }}>🎁 <span onClick={() => { setOpen(false); navigate("/my-lawn"); }} style={{ color:"#a5d6a7", textDecoration:"underline", cursor:"pointer", fontWeight:700 }}>Parraine un ami</span> : 1 mois de Premium offert pour lui, et pour toi dès qu'il utilise l'app.</div>}</>}
             </div>
           )}
 
