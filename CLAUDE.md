@@ -9,6 +9,8 @@
 - **Jusqu'à décembre 2026 (décision du 05/10/2026)** : les nouvelles évolutions restent sur STA (validées par un test STA)
   et partent toutes ensemble en prod en décembre ; STA est donc en avance sur la PROD jusque-là. Un correctif urgent
   de PROD se fait sur `main`, puis `main` est fusionné dans `Staging`.
+  Chaque évolution laissée sur STA ajoute ses lignes de test dans `docs/recette/Recette_prod_decembre_2026.xlsx`
+  (recette à dérouler après la mise en prod).
 - Toute modification de schéma Supabase s'applique aux **deux** projets.
 - **Google Play** : l'app Android est une TWA (`fr.mongazon360.app`) qui charge mongazon360.fr en direct
   (service worker sans cache, `index.html` en no-store) → tout déploiement de `main` met à jour l'app
