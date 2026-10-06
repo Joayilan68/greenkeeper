@@ -659,26 +659,25 @@ module.exports = async function handler(req, res) {
       }
 
       // ── RELANCE FIN D'ESSAI PREMIUM (email + push) — créneau MATIN ─────────
-      // Lit l'état d'essai depuis Clerk (unsafe_metadata.trialStartedAt), relance
-      // à J-2, J-1 et J-0 les comptes non abonnés, une seule fois par jalon.
+      // Essai = 7 jours à partir de la création du compte (api/premium.cjs) ; relance à J-2, J-1
+      // et le dernier jour les comptes non abonnés, une seule fois par jalon.
       let trialRelances = 0;
       if (slot === "matin") {
         try {
-          const TRIAL_MS = 7 * 24 * 60 * 60 * 1000;
+          const { ESSAI_MS } = require("./premium.cjs");
           const clerkKey = process.env.CLERK_SECRET_KEY;
           for (const u of await getClerkUsers()) {
             const um = u.unsafe_metadata || {};
             const pm = u.public_metadata || {};
-            const trialStart = um.trialStartedAt;
-            if (!trialStart) continue;
+            if (!u.created_at) continue;
             if (pm.isSubscribed === true || pm.subscriptionStatus === "active"
                 || pm.subscriptionStatus === "trialing" || clerkGuestActive(pm)) continue;
 
-            const daysLeft = Math.ceil((Number(trialStart) + TRIAL_MS - Date.now()) / 86400000);
+            const daysLeft = Math.ceil((u.created_at + ESSAI_MS - Date.now()) / 86400000);
             let flagKey = null, when = null;
             if      (daysLeft === 2 && !um.trialRemindedJ2) { flagKey = "trialRemindedJ2"; when = "dans 2 jours"; }
             else if (daysLeft === 1 && !um.trialRemindedJ1) { flagKey = "trialRemindedJ1"; when = "demain"; }
-            else if (daysLeft <= 0 && !um.trialRemindedJ0)  { flagKey = "trialRemindedJ0"; when = "aujourd'hui"; }
+            else if (daysLeft <= 0 && daysLeft >= -1 && !um.trialRemindedJ0)  { flagKey = "trialRemindedJ0"; when = "aujourd'hui"; }
             if (!flagKey) continue;
 
             const email  = primaryEmail(u);

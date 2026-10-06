@@ -1,9 +1,16 @@
 // api/premium.cjs
-// Premium offert (famille, bêta-testeurs…) — règle unique côté serveur.
+// Premium offert (famille, bêta-testeurs…) et essai de 7 jours — règles uniques côté serveur.
 // Deux sources, toutes deux écrites uniquement par le serveur :
 //   - Clerk publicMetadata : guestAccess (true) + guestUntil ("AAAA-MM-JJ", absent = à vie)
 //   - Supabase user_access : status "guest" + guest_until (null = à vie)
 // La date de fin est incluse (accès jusqu'au soir du jour indiqué, heure de Paris).
+
+// Essai Premium : 7 jours à partir de la création du compte (date Clerk, que l'utilisateur ne peut pas modifier)
+const ESSAI_MS = 7 * 86400000;
+const essaiActif = (createdAt, now = Date.now()) => {
+  const t = typeof createdAt === "number" ? createdAt : Date.parse(createdAt);
+  return t > 0 && now < t + ESSAI_MS;
+};
 
 const todayParis = () => new Date().toLocaleDateString("fr-CA", { timeZone: "Europe/Paris" });
 
@@ -34,4 +41,4 @@ async function isGuestUser(userId, publicMetadata) {
   }
 }
 
-module.exports = { todayParis, clerkGuestActive, rowGuestActive, isGuestUser };
+module.exports = { ESSAI_MS, essaiActif, todayParis, clerkGuestActive, rowGuestActive, isGuestUser };
