@@ -82,13 +82,9 @@ module.exports = async function handler(req, res) {
                        clerkUser.publicMetadata?.subscriptionStatus === "active" ||
                        clerkUser.publicMetadata?.subscriptionStatus === "trialing";
 
-  // ✅ Essai gratuit 7 jours : posé côté client dans unsafeMetadata.trialStartedAt.
-  // Le serveur DOIT le reconnaître, sinon un nouvel inscrit en essai reçoit un 403
-  // « réservé aux membres Premium » et ne peut PAS faire son 1er diagnostic.
-  const TRIAL_MS   = 7 * 24 * 60 * 60 * 1000;
-  const trialMeta  = clerkUser.unsafeMetadata || clerkUser.unsafe_metadata || {};
-  const trialStart = Number(trialMeta.trialStartedAt) || 0;
-  const isTrial    = trialStart > 0 && Date.now() < trialStart + TRIAL_MS;
+  // Essai gratuit 7 jours à partir de la création du compte (règle unique api/premium.cjs) : un nouvel
+  // inscrit fait son 1er diagnostic sans recevoir « réservé aux membres Premium »
+  const isTrial    = require("./premium.cjs").essaiActif(clerkUser.createdAt);
 
   // Premium offert (famille, bêta…) encore valide — règle commune api/premium.cjs
   const isGuest = !isAdmin && !isPremium && await isGuestUser(clerkUserId, clerkUser.publicMetadata);

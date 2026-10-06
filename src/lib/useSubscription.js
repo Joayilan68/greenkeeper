@@ -7,6 +7,10 @@ const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
 
 // Premium offert (famille, bêta…) : guestAccess posé par le serveur, guestUntil = dernier jour inclus
 // (absent = à vie). Même règle que api/premium.cjs.
+// Essai Premium : 7 jours à partir de la création du compte Clerk (même règle que api/premium.cjs)
+const TRIAL_MS = 7 * 86400000;
+const debutEssai = (user) => (user?.createdAt ? new Date(user.createdAt).getTime() : 0);
+
 function guestActive(pm) {
   const until = pm?.guestUntil;
   return pm?.guestAccess === true
@@ -81,20 +85,9 @@ export function useSubscription() {
       }
     } catch { /* réseau indisponible — on retombe sur free */ }
 
-    // 4. Essai Premium 7 jours — OFFERT au 1er login (sans carte, sans friction).
-    //    Marqué une seule fois dans unsafeMetadata.trialStartedAt. Pendant la
-    //    fenêtre → tier "paid" (Premium complet). Ensuite → free + upsell.
-    //    (Sécurisé : l'utilisateur est authentifié → rate-limit diagnostic actif.)
-    try {
-      const TRIAL_MS = 7 * 24 * 60 * 60 * 1000;
-      const md = user.unsafeMetadata || {};
-      let trialStart = md.trialStartedAt;
-      if (!trialStart) {
-        trialStart = Date.now();
-        try { await user.update({ unsafeMetadata: { ...md, trialStartedAt: trialStart } }); } catch {}
-      }
-      if (trialStart && Date.now() < Number(trialStart) + TRIAL_MS) return "paid";
-    } catch { /* non bloquant */ }
+    // 4. Essai Premium 7 jours à partir de la création du compte (même règle que api/premium.cjs) :
+    //    Premium complet pendant la fenêtre, puis free + upsell.
+    if (debutEssai(user) && Date.now() < debutEssai(user) + TRIAL_MS) return "paid";
 
     return "free";
   }, [isSignedIn, user, getToken]);
@@ -119,19 +112,18 @@ export function useSubscription() {
   }, [computeTier]);
 
   // ── Infos essai Premium (pour bannière / compte à rebours) ────────────────
-  const TRIAL_MS       = 7 * 24 * 60 * 60 * 1000;
-  const trialStartedAt = user?.unsafeMetadata?.trialStartedAt;
+  const debut = debutEssai(user);
   const realPremium    = user?.publicMetadata?.isSubscribed === true
                       || user?.publicMetadata?.subscriptionStatus === "active"
                       || user?.publicMetadata?.subscriptionStatus === "trialing"
                       || guestActive(user?.publicMetadata);
-  const isTrial        = tier === "paid" && !realPremium && !!trialStartedAt
-                      && Date.now() < Number(trialStartedAt) + TRIAL_MS;
-  const trialDaysLeft  = trialStartedAt
-    ? Math.max(0, Math.ceil((Number(trialStartedAt) + TRIAL_MS - Date.now()) / 86400000))
+  const isTrial        = tier === "paid" && !realPremium && !!debut
+                      && Date.now() < Number(debut) + TRIAL_MS;
+  const trialDaysLeft  = debut
+    ? Math.max(0, Math.ceil((Number(debut) + TRIAL_MS - Date.now()) / 86400000))
     : 0;
-  const trialEnded     = tier === "free" && !!trialStartedAt
-                      && Date.now() >= Number(trialStartedAt) + TRIAL_MS;
+  const trialEnded     = tier === "free" && !!debut
+                      && Date.now() >= Number(debut) + TRIAL_MS;
 
   return {
     tier,

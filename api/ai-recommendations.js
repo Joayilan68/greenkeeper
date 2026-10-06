@@ -122,11 +122,8 @@ module.exports = async function handler(req, res) {
         const email = user.emailAddresses?.[0]?.emailAddress || "";
 
         const isAdmin   = user.publicMetadata?.role === "admin" || ADMIN_EMAILS.includes(email);
-        // Essai gratuit 7 jours (unsafeMetadata.trialStartedAt, posé côté client)
-        const TRIAL_MS   = 7 * 24 * 60 * 60 * 1000;
-        const trialMeta  = user.unsafeMetadata || user.unsafe_metadata || {};
-        const trialStart = Number(trialMeta.trialStartedAt) || 0;
-        const isTrial    = trialStart > 0 && Date.now() < trialStart + TRIAL_MS;
+        // Essai gratuit 7 jours à partir de la création du compte (règle unique api/premium.cjs)
+        const isTrial    = require("./premium.cjs").essaiActif(user.createdAt);
         const isPremium = user.publicMetadata?.isSubscribed === true ||
                           user.publicMetadata?.subscriptionStatus === "active" ||
                           user.publicMetadata?.subscriptionStatus === "trialing";
