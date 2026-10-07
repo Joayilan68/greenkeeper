@@ -1,6 +1,6 @@
 import { useWeather } from "../lib/useWeather";
 import { useProfile } from "../lib/useProfile";
-import { DAYS_FR, calcArrosage, getWMO } from "../lib/lawn";
+import { DAYS_FR, calcArrosage, getWMO, pluieUtile } from "../lib/lawn";
 import { card, scroll, header } from "../lib/styles";
 
 export default function Week() {
@@ -24,7 +24,7 @@ export default function Week() {
           const w = getWMO(day.code);
           const a = profile ? calcArrosage(month, profile, day) : null;
           const canTonte = day.precip < 3 && day.wind < 35 && day.temp_max > 8;
-          const needArros = a && a.mm > 0 && day.precip < 5;
+          const needArros = a && a.mm > 0 && pluieUtile(day) < 5;
           const tags = [];
           if (canTonte)   tags.push({ txt:`✂️ Tonte possible`,      bg:"rgba(76,175,80,0.2)" });
           else            tags.push({ txt:`❌ Tonte déconseillée`,   bg:"rgba(211,47,47,0.2)" });

@@ -6,7 +6,7 @@
 // → cohérence parfaite garantie entre les deux pages
 // ═══════════════════════════════════════════════════════════════════════════════
 
-import { MONTHLY_PLAN } from "./lawn";
+import { MONTHLY_PLAN, pluieUtile } from "./lawn";
 import CALENDRIER from "./calendrierActions.json";
 import ZONES from "./zonesGazon.json";
 import TONTE from "./tonteGazon.json";
@@ -180,8 +180,9 @@ export const ACTIONS_PLAN = [
       return Math.max(1, Math.floor(7 / freq));
     },
     getBlocked: (w, profile) => {
-      if (w?.precip >= 10) return { blocked: true, raison: "Forte pluie — arrosage inutile aujourd'hui" };
-      if (w?.precip >= 8)  return { blocked: true, raison: `Pluie ${w.precip}mm ≥ 8mm — arrosage inutile aujourd'hui` };
+      const pluie = pluieUtile(w); // pluie du jour et de la veille
+      if (pluie >= 10) return { blocked: true, raison: "Forte pluie — arrosage inutile aujourd'hui" };
+      if (pluie >= 8)  return { blocked: true, raison: `Pluie ${pluie}mm (hier et aujourd'hui) — arrosage inutile aujourd'hui` };
       return { blocked: false };
     },
     keywords:      ["arrosage"],

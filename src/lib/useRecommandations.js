@@ -4,6 +4,7 @@
 // 100% localStorage — zéro API — zéro latence
 
 import { useSaison } from "./useSaison";
+import { pluieUtile } from "./lawn";
 
 const KEY_DERNIERE_RECO = "gk_derniere_reco";
 
@@ -449,7 +450,7 @@ const CALENDRIER = {
       if (isGazonSynth(profil)) return false;
       if (isGazonBermuda(profil)) return false;
       if (gelPossible(meteo)) return false;
-      if ((meteo?.precip || 0) >= 8) return false;
+      if (pluieUtile(meteo) >= 8) return false; // pluie du jour et de la veille
       if (dernierJour(history, "arrosage") < 1) return false;
       if (profil?.arrosage === "automatique") return false;
       if (profil?.arrosage === "aucun") return false;

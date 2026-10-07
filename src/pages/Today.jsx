@@ -227,6 +227,7 @@ export default function Today() {
     ? calcArrosageSemis({
         et0: weather.et0,
         precip: weather.precip,
+        precipVeille: weather.precip_veille,
         type: parcours?.type === "regarnissage" ? "regarnissage" : "creation",
         debitMmH,
       })
@@ -567,7 +568,7 @@ export default function Today() {
                 <div style={{ marginTop:12, background:"rgba(74,222,128,0.1)", border:"1px solid rgba(74,222,128,0.25)", borderRadius:12, padding:"12px 14px", textAlign:"center" }}>
                   <div style={{ fontSize:14, fontWeight:800, color:"#4ade80" }}>✅ Pas d'arrosage nécessaire aujourd'hui</div>
                   <div style={{ fontSize:11, color:"#81c784", marginTop:4 }}>
-                    La pluie couvre les besoins ({arrosSemis.precip}mm · ET₀ {arrosSemis.et0}mm).
+                    La pluie couvre les besoins ({arrosSemis.precip}mm avec celle d'hier · ET₀ {arrosSemis.et0}mm).
                   </div>
                 </div>
               ) : (
@@ -787,7 +788,8 @@ export default function Today() {
                   : { color:"#f87171", bg:"rgba(248,113,113,0.15)", border:"rgba(248,113,113,0.3)" };
                 const badgeText =
                   status === "done_today" ? "✓ Fait aujourd'hui" :
-                  status === "too_soon"   ? `Dans ${daysLeft}j` :
+                  status === "too_soon"   ? (action.id === "arrosage" // décidé le jour même selon la pluie
+                    ? `${daysLeft === 1 ? "Demain" : `Dans ${daysLeft}j`}, selon la météo` : `Dans ${daysLeft}j`) :
                   status === "blocked"   ? `⛔ ${blockedReason?.split(" — ")[0] || "Bloqué"}` :
                   `⚠️ Excl. ${daysLeft}j`;
                 return (
