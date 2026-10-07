@@ -10,5 +10,6 @@
   "alias": {
     "universel": "universel", "inconnu": "universel", "sport": "sport", "ombre": "ombre", "rustique": "rustique",
     "ornemental": "ornement", "ornement": "ornement", "bermuda": "bermuda", "chaud": "bermuda", "sec": "rustique"
-  }
+  },
+  "pluie": { "codeMeteoMin": 51, "mmJour": 2, "mmVeille": 10 }
 }

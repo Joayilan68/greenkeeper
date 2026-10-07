@@ -68,6 +68,14 @@ const tropFroid   = (w, s = 10) => w?.temp_max !== undefined && w.temp_max < s;
 const pluiePrevue = (w, s = 5)  => w?.precip   !== undefined && w.precip > s;
 const solDetrempé = (w) => w?.precip !== undefined && w.precip > 15;
 const ventFort    = (w) => w?.wind   !== undefined && w.wind >= 40;
+// Tonte sur herbe ou sol mouillés (base, « Pluie et tonte ») : jour de pluie, ≥ 2 mm dans la journée, > 10 mm la veille
+function tonteMouillee(w) {
+  const P = TONTE.pluie;
+  if (typeof w?.code === "number" && w.code >= P.codeMeteoMin) return "Il pleut aujourd'hui : herbe mouillée, coupe irrégulière et risque de maladie";
+  if (typeof w?.precip === "number" && w.precip >= P.mmJour) return `Pluie prévue (${w.precip} mm) : herbe mouillée, coupe irrégulière et risque de maladie`;
+  if (typeof w?.precip_veille === "number" && w.precip_veille > P.mmVeille) return "Sol encore détrempé après la pluie d'hier : attends demain";
+  return null;
+}
 
 // ── Helpers type de gazon ─────────────────────────────────────────────────────
 // Compatible multi-select (gazons[]) ET single-select (pelouse)
@@ -143,7 +151,8 @@ export const ACTIONS_PLAN = [
     getBlocked: (w, profile, zone) => {
       const premiere = avantPremiereTonte(w, zone);
       if (premiere) return { blocked: true, raison: `Trop tôt : 1re tonte vers le ${premiere} dans ta zone, quand l'herbe repart` };
-      if (pluiePrevue(w, 5)) return { blocked: true, raison: "Pluie prévue (>5mm) — gazon glissant, risque fongique" };
+      const mouillee = tonteMouillee(w);
+      if (mouillee) return { blocked: true, raison: mouillee };
       if (ventFort(w))       return { blocked: true, raison: "Vents forts (≥40km/h) — reporter" };
       if (w?.temp_min !== undefined && w.temp_min <= 0) return { blocked: true, raison: "Gel — ne pas tondre le gazon gelé" };
       return { blocked: false };
