@@ -15,6 +15,7 @@
 
 const { zoneFromLatLon, ZONES } = require("./parcoursEngine.cjs");
 const CALENDRIER = require("../src/lib/calendrierActions.json");
+const PLUIE_TONTE = require("../src/lib/tonteGazon.json").pluie;
 
 // Mois où une action est proposée : même calendrier et mêmes exceptions que le plan d'entretien de l'app
 // (moisCalendrier de src/lib/planEntretien.js) — une notification ne propose jamais une action hors saison
@@ -36,6 +37,11 @@ function avantPremiereTonte(profile, weather, today) {
   if (t.getUTCMonth() >= 5 || t >= new Date(Date.UTC(t.getUTCFullYear(), m - 1, j - 3))) return false;
   return !(typeof weather?.soil_temp === "number" && weather.soil_temp >= z.solPousse);
 }
+
+// Herbe ou sol mouillés : pas de tonte (même règle que l'app, base « Pluie et tonte »)
+const tonteMouillee = (w) => (typeof w?.code === "number" && w.code >= PLUIE_TONTE.codeMeteoMin)
+  || (typeof w?.precip === "number" && w.precip >= PLUIE_TONTE.mmJour)
+  || (typeof w?.precip_veille === "number" && w.precip_veille > PLUIE_TONTE.mmVeille);
 
 // Rappel d'entretien → actions du calendrier ; prévention maladies : mois des risques suivis par checkMaladie
 const SAISON_RAPPEL = {
@@ -226,7 +232,7 @@ function checkEntretienDu(profile, reminderPrefs, history, month, weather, today
     if (id === "desherbage" && isGazonRustique(profile)) continue;
     // Hors saison dans sa zone (calendrier de l'app), ou tonte avant la 1re tonte de la zone : pas de rappel
     if (id === "fongicide" ? !MOIS_MALADIES.includes(month) : !SAISON_RAPPEL[id] || !deSaison(SAISON_RAPPEL[id], profile, month)) continue;
-    if (id === "tonte" && avantPremiereTonte(profile, weather, today)) continue;
+    if (id === "tonte" && (avantPremiereTonte(profile, weather, today) || tonteMouillee(weather))) continue;
     // Robot déclaré → on ne rappelle pas "tondez" mais une SUPERVISION espacée (14j) :
     // filet de sécurité si le robot ne tond pas (panne / débranché / non connecté).
     const robotTonte = id === "tonte" && hasRobotTondeuse(profile);

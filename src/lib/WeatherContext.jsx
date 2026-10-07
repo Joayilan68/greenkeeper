@@ -72,6 +72,7 @@ export function WeatherProvider({ children, isPaid }) {
         temp_max:  daily.temperature_2m_max[i],
         temp_min:  daily.temperature_2m_min[i],
         precip:    daily.precipitation_sum[i],
+        precip_veille: i ? daily.precipitation_sum[i - 1] : daily.precip_veille ?? undefined,
         code:      daily.weathercode[i],
         humidity:  daily.relative_humidity_2m_mean[i],
         wind:      daily.windspeed_10m_max[i],

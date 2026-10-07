@@ -128,6 +128,15 @@ function aggregateHourlyToDaily(data) {
 
 // Station météo connectée de l'utilisateur (jeton Clerk présent) : mesures du jardin appliquées au jour 0.
 // Jamais mis en cache (le cache est partagé par coordonnées) ; sans station ou en cas d'erreur, météo inchangée.
+// Séries quotidiennes ramenées à aujourd'hui (index 0) ; la pluie de la veille reste dans daily.precip_veille
+function sansVeille(data) {
+  const daily = data?.daily;
+  if (!daily?.time) return data;
+  const jours = {};
+  for (const [k, v] of Object.entries(daily)) jours[k] = Array.isArray(v) ? v.slice(1) : v;
+  return { ...data, daily: { ...jours, precip_veille: daily.precipitation_sum?.[0] ?? null } };
+}
+
 async function avecStation(req, supabase, data) {
   if (!req.headers.authorization || !supabase || !data?.daily) return data;
   try {
@@ -186,7 +195,7 @@ module.exports = async function handler(req, res) {
       `&longitude=${encodeURIComponent(lon)}` +
       `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode,relative_humidity_2m_mean,windspeed_10m_max` +
       `&timezone=auto` +
-      `&forecast_days=7`;
+      `&past_days=1&forecast_days=7`; // la veille sert seulement à precip_veille (sol détrempé), retirée ensuite
 
     // PREMIUM UNIQUEMENT : on ajoute les variables agronomiques horaires.
     // Free → aucune donnée sol/ET₀ tirée (économie de quota et de charge).
@@ -210,6 +219,7 @@ module.exports = async function handler(req, res) {
     if (isPremium) {
       data = aggregateHourlyToDaily(data);
     }
+    data = sansVeille(data);
 
     // ── 3. Écriture du cache (best-effort, jamais bloquant) ──────────────────
     if (supabase) {

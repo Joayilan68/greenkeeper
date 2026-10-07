@@ -315,6 +315,8 @@ module.exports = async function handler(req, res) {
           temp_min: d.temperature_2m_min ? d.temperature_2m_min[0] : null,
           temp_max: d.temperature_2m_max ? d.temperature_2m_max[0] : null,
           precip:   d.precipitation_sum  ? d.precipitation_sum[0]  : null,
+          precip_veille: d.precip_veille ?? null,
+          code:     d.weathercode ? d.weathercode[0] : null,
           wind:     d.windspeed_10m_max  ? d.windspeed_10m_max[0]  : null,
           humidity: d.relative_humidity_2m_mean ? d.relative_humidity_2m_mean[0] : null,
           soil_temp: d.soil_temp ? d.soil_temp[0] : null,
