@@ -55,6 +55,9 @@ export function getDebitMmH() {
   } catch { return DEBIT_DEFAULT_MMH; }
 }
 
+// Pluie qui compte pour l'arrosage du jour : celle du jour et celle de la veille (base, « Pluie et arrosage »)
+export const pluieUtile = (w) => Math.round(((Number(w?.precip) || 0) + (Number(w?.precip_veille) || 0)) * 10) / 10;
+
 export function calcArrosage(month, profile, weather, history = [], debitMmH = DEBIT_DEFAULT_MMH) {
   const plan = MONTHLY_PLAN[month];
   const baseHebdo = plan?.arrosage_base ?? 0;
@@ -94,10 +97,11 @@ export function calcArrosage(month, profile, weather, history = [], debitMmH = D
     if (weather.temp_max > 30)      mm *= 1.3;
     else if (weather.temp_max > 25) mm *= 1.15;
 
-    // Pluie → réduit ou annule
-    if (weather.precip >= 10) return { skip: true, reason: "precip", precip: weather.precip };
-    if (weather.precip > 5)   mm = Math.max(0, mm - weather.precip * 0.8);
-    else if (weather.precip > 2) mm = Math.max(0, mm - weather.precip * 0.5);
+    // Pluie du jour et de la veille → réduit ou annule (base, « Pluie et arrosage »)
+    const pluie = pluieUtile(weather);
+    if (pluie >= 10) return { skip: true, reason: "precip", precip: pluie };
+    if (pluie > 5)   mm = Math.max(0, mm - pluie * 0.8);
+    else if (pluie > 2) mm = Math.max(0, mm - pluie * 0.5);
 
     // Humidité élevée → réduit
     if (weather.humidity > 80) mm *= 0.85;
@@ -124,7 +128,8 @@ export function calcArrosage(month, profile, weather, history = [], debitMmH = D
 // doses fréquentes (micro-arrosages), pas un arrosage profond espacé.
 //
 // Logique agronomique (déficit hydrique de surface) :
-//   déficit = (ET₀ − pluie_du_jour) × coef_type
+//   déficit = (ET₀ − pluie du jour − ½ pluie de la veille) × coef_type
+//     (la surface d'un semis sèche vite : la moitié de la pluie de la veille compte encore)
 //     coef : création ×1.2 (sol nu s'assèche plus vite), regarnissage ×1.0
 //   nombre de micro-arrosages selon le déficit (mm) :
 //     ≤ 0 → 0  |  0-2 → 1  |  2-4 → 2  |  4-6 → 3  |  > 6 → 4   (plafond 4)
@@ -133,14 +138,15 @@ export function calcArrosage(month, profile, weather, history = [], debitMmH = D
 //
 // Premium uniquement (nécessite l'ET₀ Open-Meteo). Si ET₀ absente → skip
 // (le front affichera la consigne texte simple pour les gratuits).
-export function calcArrosageSemis({ et0, precip = 0, type = "creation", debitMmH = DEBIT_DEFAULT_MMH }) {
+export function calcArrosageSemis({ et0, precip = 0, precipVeille = 0, type = "creation", debitMmH = DEBIT_DEFAULT_MMH }) {
   // ET₀ indispensable (donnée Premium). Absente → pas de calcul dynamique.
   if (et0 === null || et0 === undefined || isNaN(et0)) {
     return { skip: true, raison: "et0_absent" };
   }
 
   const coef = type === "regarnissage" ? 1.0 : 1.2;
-  const pluie = (typeof precip === "number" && !isNaN(precip)) ? precip : 0;
+  const mm = (v) => (typeof v === "number" && !isNaN(v)) ? v : 0;
+  const pluie = Math.round((mm(precip) + mm(precipVeille) * 0.5) * 10) / 10;
   const deficit = Math.max(0, (et0 - pluie)) * coef;
 
   // Nombre de micro-arrosages selon le déficit (plafond strict à 4)
