@@ -614,8 +614,18 @@ export default function Pilotage() {
                     <span>{t}</span><span>{v.ouvertes}/{v.envoyees} · {v.envoyees ? Math.round(v.ouvertes / v.envoyees * 100) : 0} %</span>
                   </div>
                 ))}
+                {users.notifs.retours?.length > 0 && (
+                  <>
+                    <div style={{ fontSize:11, fontWeight:700, color:"#a5d6a7", margin:"10px 0 4px" }}>Démarrage et relances : retours dans l'app</div>
+                    {users.notifs.retours.map(([t, v]) => (
+                      <div key={t} style={{ display:"flex", justifyContent:"space-between", fontSize:12, padding:"4px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
+                        <span>{t}</span><span>{v.retours}/{v.envoyes} · {v.envoyes ? Math.round(v.retours / v.envoyes * 100) : 0} %</span>
+                      </div>
+                    ))}
+                  </>
+                )}
                 <div style={{ fontSize:10, color:"#4a7c5c", marginTop:8, lineHeight:1.5 }}>
-                  Ouvertures mesurées depuis le 26/09/2026 (clic sur la notification). Les emails ne sont pas mesurés.
+                  Ouvertures mesurées depuis le 26/09/2026 (clic sur la notification). Retour = visite dans l'app le jour même ou le lendemain du message (emails tracés depuis le 07/10/2026).
                 </div>
               </div>
             )}
