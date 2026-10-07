@@ -7,6 +7,7 @@
 //   POST { action: "husqvarna" }              → adresse de connexion au compte Husqvarna
 //   POST { action: "robot", commande }        → commande validée par l'utilisateur (repos_journee, repos_long, reprendre)
 //   POST { action: "gardena" }                → adresse de connexion au compte Husqvarna Group pour l'arrosage Gardena
+//   POST { action: "gardena_robot" }          → idem pour le robot Gardena SILENO
 //   POST { action: "rachio_programmateurs", apiKey } → programmateurs du compte Rachio
 //   POST { action: "rachio", apiKey, programmateur }  → connexion du programmateur Rachio (clé chiffrée)
 //   POST { action: "arrosage", commande, zone, minutes } → commande validée (arroser, suspendre, veille, reprendre)
@@ -19,25 +20,44 @@ const E = require("./equipements.cjs");
 const COLONNES = "id, type, marque, nom, statut, erreur, mesures, mesures_at, created_at";
 const retourHusqvarna = (req) => `https://${req.headers["x-forwarded-host"] || req.headers.host}/api/objets`;
 
-// Retour de Husqvarna : jetons obtenus, robot (ou jardin Gardena) enregistré, puis retour à « Mes équipements »
+// Gardena : l'équipement demandé (arrosage ou robot) est enregistré, et l'autre aussi s'il existe sur le compte
+// et qu'aucun équipement d'une autre marque n'occupe déjà sa place ; un arrosage et un robot par compte dans l'app
+async function connexionGardena(supabase, userId, jetons, objet) {
+  const jardins = await E.jardinsGardena(jetons.access);
+  const avecZones = jardins.find(j => j.zones.length);
+  const avecRobot = jardins.find(j => j.robots.length);
+  const demande = objet === "gardena_robot" ? "robot" : "arrosage";
+  if (!(demande === "robot" ? avecRobot : avecZones)) return "aucun";
+  const { data: actuels } = await supabase.from("equipements").select("type, marque").eq("user_id", userId);
+  const libre = (type) => type === demande || !(actuels || []).some(e => e.type === type && e.marque !== "gardena");
+  const lignes = [];
+  if (avecZones && libre("arrosage")) {
+    const { id, nom, zones } = avecZones;
+    lignes.push({ type: "arrosage", appareil: id, nom, mesures: { id, nom, zones, suspendu: null } });
+  }
+  if (avecRobot && libre("robot")) {
+    const r = avecRobot.robots[0];
+    lignes.push({ type: "robot", appareil: r.id, nom: r.nom, mesures: r });
+  }
+  const at = new Date().toISOString();
+  const { error } = await supabase.from("equipements").upsert(lignes.map(l => ({
+    user_id: userId, marque: "gardena", ...l, nom: String(l.nom).slice(0, 60),
+    secret: E.chiffrer(jetons), statut: "connecte", erreur: null, mesures_at: at,
+  })), { onConflict: "user_id,type" });
+  if (error) throw error;
+  return lignes.length > 1 ? "ok_tout" : "ok";
+}
+
+// Retour de Husqvarna : jetons obtenus, robot (ou équipements Gardena) enregistré, puis retour à « Mes équipements »
 async function connexionHusqvarna(req, res, supabase) {
   const etat = E.verifierEtat(req.query.state);
-  const fin = (resultat) => res.redirect(302, `/equipements?${etat?.objet === "gardena" ? "gardena" : "husqvarna"}=${resultat}`);
+  const gardena = etat?.objet === "gardena" || etat?.objet === "gardena_robot";
+  const fin = (resultat) => res.redirect(302, `/equipements?${gardena ? etat.objet : "husqvarna"}=${resultat}`);
   if (!etat) return fin("expire");
   const { userId } = etat;
   try {
     const jetons = await E.jetonsHusqvarna({ grant_type: "authorization_code", code: String(req.query.code), redirect_uri: retourHusqvarna(req) });
-    if (etat.objet === "gardena") {
-      const jardins = (await E.jardinsGardena(jetons.access)).filter(j => j.zones.length);
-      if (!jardins.length) return fin("aucun");
-      const j = jardins[0]; // un arrosage par compte dans l'app pour l'instant
-      const { error } = await supabase.from("equipements").upsert({
-        user_id: userId, type: "arrosage", marque: "gardena", appareil: j.id, nom: j.nom.slice(0, 60),
-        secret: E.chiffrer(jetons), statut: "connecte", erreur: null, mesures: { ...j, suspendu: null }, mesures_at: new Date().toISOString(),
-      }, { onConflict: "user_id,type" });
-      if (error) throw error;
-      return fin("ok");
-    }
+    if (gardena) return fin(await connexionGardena(supabase, userId, jetons, etat.objet));
     const robots = await E.robotsHusqvarna(jetons.access);
     if (!robots.length) return fin("aucun");
     const robot = robots[0]; // un robot par compte dans l'app pour l'instant
@@ -48,7 +68,7 @@ async function connexionHusqvarna(req, res, supabase) {
     if (error) throw error;
     return fin("ok");
   } catch (e) {
-    await require("./alerting.cjs").reportServerError(`Connexion ${etat.objet === "gardena" ? "Gardena" : "Husqvarna"} en échec`, e, { "Utilisateur": userId });
+    await require("./alerting.cjs").reportServerError(`Connexion ${gardena ? "Gardena" : "Husqvarna"} en échec`, e, { "Utilisateur": userId });
     return fin("erreur");
   }
 }
@@ -63,8 +83,8 @@ module.exports = async function handler(req, res) {
 
   try {
     if (req.method === "GET") {
-      const [station, robot, arrosage] = await Promise.all([ // relus si besoin
-        E.mesuresStation(supabase, userId), E.etatRobot(supabase, userId), E.etatArrosage(supabase, userId)]);
+      const [station, robot] = await Promise.all([E.mesuresStation(supabase, userId), E.etatRobot(supabase, userId)]); // relus si besoin
+      const arrosage = await E.etatArrosage(supabase, userId); // après le robot : un jardin Gardena commun n'est relu qu'une fois
       const { data, error } = await supabase.from("equipements").select(COLONNES).eq("user_id", userId);
       if (error) throw error;
       return res.json({ equipements: data || [], station, robot, arrosage });
@@ -94,9 +114,9 @@ module.exports = async function handler(req, res) {
       return res.json({ equipement: data });
     }
 
-    if (action === "husqvarna" || action === "gardena") {
+    if (["husqvarna", "gardena", "gardena_robot"].includes(action)) {
       if (!process.env.HUSQVARNA_CLIENT_ID) return res.status(503).json({ error: "Connexion pas encore disponible" });
-      return res.json({ url: E.urlConnexionHusqvarna(userId, retourHusqvarna(req), action === "gardena" ? "gardena" : "robot") });
+      return res.json({ url: E.urlConnexionHusqvarna(userId, retourHusqvarna(req), action === "husqvarna" ? "robot" : action) });
     }
 
     if (action === "rachio_programmateurs" || action === "rachio") {
@@ -132,8 +152,8 @@ module.exports = async function handler(req, res) {
     }
 
     if (action === "retirer") {
-      const { data: eq } = await supabase.from("equipements").select("id, marque, secret").eq("user_id", userId).eq("id", id).maybeSingle();
-      if (eq?.marque === "husqvarna" || eq?.marque === "gardena") await E.revoquerHusqvarna(eq);
+      const { data: eq } = await supabase.from("equipements").select("id, user_id, marque, secret").eq("user_id", userId).eq("id", id).maybeSingle();
+      if (eq?.marque === "husqvarna" || eq?.marque === "gardena") await E.revoquerHusqvarna(supabase, eq);
       const { error } = await supabase.from("equipements").delete().eq("user_id", userId).eq("id", id);
       if (error) throw error;
       return res.json({ ok: true });

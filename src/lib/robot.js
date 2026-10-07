@@ -1,5 +1,5 @@
 // src/lib/robot.js
-// Robot tondeuse connecté (Husqvarna Automower) : état lisible et proposition du mode « Proposition ».
+// Robot tondeuse connecté (Husqvarna Automower, Gardena SILENO) : état lisible et proposition du mode « Proposition ».
 // La proposition suit la tonte telle que la calcule « Aujourd'hui » (calendrier unique, météo, 1re tonte de la
 // zone, parcours de semis) : le robot n'est jamais invité à tondre quand l'app le déconseille.
 
@@ -10,7 +10,7 @@ const ACTIVITES = {
 
 export function etatRobot(r) {
   if (!r.connecte) return "hors ligne (pas de réseau)";
-  if (r.erreur || ["error", "fatal_error", "error_at_power_up"].includes(r.etat)) return `⚠️ en erreur (code ${r.erreur}) : voir l'app Husqvarna`;
+  if (r.erreur || ["error", "fatal_error", "error_at_power_up"].includes(r.etat)) return `⚠️ en erreur (code ${r.erreur}) : voir l'app ${r.marque === "gardena" ? "Gardena smart" : "Husqvarna"}`;
   if (r.etat === "off") return "éteint";
   if (r.etat === "paused") return "en pause";
   return ACTIVITES[r.activite] || "état inconnu";
@@ -26,7 +26,7 @@ export function propositionRobot(r, tonte) {
     const long = tonte.status === "off_season" || tonte.parcoursBloque || String(tonte.blockedReason || "").startsWith("Trop tôt");
     return {
       commande: long ? "repos_long" : "repos_journee",
-      bouton: long ? "⏸️ Mettre au repos jusqu'à nouvel ordre" : "⏸️ Mettre au repos jusqu'à demain 7 h",
+      bouton: long ? "⏸️ Mettre au repos jusqu'à nouvel ordre" : `⏸️ Mettre au repos jusqu'à demain ${r.marque === "gardena" ? "matin" : "7 h"}`,
       raison: tonte.blockedReason || "Hors saison de tonte dans ta zone",
     };
   }

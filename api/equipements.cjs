@@ -129,7 +129,8 @@ function verifierEtat(etat) {
   return e > Date.now() ? { userId: u, objet: o || "robot" } : null;
 }
 
-// Connexion au compte Husqvarna Group : robot Automower (objet « robot ») ou arrosage Gardena (objet « gardena »)
+// Connexion au compte Husqvarna Group : robot Automower (objet « robot »), arrosage Gardena (objet « gardena »)
+// ou robot Gardena SILENO (objet « gardena_robot »)
 function urlConnexionHusqvarna(userId, redirectUri, objet = "robot") {
   return `${HQ_AUTH}/authorize?${new URLSearchParams({
     client_id: process.env.HUSQVARNA_CLIENT_ID, redirect_uri: redirectUri, response_type: "code", state: etatSigne(userId, objet),
@@ -148,14 +149,24 @@ async function jetonsHusqvarna(params) {
 }
 
 // Jeton d'accès valable (renouvelé et réenregistré s'il expire dans moins de 2 minutes)
-async function accesHusqvarna(supabase, eq) { // jetons Husqvarna Group : robot Automower et arrosage Gardena
+async function accesHusqvarna(supabase, eq) { // jetons Husqvarna Group : robot Automower, arrosage et robot Gardena
   const j = dechiffrer(eq.secret);
   if (j.expire - Date.now() > 120000) return j.access;
-  if (!j.refresh) throw new Error("Connexion Husqvarna expirée : reconnecte ton robot");
+  if (!j.refresh) throw new Error("Connexion Husqvarna expirée : reconnecte ton équipement");
   const neuf = await jetonsHusqvarna({ grant_type: "refresh_token", refresh_token: j.refresh });
   neuf.refresh = neuf.refresh || j.refresh;
-  await supabase.from("equipements").update({ secret: chiffrer(neuf) }).eq("id", eq.id);
+  // Une connexion Gardena peut servir à l'arrosage et au robot : jetons renouvelés partout où ils servent
+  for (const e of await connexionsHusqvarna(supabase, eq.user_id)) {
+    if (e.id === eq.id || dechiffrer(e.secret).refresh === j.refresh) {
+      await supabase.from("equipements").update({ secret: chiffrer(neuf) }).eq("id", e.id);
+    }
+  }
   return neuf.access;
+}
+
+async function connexionsHusqvarna(supabase, userId) {
+  const { data } = await supabase.from("equipements").select("id, secret").eq("user_id", userId).in("marque", ["husqvarna", "gardena"]);
+  return data || [];
 }
 
 async function appelHusqvarna(acces, chemin, corps) {
@@ -176,7 +187,7 @@ function robotLisible(m) {
   const a = m?.attributes || {};
   const bas = (v) => typeof v === "string" ? v.toLowerCase() : null;
   return {
-    id: m.id, nom: a.system?.name || a.system?.model || "Automower", modele: a.system?.model || null,
+    id: m.id, marque: "husqvarna", nom: a.system?.name || a.system?.model || "Automower", modele: a.system?.model || null,
     activite: bas(a.mower?.activity), etat: bas(a.mower?.state), batterie: a.battery?.batteryPercent ?? null,
     erreur: a.mower?.errorCode || 0, force: bas(a.planner?.override?.action), restriction: bas(a.planner?.restrictedReason),
     prochaine_tonte: a.planner?.nextStartTimestamp || null, hauteur: a.settings?.cuttingHeight ?? null,
@@ -188,13 +199,17 @@ async function robotsHusqvarna(acces) {
   return ((await appelHusqvarna(acces, "mowers"))?.data || []).map(robotLisible);
 }
 
-// Robot de l'utilisateur : état (relu s'il a plus de 5 minutes)
+// Robot de l'utilisateur : état (relu s'il a plus de 5 minutes, 10 pour Gardena)
 async function etatRobot(supabase, userId) {
   const { data: eq } = await supabase.from("equipements").select("*").eq("user_id", userId).eq("type", "robot").maybeSingle();
   if (!eq) return null;
   const age = eq.mesures_at ? Date.now() - Date.parse(eq.mesures_at) : Infinity;
-  if (eq.mesures && age < ETAT_ROBOT_MS) return { ...eq.mesures, at: eq.mesures_at };
+  if (eq.mesures && age < (eq.marque === "gardena" ? ETAT_ARROSAGE_MS : ETAT_ROBOT_MS)) return { ...eq.mesures, at: eq.mesures_at };
   try {
+    if (eq.marque === "gardena") {
+      const at = new Date().toISOString();
+      return { ...(await actualiserGardena(supabase, eq, at)), at };
+    }
     const robot = (await robotsHusqvarna(await accesHusqvarna(supabase, eq))).find(r => r.id === eq.appareil);
     if (!robot) throw new Error("Robot introuvable sur le compte Husqvarna");
     const at = new Date().toISOString();
@@ -224,24 +239,35 @@ async function commandeRobot(supabase, userId, commande) {
   if (!COMMANDES[commande]) throw new Error("Commande inconnue");
   const { data: eq } = await supabase.from("equipements").select("*").eq("user_id", userId).eq("type", "robot").maybeSingle();
   if (!eq) throw new Error("Aucun robot connecté");
+  if (eq.marque === "gardena") {
+    await commandeMowerGardena(await accesHusqvarna(supabase, eq), eq.appareil, COMMANDES_GARDENA[commande]);
+    // Gardena ne connaît pas de repos d'une durée donnée : le planning est relancé demain par la tâche du matin
+    const reprise = commande === "repos_journee" ? jourParis(Date.now() + 86400000) : null;
+    await supabase.from("equipements").update({ mesures: { ...eq.mesures, reprise }, mesures_at: null }).eq("id", eq.id);
+    return;
+  }
   await appelHusqvarna(await accesHusqvarna(supabase, eq), `mowers/${eq.appareil}/actions`, COMMANDES[commande]());
   await supabase.from("equipements").update({ mesures_at: null }).eq("id", eq.id); // état relu au prochain affichage
 }
 
-async function revoquerHusqvarna(eq) {
+// Révocation à la déconnexion, sauf si la même connexion sert encore à l'autre équipement Gardena
+async function revoquerHusqvarna(supabase, eq) {
+  const refresh = dechiffrer(eq.secret).refresh;
+  if ((await connexionsHusqvarna(supabase, eq.user_id)).some(e => e.id !== eq.id && dechiffrer(e.secret).refresh === refresh)) return;
   try {
     await fetch(`${HQ_AUTH}/revoke`, { method: "POST", signal: AbortSignal.timeout(5000),
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ token: dechiffrer(eq.secret).refresh || "", client_id: process.env.HUSQVARNA_CLIENT_ID }) });
+      body: new URLSearchParams({ token: refresh || "", client_id: process.env.HUSQVARNA_CLIENT_ID }) });
   } catch { /* la suppression des jetons chez nous suffit */ }
 }
 
-// ── Arrosage connecté : Gardena smart system (compte Husqvarna Group) et Rachio (clé API de l'utilisateur) ──
-// Lecture des zones à l'affichage (au plus toutes les 10 min : Gardena limite à 700 requêtes par semaine pour
-// toute l'application) ; commandes envoyées seulement après validation de l'utilisateur (mode Proposition).
+// ── Gardena smart system (compte Husqvarna Group) : arrosage et robots SILENO ; arrosage Rachio (clé API) ──
+// Lecture à l'affichage, au plus toutes les 10 min et en une requête pour l'arrosage et le robot du même jardin
+// (Gardena limite à 700 requêtes par semaine pour toute l'application) ; commandes envoyées seulement après
+// validation de l'utilisateur (mode Proposition).
 const GARDENA = "https://api.smart.gardena.dev/v2";
 const RACHIO = "https://api.rach.io/1/public";
-const ETAT_ARROSAGE_MS = 10 * 60 * 1000;
+const ETAT_ARROSAGE_MS = 10 * 60 * 1000; // aussi pour le robot Gardena
 
 async function appelGardena(acces, chemin, corps) {
   const r = await fetch(`${GARDENA}/${chemin}`, {
@@ -256,18 +282,84 @@ async function appelGardena(acces, chemin, corps) {
   return r.status === 202 ? null : r.json().catch(() => null);
 }
 
-// Jardins Gardena et leurs vannes (programmateurs Water Control, Smart Irrigation Control)
+// Robot SILENO ramené aux valeurs du robot Automower (src/lib/robot.js) ; c = service COMMON du même appareil
+const ACTIVITES_GARDENA = { OK_CUTTING: "mowing", OK_CUTTING_TIMER_OVERRIDDEN: "mowing", OK_SEARCHING: "going_home",
+  OK_LEAVING: "leaving", OK_CHARGING: "charging", STOPPED_IN_GARDEN: "stopped_in_garden" };
+function robotGardena(m, c, jardin) {
+  const v = (a) => a?.value ?? null;
+  const activite = String(v(m.attributes?.activity) || "");
+  const etat = v(m.attributes?.state);
+  return {
+    id: m.id, marque: "gardena", jardin, nom: v(c.name) || "SILENO", modele: v(c.modelType),
+    activite: ACTIVITES_GARDENA[activite] || (activite.startsWith("PARKED") ? "parked_in_cs" : null),
+    etat: etat === "ERROR" ? "error" : activite === "PAUSED" ? "paused" : typeof etat === "string" ? etat.toLowerCase() : null,
+    batterie: v(c.batteryLevel), erreur: etat === "ERROR" ? v(m.attributes?.lastErrorCode) || "inconnu" : 0,
+    force: activite === "PARKED_PARK_SELECTED" ? "force_park" : null, restriction: null, prochaine_tonte: null, hauteur: null,
+    connecte: v(c.rfLinkState) !== "OFFLINE" && etat !== "UNAVAILABLE",
+  };
+}
+
+// Un jardin Gardena : vannes (Water Control, Smart Irrigation Control) et robots SILENO, en une requête
+async function lieuGardena(acces, id, nom) {
+  const d = await appelGardena(acces, `locations/${id}`);
+  const services = d?.included || [];
+  const val = (a) => typeof a?.value === "string" ? a.value.toLowerCase() : a?.value ?? null;
+  const appareil = (s) => String(s.id).split(":")[0];
+  const commun = (s) => services.find(x => x.type === "COMMON" && appareil(x) === appareil(s))?.attributes || {};
+  const zones = services.filter(x => x.type === "VALVE").map(v => ({
+    id: v.id, nom: v.attributes?.name?.value || "Vanne", activite: val(v.attributes?.activity), etat: val(v.attributes?.state),
+  }));
+  const robots = services.filter(x => x.type === "MOWER").map(m => robotGardena(m, commun(m), id));
+  return { id, nom: nom || d?.data?.attributes?.name || "Mon jardin", zones, robots };
+}
+
 async function jardinsGardena(acces) {
   const jardins = [];
-  for (const loc of (await appelGardena(acces, "locations"))?.data || []) {
-    const d = await appelGardena(acces, `locations/${loc.id}`);
-    const val = (a) => typeof a?.value === "string" ? a.value.toLowerCase() : a?.value ?? null;
-    const zones = (d?.included || []).filter(x => x.type === "VALVE").map(v => ({
-      id: v.id, nom: v.attributes?.name?.value || "Vanne", activite: val(v.attributes?.activity), etat: val(v.attributes?.state),
-    }));
-    jardins.push({ id: loc.id, nom: loc.attributes?.name || "Mon jardin", zones });
-  }
+  for (const loc of (await appelGardena(acces, "locations"))?.data || []) jardins.push(await lieuGardena(acces, loc.id, loc.attributes?.name));
   return jardins;
+}
+
+// Relit le jardin de l'équipement et met à jour l'arrosage et le robot Gardena qui en dépendent ; renvoie les mesures de eq
+async function actualiserGardena(supabase, eq, at) {
+  const jardin = eq.type === "arrosage" ? eq.appareil : eq.mesures?.jardin;
+  if (!jardin) throw new Error("Jardin Gardena inconnu : reconnecte ton équipement");
+  const { robots, ...arrosage } = await lieuGardena(await accesHusqvarna(supabase, eq), jardin);
+  const { data: lies } = await supabase.from("equipements").select("id, type, appareil, mesures").eq("user_id", eq.user_id).eq("marque", "gardena");
+  let lu = null;
+  for (const e of lies || []) {
+    let mesures = null;
+    if (e.type === "arrosage" && e.appareil === jardin) mesures = { ...arrosage, nom: e.mesures?.nom || arrosage.nom, suspendu: e.mesures?.suspendu || null };
+    const robot = e.type === "robot" && e.mesures?.jardin === jardin && robots.find(r => r.id === e.appareil);
+    if (robot) mesures = { ...robot, reprise: e.mesures?.reprise || null };
+    if (!mesures) continue;
+    await supabase.from("equipements").update({ mesures, mesures_at: at, statut: "connecte", erreur: null }).eq("id", e.id);
+    if (e.id === eq.id) lu = mesures;
+  }
+  if (!lu) throw new Error(eq.type === "robot" ? "Robot introuvable sur le compte Gardena" : "Programmateur introuvable sur le compte");
+  return lu;
+}
+
+// Commandes du robot SILENO (service MOWER_CONTROL)
+const COMMANDES_GARDENA = { repos_journee: "PARK_UNTIL_FURTHER_NOTICE", repos_long: "PARK_UNTIL_FURTHER_NOTICE", reprendre: "START_DONT_OVERRIDE" };
+const commandeMowerGardena = (acces, id, command) =>
+  appelGardena(acces, `command/${id}`, { data: { id: crypto.randomUUID(), type: "MOWER_CONTROL", attributes: { command } } });
+const jourParis = (ms) => new Date(ms).toLocaleDateString("sv-SE", { timeZone: "Europe/Paris" });
+
+// Tâche du matin : planning relancé pour les robots Gardena mis au repos la veille (« jusqu'à demain matin »)
+async function reprendreRobotsGardena(supabase) {
+  const { data } = await supabase.from("equipements").select("*").eq("type", "robot").eq("marque", "gardena").not("mesures->>reprise", "is", null);
+  let n = 0;
+  for (const eq of data || []) {
+    if (eq.mesures.reprise > jourParis(Date.now())) continue;
+    try {
+      await commandeMowerGardena(await accesHusqvarna(supabase, eq), eq.appareil, "START_DONT_OVERRIDE");
+      await supabase.from("equipements").update({ mesures: { ...eq.mesures, reprise: null }, mesures_at: null }).eq("id", eq.id);
+      n++;
+    } catch (e) {
+      await require("./alerting.cjs").reportServerError("Robot Gardena — reprise du planning non envoyée", e, { "Utilisateur": eq.user_id });
+    }
+  }
+  return n;
 }
 
 async function appelRachio(apiKey, chemin, corps) {
@@ -298,12 +390,11 @@ async function etatArrosage(supabase, userId) {
   const age = eq.mesures_at ? Date.now() - Date.parse(eq.mesures_at) : Infinity;
   if (eq.mesures && age < ETAT_ARROSAGE_MS) return { ...eq.mesures, marque: eq.marque, at: eq.mesures_at };
   try {
-    const lu = eq.marque === "gardena"
-      ? (await jardinsGardena(await accesHusqvarna(supabase, eq))).find(j => j.id === eq.appareil)
-      : (await programmateursRachio(dechiffrer(eq.secret).apiKey)).find(d => d.id === eq.appareil);
+    const at = new Date().toISOString();
+    if (eq.marque === "gardena") return { ...(await actualiserGardena(supabase, eq, at)), marque: eq.marque, at };
+    const lu = (await programmateursRachio(dechiffrer(eq.secret).apiKey)).find(d => d.id === eq.appareil);
     if (!lu) throw new Error("Programmateur introuvable sur le compte");
     const mesures = { ...lu, suspendu: eq.mesures?.suspendu || null };
-    const at = new Date().toISOString();
     await supabase.from("equipements").update({ mesures, mesures_at: at, statut: "connecte", erreur: null }).eq("id", eq.id);
     return { ...mesures, marque: eq.marque, at };
   } catch (e) {
@@ -350,6 +441,6 @@ async function commandeArrosage(supabase, userId, { commande, zone, minutes }) {
 module.exports = {
   chiffrer, dechiffrer, stationsEcowitt, mesuresEcowitt, mesuresStation, appliquerStation,
   urlConnexionHusqvarna, verifierEtat, jetonsHusqvarna, robotsHusqvarna, etatRobot, commandeRobot, revoquerHusqvarna,
-  jardinsGardena, programmateursRachio, etatArrosage, commandeArrosage,
+  jardinsGardena, reprendreRobotsGardena, programmateursRachio, etatArrosage, commandeArrosage,
   minutesJusquaDemain7h,
 };

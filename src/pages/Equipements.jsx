@@ -19,19 +19,30 @@ const RETOURS_HUSQVARNA = {
   erreur: "La connexion Husqvarna a échoué, réessaie plus tard.",
 };
 
-// Retour de la connexion Gardena (même compte Husqvarna Group : api/objets.js → /equipements?gardena=…)
-const RETOURS_GARDENA = {
-  ok: "✅ Arrosage Gardena connecté : « Aujourd'hui » te proposera d'arroser à la bonne dose le matin, ou de suspendre les programmes quand il pleut.",
-  aucun: "Aucun programmateur Gardena trouvé sur ce compte.",
+// Retour de la connexion Gardena (même compte Husqvarna Group : api/objets.js → /equipements?gardena=… ou ?gardena_robot=…)
+const ECHECS_GARDENA = {
   expire: "La connexion a pris trop de temps, recommence.",
   erreur: "La connexion Gardena a échoué : l'accès Gardena n'est peut-être pas encore ouvert, réessaie plus tard.",
+};
+const TOUT_GARDENA = "✅ Arrosage et robot Gardena connectés : « Aujourd'hui » te proposera d'arroser à la bonne dose le matin, de suspendre les programmes quand il pleut, et de mettre ton robot au repos ou de le relancer.";
+const RETOURS_GARDENA = {
+  ok: "✅ Arrosage Gardena connecté : « Aujourd'hui » te proposera d'arroser à la bonne dose le matin, ou de suspendre les programmes quand il pleut.",
+  ok_tout: TOUT_GARDENA,
+  aucun: "Aucun programmateur Gardena trouvé sur ce compte.",
+  ...ECHECS_GARDENA,
+};
+const RETOURS_GARDENA_ROBOT = {
+  ok: "✅ Robot Gardena connecté : « Aujourd'hui » te proposera de le mettre au repos ou de le relancer selon la météo et tes conseils.",
+  ok_tout: TOUT_GARDENA,
+  aucun: "Aucun robot Gardena trouvé sur ce compte.",
+  ...ECHECS_GARDENA,
 };
 
 const A_VENIR = [
   { icone:"📷", titre:"Caméra", texte:"Une photo de ta pelouse chaque semaine, analysée comme un diagnostic." },
 ];
 
-// Mes équipements (depuis Mon Gazon) : station météo Ecowitt, robot Husqvarna et arrosage Gardena ou Rachio
+// Mes équipements (depuis Mon Gazon) : station météo Ecowitt, robot Husqvarna ou Gardena et arrosage Gardena ou Rachio
 // connectés ; caméras à venir
 export default function Equipements() {
   const navigate = useNavigate();
@@ -40,7 +51,8 @@ export default function Equipements() {
   const { donnees, erreur, setErreur, envoi, charger, action } = useEquipements();
   const [cles, setCles] = useState({ applicationKey:"", apiKey:"" });
   const [stations, setStations] = useState(null);
-  const retourHq = RETOURS_HUSQVARNA[params.get("husqvarna")] || RETOURS_GARDENA[params.get("gardena")];
+  const retourHq = RETOURS_HUSQVARNA[params.get("husqvarna")] || RETOURS_GARDENA[params.get("gardena")]
+    || RETOURS_GARDENA_ROBOT[params.get("gardena_robot")];
   const [cleRachio, setCleRachio] = useState("");
   const [programmateurs, setProgrammateurs] = useState(null);
 
@@ -59,8 +71,8 @@ export default function Equipements() {
     const d = await action({ action:"husqvarna" });
     if (d?.url) window.location.href = d.url;
   };
-  const connecterGardena = async () => {
-    const d = await action({ action:"gardena" });
+  const connecterGardena = async (objet = "gardena") => {
+    const d = await action({ action: objet });
     if (d?.url) window.location.href = d.url;
   };
   const chercherRachio = async () => {
@@ -176,13 +188,13 @@ export default function Equipements() {
           {eqRobot ? (
             <>
               <div style={{ fontSize:12, color: eqRobot.statut === "erreur" ? "#f9a825" : "#a5d6a7", margin:"6px 0 8px" }}>
-                {eqRobot.nom} · Husqvarna Automower · {eqRobot.statut === "erreur" ? `⚠️ ${eqRobot.erreur}` : "✓ connecté"}
+                {eqRobot.nom} · {eqRobot.marque === "gardena" ? "Gardena SILENO" : "Husqvarna Automower"} · {eqRobot.statut === "erreur" ? `⚠️ ${eqRobot.erreur}` : "✓ connecté"}
               </div>
               <div style={{ fontSize:11, color:"#a5d6a7", lineHeight:1.6, marginBottom:10 }}>
                 Dans « Aujourd'hui », l'app te propose de mettre ton robot au repos (pluie, gel, vent, semis en cours, hors saison) ou de relancer son planning : rien n'est envoyé au robot sans ta validation.
               </div>
               {eqRobot.statut === "erreur" && (
-                <button onClick={connecterRobot} disabled={envoi} style={{ ...bouton, marginBottom:10 }}>Reconnecter mon robot</button>
+                <button onClick={() => eqRobot.marque === "gardena" ? connecterGardena("gardena_robot") : connecterRobot()} disabled={envoi} style={{ ...bouton, marginBottom:10 }}>Reconnecter mon robot</button>
               )}
               <div>
                 <button onClick={() => retirer(eqRobot.id)} disabled={envoi} style={{ background:"none", border:"none", padding:0, color:"#81c784", fontSize:11, cursor:"pointer", textDecoration:"underline" }}>
@@ -195,10 +207,12 @@ export default function Equipements() {
               <div style={{ fontSize:12, color:"#a5d6a7", lineHeight:1.6, margin:"6px 0 10px" }}>
                 Connecte ton robot : l'app te propose de le mettre au repos quand il pleut, gèle ou pendant un semis, et de le relancer quand les conditions sont bonnes.
               </div>
-              <div style={{ fontSize:11, fontWeight:700, color:"#e8f5e9", marginBottom:8 }}>Compatible : Husqvarna Automower (application Automower Connect)</div>
+              <div style={{ fontSize:11, fontWeight:700, color:"#e8f5e9", marginBottom:6 }}>Husqvarna Automower (application Automower Connect)</div>
               <button onClick={connecterRobot} disabled={envoi} style={bouton}>{envoi ? "Ouverture…" : "Connecter mon Automower"}</button>
+              <div style={{ fontSize:11, fontWeight:700, color:"#e8f5e9", margin:"14px 0 6px" }}>Gardena SILENO (application GARDENA smart system)</div>
+              <button onClick={() => connecterGardena("gardena_robot")} disabled={envoi} style={bouton}>{envoi ? "Ouverture…" : "Connecter mon robot Gardena"}</button>
               <div style={{ fontSize:10, color:"#4a7c5c", lineHeight:1.5, marginTop:10 }}>
-                Tu te connectes sur le site de Husqvarna : Mongazon360 ne voit jamais ton mot de passe. Autres marques de robots : en préparation.
+                Tu te connectes sur le site du groupe Husqvarna (Husqvarna et Gardena) : Mongazon360 ne voit jamais ton mot de passe. Si ton arrosage Gardena est sur le même compte, il est connecté en même temps. Autres marques de robots : en préparation.
               </div>
             </>
           )}
@@ -216,7 +230,7 @@ export default function Equipements() {
                 Dans « Aujourd'hui », l'app te propose d'arroser chaque zone à la dose du jour (le matin seulement), de suspendre les programmes quand la pluie suffit, ou de mettre l'arrosage en veille l'hiver : rien n'est envoyé sans ta validation.
               </div>
               {eqArrosage.statut === "erreur" && eqArrosage.marque === "gardena" && (
-                <button onClick={connecterGardena} disabled={envoi} style={{ ...bouton, marginBottom:10 }}>Reconnecter Gardena</button>
+                <button onClick={() => connecterGardena()} disabled={envoi} style={{ ...bouton, marginBottom:10 }}>Reconnecter Gardena</button>
               )}
               <button onClick={() => retirer(eqArrosage.id)} disabled={envoi} style={{ background:"none", border:"none", padding:0, color:"#81c784", fontSize:11, cursor:"pointer", textDecoration:"underline" }}>
                 Déconnecter l'arrosage (l'accès est effacé)
@@ -228,7 +242,7 @@ export default function Equipements() {
                 Connecte ton programmateur : l'app te propose d'arroser à la bonne dose le matin et de suspendre les programmes quand il pleut.
               </div>
               <div style={{ fontSize:11, fontWeight:700, color:"#e8f5e9", marginBottom:6 }}>Gardena smart system (Water Control, Smart Irrigation Control)</div>
-              <button onClick={connecterGardena} disabled={envoi} style={bouton}>{envoi ? "Ouverture…" : "Connecter mon arrosage Gardena"}</button>
+              <button onClick={() => connecterGardena()} disabled={envoi} style={bouton}>{envoi ? "Ouverture…" : "Connecter mon arrosage Gardena"}</button>
               <div style={{ fontSize:11, fontWeight:700, color:"#e8f5e9", margin:"14px 0 4px" }}>Rachio</div>
               <div style={{ fontSize:11, color:"#81c784", lineHeight:1.6 }}>
                 Sur <a href="https://app.rach.io" target="_blank" rel="noopener noreferrer" style={{ color:"#a5d6a7" }}>app.rach.io</a>, ouvre les réglages de ton compte et copie ta clé API (« Get API Key »).

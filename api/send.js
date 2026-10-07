@@ -867,6 +867,13 @@ module.exports = async function handler(req, res) {
         catch (e) { await require("./alerting.cjs").reportServerError("Tâche planifiée — récompenses de parrainage", e); }
       }
 
+      // ── ROBOTS GARDENA MIS AU REPOS LA VEILLE — créneau MATIN (planning relancé) ──
+      let robotsRelances = 0;
+      if (slot === "matin") {
+        try { robotsRelances = await require("./equipements.cjs").reprendreRobotsGardena(supabase); }
+        catch (e) { await require("./alerting.cjs").reportServerError("Tâche planifiée — reprise des robots Gardena", e); }
+      }
+
       // ── FIN DES PREMIUM OFFERTS À DATE (bêta…) — créneau MATIN ─────────────
       // Date de fin dépassée → user_access repasse en "approved" et Clerk perd
       // guestAccess/guestUntil. Les accès sans date (famille) ne sont jamais touchés.
@@ -968,8 +975,8 @@ module.exports = async function handler(req, res) {
       }
       await alerting.setStatus(`cron_${slot}`, { date: today, at: new Date().toISOString(), pushSent, emailSent, emailFallbackSent, photosPurgees });
 
-      console.log(`[CRON ${slot}] reminders:`, remindersData?.length || 0, "pushSent:", pushSent, "emailSent:", emailSent, "emailFallbackSent:", emailFallbackSent, "skipped:", skipped, "parcoursSent:", parcoursSent, "parcoursTermines:", parcoursTermines, "trialRelances:", trialRelances, "baselineSent:", baselineSent, "premiumOffertsExpires:", premiumOffertsExpires, "offreEmails:", offreEmails, "relancesPush:", relancesPush, "relancesEmail:", relancesEmail, "relancesBob:", relancesBob, "photosPurgees:", photosPurgees, "parrainsRecompenses:", parrainsRecompenses);
-      return res.json({ success: true, date: today, slot, pushSent, emailSent, emailFallbackSent, skipped, parcoursSent, parcoursTermines, trialRelances, baselineSent, premiumOffertsExpires, offreEmails, relancesPush, relancesEmail, relancesBob, photosPurgees, parrainsRecompenses, reminders: remindersData?.length || 0 });
+      console.log(`[CRON ${slot}] reminders:`, remindersData?.length || 0, "pushSent:", pushSent, "emailSent:", emailSent, "emailFallbackSent:", emailFallbackSent, "skipped:", skipped, "parcoursSent:", parcoursSent, "parcoursTermines:", parcoursTermines, "trialRelances:", trialRelances, "baselineSent:", baselineSent, "premiumOffertsExpires:", premiumOffertsExpires, "offreEmails:", offreEmails, "relancesPush:", relancesPush, "relancesEmail:", relancesEmail, "relancesBob:", relancesBob, "photosPurgees:", photosPurgees, "parrainsRecompenses:", parrainsRecompenses, "robotsRelances:", robotsRelances);
+      return res.json({ success: true, date: today, slot, pushSent, emailSent, emailFallbackSent, skipped, parcoursSent, parcoursTermines, trialRelances, baselineSent, premiumOffertsExpires, offreEmails, relancesPush, relancesEmail, relancesBob, photosPurgees, parrainsRecompenses, robotsRelances, reminders: remindersData?.length || 0 });
     } catch (e) {
       await require("./alerting.cjs").reportServerError("Tâche planifiée en échec", e, { "Créneau": req.query.slot || "matin" });
       return res.status(500).json({ error: e.message });

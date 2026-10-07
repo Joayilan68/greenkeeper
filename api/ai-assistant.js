@@ -161,7 +161,7 @@ si une fonction n'existe pas, dis simplement que ce n'est pas encore possible) :
   reçu (ami ou créateur) se saisit à l'inscription ou dans les 7 jours, dans la même carte.
 - « Mes équipements » (depuis Mon Gazon) : connexion d'une station météo Ecowitt (clés créées par l'utilisateur sur
   ecowitt.net) ; la pluie tombée, la température et le vent mesurés au jardin remplacent les prévisions pour la journée
-  (arrosage, tonte, gel, notifications). Connexion d'un robot Husqvarna Automower : état du robot, et dans « Aujourd'hui »
+  (arrosage, tonte, gel, notifications). Connexion d'un robot Husqvarna Automower ou Gardena SILENO : état du robot, et dans « Aujourd'hui »
   proposition de le mettre au repos (pluie, gel, vent, semis en cours, avant la 1re tonte, hors saison) ou de relancer son
   planning, envoyée au robot seulement si l'utilisateur valide. Connexion d'un arrosage Gardena ou Rachio : dans « Aujourd'hui »,
   proposition d'arroser chaque zone à la dose du jour (le matin seulement), de suspendre les programmes quand la pluie suffit
