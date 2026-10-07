@@ -350,7 +350,7 @@ async function handleUsers(req, res) {
       devices,
       acquisition,
       bob,
-      notifs,
+      notifs: notifs && { ...notifs, suivis: undefined, retours: presenceRetours(notifs.suivis, presence) },
       relances,
       retention,
       clerkSources,
@@ -673,26 +673,43 @@ function retentionCohortes(users, presence) {
 
 // ── Helper : notifications du moteur sur 14 jours (journal reminders.notif_log) ──
 // Push : envoyées, ouvertes (clic mesuré par le service worker), taux par type ; emails : envoyés.
+// Démarrage et relances (push et email) : envois gardés par compte pour mesurer les retours (presenceRetours).
 async function fetchNotifStats() {
   try {
-    const { data, error } = await createClient(SB_URL, SB_KEY).from("reminders").select("notif_log").limit(5000);
+    const { data, error } = await createClient(SB_URL, SB_KEY).from("reminders").select("user_id, notif_log").limit(5000);
     if (error) throw new Error(error.message);
     const types = {};
+    const suivis = [];
     let push = 0, ouvertes = 0, emails = 0;
     for (const r of data || []) for (const h of r.notif_log?.history || []) {
+      const t = String(h.type || "autre").replace(/^(entretien|maladie|urgence|conseil|gami|relance|demarrage|hiver|printemps|bilan)_.*/, "$1");
+      if (t === "demarrage" || t === "relance") suivis.push({ user: r.user_id, date: h.date, type: t, canal: h.channel === "email" ? "email" : "push" });
       if (h.channel === "email") { emails++; continue; }
       push++;
       if (h.opened) ouvertes++;
-      const t = String(h.type || "autre").replace(/^(entretien|maladie|urgence|conseil|gami|relance|demarrage|hiver|printemps|bilan)_.*/, "$1");
       types[t] = types[t] || { envoyees: 0, ouvertes: 0 };
       types[t].envoyees++;
       if (h.opened) types[t].ouvertes++;
     }
-    return { push, ouvertes, emails, parType: Object.entries(types).sort((a, b) => b[1].envoyees - a[1].envoyees) };
+    return { push, ouvertes, emails, parType: Object.entries(types).sort((a, b) => b[1].envoyees - a[1].envoyees), suivis };
   } catch (e) {
     console.warn("stats-users notifs:", e.message);
     return null;
   }
+}
+
+// Retour après un message de démarrage ou une relance = visite dans l'app le jour même (envoi à 8 h) ou le lendemain
+function presenceRetours(suivis, presence) {
+  const jours = new Set((presence || []).map(p => `${p.user_id}|${p.day}`));
+  const lendemain = (d) => new Date(Date.parse(d) + 86400000).toISOString().slice(0, 10);
+  const res = {};
+  for (const s of suivis || []) {
+    const k = `${s.type} · ${s.canal}`;
+    res[k] = res[k] || { envoyes: 0, retours: 0 };
+    res[k].envoyes++;
+    if (jours.has(`${s.user}|${s.date}`) || jours.has(`${s.user}|${lendemain(s.date)}`)) res[k].retours++;
+  }
+  return Object.entries(res);
 }
 
 // ── Helper : utilisation de Bob sur 30 jours (1 ligne rate_limits par question) ─

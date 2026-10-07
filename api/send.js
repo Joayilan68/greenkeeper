@@ -414,6 +414,12 @@ module.exports = async function handler(req, res) {
                 });
                 const d = await r.json().catch(() => ({}));
                 if (!r.ok || d.error) throw new Error("Resend : " + (d.error?.message || r.status));
+                if (remMap[u.id]) { // trace de l'email (Pilotage : envois et retours des messages de démarrage et des relances)
+                  await supabase.from("reminders").update({
+                    notif_log: appendNotifLog(remMap[u.id].notif_log, { date: today, priority: 5, type: typeMsg, slot, channel: "email" }),
+                    updated_at: new Date().toISOString(),
+                  }).eq("user_id", u.id);
+                }
                 relancesEmail++;
               }
             } catch (e) {
