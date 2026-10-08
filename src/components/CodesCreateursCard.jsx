@@ -78,7 +78,7 @@ export default function CodesCreateursCard({ getToken }) {
         </div>
       )}
       <div style={{ fontSize:10, color:"#4a7c5c", lineHeight:1.5, marginTop:8 }}>
-        Lien à donner : mongazon360.fr/?p=CODE (ou code saisi à l'inscription) → 1 mois offert au filleul. Commission = % des paiements Stripe des filleuls abonnés pendant la durée indiquée, à verser au créateur.
+        Lien à donner : mongazon360.fr/?p=CODE (ou code saisi à l'inscription) → 1 mois offert au filleul. Commission = % des paiements Stripe des filleuls pendant la durée indiquée (même s'ils se sont désabonnés depuis), à verser au créateur.
       </div>
     </div>
   );

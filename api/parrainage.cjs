@@ -10,6 +10,7 @@
 const MOIS_OFFERT_JOURS = 30;
 const RECOMPENSES_PAR_AN = 12;
 const CREDIT_ABONNE_CENTIMES = 499;
+const JOURS_FILLEUL_ACTIF = 2; // filleul actif : app utilisée au moins 2 jours différents (CGV)
 
 const normCode = (c) => String(c || "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 16);
 const codeValide = (c) => /^[A-Z0-9]{3,16}$/.test(c);
@@ -23,6 +24,10 @@ const stripeGet = async (chemin) => {
 };
 const clientStripe = async (userId) =>
   (await stripeGet(`subscriptions/search?query=${encodeURIComponent(`metadata['userId']:'${userId}'`)}&limit=1`)).data?.[0]?.customer || null;
+
+// Jours différents où le compte a utilisé l'app (une ligne par jour dans daily_active_users)
+const joursUtilisation = async (sb, userId) =>
+  (await sb.from("daily_active_users").select("day", { count: "exact", head: true }).eq("user_id", userId)).count || 0;
 
 // Ajoute des jours de Premium offert (user_access + Clerk), à partir d'aujourd'hui ou de la fin actuelle.
 // Un accès offert à vie n'est pas modifié. Renvoie la nouvelle date de fin, ou null si rien n'a changé.
@@ -117,8 +122,7 @@ async function recompenserParrains(sb) {
   let n = 0;
   for (const p of enAttente || []) {
     try {
-      const { count } = await sb.from("daily_active_users").select("day", { count: "exact", head: true }).eq("user_id", p.filleul_id);
-      if ((count || 0) < 2) continue;
+      if (await joursUtilisation(sb, p.filleul_id) < JOURS_FILLEUL_ACTIF) continue;
       const parrain = p.codes.user_id;
       const an = new Date(Date.now() - 365 * 86400000).toISOString();
       const { data: codesParrain } = await sb.from("codes").select("code").eq("user_id", parrain);
@@ -155,16 +159,14 @@ async function recompenserParrains(sb) {
   return n;
 }
 
-// Pilotage → Finances : codes créateurs et parrainage, avec inscrits, actifs, abonnés, CA et commission
+// Pilotage → Finances : codes créateurs et parrainage, avec inscrits, actifs, abonnés, CA et commission.
+// CA = factures payées par les filleuls pendant la durée de commission, y compris par un filleul désabonné depuis.
 async function statsCodes(sb, clerkUsers) {
-  const [{ data: codes }, { data: filleuls }, { data: actifs }] = await Promise.all([
+  const [{ data: codes }, { data: filleuls }] = await Promise.all([
     sb.from("codes").select("*").order("created_at", { ascending: false }),
     sb.from("parrainages").select("filleul_id, code, created_at, recompense_at"),
-    sb.from("daily_active_users").select("user_id, day"),
   ]);
-  const jours = {};
-  for (const a of actifs || []) (jours[a.user_id] ||= new Set()).add(a.day);
-  const abonnes = new Set(clerkUsers.filter(u => u.public_metadata?.isSubscribed === true).map(u => u.id));
+  const abonnement = new Map(clerkUsers.map(u => [u.id, u.public_metadata || {}])); // isSubscribed, subscriptionStatus
   const parCode = {};
   for (const f of filleuls || []) (parCode[f.code] ||= []).push(f);
 
@@ -172,7 +174,7 @@ async function statsCodes(sb, clerkUsers) {
   for (const c of (codes || []).filter(c => c.type === "createur")) {
     const liste = parCode[c.code] || [];
     let ca = 0;
-    for (const f of liste.filter(f => abonnes.has(f.filleul_id))) {
+    for (const f of liste.filter(f => abonnement.get(f.filleul_id)?.subscriptionStatus)) { // abonné un jour
       try {
         const client = await clientStripe(f.filleul_id);
         if (!client) continue;
@@ -181,11 +183,12 @@ async function statsCodes(sb, clerkUsers) {
         ca += (factures.data || []).filter(i => i.created * 1000 <= fin.getTime()).reduce((s, i) => s + (i.amount_paid || 0), 0);
       } catch (e) { console.warn("[parrainage] CA créateur :", e.message); }
     }
+    const jours = await Promise.all(liste.map(f => joursUtilisation(sb, f.filleul_id)));
     createurs.push({
       code: c.code, nom: c.nom, email: c.email, actif: c.actif, commissionPct: c.commission_pct, dureeMois: c.duree_mois,
       lien: lien(c.code), inscrits: liste.length,
-      actifs: liste.filter(f => (jours[f.filleul_id]?.size || 0) >= 2).length,
-      abonnes: liste.filter(f => abonnes.has(f.filleul_id)).length,
+      actifs: jours.filter(n => n >= JOURS_FILLEUL_ACTIF).length,
+      abonnes: liste.filter(f => abonnement.get(f.filleul_id)?.isSubscribed === true).length,
       ca: ca / 100, commission: Math.round(ca * (c.commission_pct || 0)) / 10000,
     });
   }

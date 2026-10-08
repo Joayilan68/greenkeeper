@@ -6,6 +6,8 @@
 //   GET /api/stats?type=users    → stats Clerk + sources UTM des inscrits
 //   GET /api/stats?type=errors   → erreurs (error_events) regroupées par problème + état des tâches planifiées
 //   GET /api/stats?type=services → vérification en direct des services externes (Pilotage → Services)
+//   GET|POST /api/stats?type=social → followers des réseaux sociaux (saisie mensuelle, Pilotage → Réseaux)
+//   GET|POST /api/stats?type=guests → Premium offerts (Pilotage → Finances)
 //   GET|POST /api/stats?type=codes → codes créateurs et parrainage (Pilotage → Finances)
 
 // Emails admin — exclus de TOUTES les stats (règle "admins exclus de tout")
@@ -279,10 +281,6 @@ async function handleUsers(req, res) {
     const newLast30   = allUsers.filter(u => u.created_at > day30).length;
     const startYear   = new Date(new Date().getFullYear(), 0, 1).getTime();
     const newThisYear = allUsers.filter(u => u.created_at >= startYear).length;
-    const activeL30  = allUsers.filter(u => u.last_active_at && u.last_active_at > day30).length;
-    // Actifs aujourd'hui = last_active_at dans les dernières 24h
-    const day1       = now - 24 * 60 * 60 * 1000;
-    const activeToday = allUsers.filter(u => u.last_active_at && u.last_active_at > day1).length;
 
     // Grouper par semaine (8 dernières semaines)
     const weeks = [];
@@ -339,8 +337,6 @@ async function handleUsers(req, res) {
       newLast7,
       newLast30,
       newThisYear,
-      activeL30,
-      activeToday,
       days,
       weeks,
       months,
@@ -364,10 +360,6 @@ async function handleUsers(req, res) {
   }
 }
 
-// ── Premium offerts (famille, bêta…) — Pilotage → Finances ─────────────────────
-// GET  : liste des comptes (Clerk guestAccess ou user_access "guest"), date de fin, dernière activité
-// POST : { action:"add", email, until, label } | { action:"update", userId, until, label } | { action:"remove", userId }
-//        until = "AAAA-MM-JJ" (dernier jour inclus) ou null (à vie). Le compte doit exister.
 // ── Codes créateurs et parrainage (Pilotage → Finances) : liste + résultats, ajout / modification d'un créateur ──
 async function handleCodes(req, res) {
   const P  = require("./parrainage.cjs");
@@ -384,6 +376,10 @@ async function handleCodes(req, res) {
   }
 }
 
+// ── Premium offerts (famille, bêta…) — Pilotage → Finances ─────────────────────
+// GET  : liste des comptes (Clerk guestAccess ou user_access "guest"), date de fin, dernière activité
+// POST : { action:"add", email, until, label } | { action:"update", userId, until, label } | { action:"remove", userId }
+//        until = "AAAA-MM-JJ" (dernier jour inclus) ou null (à vie). Le compte doit exister.
 async function handleGuests(req, res) {
   const sb = createClient(SB_URL, SB_KEY);
   const primary = (u) => u.email_addresses?.find(e => e.id === u.primary_email_address_id)?.email_address
@@ -543,8 +539,6 @@ async function fetchDauByDay() {
   }
 }
 
-// ── Helper : points géographiques des inscrits (profiles.lat/lon agrégés) ─────
-// Regroupe par coordonnées arrondies (≈ même ville) avec un compteur.
 // ── Helper : diagnostics photo de tous les inscrits (hors admins) ──────────────
 // Total, 7 derniers jours, score visuel moyen, problèmes les plus détectés.
 async function fetchDiagnosticsRows() {
@@ -577,6 +571,8 @@ function diagnosticsStats(allRows, userIds) {
   };
 }
 
+// ── Helper : points géographiques des inscrits (profiles.lat/lon agrégés) ─────
+// Regroupe par coordonnées arrondies (≈ même ville) avec un compteur.
 async function fetchGeoPoints() {
   try {
     if (!SB_URL || !SB_KEY) return [];
@@ -602,9 +598,9 @@ async function fetchGeoPoints() {
   }
 }
 
-// ── Helper : entonnoir de conversion (table funnel_events, 30 jours) ──────────
-// Étapes : landing_view → cta_click → auth_screen_view → signup_completed.
-// Renvoie les compteurs + taux de passage entre chaque étape.
+// ── Helper : entonnoir de conversion (vue funnel_events_by_day, 30 jours) ─────
+// Compteurs par étape (landing, essai, démo, clic inscription, inscription) et deux taux :
+// visite → inscription, et essai (diagnostic + démo) → clic inscription.
 async function fetchFunnel() {
   const empty = {
     landing_view: 0, cta_click: 0, auth_screen_view: 0, signup_completed: 0,
