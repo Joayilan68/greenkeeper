@@ -6,6 +6,7 @@
 // qui sert aussi au taux de retour de Pilotage.
 // Séquence de démarrage : la première semaine (J+1 à J+6), un message par jour à l'inscrit qui n'est pas
 // venu dans l'app la veille ni le jour même ; historique dans private_metadata.demarrage (jours envoyés).
+// Le dernier (J+6) à l'inscrit jamais revenu est construit sur sa situation (messageFinal).
 
 const JOUR = 86400000;
 const SEUILS = [7, 21, 45];
@@ -26,6 +27,13 @@ function marquerRetours(u) {
   if (!h.some(r => !r.retour && estRevenu(u, r))) return null;
   return h.map(r => !r.retour && estRevenu(u, r) ? { ...r, retour: true } : r);
 }
+
+// Inscrit jamais revenu dans l'app après son jour d'inscription
+const jamaisRevenu = (u) => { const v = derniereVisite(u); return !v || jourDe(v) <= jourDe(u.created_at); };
+const JOUR_FINAL_DEMARRAGE = SEUILS[0] - 1; // J+6 : dernier message avant le silence (relances sur consentement seulement)
+
+// Gazon clairsemé ou sol nu : même détection que la carte « Des zones à regarnir » de Diagnostic.jsx
+const aRegarnir = (p) => !!p && /sol.?nu|clairsem|d[ée]garn|trou|pelad|mort|densit/i.test(`${p.id || ""} ${p.nom || ""}`);
 
 // Palier dû aujourd'hui (1 à 3) ou null. Un seul message même si plusieurs seuils sont franchis.
 function palierDu(u, now = Date.now(), month = new Date(now).getMonth() + 1) {
@@ -103,18 +111,19 @@ function etapeDemarrage(u, now = Date.now()) {
 
 // Messages de démarrage, un thème par jour (fonctions réelles de l'app) ; repli sur l'action utile du moment.
 // Le premier message envoyé traite d'abord le profil à compléter ou le problème du dernier diagnostic.
-function messageDemarrage(jour, { ville, probleme, action, conseil, profilComplet, premier }) {
-  const chez = ville ? ` à ${ville}` : "";
+function messageDemarrage(jour, { ville, probleme, action, conseil, profilComplet, premier, final, semis }) {
+  const chez = ville ? ` à ${String(ville).split(",")[0].trim()}` : "";
   const actionSemaine = {
     title: action ? `🌿 Aujourd'hui${chez} : ${sansEmoji(action.title)}` : `🌿 Ton gazon${chez} aujourd'hui`,
     body: `${action ? action.body : conseil.body} Chaque jour, « Aujourd'hui » te dit quoi faire selon la météo.`,
     url: "/today",
   };
-  if (!profilComplet && (jour <= 2 || premier)) return {
+  if (!profilComplet && (jour <= 2 || premier || final)) return {
     title: "⏱️ Ton plan d'entretien est à 2 minutes",
     body: "Indique ton type de gazon et ton sol : Bob te prépare un plan mois par mois, calé sur la météo de chez toi.",
     url: "/setup",
   };
+  if (final) return messageFinal({ chez, probleme, action, semis });
   if ((jour === 1 || premier) && probleme) return {
     title: `🔬 ${probleme.nom} : voici quoi faire`,
     body: `${probleme.solution || "Ton diagnostic a repéré ce problème."} Ton plan d'action t'attend dans l'app.`,
@@ -138,6 +147,36 @@ function messageDemarrage(jour, { ville, probleme, action, conseil, profilComple
   return actionSemaine;
 }
 
+// Dernier message (J+6) à l'inscrit jamais revenu, selon sa situation : zones à regarnir (fenêtre de semis de sa
+// zone, base de connaissances : ouverte maintenant ou prochaine date), autre problème de son dernier diagnostic,
+// action du jour chez lui, sinon invitation au diagnostic photo. Sans notifications autorisées, plus rien ne part ensuite.
+const RAPPELS = " Autorise les notifications dans l'app : Bob te prévient au bon moment.";
+function messageFinal({ chez, probleme, action, semis }) {
+  if (aRegarnir(probleme) && semis && (semis.verdict !== "bloque" || semis.prochaineFenetre)) {
+    return semis.verdict !== "bloque" ? {
+      title: `🌱 ${probleme.nom}${chez} : c'est le moment de regarnir`,
+      body: `Ton diagnostic a repéré des zones à regarnir, et la fenêtre de semis est ouverte dans ta zone. Le parcours Regarnissage te guide jour par jour : préparation du sol, semis, arrosages.${RAPPELS}`,
+      url: "/parcours?type=regarnissage", bouton: "Lancer mon regarnissage",
+    } : {
+      title: `🌱 ${probleme.nom} : prépare ton regarnissage`,
+      body: `Ton diagnostic a repéré des zones à regarnir. Dans ta zone, la prochaine occasion de semer est ${semis.prochaineFenetre}. Programme ton parcours Regarnissage dès maintenant : Bob te préviendra à l'ouverture de la fenêtre si tu autorises les notifications.`,
+      url: "/parcours?type=regarnissage", bouton: "Préparer mon regarnissage",
+    };
+  }
+  if (probleme) return {
+    title: `🔬 ${probleme.nom} : ton plan d'action t'attend`,
+    body: `${probleme.solution || "Ton diagnostic a repéré ce problème."}${RAPPELS}`,
+    url: "/today",
+  };
+  if (action) return { title: `🌿 Aujourd'hui${chez} : ${sansEmoji(action.title)}`, body: `${action.body}${RAPPELS}`, url: "/today" };
+  return {
+    title: `📸 Et ta pelouse${chez}, elle en est où ?`,
+    body: `Une photo suffit : le diagnostic repère mousse, zones sèches ou clairsemées et te dit quoi faire.${RAPPELS}`,
+    url: "/diagnostic", bouton: "Faire mon diagnostic",
+  };
+}
+
 const ajouterRelance = (u, entree) => [...historique(u), entree].slice(-6);
 
-module.exports = { palierDu, messageRelance, marquerRetours, ajouterRelance, statsRelances, etapeDemarrage, messageDemarrage };
+module.exports = { palierDu, messageRelance, marquerRetours, ajouterRelance, statsRelances, etapeDemarrage, messageDemarrage,
+  jamaisRevenu, aRegarnir, JOUR_FINAL_DEMARRAGE };
