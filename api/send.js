@@ -337,7 +337,9 @@ module.exports = async function handler(req, res) {
       let relancesPush = 0, relancesEmail = 0;
       if (slot === "matin") {
         try {
-          const { palierDu, messageRelance, marquerRetours, ajouterRelance, etapeDemarrage, messageDemarrage } = require("./relances.cjs");
+          const { palierDu, messageRelance, marquerRetours, ajouterRelance, etapeDemarrage, messageDemarrage,
+            jamaisRevenu, aRegarnir, JOUR_FINAL_DEMARRAGE } = require("./relances.cjs");
+          const { canSow } = require("./parcoursEngine.cjs");
           const { ADMIN_EMAILS } = require("./auth.cjs");
           const remMap = {};
           (remindersData || []).forEach(r => { remMap[r.user_id] = r; });
@@ -381,12 +383,15 @@ module.exports = async function handler(req, res) {
             });
             let probleme = null;
             const premier = !!etape && !(u.private_metadata?.demarrage || []).length;
-            if (premier && profilComplet) {
+            const final = etape === JOUR_FINAL_DEMARRAGE && jamaisRevenu(u); // dernier message, selon sa situation
+            if ((premier || final) && profilComplet) {
               const { data: diag } = await supabase.from("diagnostics").select("problemes")
                 .eq("user_id", u.id).order("created_at", { ascending: false }).limit(1).maybeSingle();
               probleme = Array.isArray(diag?.problemes) ? diag.problemes[0] || null : null;
             }
-            const contexte = { ville: profile.ville, action, conseil: conseilDuJour(today, month), profilComplet, probleme, premier };
+            // Zones à regarnir : fenêtre de semis de sa zone aujourd'hui (base de connaissances)
+            const semis = final && aRegarnir(probleme) ? canSow({ lat: profile.lat, lon: profile.lon, dateSemis: today, soilTempSource: "estime" }) : null;
+            const contexte = { ville: profile.ville, action, conseil: conseilDuJour(today, month), profilComplet, probleme, premier, final, semis };
             const msg = palier ? messageRelance(palier, contexte) : messageDemarrage(etape, contexte);
             const typeMsg = palier ? `relance_${palier}` : `demarrage_${etape}`;
 
@@ -410,7 +415,7 @@ module.exports = async function handler(req, res) {
                   body: JSON.stringify({
                     from: "Bob de Mongazon360 <bonjour@mongazon360.fr>", to: [email], subject: msg.title,
                     html: buildOffreEmailHtml(u.first_name || "jardinier", msg.title, [esc(msg.body)],
-                      profilComplet ? "Ouvrir Mongazon360" : "Créer mon plan", `https://mongazon360.fr${msg.url}`),
+                      msg.bouton || (profilComplet ? "Ouvrir Mongazon360" : "Créer mon plan"), `https://mongazon360.fr${msg.url}`),
                     headers: { "List-Unsubscribe": "<https://mongazon360.fr/parametres>" },
                   }),
                 });
