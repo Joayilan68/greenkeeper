@@ -1,9 +1,10 @@
 // api/objets.js
 // Équipements connectés de l'utilisateur connecté (écran « Mes équipements », robot dans « Aujourd'hui ») :
 //   GET                                       → équipements (sans les clés), mesures de la station, état du robot
-//   GET ?code=…&state=…                       → retour de la connexion Husqvarna (adresse de retour déclarée chez Husqvarna)
+//   GET ?code=…&state=…                       → retour d'une connexion Husqvarna Group ou Netatmo (adresse déclarée chez eux)
 //   POST { action: "stations", applicationKey, apiKey }        → stations du compte Ecowitt
 //   POST { action: "ajouter", applicationKey, apiKey, mac, nom } → connexion de la station (clés chiffrées)
+//   POST { action: "netatmo" }                → adresse de connexion au compte Netatmo (station météo)
 //   POST { action: "husqvarna" }              → adresse de connexion au compte Husqvarna
 //   POST { action: "robot", commande }        → commande validée par l'utilisateur (repos_journee, repos_long, reprendre)
 //   POST { action: "gardena" }                → adresse de connexion au compte Husqvarna Group pour l'arrosage Gardena
@@ -18,7 +19,7 @@ const { verifiedUserId } = require("./auth.cjs");
 const E = require("./equipements.cjs");
 
 const COLONNES = "id, type, marque, nom, statut, erreur, mesures, mesures_at, created_at";
-const retourHusqvarna = (req) => `https://${req.headers["x-forwarded-host"] || req.headers.host}/api/objets`;
+const adresseRetour = (req) => `https://${req.headers["x-forwarded-host"] || req.headers.host}/api/objets`;
 
 // Gardena : l'équipement demandé (arrosage ou robot) est enregistré, et l'autre aussi s'il existe sur le compte
 // et qu'aucun équipement d'une autre marque n'occupe déjà sa place ; un arrosage et un robot par compte dans l'app
@@ -48,15 +49,33 @@ async function connexionGardena(supabase, userId, jetons, objet) {
   return lignes.length > 1 ? "ok_tout" : "ok";
 }
 
-// Retour de Husqvarna : jetons obtenus, robot (ou équipements Gardena) enregistré, puis retour à « Mes équipements »
-async function connexionHusqvarna(req, res, supabase) {
+// Netatmo : station du compte enregistrée (la première qui envoie des mesures, sinon la première) ; une station par compte
+async function connexionNetatmo(supabase, userId, code, redirectUri) {
+  const jetons = await E.jetonsNetatmo({ grant_type: "authorization_code", code, redirect_uri: redirectUri, scope: "read_station" });
+  const stations = await E.stationsNetatmo(jetons.access);
+  if (!stations.length) return "aucun";
+  const st = stations.find(s => s.mesures.temp !== null || s.mesures.pluie_jour !== null) || stations[0];
+  const { error } = await supabase.from("equipements").upsert({
+    user_id: userId, type: "station", marque: "netatmo", appareil: st.id, nom: st.nom.slice(0, 60),
+    secret: E.chiffrer(jetons), statut: "connecte", erreur: null, mesures: st.mesures, mesures_at: new Date().toISOString(),
+  }, { onConflict: "user_id,type" });
+  if (error) throw error;
+  return "ok";
+}
+
+// Retour d'une connexion chez le fabricant (Husqvarna Group : robot ou Gardena ; Netatmo : station), puis retour à
+// « Mes équipements » ; connexion refusée par l'utilisateur (?error=…) : « refus »
+async function retourConnexion(req, res, supabase) {
   const etat = E.verifierEtat(req.query.state);
-  const gardena = etat?.objet === "gardena" || etat?.objet === "gardena_robot";
-  const fin = (resultat) => res.redirect(302, `/equipements?${gardena ? etat.objet : "husqvarna"}=${resultat}`);
+  const objet = etat?.objet;
+  const gardena = objet === "gardena" || objet === "gardena_robot";
+  const fin = (resultat) => res.redirect(302, `/equipements?${gardena || objet === "netatmo" ? objet : "husqvarna"}=${resultat}`);
   if (!etat) return fin("expire");
+  if (!req.query.code) return fin("refus");
   const { userId } = etat;
   try {
-    const jetons = await E.jetonsHusqvarna({ grant_type: "authorization_code", code: String(req.query.code), redirect_uri: retourHusqvarna(req) });
+    if (objet === "netatmo") return fin(await connexionNetatmo(supabase, userId, String(req.query.code), adresseRetour(req)));
+    const jetons = await E.jetonsHusqvarna({ grant_type: "authorization_code", code: String(req.query.code), redirect_uri: adresseRetour(req) });
     if (gardena) return fin(await connexionGardena(supabase, userId, jetons, etat.objet));
     const robots = await E.robotsHusqvarna(jetons.access);
     if (!robots.length) return fin("aucun");
@@ -68,7 +87,7 @@ async function connexionHusqvarna(req, res, supabase) {
     if (error) throw error;
     return fin("ok");
   } catch (e) {
-    await require("./alerting.cjs").reportServerError(`Connexion ${gardena ? "Gardena" : "Husqvarna"} en échec`, e, { "Utilisateur": userId });
+    await require("./alerting.cjs").reportServerError(`Connexion ${objet === "netatmo" ? "Netatmo" : gardena ? "Gardena" : "Husqvarna"} en échec`, e, { "Utilisateur": userId });
     return fin("erreur");
   }
 }
@@ -76,7 +95,7 @@ async function connexionHusqvarna(req, res, supabase) {
 module.exports = async function handler(req, res) {
   if (!["GET", "POST"].includes(req.method)) return res.status(405).end();
   const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
-  if (req.method === "GET" && req.query.code && req.query.state) return connexionHusqvarna(req, res, supabase);
+  if (req.method === "GET" && req.query.state && (req.query.code || req.query.error)) return retourConnexion(req, res, supabase);
 
   const userId = await verifiedUserId(req);
   if (!userId) return res.status(401).json({ error: "Connexion requise" });
@@ -116,7 +135,12 @@ module.exports = async function handler(req, res) {
 
     if (["husqvarna", "gardena", "gardena_robot"].includes(action)) {
       if (!process.env.HUSQVARNA_CLIENT_ID) return res.status(503).json({ error: "Connexion pas encore disponible" });
-      return res.json({ url: E.urlConnexionHusqvarna(userId, retourHusqvarna(req), action === "husqvarna" ? "robot" : action) });
+      return res.json({ url: E.urlConnexionHusqvarna(userId, adresseRetour(req), action === "husqvarna" ? "robot" : action) });
+    }
+
+    if (action === "netatmo") {
+      if (!process.env.NETATMO_CLIENT_ID) return res.status(503).json({ error: "Connexion Netatmo pas encore disponible" });
+      return res.json({ url: E.urlConnexionNetatmo(userId, adresseRetour(req)) });
     }
 
     if (action === "rachio_programmateurs" || action === "rachio") {

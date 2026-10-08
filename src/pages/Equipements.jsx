@@ -11,17 +11,25 @@ const nombre = (v, u) => typeof v === "number" ? `${v.toLocaleString("fr-FR", { 
 const champ = { width:"100%", boxSizing:"border-box", background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:8, padding:"9px 10px", color:"#e8f5e9", fontSize:12, marginTop:4 };
 const bouton = { background:"linear-gradient(135deg,#43a047,#2e7d32)", color:"#fff", border:"none", borderRadius:10, padding:"10px 16px", fontSize:13, fontWeight:800, cursor:"pointer" };
 
-// Retour de la connexion Husqvarna (api/objets.js → /equipements?husqvarna=…)
+// Retours des connexions chez le fabricant (api/objets.js → /equipements?husqvarna=…, ?gardena=…, ?netatmo=…)
+const EXPIRE = "La connexion a pris trop de temps, recommence.";
+const REFUS = "Connexion annulée : rien n'a été enregistré.";
 const RETOURS_HUSQVARNA = {
   ok: "✅ Robot connecté : « Aujourd'hui » te proposera de le mettre au repos ou de le relancer selon la météo et tes conseils.",
   aucun: "Aucun robot trouvé sur ce compte Husqvarna.",
-  expire: "La connexion a pris trop de temps, recommence.",
+  expire: EXPIRE, refus: REFUS,
   erreur: "La connexion Husqvarna a échoué, réessaie plus tard.",
 };
+const RETOURS_NETATMO = {
+  ok: "✅ Station Netatmo connectée : la pluie tombée, la température et le vent mesurés chez toi remplacent les prévisions de la journée.",
+  aucun: "Aucune station météo trouvée sur ce compte Netatmo.",
+  expire: EXPIRE, refus: REFUS,
+  erreur: "La connexion Netatmo a échoué, réessaie plus tard.",
+};
 
-// Retour de la connexion Gardena (même compte Husqvarna Group : api/objets.js → /equipements?gardena=… ou ?gardena_robot=…)
+// Gardena : même compte Husqvarna Group (?gardena=… pour l'arrosage, ?gardena_robot=… pour le robot)
 const ECHECS_GARDENA = {
-  expire: "La connexion a pris trop de temps, recommence.",
+  expire: EXPIRE, refus: REFUS,
   erreur: "La connexion Gardena a échoué : l'accès Gardena n'est peut-être pas encore ouvert, réessaie plus tard.",
 };
 const TOUT_GARDENA = "✅ Arrosage et robot Gardena connectés : « Aujourd'hui » te proposera d'arroser à la bonne dose le matin, de suspendre les programmes quand il pleut, et de mettre ton robot au repos ou de le relancer.";
@@ -42,7 +50,7 @@ const A_VENIR = [
   { icone:"📷", titre:"Caméra", texte:"Une photo de ta pelouse chaque semaine, analysée comme un diagnostic." },
 ];
 
-// Mes équipements (depuis Mon Gazon) : station météo Ecowitt, robot Husqvarna ou Gardena et arrosage Gardena ou Rachio
+// Mes équipements (depuis Mon Gazon) : station météo Netatmo ou Ecowitt, robot Husqvarna ou Gardena et arrosage Gardena ou Rachio
 // connectés ; caméras à venir
 export default function Equipements() {
   const navigate = useNavigate();
@@ -52,7 +60,7 @@ export default function Equipements() {
   const [cles, setCles] = useState({ applicationKey:"", apiKey:"" });
   const [stations, setStations] = useState(null);
   const retourHq = RETOURS_HUSQVARNA[params.get("husqvarna")] || RETOURS_GARDENA[params.get("gardena")]
-    || RETOURS_GARDENA_ROBOT[params.get("gardena_robot")];
+    || RETOURS_GARDENA_ROBOT[params.get("gardena_robot")] || RETOURS_NETATMO[params.get("netatmo")];
   const [cleRachio, setCleRachio] = useState("");
   const [programmateurs, setProgrammateurs] = useState(null);
 
@@ -67,11 +75,8 @@ export default function Equipements() {
     setCles({ applicationKey:"", apiKey:"" }); setStations(null); charger();
   };
   const retirer = async (id) => { if (await action({ action:"retirer", id })) charger(); };
-  const connecterRobot = async () => {
-    const d = await action({ action:"husqvarna" });
-    if (d?.url) window.location.href = d.url;
-  };
-  const connecterGardena = async (objet = "gardena") => {
+  // Connexion sur le site du fabricant (husqvarna, gardena, gardena_robot, netatmo), qui revient sur cette page
+  const connexion = async (objet) => {
     const d = await action({ action: objet });
     if (d?.url) window.location.href = d.url;
   };
@@ -120,7 +125,7 @@ export default function Equipements() {
           {eq && (
             <>
               <div style={{ fontSize:12, color: eq.statut === "erreur" ? "#f9a825" : "#a5d6a7", margin:"6px 0 10px" }}>
-                {eq.nom} · Ecowitt · {eq.statut === "erreur" ? `⚠️ ${eq.erreur}` : "✓ connectée"}
+                {eq.nom} · {eq.marque === "netatmo" ? "Netatmo" : "Ecowitt"} · {eq.statut === "erreur" ? `⚠️ ${eq.erreur}` : "✓ connectée"}
               </div>
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
                 {[["🌡️", nombre(m?.temp, "°C"), "Température"], ["💧", nombre(m?.pluie_jour, "mm"), "Pluie aujourd'hui"],
@@ -138,8 +143,11 @@ export default function Equipements() {
               <div style={{ fontSize:11, color:"#a5d6a7", lineHeight:1.6, margin:"10px 0" }}>
                 La pluie tombée, la température et le vent mesurés chez toi remplacent les prévisions pour la journée : arrosage, tonte, alertes gel, notifications et Bob s'appuient sur ton jardin.
               </div>
+              {eq.statut === "erreur" && eq.marque === "netatmo" && (
+                <button onClick={() => connexion("netatmo")} disabled={envoi} style={{ ...bouton, display:"block", marginBottom:10 }}>Reconnecter ma station Netatmo</button>
+              )}
               <button onClick={() => retirer(eq.id)} disabled={envoi} style={{ background:"none", border:"none", padding:0, color:"#81c784", fontSize:11, cursor:"pointer", textDecoration:"underline" }}>
-                Déconnecter la station (ses clés sont effacées)
+                Déconnecter la station (l'accès est effacé)
               </button>
             </>
           )}
@@ -149,7 +157,9 @@ export default function Equipements() {
               <div style={{ fontSize:12, color:"#a5d6a7", lineHeight:1.6, margin:"6px 0 10px" }}>
                 Connecte ta station : la pluie réellement tombée et la température de ton jardin remplacent les prévisions pour décider d'arroser, de tondre ou de protéger ton gazon du gel.
               </div>
-              <div style={{ fontSize:11, fontWeight:700, color:"#e8f5e9" }}>Compatible : stations Ecowitt reliées à ecowitt.net</div>
+              <div style={{ fontSize:11, fontWeight:700, color:"#e8f5e9", marginBottom:6 }}>Netatmo (Station Météo, avec module extérieur ou pluviomètre)</div>
+              <button onClick={() => connexion("netatmo")} disabled={envoi} style={bouton}>{envoi ? "Ouverture…" : "Connecter ma station Netatmo"}</button>
+              <div style={{ fontSize:11, fontWeight:700, color:"#e8f5e9", margin:"14px 0 0" }}>Ecowitt (station reliée à ecowitt.net)</div>
               <div style={{ fontSize:11, color:"#81c784", lineHeight:1.6, margin:"6px 0 10px" }}>
                 1. Sur <a href="https://www.ecowitt.net/home/user" target="_blank" rel="noopener noreferrer" style={{ color:"#a5d6a7" }}>ecowitt.net</a>, ouvre « Private Center » et crée une <strong>Application Key</strong> et une <strong>API Key</strong>.<br/>
                 2. Colle-les ci-dessous, puis choisis ta station.
@@ -176,7 +186,7 @@ export default function Equipements() {
                 </div>
               )}
               <div style={{ fontSize:10, color:"#4a7c5c", lineHeight:1.5, marginTop:10 }}>
-                Tes clés sont chiffrées et servent uniquement à lire les mesures de ta station. Tu peux déconnecter la station ici ou supprimer les clés sur ecowitt.net à tout moment. Autres marques de stations : en préparation.
+                Netatmo : connexion sur le site de Netatmo, Mongazon360 ne voit jamais ton mot de passe ; accès en lecture seule, retirable dans ton compte Netatmo. Ecowitt : clés chiffrées, supprimables sur ecowitt.net. Dans les deux cas, tu peux déconnecter la station ici à tout moment. Autres marques de stations : en préparation.
               </div>
             </>
           )}
@@ -194,7 +204,7 @@ export default function Equipements() {
                 Dans « Aujourd'hui », l'app te propose de mettre ton robot au repos (pluie, gel, vent, semis en cours, hors saison) ou de relancer son planning : rien n'est envoyé au robot sans ta validation.
               </div>
               {eqRobot.statut === "erreur" && (
-                <button onClick={() => eqRobot.marque === "gardena" ? connecterGardena("gardena_robot") : connecterRobot()} disabled={envoi} style={{ ...bouton, marginBottom:10 }}>Reconnecter mon robot</button>
+                <button onClick={() => connexion(eqRobot.marque === "gardena" ? "gardena_robot" : "husqvarna")} disabled={envoi} style={{ ...bouton, marginBottom:10 }}>Reconnecter mon robot</button>
               )}
               <div>
                 <button onClick={() => retirer(eqRobot.id)} disabled={envoi} style={{ background:"none", border:"none", padding:0, color:"#81c784", fontSize:11, cursor:"pointer", textDecoration:"underline" }}>
@@ -208,9 +218,9 @@ export default function Equipements() {
                 Connecte ton robot : l'app te propose de le mettre au repos quand il pleut, gèle ou pendant un semis, et de le relancer quand les conditions sont bonnes.
               </div>
               <div style={{ fontSize:11, fontWeight:700, color:"#e8f5e9", marginBottom:6 }}>Husqvarna Automower (application Automower Connect)</div>
-              <button onClick={connecterRobot} disabled={envoi} style={bouton}>{envoi ? "Ouverture…" : "Connecter mon Automower"}</button>
+              <button onClick={() => connexion("husqvarna")} disabled={envoi} style={bouton}>{envoi ? "Ouverture…" : "Connecter mon Automower"}</button>
               <div style={{ fontSize:11, fontWeight:700, color:"#e8f5e9", margin:"14px 0 6px" }}>Gardena SILENO (application GARDENA smart system)</div>
-              <button onClick={() => connecterGardena("gardena_robot")} disabled={envoi} style={bouton}>{envoi ? "Ouverture…" : "Connecter mon robot Gardena"}</button>
+              <button onClick={() => connexion("gardena_robot")} disabled={envoi} style={bouton}>{envoi ? "Ouverture…" : "Connecter mon robot Gardena"}</button>
               <div style={{ fontSize:10, color:"#4a7c5c", lineHeight:1.5, marginTop:10 }}>
                 Tu te connectes sur le site du groupe Husqvarna (Husqvarna et Gardena) : Mongazon360 ne voit jamais ton mot de passe. Si ton arrosage Gardena est sur le même compte, il est connecté en même temps. Autres marques de robots : en préparation.
               </div>
@@ -230,7 +240,7 @@ export default function Equipements() {
                 Dans « Aujourd'hui », l'app te propose d'arroser chaque zone à la dose du jour (le matin seulement), de suspendre les programmes quand la pluie suffit, ou de mettre l'arrosage en veille l'hiver : rien n'est envoyé sans ta validation.
               </div>
               {eqArrosage.statut === "erreur" && eqArrosage.marque === "gardena" && (
-                <button onClick={() => connecterGardena()} disabled={envoi} style={{ ...bouton, marginBottom:10 }}>Reconnecter Gardena</button>
+                <button onClick={() => connexion("gardena")} disabled={envoi} style={{ ...bouton, marginBottom:10 }}>Reconnecter Gardena</button>
               )}
               <button onClick={() => retirer(eqArrosage.id)} disabled={envoi} style={{ background:"none", border:"none", padding:0, color:"#81c784", fontSize:11, cursor:"pointer", textDecoration:"underline" }}>
                 Déconnecter l'arrosage (l'accès est effacé)
@@ -242,7 +252,7 @@ export default function Equipements() {
                 Connecte ton programmateur : l'app te propose d'arroser à la bonne dose le matin et de suspendre les programmes quand il pleut.
               </div>
               <div style={{ fontSize:11, fontWeight:700, color:"#e8f5e9", marginBottom:6 }}>Gardena smart system (Water Control, Smart Irrigation Control)</div>
-              <button onClick={() => connecterGardena()} disabled={envoi} style={bouton}>{envoi ? "Ouverture…" : "Connecter mon arrosage Gardena"}</button>
+              <button onClick={() => connexion("gardena")} disabled={envoi} style={bouton}>{envoi ? "Ouverture…" : "Connecter mon arrosage Gardena"}</button>
               <div style={{ fontSize:11, fontWeight:700, color:"#e8f5e9", margin:"14px 0 4px" }}>Rachio</div>
               <div style={{ fontSize:11, color:"#81c784", lineHeight:1.6 }}>
                 Sur <a href="https://app.rach.io" target="_blank" rel="noopener noreferrer" style={{ color:"#a5d6a7" }}>app.rach.io</a>, ouvre les réglages de ton compte et copie ta clé API (« Get API Key »).

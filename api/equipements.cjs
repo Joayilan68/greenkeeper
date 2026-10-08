@@ -1,7 +1,7 @@
 // api/equipements.cjs
 // Équipements connectés (table equipements, accès serveur uniquement) : clés d'accès chiffrées,
-// connecteurs Ecowitt (station météo), Husqvarna Automower (robot tondeuse), Gardena et Rachio (arrosage), application des mesures
-// du jardin à la météo du jour.
+// connecteurs Ecowitt et Netatmo (station météo), Husqvarna Automower et Gardena SILENO (robot tondeuse), Gardena et Rachio
+// (arrosage), application des mesures du jardin à la météo du jour.
 // Utilisé par api/objets.js (écran « Mes équipements »), api/weather.js (app), api/send.js
 // (notifications) et api/bobContext.cjs (Bob). Aucune donnée n'est gardée au-delà de la dernière mesure.
 
@@ -71,6 +71,70 @@ async function mesuresEcowitt({ applicationKey, apiKey, mac }) {
   return m;
 }
 
+// ── Netatmo (dev.netatmo.com) : connexion OAuth sur le site de Netatmo, accès en lecture (read_station) ──
+// Jetons chiffrés dans equipements.secret ; le jeton d'accès vaut 3 h et le jeton de renouvellement change à chaque
+// renouvellement (réenregistré). Mesures ramenées aux valeurs Ecowitt : module extérieur (température, humidité),
+// pluviomètre (pluie depuis minuit), anémomètre ; une mesure de module de plus de 3 h est ignorée.
+const NETATMO = "https://api.netatmo.com";
+
+function urlConnexionNetatmo(userId, redirectUri) {
+  return `${NETATMO}/oauth2/authorize?${new URLSearchParams({
+    client_id: process.env.NETATMO_CLIENT_ID, redirect_uri: redirectUri, scope: "read_station", state: etatSigne(userId, "netatmo"),
+  })}`;
+}
+
+async function jetonsNetatmo(params) {
+  const r = await fetch(`${NETATMO}/oauth2/token`, {
+    method: "POST", signal: AbortSignal.timeout(8000),
+    headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8", Accept: "application/json" },
+    body: new URLSearchParams({ client_id: process.env.NETATMO_CLIENT_ID, client_secret: process.env.NETATMO_CLIENT_SECRET, ...params }),
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok || !d.access_token) throw new Error(`Netatmo : connexion refusée (${d.error_description || d.error || r.status})`);
+  return { access: d.access_token, refresh: d.refresh_token, expire: Date.now() + (Number(d.expires_in) || 10800) * 1000 };
+}
+
+// Jeton d'accès valable (renouvelé et réenregistré s'il expire dans moins de 2 minutes)
+async function accesNetatmo(supabase, eq) {
+  const j = dechiffrer(eq.secret);
+  if (j.expire - Date.now() > 120000) return j.access;
+  if (!j.refresh) throw new Error("Connexion Netatmo expirée : reconnecte ta station");
+  const neuf = await jetonsNetatmo({ grant_type: "refresh_token", refresh_token: j.refresh });
+  neuf.refresh = neuf.refresh || j.refresh;
+  await supabase.from("equipements").update({ secret: chiffrer(neuf) }).eq("id", eq.id);
+  return neuf.access;
+}
+
+function mesuresModulesNetatmo(station) {
+  const recent = (m) => m?.dashboard_data && Date.now() - m.dashboard_data.time_utc * 1000 < VALIDITE_MS ? m.dashboard_data : null;
+  const module = (type) => recent((station.modules || []).find(m => m.type === type));
+  const num = (v) => typeof v === "number" ? v : null;
+  const ext = module("NAModule1"), pluie = module("NAModule3"), vent = module("NAModule2"); // extérieur, pluviomètre, anémomètre
+  return {
+    temp: num(ext?.Temperature), humidite: num(ext?.Humidity), pluie_jour: num(pluie?.sum_rain_24),
+    vent: num(vent?.WindStrength), rafale: num(vent?.GustStrength), sol_humidite: null,
+  };
+}
+
+// Stations météo du compte Netatmo (ou celle demandée) avec leurs mesures
+async function stationsNetatmo(acces, id) {
+  const r = await fetch(`${NETATMO}/api/getstationsdata?${new URLSearchParams({ get_favorites: "false", ...(id ? { device_id: id } : {}) })}`, {
+    headers: { Authorization: `Bearer ${acces}` }, signal: AbortSignal.timeout(8000),
+  });
+  if (r.status === 401 || r.status === 403) throw new Error("Netatmo refuse l'accès : reconnecte ta station");
+  if (r.status === 429) throw new Error("Trop de demandes envoyées à Netatmo, réessaie plus tard");
+  const d = await r.json().catch(() => null);
+  if (!r.ok || !d?.body) throw new Error(`Netatmo : erreur ${r.status}`);
+  return (d.body.devices || []).map(st => ({ id: st._id, nom: st.station_name || st.module_name || "Station Netatmo", mesures: mesuresModulesNetatmo(st) }));
+}
+
+async function mesuresNetatmo(supabase, eq) {
+  const st = (await stationsNetatmo(await accesNetatmo(supabase, eq), eq.appareil)).find(s => s.id === eq.appareil);
+  if (!st) throw new Error("Station introuvable sur le compte Netatmo");
+  if (st.mesures.temp === null && st.mesures.pluie_jour === null) throw new Error("Pas de mesure récente du module extérieur ni du pluviomètre Netatmo");
+  return st.mesures;
+}
+
 // ── Station de l'utilisateur : dernière mesure (relue si elle a plus de 10 minutes) ───────────
 async function mesuresStation(supabase, userId) {
   const { data: eq } = await supabase.from("equipements").select("*")
@@ -79,7 +143,7 @@ async function mesuresStation(supabase, userId) {
   const age = eq.mesures_at ? Date.now() - Date.parse(eq.mesures_at) : Infinity;
   if (eq.mesures && age < FRAICHEUR_MS) return { ...eq.mesures, at: eq.mesures_at, nom: eq.nom, marque: eq.marque };
   try {
-    const mesures = await mesuresEcowitt({ ...dechiffrer(eq.secret), mac: eq.appareil });
+    const mesures = eq.marque === "netatmo" ? await mesuresNetatmo(supabase, eq) : await mesuresEcowitt({ ...dechiffrer(eq.secret), mac: eq.appareil });
     const at = new Date().toISOString();
     await supabase.from("equipements").update({ mesures, mesures_at: at, statut: "connecte", erreur: null }).eq("id", eq.id);
     return { ...mesures, at, nom: eq.nom, marque: eq.marque };
@@ -115,7 +179,7 @@ const HQ_AUTH = "https://api.authentication.husqvarnagroup.dev/v1/oauth2";
 const HQ_API = "https://api.amc.husqvarna.dev/v1";
 const ETAT_ROBOT_MS = 5 * 60 * 1000; // état du robot relu au plus toutes les 5 minutes
 
-// Paramètre « state » signé : identifie l'utilisateur au retour de Husqvarna (valable 15 minutes)
+// Paramètre « state » signé : identifie l'utilisateur au retour d'une connexion (Husqvarna Group, Netatmo ; valable 15 minutes)
 function etatSigne(userId, objet) {
   const corps = Buffer.from(JSON.stringify({ u: userId, o: objet, e: Date.now() + 15 * 60 * 1000 })).toString("base64url");
   return `${corps}.${crypto.createHmac("sha256", cle()).update(corps).digest("base64url")}`;
@@ -440,6 +504,7 @@ async function commandeArrosage(supabase, userId, { commande, zone, minutes }) {
 
 module.exports = {
   chiffrer, dechiffrer, stationsEcowitt, mesuresEcowitt, mesuresStation, appliquerStation,
+  urlConnexionNetatmo, jetonsNetatmo, stationsNetatmo,
   urlConnexionHusqvarna, verifierEtat, jetonsHusqvarna, robotsHusqvarna, etatRobot, commandeRobot, revoquerHusqvarna,
   jardinsGardena, reprendreRobotsGardena, programmateursRachio, etatArrosage, commandeArrosage,
   minutesJusquaDemain7h,
