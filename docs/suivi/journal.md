@@ -22,3 +22,6 @@ du premier onglet).
   seront confirmés avec les maquettes en novembre. Ajouts au périmètre demandés par Jordan : nettoyage des pages (expérience,
   compréhension), optimisation des tuiles de chaque page, réflexion sur l'intérêt des GreenPoints, des ligues et de la
   page Classement (au 09/10 : 12 utilisateurs actifs sur 30 jours, 9 ont gagné des points, aucune récompense obtenue).
+- 09/10/2026 — Nouveau chantier demandé par Jordan, à lancer sous peu : point complet des API partenaires, pour enrichir les
+  outils automatisés et intégrer le maximum de marques commercialisées en France dont l'API est ouverte et utilisable dans
+  une app payante (robots, arrosage, stations, capteurs de sol, caméras). Livrable : version 2 du fichier « Suivi API ».
