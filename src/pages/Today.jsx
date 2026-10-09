@@ -796,21 +796,27 @@ export default function Today() {
                   : status === "too_soon"
                   ? { color:"#fbbf24", bg:"rgba(251,191,36,0.15)", border:"rgba(251,191,36,0.3)" }
                   : { color:"#f87171", bg:"rgba(248,113,113,0.15)", border:"rgba(248,113,113,0.3)" };
+                // Raison de blocage « court — explication » : le court en étiquette, l'explication en dessous
+                const [raison, ...suite] = String(blockedReason || "").split(" — ");
+                const explication = status === "blocked" && suite.length ? suite.join(" — ") : null;
                 const badgeText =
                   status === "done_today" ? "✓ Fait aujourd'hui" :
                   status === "too_soon"   ? (action.id === "arrosage" // décidé le jour même selon la pluie
                     ? `${daysLeft === 1 ? "Demain" : `Dans ${daysLeft}j`}, selon la météo` : `Dans ${daysLeft}j`) :
-                  status === "blocked"   ? `⛔ ${blockedReason?.split(" — ")[0] || "Bloqué"}` :
+                  status === "blocked"   ? `⛔ ${raison || "Bloqué"}` :
                   `⚠️ Excl. ${daysLeft}j`;
                 return (
                   <div key={action.id} style={{ display:"flex", flexDirection:"column", gap:4, padding:"9px 12px", marginBottom:5, borderRadius:9, background:"rgba(255,255,255,0.07)", border:"1px solid rgba(255,255,255,0.08)" }}>
                     {/* Ligne label + badge */}
-                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-                      <div style={{ fontSize:13, fontWeight:600, color:"#c8e6c9" }}>{action.label}</div>
-                      <div style={{ fontSize:11, fontWeight:700, color:badgeStyle.color, background:badgeStyle.bg, border:`1px solid ${badgeStyle.border}`, borderRadius:8, padding:"3px 10px", whiteSpace:"nowrap", marginLeft:8 }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:8 }}>
+                      <div style={{ fontSize:13, fontWeight:600, color:"#c8e6c9", flexShrink:0 }}>{action.label}</div>
+                      <div style={{ fontSize:11, fontWeight:700, color:badgeStyle.color, background:badgeStyle.bg, border:`1px solid ${badgeStyle.border}`, borderRadius:8, padding:"3px 10px", minWidth:0, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
                         {badgeText}
                       </div>
                     </div>
+                    {explication && (
+                      <div style={{ fontSize:11, color:"#a5d6a7", lineHeight:1.45 }}>{explication.charAt(0).toUpperCase() + explication.slice(1)}</div>
+                    )}
                     {/* ── Bouton Amazon inline si l'action a un produit ── */}
                     {amazonKey && profile && status !== "done_today" && (
                       <ProductCard actionKey={amazonKey} profile={profile} compact />
