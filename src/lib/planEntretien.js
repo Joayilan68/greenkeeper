@@ -68,12 +68,14 @@ const tropFroid   = (w, s = 10) => w?.temp_max !== undefined && w.temp_max < s;
 const pluiePrevue = (w, s = 5)  => w?.precip   !== undefined && w.precip > s;
 const solDetrempé = (w) => w?.precip !== undefined && w.precip > 15;
 const ventFort    = (w) => w?.wind   !== undefined && w.wind >= 40;
-// Tonte sur herbe ou sol mouillés (base, « Pluie et tonte ») : jour de pluie, ≥ 2 mm dans la journée, > 10 mm la veille
+// Tonte sur herbe ou sol mouillés (base, « Pluie et tonte ») : jour de pluie, ≥ 2 mm dans la journée, > 10 mm la veille.
+// Raisons au format « court — explication » comme les autres blocages (le court sert d'étiquette dans « Aujourd'hui »).
 function tonteMouillee(w) {
   const P = TONTE.pluie;
-  if (typeof w?.code === "number" && w.code >= P.codeMeteoMin) return "Il pleut aujourd'hui : herbe mouillée, coupe irrégulière et risque de maladie";
-  if (typeof w?.precip === "number" && w.precip >= P.mmJour) return `Pluie prévue (${w.precip} mm) : herbe mouillée, coupe irrégulière et risque de maladie`;
-  if (typeof w?.precip_veille === "number" && w.precip_veille > P.mmVeille) return "Sol encore détrempé après la pluie d'hier : attends demain";
+  const mouille = "herbe mouillée, coupe irrégulière et risque de maladie";
+  if (typeof w?.code === "number" && w.code >= P.codeMeteoMin) return `Il pleut aujourd'hui — ${mouille}`;
+  if (typeof w?.precip === "number" && w.precip >= P.mmJour) return `Pluie prévue (${String(w.precip).replace(".", ",")} mm) — ${mouille}`;
+  if (typeof w?.precip_veille === "number" && w.precip_veille > P.mmVeille) return "Sol détrempé — il a beaucoup plu hier, attends demain pour tondre";
   return null;
 }
 
@@ -150,7 +152,7 @@ export const ACTIONS_PLAN = [
     getInterval: (month) => month >= 6 && month <= 8 ? 4 : month >= 3 && month <= 5 ? 5 : 7,
     getBlocked: (w, profile, zone) => {
       const premiere = avantPremiereTonte(w, zone);
-      if (premiere) return { blocked: true, raison: `Trop tôt : 1re tonte vers le ${premiere} dans ta zone, quand l'herbe repart` };
+      if (premiere) return { blocked: true, raison: `Trop tôt — 1re tonte vers le ${premiere} dans ta zone, quand l'herbe repart` };
       const mouillee = tonteMouillee(w);
       if (mouillee) return { blocked: true, raison: mouillee };
       if (ventFort(w))       return { blocked: true, raison: "Vents forts (≥40km/h) — reporter" };
