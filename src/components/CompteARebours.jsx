@@ -16,7 +16,7 @@ export default function CompteARebours({ profile, soilTemp, isPaid }) {
   const solChaud = typeof soilTemp === "number" && soilTemp >= c.solPousse;
 
   return (
-    <div style={{ ...card(), background:"linear-gradient(135deg,rgba(129,199,132,0.14),rgba(13,43,26,0.6))", border:"1px solid rgba(129,199,132,0.3)" }}>
+    <div data-tuile="accueil-compte-a-rebours" style={{ ...card(), background:"linear-gradient(135deg,rgba(129,199,132,0.14),rgba(13,43,26,0.6))", border:"1px solid rgba(129,199,132,0.3)" }}>
       <div style={{ fontSize:11, fontWeight:800, color:"#81c784", letterSpacing:1, textTransform:"uppercase" }}>🌱 Compte à rebours du printemps</div>
       <div style={{ fontSize:18, fontWeight:900, color:"#F1F8F2", margin:"6px 0 2px" }}>{titre}</div>
       <div style={{ fontSize:11, color:"#81c784" }}>Vers le {dateCourte(c.tonte)} en zone {c.zone}, selon la reprise de la pousse</div>

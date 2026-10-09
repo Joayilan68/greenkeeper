@@ -521,7 +521,7 @@ export default function Today() {
 
         {/* Météo — Premium complète */}
         {isPaid && weather && (()=>{ const w=getWMO(weather.code); return (
-          <div style={{...card(),background:"rgba(76,175,80,0.12)",border:"1px solid rgba(76,175,80,0.25)"}}>
+          <div data-tuile="aujourdhui-meteo" style={{...card(),background:"rgba(76,175,80,0.12)",border:"1px solid rgba(76,175,80,0.25)"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
               <div>
                 <div style={{fontSize:32,fontWeight:800}}>{Math.round(weather.temp_max)}°C</div>
@@ -558,7 +558,7 @@ export default function Today() {
 
         {/* Arrosage adapté au PARCOURS (germination/levée) — remplace le minuteur d'entretien */}
         {isPaid && phaseP && phaseP.phase < 5 && phaseP.arrosage && (
-          <div style={{...card(), background:"rgba(25,118,210,0.1)", border:"1px solid rgba(100,181,246,0.25)"}}>
+          <div data-tuile="aujourdhui-arrosage-parcours" style={{...card(), background:"rgba(25,118,210,0.1)", border:"1px solid rgba(100,181,246,0.25)"}}>
             <div style={cardTitle}>
               <span>💧 Arrosage recommandé</span>
               <span style={{ fontSize:11, color:"#64b5f6", background:"rgba(100,181,246,0.15)", borderRadius:20, padding:"2px 8px" }}>
@@ -605,7 +605,7 @@ export default function Today() {
           const arrosageAFaire = recommended.some(a => a.action.id === "arrosage");
           const arrosageFait   = actionStatuses.some(a => a.action.id === "arrosage" && a.status === "done_today");
           return (
-            <div style={{...card(),background:"rgba(25,118,210,0.1)",border:`1px solid ${timerDone ? "rgba(74,222,128,0.4)" : timerActive ? "rgba(100,181,246,0.5)" : "rgba(100,181,246,0.25)"}`}}>
+            <div data-tuile="aujourdhui-arrosage" style={{...card(),background:"rgba(25,118,210,0.1)",border:`1px solid ${timerDone ? "rgba(74,222,128,0.4)" : timerActive ? "rgba(100,181,246,0.5)" : "rgba(100,181,246,0.25)"}`}}>
               <div style={cardTitle}>
                 <span>💧 Arrosage recommandé</span>
                 <span style={{ fontSize:11, color:"#64b5f6", background:"rgba(100,181,246,0.15)", borderRadius:20, padding:"2px 8px" }}>
@@ -703,7 +703,7 @@ export default function Today() {
         {robotEq.erreur && <div style={{ ...card(), color:"#ef9a9a", fontSize:12 }}>⚠️ {robotEq.erreur}</div>}
 
         {/* ── JOURNALISER ─────────────────────────────────────────────────── */}
-        <div style={{ ...card(), background:"rgba(15,47,31,0.95)", border:"1px solid rgba(102,187,106,0.25)" }}>
+        <div data-tuile="aujourdhui-journaliser" style={{ ...card(), background:"rgba(15,47,31,0.95)", border:"1px solid rgba(102,187,106,0.25)" }}>
           <div style={cardTitle}>
             <span>✅ Journaliser</span>
             <span style={{ fontSize:11, color:"#66BB6A", background:"rgba(102,187,106,0.15)", borderRadius:20, padding:"2px 8px" }}>
@@ -713,7 +713,7 @@ export default function Today() {
 
           {/* ── BANDEAU PARCOURS (Semis / Regarnissage en cours) ──────────── */}
           {phaseP && (
-            <div style={{ background:"linear-gradient(135deg,rgba(76,175,80,0.2),rgba(15,47,31,0.5))", border:"1px solid rgba(102,187,106,0.4)", borderRadius:12, padding:"12px 14px", marginBottom:14, display:"flex", alignItems:"center", gap:12 }}>
+            <div data-tuile="aujourdhui-parcours" style={{ background:"linear-gradient(135deg,rgba(76,175,80,0.2),rgba(15,47,31,0.5))", border:"1px solid rgba(102,187,106,0.4)", borderRadius:12, padding:"12px 14px", marginBottom:14, display:"flex", alignItems:"center", gap:12 }}>
               <span style={{ fontSize:22, flexShrink:0 }}>{parcours?.type === "regarnissage" ? "🌾" : "🌱"}</span>
               <div style={{ flex:1 }}>
                 <div style={{ fontSize:13, fontWeight:800, color:"#F1F8F2" }}>
@@ -732,7 +732,7 @@ export default function Today() {
 
           {/* À FAIRE AUJOURD'HUI */}
           {recommended.length > 0 ? (
-            <div style={{ marginBottom:16 }}>
+            <div data-tuile="aujourdhui-a-faire" style={{ marginBottom:16 }}>
               <div style={{ fontSize:10, fontWeight:800, color:"#66BB6A", letterSpacing:1, marginBottom:10, display:"flex", alignItems:"center", gap:6 }}>
                 <span style={{ width:6, height:6, borderRadius:"50%", background:"#66BB6A", display:"inline-block" }} />
                 À FAIRE AUJOURD'HUI
@@ -785,7 +785,7 @@ export default function Today() {
 
           {/* PRÉVOIR */}
           {prevoyez.length > 0 && (
-            <div style={{ marginBottom:10 }}>
+            <div data-tuile="aujourdhui-prevoir" style={{ marginBottom:10 }}>
               <div style={{ fontSize:10, fontWeight:800, color:"#a5d6a7", letterSpacing:1, marginBottom:8 }}>
                 PRÉVOIR
               </div>
@@ -829,7 +829,7 @@ export default function Today() {
 
           {/* PAS PRÉVU CE MOIS */}
           {pasPrevu.length > 0 && (
-            <div>
+            <div data-tuile="aujourdhui-pas-prevu">
               <div style={{ fontSize:10, fontWeight:800, color:"#81c784", letterSpacing:1, marginBottom:6 }}>
                 PAS PRÉVU CE MOIS
               </div>
@@ -845,7 +845,7 @@ export default function Today() {
         </div>
 
         {/* ── RECOMMANDATION DE BOB ────────────────────────────────────────── */}
-        <div style={card()}>
+        <div data-tuile="aujourdhui-recommandations" style={card()}>
           <div style={cardTitle}>
             <span>🤖 Recommandation Bob</span>
             {isPaid && <button onClick={fetchAI} style={{background:"rgba(76,175,80,0.2)",border:"none",borderRadius:8,padding:"4px 10px",color:"#a5d6a7",fontSize:11,cursor:"pointer"}}>↻</button>}

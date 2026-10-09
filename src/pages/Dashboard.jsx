@@ -187,7 +187,7 @@ export default function Dashboard() {
 
         {/* ── NOTIF PUSH ────────────────────────────────────────────────────── */}
         {isSupported && showPushBanner && (
-          <div style={{ background:"linear-gradient(135deg,rgba(27,94,32,0.6),rgba(13,43,26,0.8))", border:"1px solid rgba(102,187,106,0.35)", borderRadius:14, padding:"14px 16px", marginBottom:4, display:"flex", alignItems:"center", gap:12 }}>
+          <div data-tuile="accueil-notifications" style={{ background:"linear-gradient(135deg,rgba(27,94,32,0.6),rgba(13,43,26,0.8))", border:"1px solid rgba(102,187,106,0.35)", borderRadius:14, padding:"14px 16px", marginBottom:4, display:"flex", alignItems:"center", gap:12 }}>
             <span style={{ fontSize:24, flexShrink:0 }}>🔔</span>
             <div style={{ flex:1 }}>
               <div style={{ fontSize:13, fontWeight:800, color:"#F1F8F2", marginBottom:3 }}>Activez les alertes</div>
@@ -208,7 +208,7 @@ export default function Dashboard() {
 
         {/* ── OFFRE SAISONNIÈRE (comptes gratuits ou en essai, hors app Android : pas d'achat dans le TWA) ── */}
         {offre && !subLoading && (!isPaid || isTrial) && !isAndroidTWA() && (
-          <div role="button" onClick={() => navigate("/subscribe")} style={{ background:"linear-gradient(135deg,rgba(249,168,37,0.25),rgba(13,43,26,0.8))", border:"1px solid rgba(249,168,37,0.45)", borderRadius:14, padding:"14px 16px", marginBottom:4, display:"flex", alignItems:"center", gap:12, cursor:"pointer" }}>
+          <div data-tuile="accueil-offre-saisonniere" role="button" onClick={() => navigate("/subscribe")} style={{ background:"linear-gradient(135deg,rgba(249,168,37,0.25),rgba(13,43,26,0.8))", border:"1px solid rgba(249,168,37,0.45)", borderRadius:14, padding:"14px 16px", marginBottom:4, display:"flex", alignItems:"center", gap:12, cursor:"pointer" }}>
             <span style={{ fontSize:24, flexShrink:0 }}>{offre.nom === "hiver" ? "❄️" : "☀️"}</span>
             <div style={{ flex:1 }}>
               <div style={{ fontSize:13, fontWeight:800, color:"#ffe082", marginBottom:3 }}>Offre {offre.nom === "hiver" ? "d'hiver" : "d'été"} : Premium 1 an à {String(OFFRE.prixOffre).replace(".", ",")} €</div>
@@ -220,7 +220,7 @@ export default function Dashboard() {
 
         {/* ── IPHONE : installer l'app (condition des notifications sur iOS) ── */}
         {showIosInstall && (
-          <div style={{ background:"linear-gradient(135deg,rgba(27,94,32,0.6),rgba(13,43,26,0.8))", border:"1px solid rgba(102,187,106,0.35)", borderRadius:14, padding:"14px 16px", marginBottom:4, display:"flex", alignItems:"flex-start", gap:12 }}>
+          <div data-tuile="accueil-installer-iphone" style={{ background:"linear-gradient(135deg,rgba(27,94,32,0.6),rgba(13,43,26,0.8))", border:"1px solid rgba(102,187,106,0.35)", borderRadius:14, padding:"14px 16px", marginBottom:4, display:"flex", alignItems:"flex-start", gap:12 }}>
             <span style={{ fontSize:24, flexShrink:0 }}>📲</span>
             <div style={{ flex:1 }}>
               <div style={{ fontSize:13, fontWeight:800, color:"#F1F8F2", marginBottom:3 }}>Installe Mongazon360 sur ton iPhone</div>
@@ -234,7 +234,7 @@ export default function Dashboard() {
 
         {/* ── BANNIÈRE VILLE NON VÉRIFIÉE ────────────────────────────────── */}
         {profile?.cityNotFound && (
-          <div style={{ background:"rgba(230,81,0,0.15)", border:"1px solid rgba(239,108,0,0.4)", borderRadius:14, padding:"12px 14px", marginBottom:4, display:"flex", alignItems:"center", gap:10 }}>
+          <div data-tuile="accueil-ville-introuvable" style={{ background:"rgba(230,81,0,0.15)", border:"1px solid rgba(239,108,0,0.4)", borderRadius:14, padding:"12px 14px", marginBottom:4, display:"flex", alignItems:"center", gap:10 }}>
             <span style={{ fontSize:22 }}>📍</span>
             <div style={{ flex:1 }}>
               <div style={{ fontSize:13, fontWeight:700, color:"#f9a825", marginBottom:2 }}>Ville introuvable — météo désactivée</div>
@@ -254,7 +254,7 @@ export default function Dashboard() {
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:4, alignItems:"stretch" }}>
 
           {/* Score */}
-          <div style={{ ...card(), background:"linear-gradient(135deg,rgba(27,94,32,0.4),rgba(13,43,26,0.6))", border:`1px solid ${color}44`, padding:14, display:"flex", flexDirection:"column" }}>
+          <div data-tuile="accueil-score" style={{ ...card(), background:"linear-gradient(135deg,rgba(27,94,32,0.4),rgba(13,43,26,0.6))", border:`1px solid ${color}44`, padding:14, display:"flex", flexDirection:"column" }}>
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
               <div style={{ fontSize:10, color:"#66BB6A", fontWeight:700, letterSpacing:1, textTransform:"uppercase" }}>🌿 Score Santé</div>
               <button
@@ -317,7 +317,7 @@ export default function Dashboard() {
 
           {/* Météo */}
           {isPaid ? (
-            <div style={{ ...card(), background:"linear-gradient(135deg,rgba(46,125,50,0.3),rgba(27,94,32,0.2))", border:"1px solid rgba(165,214,167,0.2)", padding:12, display:"flex", flexDirection:"column" }}>
+            <div data-tuile="accueil-meteo" style={{ ...card(), background:"linear-gradient(135deg,rgba(46,125,50,0.3),rgba(27,94,32,0.2))", border:"1px solid rgba(165,214,167,0.2)", padding:12, display:"flex", flexDirection:"column" }}>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
                 <div>
                   <div style={{ fontSize:10, color:"#81c784", fontWeight:700 }}>📍 {locationName || "Localisation"}</div>
@@ -353,7 +353,7 @@ export default function Dashboard() {
             </div>
           ) : (
             // Gratuit : le temps du jour ; vent, pluie et alertes détaillées en Premium
-            <div style={{ ...card(), display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:12, textAlign:"center" }}>
+            <div data-tuile="accueil-meteo" style={{ ...card(), display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:12, textAlign:"center" }}>
               <div style={{ fontSize:10, color:"#81c784", fontWeight:700, marginBottom:4 }}>📍 {locationName || "Aujourd'hui"}</div>
               {weather ? (
                 <>
@@ -375,7 +375,7 @@ export default function Dashboard() {
 
         {/* ── STREAK ────────────────────────────────────────────────────────── */}
         {streak > 0 && (
-          <div style={{ background: enDanger ? "rgba(230,81,0,0.15)" : modeHiver ? "rgba(21,101,192,0.12)" : "rgba(76,175,80,0.12)", border:`1px solid ${enDanger ? "rgba(239,108,0,0.4)" : modeHiver ? "rgba(66,165,245,0.3)" : "rgba(102,187,106,0.35)"}`, borderRadius:12, padding:"10px 14px", display:"flex", alignItems:"center", gap:10, marginBottom:4 }}>
+          <div data-tuile="accueil-serie" style={{ background: enDanger ? "rgba(230,81,0,0.15)" : modeHiver ? "rgba(21,101,192,0.12)" : "rgba(76,175,80,0.12)", border:`1px solid ${enDanger ? "rgba(239,108,0,0.4)" : modeHiver ? "rgba(66,165,245,0.3)" : "rgba(102,187,106,0.35)"}`, borderRadius:12, padding:"10px 14px", display:"flex", alignItems:"center", gap:10, marginBottom:4 }}>
             <span style={{ fontSize:22 }}>{modeHiver ? "🛡️" : enDanger ? "⚠️" : "🔥"}</span>
             <div style={{ flex:1 }}>
               <div style={{ fontWeight:700, fontSize:14, color: enDanger ? "#ef9a9a" : modeHiver ? "#90caf9" : "#a5d6a7" }}>
@@ -389,7 +389,7 @@ export default function Dashboard() {
         )}
 
         {/* ── GREENPOINTS ───────────────────────────────────────────────────── */}
-        <div style={{ ...card(), padding:14 }}>
+        <div data-tuile="accueil-greenpoints" style={{ ...card(), padding:14 }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
             <span style={{ fontWeight:700, color:"#66BB6A", fontSize:14 }}>🌿 GreenPoints</span>
             <span style={{ background: palier?.couleur || "#2e7d32", color:"white", borderRadius:20, padding:"2px 10px", fontSize:11, fontWeight:600 }}>
@@ -414,7 +414,7 @@ export default function Dashboard() {
         </div>
 
         {/* ── CLASSEMENT ────────────────────────────────────────────────────── */}
-        <div style={{ ...card(), padding:14 }}>
+        <div data-tuile="accueil-classement" style={{ ...card(), padding:14 }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
             <span style={{ fontWeight:700, color:"#66BB6A", fontSize:14 }}>🏆 Classement</span>
             {classementActif ? (
@@ -445,7 +445,7 @@ export default function Dashboard() {
         </div>
 
         {/* ── ÉVOLUTION DU SCORE ────────────────────────────────────────────── */}
-        <div style={{ ...card(), padding:14 }}>
+        <div data-tuile="accueil-evolution-score" style={{ ...card(), padding:14 }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
             <span style={{ fontWeight:700, color:"#66BB6A", fontSize:14 }}>📈 Évolution du score</span>
             <span style={{ fontSize:11, color:"#81c784" }}>{anneeEnCours}, semaine par semaine</span>
@@ -486,7 +486,7 @@ export default function Dashboard() {
           </div>
 
           {/* Bilan de saison : toute l'année, mis en avant du 15 novembre à fin février */}
-          <div role="button" onClick={() => navigate("/bilan")} style={{ marginTop:10, display:"flex", alignItems:"center", justifyContent:"space-between", gap:8, cursor:"pointer",
+          <div data-tuile="accueil-bilan" role="button" onClick={() => navigate("/bilan")} style={{ marginTop:10, display:"flex", alignItems:"center", justifyContent:"space-between", gap:8, cursor:"pointer",
             borderRadius:10, padding:"9px 12px", ...(bilanDisponible()
               ? { background:"linear-gradient(135deg,rgba(249,168,37,0.22),rgba(13,43,26,0.4))", border:"1px solid rgba(249,168,37,0.45)" }
               : { background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)" }) }}>
@@ -498,7 +498,7 @@ export default function Dashboard() {
         </div>
 
         {/* ── CONSEILS GAZON (rubrique statique /conseils, hors de l'app) ───── */}
-        <a href="/conseils" style={{ ...card(), display:"flex", alignItems:"center", gap:12, textDecoration:"none", color:"inherit" }}>
+        <a data-tuile="accueil-conseils" href="/conseils" style={{ ...card(), display:"flex", alignItems:"center", gap:12, textDecoration:"none", color:"inherit" }}>
           <span style={{ fontSize:24 }}>📚</span>
           <div style={{ flex:1 }}>
             <div style={{ fontSize:13, fontWeight:800, color:"#F1F8F2" }}>Conseils gazon</div>
@@ -548,7 +548,7 @@ function CarteParcours() {
 
   if (parcours.statut === "en_attente_fenetre") {
     return (
-      <div style={{ background:"linear-gradient(135deg,rgba(255,193,7,0.15),rgba(13,43,26,0.6))", border:"1px solid rgba(255,193,7,0.35)", borderRadius:14, padding:"14px 16px", marginBottom:4, display:"flex", alignItems:"center", gap:12 }}>
+      <div data-tuile="accueil-parcours" style={{ background:"linear-gradient(135deg,rgba(255,193,7,0.15),rgba(13,43,26,0.6))", border:"1px solid rgba(255,193,7,0.35)", borderRadius:14, padding:"14px 16px", marginBottom:4, display:"flex", alignItems:"center", gap:12 }}>
         <span style={{ fontSize:24, flexShrink:0 }}>⏳</span>
         <div style={{ flex:1 }}>
           <div style={{ fontSize:13, fontWeight:800, color:"#F1F8F2", marginBottom:3 }}>Projet de {typeLabel} enregistré</div>
@@ -566,7 +566,7 @@ function CarteParcours() {
 
   if (parcours.statut === "actif") {
     return (
-      <div style={{ background:"linear-gradient(135deg,rgba(76,175,80,0.25),rgba(13,43,26,0.6))", border:"1px solid rgba(102,187,106,0.4)", borderRadius:14, padding:"14px 16px", marginBottom:4, display:"flex", alignItems:"center", gap:12 }}>
+      <div data-tuile="accueil-parcours" style={{ background:"linear-gradient(135deg,rgba(76,175,80,0.25),rgba(13,43,26,0.6))", border:"1px solid rgba(102,187,106,0.4)", borderRadius:14, padding:"14px 16px", marginBottom:4, display:"flex", alignItems:"center", gap:12 }}>
         <span style={{ fontSize:24, flexShrink:0 }}>🌱</span>
         <div style={{ flex:1 }}>
           <div style={{ fontSize:13, fontWeight:800, color:"#F1F8F2", marginBottom:3 }}>Parcours de {typeLabel} en cours</div>

@@ -283,7 +283,7 @@ export default function MyLawn() {
 
         {/* ── MON PROFIL ────────────────────────────────────────────────── */}
         {profile ? (
-          <div style={card()}>
+          <div data-tuile="mongazon-profil" style={card()}>
             <div style={cardTitle}>
               <span>👤 Mon profil</span>
               <button onClick={() => navigate("/setup")} style={{ background:"rgba(76,175,80,0.2)", border:"none", borderRadius:8, padding:"4px 10px", color:"#a5d6a7", fontSize:11, cursor:"pointer" }}>
@@ -376,7 +376,7 @@ export default function MyLawn() {
         )}
 
         {/* ── MES ÉQUIPEMENTS (station météo, robot et arrosage connectés ; caméras à venir) ── */}
-        <div onClick={() => navigate("/equipements")} style={{ ...card(), cursor:"pointer", display:"flex", alignItems:"center", gap:12 }}>
+        <div data-tuile="mongazon-equipements" onClick={() => navigate("/equipements")} style={{ ...card(), cursor:"pointer", display:"flex", alignItems:"center", gap:12 }}>
           <span style={{ fontSize:24 }}>📡</span>
           <div style={{ flex:1 }}>
             <div style={{ fontSize:13, fontWeight:800, color:"#F1F8F2" }}>Mes équipements</div>
@@ -389,7 +389,7 @@ export default function MyLawn() {
         <CarteParrainage />
 
         {/* ── PLAN ANNUEL PERSONNALISÉ (achat unique) ── */}
-        <div onClick={() => navigate("/plan-annuel")} style={{ ...card(), cursor:"pointer", display:"flex", alignItems:"center", gap:12 }}>
+        <div data-tuile="mongazon-plan-annuel" onClick={() => navigate("/plan-annuel")} style={{ ...card(), cursor:"pointer", display:"flex", alignItems:"center", gap:12 }}>
           <span style={{ fontSize:24 }}>📅</span>
           <div style={{ flex:1 }}>
             <div style={{ fontSize:13, fontWeight:800, color:"#F1F8F2" }}>Mon plan gazon {anneePlan()}</div>
@@ -399,7 +399,7 @@ export default function MyLawn() {
         </div>
 
         {/* ── BOUTON COMPLÉTER PROFIL ── */}
-        <div style={{ marginBottom:12, display:"flex", alignItems:"center", justifyContent:"space-between", background:"rgba(255,255,255,0.05)", border:`1px solid ${completion < 90 ? "rgba(244,162,97,0.25)" : "rgba(82,183,136,0.25)"}`, borderRadius:14, padding:"10px 14px" }}>
+        <div data-tuile="mongazon-completer-profil" style={{ marginBottom:12, display:"flex", alignItems:"center", justifyContent:"space-between", background:"rgba(255,255,255,0.05)", border:`1px solid ${completion < 90 ? "rgba(244,162,97,0.25)" : "rgba(82,183,136,0.25)"}`, borderRadius:14, padding:"10px 14px" }}>
           <div>
             <div style={{ fontSize:12, fontWeight:700, color: completion < 90 ? "#f4a261" : "#95d5b2" }}>👤 Profil complété à {completion}%</div>
             <div style={{ fontSize:11, color:"#81c784", marginTop:2 }}>
@@ -411,7 +411,7 @@ export default function MyLawn() {
           </button>
         </div>
 {/* ── LANCER UN PARCOURS (Semis / Regarnissage) ────────────────── */}
-        <div style={{ ...card(), border:"1px solid rgba(82,183,136,0.3)", background:"linear-gradient(135deg, rgba(45,106,79,0.25), rgba(15,47,31,0.5))" }}>
+        <div data-tuile="mongazon-lancer-parcours" style={{ ...card(), border:"1px solid rgba(82,183,136,0.3)", background:"linear-gradient(135deg, rgba(45,106,79,0.25), rgba(15,47,31,0.5))" }}>
           <div style={{ fontSize:14, fontWeight:800, color:"#F1F8F2", marginBottom:4 }}>🌱 Lancer un parcours</div>
           <div style={{ fontSize:12, color:"#81c784", marginBottom:12, lineHeight:1.5 }}>
             Créez une nouvelle pelouse ou densifiez l'existante, guidé étape par étape selon votre zone et la météo.
@@ -430,7 +430,7 @@ export default function MyLawn() {
           </div>
         </div>
         {/* ── 1. SCORE HÉRO ── */}
-        <div style={{ ...card(), background:`linear-gradient(135deg, rgba(27,94,32,0.5), rgba(13,43,26,0.7))`, border:`2px solid ${color}55`, padding:20 }}>
+        <div data-tuile="mongazon-score" style={{ ...card(), background:`linear-gradient(135deg, rgba(27,94,32,0.5), rgba(13,43,26,0.7))`, border:`2px solid ${color}55`, padding:20 }}>
           <div style={{ fontSize:11, color:"#66BB6A", fontWeight:700, letterSpacing:1.5, marginBottom:12, textAlign:"center" }}>🌿 SCORE SANTÉ</div>
           <div style={{ display:"flex", justifyContent:"center", alignItems:"center", gap:24, marginBottom:12 }}>
             <div style={{ position:"relative" }}>
@@ -469,7 +469,7 @@ export default function MyLawn() {
 
         {/* ── 2. CONSEIL DU MOIS ── */}
         {recommandationPrincipale && (
-          <div style={{ ...card(), border:`2px solid ${recommandationPrincipale.urgence === "haute" ? "rgba(198,40,40,0.5)" : "rgba(102,187,106,0.4)"}`, background:`linear-gradient(135deg, ${recommandationPrincipale.urgence === "haute" ? "rgba(198,40,40,0.12)" : "rgba(15,47,31,0.7)"}, rgba(27,94,32,0.3))` }}>
+          <div data-tuile="mongazon-conseil-du-mois" style={{ ...card(), border:`2px solid ${recommandationPrincipale.urgence === "haute" ? "rgba(198,40,40,0.5)" : "rgba(102,187,106,0.4)"}`, background:`linear-gradient(135deg, ${recommandationPrincipale.urgence === "haute" ? "rgba(198,40,40,0.12)" : "rgba(15,47,31,0.7)"}, rgba(27,94,32,0.3))` }}>
             <div style={cardTitle}>
               <span style={{ fontSize:13 }}>{recommandationPrincipale.icone} Conseil du mois</span>
               <span style={{ fontSize:11, background: recommandationPrincipale.urgence === "haute" ? "rgba(198,40,40,0.2)" : "rgba(102,187,106,0.2)", color: recommandationPrincipale.urgence === "haute" ? "#ef9a9a" : "#66BB6A", borderRadius:20, padding:"2px 10px", fontWeight:700 }}>
@@ -538,7 +538,7 @@ export default function MyLawn() {
           ];
 
           return (
-            <div style={card()}>
+            <div data-tuile="mongazon-detail-score" style={card()}>
               <div style={cardTitle}><span>📊 Détail du score</span></div>
               <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
                 {items.map((item) => {
@@ -566,7 +566,7 @@ export default function MyLawn() {
 
         {/* ── 4. PROBLÈMES PRIORITAIRES ── */}
         {issues.length > 0 && (
-          <div style={card()}>
+          <div data-tuile="mongazon-problemes" style={card()}>
             <div style={cardTitle}><span>⚠️ Problèmes prioritaires</span></div>
             {(isPaid ? issues : issues.slice(0,2)).map((issue, i) => (
               <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 10px", background:"rgba(239,108,0,0.1)", borderRadius:10, marginBottom:6, border:"1px solid rgba(239,108,0,0.2)" }}>
@@ -630,7 +630,7 @@ export default function MyLawn() {
           };
 
           return (
-            <div style={card()}>
+            <div data-tuile="mongazon-plan-du-mois" style={card()}>
 
               {/* ── Header ── */}
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:14 }}>
@@ -761,7 +761,7 @@ export default function MyLawn() {
         })()}
 
         {/* ── 7. CALIBRAGE ARROSEUR ── */}
-        <div style={{ ...card(), background:"linear-gradient(135deg,rgba(25,118,210,0.1),rgba(13,43,26,0.6))", border:"1px solid rgba(100,181,246,0.3)" }}>
+        <div data-tuile="mongazon-calibrage" style={{ ...card(), background:"linear-gradient(135deg,rgba(25,118,210,0.1),rgba(13,43,26,0.6))", border:"1px solid rgba(100,181,246,0.3)" }}>
           <div style={cardTitle}>
             <span>💧 Calibrage arroseur</span>
             {!isPaid && <span style={{ fontSize:10, color:"#f9a825", background:"rgba(249,168,37,0.15)", borderRadius:20, padding:"2px 8px" }}>🔒 Premium</span>}
@@ -877,7 +877,7 @@ export default function MyLawn() {
           const keysToShow = isPaid ? allKeys.slice(0, 3) : allKeys.slice(0, 1);
 
           return (
-            <div style={card()}>
+            <div data-tuile="mongazon-produits" style={card()}>
               <div style={cardTitle}><span>🛒 Produits recommandés</span></div>
               <div style={{ fontSize:11, color:"#81c784", marginBottom:12, fontStyle:"italic", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                 <span>{actionKeys.length > 0 ? "Liés aux actions prioritaires du mois" : "Sélectionnés selon votre score"}</span>
@@ -907,7 +907,7 @@ export default function MyLawn() {
 
         {/* ── 9. BLOC PREMIUM ── */}
         {!isPaid && (
-          <div style={{ ...card(), background:"linear-gradient(135deg, rgba(249,168,37,0.15), rgba(230,81,0,0.1))", border:"1px solid rgba(249,168,37,0.4)", textAlign:"center" }}>
+          <div data-tuile="mongazon-premium" style={{ ...card(), background:"linear-gradient(135deg, rgba(249,168,37,0.15), rgba(230,81,0,0.1))", border:"1px solid rgba(249,168,37,0.4)", textAlign:"center" }}>
             <div style={{ fontSize:28, marginBottom:8 }}>⭐</div>
             <div style={{ fontSize:15, fontWeight:800, color:"#f9a825", marginBottom:8 }}>Passez Premium</div>
             {["Détail complet du score","Arrosage précis calculé","Produits personnalisés","Rappels push + email"].map(f => (
