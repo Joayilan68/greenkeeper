@@ -18,3 +18,7 @@ du premier onglet).
   d'inscription (et non 47 : 31 étaient des écrans de connexion d'inscrits existants) pour 6 inscrits, soit 40 %. Les pertes
   principales sont avant l'inscription : peu de visiteurs passent à l'action, et l'essai du diagnostic demande une photo
   (2 diagnostics pour 11 clics). Proposition des 3 niveaux remise à Jordan, décision prévue en novembre.
+- 09/10/2026 — Refonte : plan des 3 niveaux (visiteur, gratuit, payant) jugé bon par Jordan ; les 4 points à trancher
+  seront confirmés avec les maquettes en novembre. Ajouts au périmètre demandés par Jordan : nettoyage des pages (expérience,
+  compréhension), optimisation des tuiles de chaque page, réflexion sur l'intérêt des GreenPoints, des ligues et de la
+  page Classement (au 09/10 : 12 utilisateurs actifs sur 30 jours, 9 ont gagné des points, aucune récompense obtenue).
