@@ -6,6 +6,11 @@
 - **STA doit être identique à la PROD.** Seule exception : un développement en cours de test sur STA,
   qui peut alors être en avance sur la PROD jusqu'à sa validation et son passage en prod.
 - Après chaque passage en prod, vérifier l'alignement : `git diff --quiet origin/main origin/Staging`.
+- **Jusqu'à décembre 2026 (décision du 05/10/2026)** : les nouvelles évolutions restent sur STA (validées par un test STA)
+  et partent toutes ensemble en prod en décembre ; STA est donc en avance sur la PROD jusque-là. Un correctif urgent
+  de PROD se fait sur `main`, puis `main` est fusionné dans `Staging`.
+  Chaque évolution laissée sur STA ajoute ses lignes de test dans `docs/recette/Recette_prod_decembre_2026.xlsx`
+  (recette à dérouler après la mise en prod).
 - Toute modification de schéma Supabase s'applique aux **deux** projets.
 - **Google Play** : l'app Android est une TWA (`fr.mongazon360.app`) qui charge mongazon360.fr en direct
   (service worker sans cache, `index.html` en no-store) → tout déploiement de `main` met à jour l'app
@@ -59,6 +64,14 @@
   l'application Husqvarna ; 700 requêtes/semaine pour toute l'app : lecture au plus toutes les 10 min) ; Rachio par la clé
   API de l'utilisateur. Lancement d'une zone seulement le matin (heures de la base, src/lib/arrosageConnecte.js).
 
+## Fichier de suivi (roadmap)
+- Google Sheet « MG360_Suivi_Projet » (premier onglet), lu en direct par Pilotage → Roadmap.
+- Mis à jour **une seule fois par semaine**, le dimanche vers 18 h (heure de Paris), par la tâche programmée
+  « Fichier de suivi — mise à jour du dimanche », qui envoie ensuite un résumé à Jordan. Jamais de mise à jour du fichier
+  à chaque évolution (crédits Claude).
+- La tâche lit l'historique du code (`main` = PROD, `Staging` = STA) : messages de commit clairs, en français. Ce qui ne se
+  voit pas dans le code (décision, ligne demandée par Jordan, validation sur STA) est noté le jour même dans
+  `docs/suivi/journal.md`.
+
 ## Contraintes
 - Vercel Hobby : 12 fonctions maximum dans `api/` — pas de nouvel endpoint sans en libérer un.
-- Roadmap : Google Sheet « MG360_Suivi_Projet » (premier onglet), lu en direct par Pilotage → Roadmap.
