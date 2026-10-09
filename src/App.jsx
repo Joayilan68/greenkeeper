@@ -33,6 +33,7 @@ import { useSubscription } from "./lib/useSubscription"; // ✅ statut Premium �
 import { useUTMCapture, getCapturedUTM } from "./lib/useUTMCapture"; // ✅ Bloc 1 — capture UTM dès l'arrivée
 import { useUTMInjection } from "./lib/useUTMInjection"; // ✅ Bloc 1 — injection Clerk metadata first-touch
 import { trackFunnel }     from "./lib/funnel";          // ✅ suivi d'entonnoir (conversion)
+import { useMesureUsage }  from "./lib/mesure";          // mesure anonyme des pages et des tuiles (refonte)
 import { deviceInfo, isRobot } from "./lib/platform";
 import { usePageMeta }     from "./lib/usePageMeta";      // titre / description / canonique par page
 import { isAnonPending, getAnonIdIfAny, setAnonPending } from "./lib/anonId"; // ✅ rattachement diagnostic anonyme
@@ -144,7 +145,8 @@ function AppWithWeather({ children }) {
     })();
   }, [visitLoaded, visitUser]);
 
-  const { isPaid } = useSubscription(); // ✅ transmet le statut Premium → active ET₀/sol dans la météo
+  const { isPaid, isAdmin, isLoading } = useSubscription(); // ✅ transmet le statut Premium → active ET₀/sol dans la météo
+  useMesureUsage(!visitLoaded || (visitUser && isLoading) || isAdmin ? null : !visitUser ? "visiteur" : isPaid ? "premium" : "gratuit");
   return <WeatherProvider isPaid={isPaid}>{children}</WeatherProvider>;
 }
 

@@ -215,6 +215,7 @@ export default function AIAssistant() {
     <>
       {/* ── BOUTON FLOTTANT ── */}
       <button
+        data-tuile="bob"
         onClick={() => setOpen(o => !o)}
         style={{
           position:"fixed", bottom:80, right:16, zIndex:500,

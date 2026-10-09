@@ -12,7 +12,7 @@ const RARETE_COLOR = {
 
 export default function BadgesGallery({ badges = [], nbUnlocked = 0, total = 0, justUnlocked = [], clearJustUnlocked }) {
   return (
-    <div style={card()}>
+    <div data-tuile="mongazon-badges" style={card()}>
       <div style={cardTitle}>
         <span>🏅 Badges</span>
         <span style={{ fontSize:11, color:"#81c784" }}>{nbUnlocked}/{total}</span>
