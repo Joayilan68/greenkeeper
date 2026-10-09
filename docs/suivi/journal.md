@@ -11,3 +11,6 @@ du premier onglet).
 
 - 09/10/2026 — Décision de Jordan : le fichier de suivi est mis à jour une seule fois par semaine, le dimanche vers 18 h,
   par une tâche programmée qui lui envoie un résumé (fin des versions .xlsx à importer ; v35 importée à la main le 09/10).
+- 09/10/2026 — Partenariats paysagistes lancés (ligne « Lead gen local — travaux de jardin ») : dossier V1 remis à Jordan
+  (offre pilote gratuite jusqu'à fin juin 2027, 12 entreprises à contacter dans le sud de l'Alsace, messages, points
+  juridiques, fonction « Trouver un pro » prévue en novembre sur STA). Objectif : 3 à 5 pilotes d'ici fin octobre.
