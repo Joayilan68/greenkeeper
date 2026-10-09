@@ -66,6 +66,9 @@
 - Husqvarna (robot) : connexion OAuth, adresse de retour `https://<domaine>/api/objets` à déclarer dans l'application
   Husqvarna (PROD et alias Staging) ; variables Vercel `HUSQVARNA_CLIENT_ID` (Application key) et
   `HUSQVARNA_CLIENT_SECRET`. Mode Proposition : aucune commande envoyée au robot sans validation de l'utilisateur.
+- Hauteur de coupe Automower : niveaux 1-9 de l'API convertis en cm selon `src/lib/automowerHauteurs.json` (fiches
+  Husqvarna) ; proposition = milieu de la hauteur de la saison (Tonte Précise, +1 cm en objectif naturel), bornée à la
+  plage du modèle ; modèles à réglage manuel ou absents de la liste : pas de proposition.
 - Robot Gardena SILENO : même connexion Husqvarna Group (une connexion Gardena enregistre l'arrosage et le robot du
   compte, jetons partagés : renouvelés et révoqués ensemble). Gardena n'a pas de repos d'une durée donnée : « repos jusqu'à
   demain matin » = repos jusqu'à nouvel ordre puis planning relancé par la tâche du matin (`reprendreRobotsGardena`).

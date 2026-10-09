@@ -122,11 +122,14 @@ export function avantPremiereTonte(w, zone, today = new Date()) {
   return new Date(2000, m - 1, j).toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
 }
 
-// Hauteur de tonte du type de gazon et de la saison : base de connaissances, onglet « Tonte Précise »
-function conseilTonte(profile, month) {
+// Hauteur de tonte du type de gazon et de la saison (« 5-6 ») : base de connaissances, onglet « Tonte Précise »
+export function hauteurSaison(profile, month) {
   const t = TONTE.types[TONTE.alias[profile?.pelouse] || "universel"];
-  const h = month >= 6 && month <= 8 ? t.ete : month >= 9 ? t.automne : t.printemps;
-  return `Hauteur ${h} cm${profile?.objectif === "naturel" ? " (+1 cm en objectif naturel)" : ""} · jamais plus d'un tiers de la hauteur`;
+  return month >= 6 && month <= 8 ? t.ete : month >= 9 ? t.automne : t.printemps;
+}
+
+function conseilTonte(profile, month) {
+  return `Hauteur ${hauteurSaison(profile, month)} cm${profile?.objectif === "naturel" ? " (+1 cm en objectif naturel)" : ""} · jamais plus d'un tiers de la hauteur`;
 }
 
 // Mois où une action est proposée : src/lib/calendrierActions.json (base de connaissances, onglet « Zones x Mois »),

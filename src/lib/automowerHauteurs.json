@@ -1,0 +1,9 @@
+{
+  "_source": "Fiches techniques Husqvarna : hauteur de coupe mini et maxi (cm) des Automower à réglage électrique. L'API Automower Connect règle la hauteur en niveaux 1 à 9, répartis linéairement entre ces deux valeurs (arrondi au demi-centimètre). Modèles à réglage manuel : aucune commande de hauteur. Modèle absent de la liste : hauteur affichée en niveau, sans proposition.",
+  "manuels": "MARK II|\\b305\\b|ASPIRE|\\b308V\\b|\\b312V\\b",
+  "modeles": [
+    { "motif": "435X AWD", "min": 3, "max": 7 },
+    { "motif": "\\b105\\b", "min": 2, "max": 5 },
+    { "motif": "\\b(310|315X?|320|405X|415X|420|430X|440|450X)\\b", "min": 2, "max": 6 }
+  ]
+}

@@ -6,7 +6,8 @@
 //   POST { action: "ajouter", applicationKey, apiKey, mac, nom } → connexion de la station (clés chiffrées)
 //   POST { action: "netatmo" }                → adresse de connexion au compte Netatmo (station météo)
 //   POST { action: "husqvarna" }              → adresse de connexion au compte Husqvarna
-//   POST { action: "robot", commande }        → commande validée par l'utilisateur (repos_journee, repos_long, reprendre)
+//   POST { action: "robot", commande, niveau } → commande validée par l'utilisateur (repos_journee, repos_long, reprendre ;
+//                                               hauteur avec niveau 1-9 pour un Automower)
 //   POST { action: "gardena" }                → adresse de connexion au compte Husqvarna Group pour l'arrosage Gardena
 //   POST { action: "gardena_robot" }          → idem pour le robot Gardena SILENO
 //   POST { action: "rachio_programmateurs", apiKey } → programmateurs du compte Rachio
@@ -109,7 +110,7 @@ module.exports = async function handler(req, res) {
       return res.json({ equipements: data || [], station, robot, arrosage });
     }
 
-    const { action, applicationKey, apiKey, mac, nom, id, commande, programmateur, zone, minutes } = req.body || {};
+    const { action, applicationKey, apiKey, mac, nom, id, commande, programmateur, zone, minutes, niveau } = req.body || {};
     const cles = { applicationKey: String(applicationKey || "").trim(), apiKey: String(apiKey || "").trim() };
 
     if (action === "stations") {
@@ -170,7 +171,7 @@ module.exports = async function handler(req, res) {
 
     if (action === "robot") {
       try {
-        await E.commandeRobot(supabase, userId, commande);
+        await E.commandeRobot(supabase, userId, commande, Number(niveau));
       } catch (e) { return res.status(400).json({ error: e.message }); }
       return res.json({ robot: await E.etatRobot(supabase, userId) });
     }

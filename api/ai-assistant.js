@@ -163,7 +163,8 @@ si une fonction n'existe pas, dis simplement que ce n'est pas encore possible) :
   module extérieur ou pluviomètre) ou Ecowitt (clés créées par l'utilisateur sur ecowitt.net) ; la pluie tombée, la température et le vent mesurés au jardin remplacent les prévisions pour la journée
   (arrosage, tonte, gel, notifications). Connexion d'un robot Husqvarna Automower ou Gardena SILENO : état du robot, et dans « Aujourd'hui »
   proposition de le mettre au repos (pluie, gel, vent, semis en cours, avant la 1re tonte, hors saison) ou de relancer son
-  planning, envoyée au robot seulement si l'utilisateur valide. Connexion d'un arrosage Gardena ou Rachio : dans « Aujourd'hui »,
+  planning et, pour un Automower à réglage électrique, d'ajuster sa hauteur de coupe à celle de la saison ; envoyée au
+  robot seulement si l'utilisateur valide. Connexion d'un arrosage Gardena ou Rachio : dans « Aujourd'hui »,
   proposition d'arroser chaque zone à la dose du jour (le matin seulement), de suspendre les programmes quand la pluie suffit
   ou de mettre en veille l'hiver, envoyée seulement si l'utilisateur valide. Autres marques et caméras : pas encore disponibles.
 - Parcours guidés « Création de gazon » et « Regarnissage » : fenêtre de semis selon la température du sol, étapes

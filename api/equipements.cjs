@@ -242,7 +242,7 @@ async function appelHusqvarna(acces, chemin, corps) {
   });
   if (r.status === 401 || r.status === 403) throw new Error("Husqvarna refuse l'accès au robot : reconnecte-le");
   if (r.status === 429) throw new Error("Trop de demandes envoyées à Husqvarna, réessaie dans quelques minutes");
-  if (!r.ok) throw new Error(`Husqvarna : erreur ${r.status}`);
+  if (!r.ok) throw Object.assign(new Error(`Husqvarna : erreur ${r.status}`), { status: r.status });
   return r.status === 202 || r.status === 204 ? null : r.json().catch(() => null);
 }
 
@@ -299,10 +299,27 @@ const COMMANDES = {
   reprendre: () => ({ data: { type: "ResumeSchedule" } }),
 };
 
-async function commandeRobot(supabase, userId, commande) {
-  if (!COMMANDES[commande]) throw new Error("Commande inconnue");
+// Hauteur de coupe (niveau 1-9) d'un Automower à réglage électrique ; un modèle à réglage manuel refuse la commande
+async function hauteurAutomower(supabase, eq, niveau) {
+  if (eq.marque !== "husqvarna") throw new Error("Réglage de la hauteur à distance indisponible pour ce robot");
+  if (!Number.isInteger(niveau) || niveau < 1 || niveau > 9) throw new Error("Hauteur de coupe invalide");
+  try {
+    await appelHusqvarna(await accesHusqvarna(supabase, eq), `mowers/${eq.appareil}/settings`, { data: { type: "settings", attributes: { cuttingHeight: niveau } } });
+  } catch (e) {
+    if (e.status === 400 || e.status === 422) throw new Error("Ton robot n'accepte pas le réglage de hauteur à distance : règle-le sur le robot ou dans l'app Automower Connect");
+    throw e;
+  }
+}
+
+async function commandeRobot(supabase, userId, commande, niveau) {
+  if (!COMMANDES[commande] && commande !== "hauteur") throw new Error("Commande inconnue");
   const { data: eq } = await supabase.from("equipements").select("*").eq("user_id", userId).eq("type", "robot").maybeSingle();
   if (!eq) throw new Error("Aucun robot connecté");
+  if (commande === "hauteur") {
+    await hauteurAutomower(supabase, eq, niveau);
+    await supabase.from("equipements").update({ mesures_at: null }).eq("id", eq.id); // réglage relu au prochain affichage
+    return;
+  }
   if (eq.marque === "gardena") {
     await commandeMowerGardena(await accesHusqvarna(supabase, eq), eq.appareil, COMMANDES_GARDENA[commande]);
     // Gardena ne connaît pas de repos d'une durée donnée : le planning est relancé demain par la tâche du matin

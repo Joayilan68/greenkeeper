@@ -683,9 +683,9 @@ export default function Today() {
         {robotEq.donnees?.robot && (
           <>
             <CarteRobot robot={robotEq.donnees.robot} profile={profile} envoi={robotEq.envoi}
-              proposition={propositionRobot(robotEq.donnees.robot, actionStatuses.find(a => a?.action?.id === "tonte"))}
-              onCommande={async (commande) => {
-                const d = await robotEq.action({ action:"robot", commande });
+              proposition={propositionRobot(robotEq.donnees.robot, actionStatuses.find(a => a?.action?.id === "tonte"), { profile, month })}
+              onCommande={async ({ commande, niveau }) => {
+                const d = await robotEq.action({ action:"robot", commande, niveau });
                 if (d) robotEq.charger();
               }} />
           </>
