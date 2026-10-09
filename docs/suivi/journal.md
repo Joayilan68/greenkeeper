@@ -25,3 +25,12 @@ du premier onglet).
 - 09/10/2026 — Nouveau chantier demandé par Jordan, à lancer sous peu : point complet des API partenaires, pour enrichir les
   outils automatisés et intégrer le maximum de marques commercialisées en France dont l'API est ouverte et utilisable dans
   une app payante (robots, arrosage, stations, capteurs de sol, caméras). Livrable : version 2 du fichier « Suivi API ».
+- 09/10/2026 — Analyse stratégique « gratuité totale et vente de données » remise à Jordan (document Claude) : modèle non viable
+  aujourd'hui ; la donnée deviendrait un complément vers 50 000 utilisateurs actifs par mois, pas un modèle unique. Recommandation :
+  garder les 3 niveaux de la refonte, ajouter des revenus de partenaires, réexaminer la gratuité à 10 000 puis 50 000 actifs.
+- 09/10/2026 — Point API partenaires livré (fichier « Suivi API » V2, 33 lignes : 6 en prod, 2 sur STA, 1 bloquée, 6 à lancer,
+  9 en réserve, 8 écartées, 1 à vérifier). Constats : les conditions Husqvarna Group (Automower et Gardena, en prod) et l'API Météo
+  de Netatmo (station, sur STA) n'autorisent l'usage dans une app payante qu'avec un accord écrit ; Rachio et Ecowitt ne disent rien
+  (confirmation à obtenir) ; Husqvarna, Gardena et Netatmo interdisent la revente de leurs données. Demandes prêtes pour Jordan
+  (Husqvarna Group avant fin octobre, Netatmo avant fin novembre). Ordre proposé : accords écrits, puis capteurs de sol Gardena et
+  Ecowitt (novembre-décembre, STA), puis robots Segway Navimow et Mammotion (début 2027), caméras ensuite.
