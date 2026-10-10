@@ -1,23 +1,31 @@
 ---
-title: Chaulage et pH du sol : faut-il chauler sa pelouse ?
-description: Mousse qui revient chaque année, gazon qui végète ? Un sol trop acide est souvent en cause. Comment mesurer le pH, quand et comment chauler, et quelle chaux choisir.
-saison: hiver
+title: Chauler sa pelouse : quand, comment et quelle dose de chaux
+description: Mousse, gazon pâle ? Mesurez le pH : sous 6, chaulez à l'automne. Quand chauler, quelle chaux, quelle dose par m² et comment l'épandre sans brûler le gazon.
+saison: automne
 date: 2026-09-25
-maj: 2026-09-27
+maj: 2026-10-10
 produits: engraisHiver
 ---
 
 Si la mousse revient chaque année malgré les traitements, si le gazon reste pâle et peu dense malgré l'engrais, le problème vient peut-être du sol lui-même : **il est trop acide**. Le chaulage corrige cette acidité. Encore faut-il savoir si votre pelouse en a besoin, car chauler un sol qui ne l'est pas ne sert à rien, voire nuit.
 
-## Le pH, c'est quoi ?
+> **En bref**
+> - **Faut-il chauler ?** Seulement si le pH est inférieur à 6, et jamais sur un sol calcaire.
+> - **Quand chauler ?** À l'automne ; au printemps aussi si le pH est entre 5 et 6.
+> - **Quelle dose ?** 80 à 100 g/m² de carbonate de calcium sous pH 5 ; 40 à 60 g/m² de chaux dolomitique entre 5 et 6.
+> - **Quelle chaux ?** Un amendement calcique ou magnésien en granulés, jamais de chaux vive.
+> - **Attention** : 3 à 4 semaines d'écart avec un engrais azoté ou un anti-mousse au sulfate de fer.
+
+## Le pH du sol, c'est quoi ?
 
 Le pH mesure l'acidité du sol, sur une échelle de 0 à 14 :
 
 | pH | Sol | Pour le gazon |
 |---|---|---|
-| Moins de 5,5 | Très acide | Gazon faible, mousse envahissante |
-| 5,5 à 6 | Acide | La mousse s'installe facilement |
+| Moins de 5 | Très acide | Gazon très faible, mousse envahissante |
+| 5 à 5,9 | Acide | La mousse s'installe, l'engrais agit mal |
 | **6 à 7** | **Légèrement acide à neutre** | **Idéal pour le gazon** |
+| 7 à 7,5 | Légèrement alcalin | Pas de chaux |
 | Plus de 7,5 | Calcaire (basique) | Surtout ne pas chauler |
 
 Dans un sol trop acide, le gazon absorbe mal les éléments nutritifs, même s'ils sont présents : l'engrais est en partie gaspillé. La vie du sol ralentit, le feutre se décompose mal, et la mousse, qui tolère très bien l'acidité, prend l'avantage.
@@ -50,13 +58,13 @@ Ces signes orientent, mais **seule une mesure** permet de décider.
 
 Pour une pelouse, privilégiez un **amendement calcique ou magnésien en granulés**, facile à épandre et sans risque de brûlure.
 
-## Quand chauler ?
+## Quand chauler sa pelouse ?
 
 - **À l'automne** : la chaux agit lentement, les pluies d'automne et d'hiver la font pénétrer et le sol est corrigé pour le printemps. Pour un pH entre 5 et 6, un apport au **printemps** est aussi possible.
 - Sur un **sol ni gelé, ni détrempé, ni couvert de neige**.
-- **Séparément des autres apports** : espacez le chaulage d'au moins **3 à 4 semaines** d'un engrais azoté ou d'un anti-mousse au sulfate de fer. Mélangés, ils perdent en efficacité.
+- **Séparément des autres apports** : espacez le chaulage d'au moins **3 à 4 semaines** d'un engrais azoté ou d'un anti-mousse au sulfate de fer. Mélangés, ils perdent en efficacité (voir [engrais gazon d'automne](/conseils/engrais-gazon-automne)).
 
-## Quelle dose ?
+## Quelle dose de chaux par m² ?
 
 La dose dépend du pH mesuré, de la texture du sol et du produit choisi. **Suivez l'emballage ou l'analyse de sol.** À titre indicatif :
 
@@ -70,16 +78,34 @@ On remonte le pH **progressivement**, d'environ un demi-point par an : une forte
 
 Un sol argileux demande plus de chaux qu'un sol sableux pour le même résultat.
 
-## Comment épandre
+## Comment chauler sa pelouse : la méthode
 
 1. **Tondez** et ramassez les feuilles.
 2. **Épandez à l'épandeur**, en deux passages croisés, avec des gants.
 3. **Laissez la pluie** faire pénétrer le produit.
 4. **Refaites un test de pH un an plus tard** avant tout nouvel apport.
 
-## Le chaulage ne suffit pas contre la mousse
+## Chaux et mousse : le chaulage suffit-il ?
 
-Chauler corrige une cause de la mousse, mais pas les autres : ombre, sol tassé, tonte trop rase, gazon affamé. Pour un résultat durable, combinez chaulage, aération, bonne hauteur de tonte et engrais adaptés (voir [mousse dans la pelouse](/conseils/mousse-pelouse) et [préparer son gazon pour l'hiver](/conseils/preparer-gazon-hiver)).
+La chaux ne tue pas la mousse : elle corrige l'acidité qui la favorise. Chauler traite donc une cause de la mousse, mais pas les autres : ombre, sol tassé, tonte trop rase, gazon affamé. Pour un résultat durable, combinez chaulage, [aération](/conseils/aerer-pelouse-carottage), bonne hauteur de tonte et engrais adaptés (voir [mousse dans la pelouse](/conseils/mousse-pelouse) et [préparer son gazon pour l'hiver](/conseils/preparer-gazon-hiver)).
+
+## Questions fréquentes
+
+### Peut-on chauler au printemps ?
+
+Oui, si le pH est entre 5 et 6. En dessous de 5, préférez l'automne : les pluies d'automne et d'hiver ont le temps de faire pénétrer la chaux avant la reprise du gazon.
+
+### Peut-on mettre la chaux et l'engrais en même temps ?
+
+Non. Laissez au moins 3 à 4 semaines entre le chaulage et un engrais azoté, et autant avec un anti-mousse au sulfate de fer : mélangés, ils perdent en efficacité.
+
+### Faut-il chauler tous les ans ?
+
+Non, seulement tant que le pH reste sous 6. Refaites un test un an après l'apport ; entre 6 et 7, un simple contrôle annuel suffit.
+
+### Peut-on chauler un sol calcaire ?
+
+Non. Si la terre mousse au contact du vinaigre ou si le pH dépasse 7, la chaux aggraverait la situation.
 
 ## Mongazon360 et votre sol
 

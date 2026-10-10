@@ -1,15 +1,21 @@
 ---
-title: Aérer sa pelouse (carottage) : pourquoi, quand et comment
-description: Flaques qui stagnent, sol dur, mousse et pâquerettes ? Votre pelouse étouffe. L'aération par carottage décompacte le sol et relance le gazon. Méthode, outils et bonne période.
+title: Carottage de la pelouse : quand et comment aérer son gazon
+description: Sol tassé, flaques, mousse ? Le carottage aère la pelouse en profondeur. Quand aérer (mars ou septembre), avec quel outil et la méthode pas à pas.
 saison: printemps
 date: 2026-09-25
-maj: 2026-09-27
+maj: 2026-10-10
 produits: aeration
 ---
 
 Un gazon peut être tondu, nourri et arrosé correctement et pourtant végéter. Souvent, le problème est invisible : **le sol est tassé**. Les racines manquent d'air, l'eau ruisselle au lieu de pénétrer, et l'engrais profite mal. L'**aération par carottage** est le geste qui redonne de l'air au sol.
 
-## Aération et scarification : quelle différence ?
+> **En bref**
+> - **Pourquoi ?** Pour décompacter un sol tassé : l'air, l'eau et l'engrais atteignent de nouveau les racines.
+> - **Quand ?** En mars et en septembre, jusqu'en avril ou octobre sur un sol argileux ou tassé, sur un sol humide mais ressuyé.
+> - **Comment ?** Un trou tous les 5 à 10 cm, sur 7 à 10 cm de profondeur, avec un aérateur à louchets creux.
+> - **À éviter** : aérer et scarifier le même jour, ou aérer moins de 90 jours après la dernière fois.
+
+## Carottage ou scarification : quelle différence ?
 
 On les confond souvent, mais elles n'agissent pas au même niveau :
 
@@ -28,7 +34,7 @@ Les deux se complètent très bien : on aère, puis on scarifie si besoin.
 - les **pâquerettes, plantains et la mousse** prospèrent, signes classiques de sol compacté ;
 - le gazon **souffre vite** en période sèche, car ses racines restent en surface.
 
-## Quand aérer ?
+## Quand aérer sa pelouse ?
 
 Il faut aérer quand le gazon pousse activement, pour qu'il comble vite les trous :
 
@@ -41,7 +47,7 @@ Le sol doit être **humide mais ressuyé** : un ou deux jours après une pluie, 
 
 À éviter : les **périodes de sécheresse ou de canicule**, le gel, et les pelouses semées depuis moins de 3 mois.
 
-## Quel outil choisir ?
+## Quel outil pour aérer le gazon ?
 
 | Outil | Surface | Efficacité |
 |---|---|---|
@@ -52,15 +58,15 @@ Le sol doit être **humide mais ressuyé** : un ou deux jours après une pluie, 
 
 Les **louchets creux**, qui retirent une carotte de terre, sont bien plus efficaces que les pointes pleines, qui ne font que pousser la terre sur les côtés.
 
-## La méthode
+## Comment faire un carottage : la méthode
 
 1. **Tondez** à hauteur normale et ramassez l'herbe.
 2. **Arrosez la veille** si le sol est sec.
 3. **Passez l'aérateur** sur toute la surface, en insistant sur les zones de passage. Visez un trou tous les **5 à 10 cm**, jusqu'à **7 à 10 cm de profondeur**.
 4. **Laissez sécher les carottes** en surface un ou deux jours, puis émiettez-les au râteau ou au dos d'un balai : la terre retombe dans les trous. Vous pouvez aussi les ramasser.
 5. **Complétez par un sablage ou un terreautage** : une fine couche de sable ou de terreau, brossée dans les trous, améliore durablement le drainage, surtout en sol argileux.
-6. **Regarnissez** les zones clairsemées : les graines tombent dans les trous et lèvent très bien.
-7. **Apportez un engrais** de saison et **arrosez** si aucune pluie n'est prévue.
+6. **Regarnissez** les zones clairsemées : les graines tombent dans les trous et lèvent très bien (voir [regarnir son gazon à l'automne](/conseils/regarnir-gazon-automne)).
+7. **Apportez un [engrais de saison](/conseils/engrais-gazon-automne)** et **arrosez** si aucune pluie n'est prévue.
 
 ## À quelle fréquence ?
 
@@ -73,6 +79,24 @@ Les **louchets creux**, qui retirent une carotte de terre, sont bien plus effica
 - variez les chemins de passage, ou installez des pas japonais sur les trajets réguliers ;
 - ne tondez pas sur un sol gorgé d'eau ;
 - apportez régulièrement de la matière organique (terreau fin), qui entretient la vie du sol.
+
+## Questions fréquentes
+
+### Faut-il ramasser les carottes de terre ?
+
+Ce n'est pas obligatoire : laissez-les sécher un ou deux jours, puis émiettez-les au râteau ; la terre retombe dans les trous. Vous pouvez aussi les ramasser.
+
+### Peut-on aérer sa pelouse en octobre ?
+
+Oui sur un sol argileux ou tassé. Sinon, préférez septembre, quand le gazon pousse encore activement et comble vite les trous.
+
+### Peut-on aérer une pelouse semée récemment ?
+
+Non : attendez au moins 3 mois après le semis.
+
+### Aérer ou scarifier contre la mousse ?
+
+Les deux se complètent, mais jamais le même jour. Le carottage traite le sol tassé, la [scarification](/conseils/scarifier-pelouse) retire le feutre et la mousse (voir aussi [mousse dans la pelouse](/conseils/mousse-pelouse)).
 
 ## Mongazon360 et l'aération
 

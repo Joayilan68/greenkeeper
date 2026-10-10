@@ -1,15 +1,21 @@
 ---
-title: Engrais gazon d'automne : lequel choisir et quand l'épandre
-description: L'engrais d'automne prépare le gazon à l'hiver et au printemps. Pourquoi privilégier le potassium, quelle période choisir, comment l'épandre et les erreurs à éviter.
+title: Engrais gazon d'automne : le meilleur choix et quand l'épandre
+description: Le meilleur engrais d'automne pour le gazon est riche en potassium et modéré en azote. À épandre en septembre-octobre : dose, méthode et erreurs à éviter.
 saison: automne
 date: 2026-09-25
-maj: 2026-09-27
+maj: 2026-10-10
 produits: engraisAutomne
 ---
 
 L'automne est la saison où l'on pense le moins à nourrir sa pelouse, et pourtant c'est **l'un des apports les plus utiles de l'année**. Après l'été, le gazon a puisé dans ses réserves. Un bon engrais d'automne lui permet de reconstituer ses racines, de mieux résister au froid et aux maladies, et de repartir plus vite au printemps.
 
-## Un engrais d'automne n'est pas un engrais de printemps
+> **En bref**
+> - **Quel engrais ?** Un engrais riche en potassium (le 3e chiffre NPK, nettement plus élevé que le 1er) et modéré en azote, de préférence organique ou à libération lente.
+> - **Quand le mettre ?** En septembre et octobre, sur un sol encore tiède, ni gelé ni détrempé, idéalement juste avant une pluie.
+> - **Quelle dose ?** Celle de l'emballage, souvent 30 à 50 g/m², en deux passages croisés.
+> - **Et en novembre ?** Un engrais d'hiver riche en potassium, au moins 45 jours après l'engrais d'automne.
+
+## Le meilleur engrais d'automne : riche en potassium
 
 Tous les engrais pour gazon indiquent trois chiffres, par exemple **NPK 6-3-12**. Ils correspondent aux trois éléments principaux :
 
@@ -23,7 +29,7 @@ Au printemps, on cherche la pousse et la couleur : l'azote domine. **En automne,
 
 > **Le bon repère sur l'emballage** : un engrais d'automne a un chiffre K (le troisième) nettement plus élevé que le chiffre N (le premier). La mention « automne » ou « hiver » figure souvent sur le sac.
 
-## Quand l'épandre ?
+## Quand mettre l'engrais d'automne ?
 
 - **En septembre et octobre**, quand le gazon repart après l'été. En **novembre**, l'engrais d'hiver riche en potassium renforce la résistance au gel, au moins 45 jours après l'engrais d'automne. Entre les autres apports, laissez au moins 90 jours : un engrais par saison, quatre au plus par an.
 - **Tant que le sol est encore tiède (au-dessus de 8 °C)** : les racines absorbent les éléments, et les engrais organiques ont besoin de l'activité du sol pour se décomposer.
@@ -37,7 +43,7 @@ Au printemps, on cherche la pousse et la couleur : l'azote domine. **En automne,
 - **Engrais minéral à libération lente** : efficace et précis, mais attention aux surdosages.
 - **Engrais minéral « rapide »** : à éviter en automne, il pousse l'herbe au mauvais moment.
 
-## Comment l'épandre
+## Comment épandre l'engrais d'automne
 
 1. **Tondez** quelques jours avant, à hauteur normale, et **ramassez les feuilles mortes**.
 2. **Pesez la dose** indiquée sur l'emballage pour votre surface (souvent de l'ordre de 30 à 50 g/m²). Mesurez votre pelouse plutôt que d'estimer à vue.
@@ -52,7 +58,7 @@ Sur les zones regarnies, utilisez un **engrais « spécial semis » ou « starte
 
 ## Engrais, mousse et chaulage : ne pas tout mélanger
 
-Si votre pelouse souffre de mousse, l'engrais seul ne suffit pas. Traitez la mousse, corrigez l'acidité du sol par un chaulage si le pH est bas, et **espacez chaulage et engrais d'au moins trois à quatre semaines**. Tout est détaillé dans notre article [mousse dans la pelouse](/conseils/mousse-pelouse).
+Si votre pelouse souffre de mousse, l'engrais seul ne suffit pas. Traitez la mousse, corrigez l'acidité du sol par un [chaulage](/conseils/chaulage-ph-pelouse) si le pH est bas, et **espacez chaulage et engrais d'au moins trois à quatre semaines**. Tout est détaillé dans notre article [mousse dans la pelouse](/conseils/mousse-pelouse).
 
 ## Les erreurs les plus fréquentes
 
@@ -61,6 +67,24 @@ Si votre pelouse souffre de mousse, l'engrais seul ne suffit pas. Traitez la mou
 3. **Surdoser** « pour bien faire » : brûlures, herbe fragile et pollution de l'eau.
 4. **Épandre à la volée** sans repère, avec des zones oubliées et d'autres saturées.
 5. **Oublier les feuilles mortes**, qui bloquent l'engrais et la lumière.
+
+## Questions fréquentes
+
+### Peut-on mettre de l'engrais en novembre ?
+
+Oui, un engrais d'hiver riche en potassium, en novembre uniquement et au moins 45 jours après l'engrais d'automne : il renforce la résistance au gel (voir [préparer son gazon pour l'hiver](/conseils/preparer-gazon-hiver)).
+
+### Quel engrais pour une jeune pelouse en automne ?
+
+Sur un semis ou un regarnissage récent, un engrais « starter », plus riche en phosphore, favorise l'enracinement des jeunes pousses.
+
+### Combien d'engrais par an pour une pelouse ?
+
+Un par saison, quatre au plus par an, avec au moins 90 jours entre deux apports. Seule exception : l'engrais d'hiver, possible 45 jours après celui d'automne.
+
+### Faut-il arroser après l'engrais ?
+
+Oui, légèrement, si aucune pluie n'est prévue dans les 2 ou 3 jours : l'eau fait pénétrer les granulés.
 
 ## Mongazon360 vous donne le bon moment
 
