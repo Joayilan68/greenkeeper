@@ -1,13 +1,18 @@
 ---
-title: Préparer son gazon pour l'hiver : la check-list complète
-description: Dernière tonte, feuilles, engrais, aération, arrosage : les gestes d'octobre à décembre pour que votre pelouse passe l'hiver sans dégâts et reparte vite au printemps.
+title: Entretien du gazon en hiver : la check-list d'octobre à février
+description: Dernière tonte à 5-6 cm, feuilles, engrais d'hiver au potassium, purge de l'arrosage, gazon gelé : l'entretien de la pelouse en hiver, mois par mois.
 saison: hiver
 date: 2026-09-25
-maj: 2026-09-27
+maj: 2026-10-10
 produits: engraisAutomne
 ---
 
 Une pelouse qui entre en hiver en bonne santé est une pelouse qui **repart vite et verte au printemps**. À l'inverse, un gazon trop long, étouffé par les feuilles ou affaibli par l'été s'expose au gel, à la mousse et aux maladies. Voici les gestes à faire entre octobre et décembre, dans l'ordre.
+
+> **En bref**
+> - **Avant l'hiver** : dernière tonte à 5-6 cm en novembre, feuilles ramassées chaque semaine, engrais d'hiver au potassium en novembre, arrosage purgé avant les gelées.
+> - **Pendant l'hiver** : pas de tonte, ne pas marcher sur le gazon gelé, rien laissé sur la pelouse.
+> - **À éviter** : les engrais riches en azote, qui font pousser une herbe tendre et fragile.
 
 ## 1. Espacer les tontes, sans les arrêter trop tôt
 
@@ -55,13 +60,27 @@ Tout est détaillé dans notre article [hiverner sa tondeuse, son robot et son a
 - **Évitez le sel de déneigement** près du gazon.
 - **Limitez les passages** sur un sol détrempé, qui se tasse durablement.
 
-## La check-list mois par mois
+## L'entretien du gazon en hiver, mois par mois
 
 | Mois | À faire |
 |---|---|
 | **Octobre** | Tontes espacées · feuilles chaque semaine · engrais d'automne · aération (sol argileux ou tassé) · chaulage si pH bas · derniers regarnissages dans le sud |
 | **Novembre** | Dernière tonte (5-6 cm) · engrais d'hiver au potassium · feuilles · purge de l'arrosage · hivernage du matériel |
 | **Décembre à février** | Pas de tonte · ne pas marcher sur le gazon gelé · rien sur la pelouse · préparer le plan du printemps |
+
+## Questions fréquentes
+
+### Faut-il tondre la pelouse en hiver ?
+
+Non : après la dernière tonte de novembre, le gazon ne pousse presque plus. Ne tondez jamais un gazon gelé ou détrempé ; la reprise se fait au printemps (voir [première tonte de printemps](/conseils/premiere-tonte-printemps)).
+
+### Quel engrais mettre en hiver ?
+
+Un engrais d'hiver riche en potassium, en novembre uniquement et au moins 45 jours après l'engrais d'automne. Pas d'engrais azoté en hiver.
+
+### Peut-on marcher sur une pelouse gelée ?
+
+Évitez-le : les brins gelés se brisent et laissent des traces brunes (voir [gel et pelouse](/conseils/gel-pelouse)).
 
 ## Mongazon360 vous guide tout l'hiver
 
