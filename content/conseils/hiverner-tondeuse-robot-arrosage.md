@@ -1,17 +1,24 @@
 ---
-title: Hiverner sa tondeuse, son robot tondeuse et son arrosage
-description: Tondeuse thermique ou électrique, robot tondeuse, arrosage automatique : les gestes d'hivernage pour éviter les pannes, les batteries mortes et les tuyaux gelés au printemps.
+title: Hivernage du robot tondeuse, de la tondeuse et de l'arrosage
+description: Hivernage du robot tondeuse : arrêt en novembre, nettoyage sans jet d'eau, batterie rangée hors gel. Et les bons gestes pour la tondeuse et l'arrosage.
 saison: hiver
 date: 2026-09-25
+maj: 2026-10-10
 ---
 
 En fin de saison, on a vite fait de ranger la tondeuse au fond du garage et d'oublier l'arrosage jusqu'au printemps. Résultat : une tondeuse qui ne démarre plus, une batterie hors d'usage ou un tuyau éclaté par le gel. **Une heure d'hivernage évite la plupart de ces pannes.** Voici les gestes, appareil par appareil.
+
+> **En bref**
+> - **Quand ?** Après la dernière tonte, en général en novembre, et toujours avant les premières gelées pour l'arrosage.
+> - **Robot tondeuse** : nettoyage sans jet d'eau, lames contrôlées, batterie chargée selon la notice, robot rangé au sec et hors gel.
+> - **Tondeuse thermique** : carburant (panne sèche ou stabilisateur), lame affûtée, remisage au sec.
+> - **Arrosage** : couper l'eau, purger le réseau, rentrer le programmateur et vider les tuyaux.
 
 ## Quand hiverner ?
 
 Après la **dernière tonte de l'année**, en général en novembre, et dans tous les cas **avant les premières gelées** pour l'arrosage. Les alertes gel de Mongazon360 vous préviennent quand elles sont annoncées dans votre commune.
 
-## La tondeuse thermique
+## Hivernage de la tondeuse thermique
 
 1. **Le carburant** : un reste d'essence vieillit en quelques mois et encrasse le carburateur. Deux solutions : faire tourner le moteur jusqu'à la panne sèche lors de la dernière tonte, ou ajouter un **stabilisateur de carburant** et faire tourner quelques minutes. Suivez la recommandation de votre notice.
 2. **Le nettoyage** : débranchez l'antiparasite de la bougie, puis nettoyez le dessous du carter (herbe collée, terre). Une brosse et une raclette en plastique suffisent. Évitez le jet haute pression sur le moteur.
@@ -25,7 +32,7 @@ Après la **dernière tonte de l'année**, en général en novembre, et dans tou
 2. **La batterie lithium-ion** se stocke **à l'intérieur, hors gel**, idéalement entre 10 et 20 °C. Ne la laissez pas dans un abri non chauffé où il gèle. Rechargez-la au niveau recommandé par le fabricant, souvent partiellement, et vérifiez-la une ou deux fois pendant l'hiver.
 3. **Le câble** d'une tondeuse filaire : vérifiez qu'il n'est ni entaillé ni écrasé.
 
-## Le robot tondeuse
+## Hivernage du robot tondeuse
 
 Le robot a besoin d'un vrai hivernage, sous peine de batterie dégradée et de mauvaises surprises au printemps :
 
@@ -36,7 +43,7 @@ Le robot a besoin d'un vrai hivernage, sous peine de batterie dégradée et de m
 5. **La station de charge** : suivez les consignes du fabricant. Selon les modèles, on la rentre ou on la débranche et on la protège sur place. Le câble périphérique peut rester en terre.
 6. **La révision** : l'hiver est la bonne période pour une révision chez le revendeur ou une mise à jour du logiciel.
 
-## L'arrosage automatique et les tuyaux
+## Hivernage de l'arrosage automatique et des tuyaux
 
 L'eau qui gèle dans une canalisation augmente de volume et fait éclater tuyaux, raccords, électrovannes et programmateurs. **Tout doit être vidé avant le premier gel.**
 
@@ -54,6 +61,20 @@ L'eau qui gèle dans une canalisation augmente de volume et fait éclater tuyaux
 - **Robot** : réinstallez la station, vérifiez le câble périphérique, reprenez la tonte **à une hauteur élevée**, puis descendez progressivement.
 - **Arrosage** : remettez en eau lentement et vérifiez chaque zone (fuites, buses bouchées) **après les dernières gelées**.
 
+## Questions fréquentes
+
+### Peut-on laisser un robot tondeuse dehors l'hiver ?
+
+Non : rangez le robot à l'intérieur, au sec et hors gel. Pour la station de charge, suivez la notice : selon les modèles, on la rentre ou on la débranche et on la protège sur place. Le câble périphérique peut rester en terre.
+
+### Comment stocker la batterie pendant l'hiver ?
+
+À l'intérieur, hors gel, idéalement entre 10 et 20 °C, chargée au niveau recommandé par le fabricant. Vérifiez-la une ou deux fois pendant l'hiver.
+
+### Quand remettre le robot en route ?
+
+Au printemps, à la reprise de la pousse : réinstallez la station, vérifiez le câble périphérique et commencez à une hauteur élevée avant de descendre progressivement (voir [première tonte de printemps](/conseils/premiere-tonte-printemps)).
+
 ## Mongazon360 et votre matériel
 
-Déclarez votre équipement dans Mongazon360 (robot tondeuse, arrosage automatique) : votre plan d'entretien s'adapte, par exemple en transformant les rappels de tonte en simples vérifications quand un robot s'en charge. Et les alertes gel vous signalent le moment de mettre l'arrosage à l'abri.
+Déclarez votre équipement dans Mongazon360 (robot tondeuse, arrosage automatique) : votre plan d'entretien s'adapte, par exemple en transformant les rappels de tonte en simples vérifications quand un robot s'en charge. Et les alertes gel vous signalent le moment de mettre l'arrosage à l'abri. À partir du 15 novembre, un rappel « Hiverne ton matériel » vous renvoie vers ce guide, avec une version pour les robots.

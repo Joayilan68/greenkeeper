@@ -1,11 +1,18 @@
 ---
-title: Feuilles mortes sur la pelouse : faut-il les ramasser ?
-description: Laisser les feuilles mortes sur le gazon peut l'abîmer en quelques semaines. Pourquoi les ramasser, à quelle fréquence, avec quel outil, et comment les réutiliser au jardin.
+title: Faut-il ramasser les feuilles mortes sur le gazon ?
+description: Oui : un tapis de feuilles étouffe le gazon et favorise mousse et maladies. Quand les ramasser, avec quel outil, quand les laisser broyées et quoi en faire.
 saison: automne
 date: 2026-09-25
+maj: 2026-10-10
 ---
 
 Chaque automne, la même question revient : faut-il vraiment ramasser les feuilles mortes sur la pelouse, ou peut-on les laisser se décomposer ? La réponse courte : **oui, il faut les enlever du gazon**, mais pas forcément les jeter. Voici pourquoi, et comment le faire sans y passer vos week-ends.
+
+> **En bref**
+> - **Faut-il les ramasser ?** Oui, dès qu'elles forment une couche continue : elles privent l'herbe de lumière et favorisent mousse et maladies.
+> - **À quel rythme ?** Idéalement une fois par semaine pendant la chute, d'octobre à début décembre, par temps sec.
+> - **Avec quoi ?** La tondeuse avec bac, lame assez haute : elle broie et ramasse en un seul passage.
+> - **Peut-on les laisser ?** Seulement une couche fine, broyée à la tondeuse mulching, l'herbe restant bien visible.
 
 ## Pourquoi les feuilles abîment le gazon
 
@@ -64,6 +71,20 @@ Les feuilles mortes sont une ressource précieuse pour le jardin :
 2. **Laisser un tapis de feuilles mouillées** tout l'hiver.
 3. **Ramasser au râteau métallique rigide** sur un gazon détrempé : vous arrachez l'herbe.
 4. **Jeter toutes les feuilles** alors qu'elles valent de l'or au compost.
+
+## Questions fréquentes
+
+### Peut-on laisser les feuilles mortes sur la pelouse tout l'hiver ?
+
+Non : sous une couche de feuilles mouillées, l'herbe jaunit en quelques semaines et la mousse s'installe. Seule une couche fine, broyée, peut rester.
+
+### Faut-il ramasser les feuilles mouillées ?
+
+Mieux vaut attendre qu'elles sèchent : elles sont plus légères, et vous n'arrachez pas l'herbe d'un gazon détrempé.
+
+### Les feuilles broyées nourrissent-elles le gazon ?
+
+Oui, en couche fine : les fragments tombent entre les brins et se décomposent. Au-delà, ramassez-les et mettez-les au compost.
 
 ## Mongazon360 vous rappelle les bons gestes
 
