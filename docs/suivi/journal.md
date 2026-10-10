@@ -38,3 +38,6 @@ du premier onglet).
   Google en hausse (2 puis 14 visites par semaine), aucun des 7 inscrits de septembre et début octobre revenu dans les 7 jours,
   aucun abonnement payant. Plan de 11 actions pour viser 500 visiteurs par semaine au 1er mars 2027 (articles, créateurs,
   réseaux, retour des inscrits), à arbitrer par Jordan ; captures Search Console demandées pour compléter le volet Google.
+- 10/10/2026 — Captures Search Console reçues et ajoutées au bilan : 26 pages indexées (seules les pages légales ne le sont
+  pas), 1 290 affichages et 31 clics en 3 mois (2,4 % de clics), presque tous depuis le 26/09 ; 235 affichages dans les
+  réponses d'IA de Google. Action n° 1 du plan revue : réécrire titres et descriptions des pages vues mais peu cliquées.
