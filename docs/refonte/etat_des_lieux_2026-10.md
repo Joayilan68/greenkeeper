@@ -26,7 +26,8 @@ mesure interne des pages et des tuiles (en prod depuis le 09/10 : table `funnel_
 - Inscrits actifs par mois : juin 14 · juillet 8 · août 43 (tests Google Play) · septembre 13 · octobre 6 (au 9).
 - Diagnostics photo : 47 (mai 15, juin 12, juillet 1, août 4, septembre 11, octobre 4), faits par 1 à 5 personnes par mois.
 - Historique : 154 interventions notées (arrosage 62, tonte 46, désherbage 20, regarnissage 8, autres 6 au plus).
-- Bob depuis mi-septembre : 11 questions sur un diagnostic, 3 de comptes gratuits, 4 de visiteurs.
+- Bob depuis mi-septembre : 3 questions, toutes d'un compte gratuit (05/10). Corrigé le 10/10 : les « 11 questions sur un
+  diagnostic » comptées le 09/10 étaient des diagnostics photo, et les « 4 questions de visiteurs », 2 essais du diagnostic.
 - GreenPoints : 50 comptes avec des points (médiane 85), 9 en ont gagné sur 30 jours, aucune récompense obtenue ;
   12 inscrits actifs sur 30 jours.
 - Inscrits localisés : 39, dont 11 dans le sud de l'Alsace (5 autour de Saint-Louis).

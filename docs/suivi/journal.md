@@ -34,3 +34,7 @@ du premier onglet).
   (confirmation à obtenir) ; Husqvarna, Gardena et Netatmo interdisent la revente de leurs données. Demandes prêtes pour Jordan
   (Husqvarna Group avant fin octobre, Netatmo avant fin novembre). Ordre proposé : accords écrits, puis capteurs de sol Gardena et
   Ecowitt (novembre-décembre, STA), puis robots Segway Navimow et Mammotion (début 2027), caméras ensuite.
+- 10/10/2026 — Bilan complet des stats remis à Jordan (document Claude) : environ 55 visiteurs par semaine depuis mi-septembre,
+  Google en hausse (2 puis 14 visites par semaine), aucun des 7 inscrits de septembre et début octobre revenu dans les 7 jours,
+  aucun abonnement payant. Plan de 11 actions pour viser 500 visiteurs par semaine au 1er mars 2027 (articles, créateurs,
+  réseaux, retour des inscrits), à arbitrer par Jordan ; captures Search Console demandées pour compléter le volet Google.
