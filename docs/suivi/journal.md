@@ -45,3 +45,7 @@ du premier onglet).
   contenu), publiés en prod dès qu'ils sont prêts pour le référencement de saison (règle ajoutée à CLAUDE.md). Premiers
   articles retravaillés et mis en prod le 10/10 : chaulage, engrais d'automne, carottage (titres calés sur les recherches
   de la Search Console, encadré « En bref », questions fréquentes). À faire par Jordan : demander l'indexation des 3 pages.
+- 10/10/2026 — Plan « trafic ×10 avant le 1er mars » (bilan des stats du 10/10) : Jordan valide 9 actions sur 11 (titres et
+  contenu des articles, 20 nouveaux articles, appels à l'action dans les articles, pages « calendrier du gazon » par
+  climat, créateurs de contenu, temps fort de printemps, réseaux sociaux, mode visiteur, parrainage mis en avant). À
+  challenger : première semaine guidée avec demande des notifications après la première aide, et bilan mensuel des stats.
