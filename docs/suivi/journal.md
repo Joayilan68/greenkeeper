@@ -53,3 +53,8 @@ du premier onglet).
   (demander les notifications après la première aide, résultat du diagnostic ou plan créé, plutôt qu'à l'inscription ; sur
   STA en novembre) ; action 11 en point des stats tous les 15 jours, le 10 et le 25 du mois (tâche programmée « Point des
   stats tous les 15 jours », 1er point le 25/10 ; trajectoire indicative : 70 visiteurs par semaine au 25/10, 500 au 25/02).
+- 10/10/2026 — Accord permanent de Jordan pour publier en prod les articles Conseils sans nouvelle confirmation, à condition
+  d'être informé du contenu de chaque article publié (noté dans CLAUDE.md). 4 nouveaux articles retravaillés et mis en prod :
+  mousse, feuilles mortes, entretien d'hiver, hivernage du matériel. Indexation des 3 premiers demandée par Jordan.
+  Automatisation proposée : stats Search Console lues par l'API (compte de service en lecture seule, à créer par Jordan) ;
+  envoi automatique des pages modifiées à Bing par IndexNow (à décider).

@@ -13,7 +13,8 @@
   (recette à dérouler après la mise en prod).
   Exception (décision du 10/10/2026) : les articles Conseils (`content/conseils/*.md` : titres, descriptions, contenu)
   partent en prod dès qu'ils sont prêts, sans toucher à l'app, pour le référencement de saison ; `main` est ensuite
-  fusionné dans `Staging`.
+  fusionné dans `Staging`. Accord permanent de Jordan (10/10/2026) : pas de nouvelle confirmation pour ces publications,
+  mais Jordan est informé à chaque fois du contenu des articles publiés.
 - Toute modification de schéma Supabase s'applique aux **deux** projets.
 - **Google Play** : l'app Android est une TWA (`fr.mongazon360.app`) qui charge mongazon360.fr en direct
   (service worker sans cache, `index.html` en no-store) → tout déploiement de `main` met à jour l'app
