@@ -41,3 +41,7 @@ du premier onglet).
 - 10/10/2026 — Captures Search Console reçues et ajoutées au bilan : 26 pages indexées (seules les pages légales ne le sont
   pas), 1 290 affichages et 31 clics en 3 mois (2,4 % de clics), presque tous depuis le 26/09 ; 235 affichages dans les
   réponses d'IA de Google. Action n° 1 du plan revue : réécrire titres et descriptions des pages vues mais peu cliquées.
+- 10/10/2026 — Décision de Jordan : exception à la règle de décembre pour les articles Conseils (titres, descriptions,
+  contenu), publiés en prod dès qu'ils sont prêts pour le référencement de saison (règle ajoutée à CLAUDE.md). Premiers
+  articles retravaillés et mis en prod le 10/10 : chaulage, engrais d'automne, carottage (titres calés sur les recherches
+  de la Search Console, encadré « En bref », questions fréquentes). À faire par Jordan : demander l'indexation des 3 pages.
