@@ -11,6 +11,9 @@
   de PROD se fait sur `main`, puis `main` est fusionné dans `Staging`.
   Chaque évolution laissée sur STA ajoute ses lignes de test dans `docs/recette/Recette_prod_decembre_2026.xlsx`
   (recette à dérouler après la mise en prod).
+  Exception (décision du 10/10/2026) : les articles Conseils (`content/conseils/*.md` : titres, descriptions, contenu)
+  partent en prod dès qu'ils sont prêts, sans toucher à l'app, pour le référencement de saison ; `main` est ensuite
+  fusionné dans `Staging`.
 - Toute modification de schéma Supabase s'applique aux **deux** projets.
 - **Google Play** : l'app Android est une TWA (`fr.mongazon360.app`) qui charge mongazon360.fr en direct
   (service worker sans cache, `index.html` en no-store) → tout déploiement de `main` met à jour l'app
