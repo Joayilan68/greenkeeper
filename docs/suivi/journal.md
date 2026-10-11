@@ -125,3 +125,6 @@ du premier onglet).
   note : « Sans objet : la Page Mongazon360 existe (statistiques, pubs) ; profil Bob Gazon en mode professionnel. Reste
   conseillé : compte Facebook personnel de Jordan administrateur de la Page, pour ne pas la perdre si le profil de la
   mascotte est fermé. » L'automatisation des abonnés (ligne en pause) pourra passer par cette Page.
+- 11/10/2026 — Jordan confirme que son compte Facebook personnel est administrateur de la Page Mongazon360. Ligne « Bob
+  gazon — convertir le profil en Page Facebook » : « Terminé » (100 %), note « Sans objet : la Page Mongazon360 existe
+  (statistiques, pubs), administrée par le compte personnel de Jordan ; profil Bob Gazon en mode professionnel. »
