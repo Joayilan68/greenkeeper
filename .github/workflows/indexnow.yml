@@ -1,10 +1,12 @@
 # Une fois la mise en prod en ligne : signale à Bing (IndexNow) les articles Conseils modifiés (scripts/indexnow.mjs)
 # et renvoie le plan du site à Google (scripts/gsc-stats.mjs plan, secret GitHub GSC_SERVICE_ACCOUNT_JSON).
+# Lancement à la main possible (onglet Actions, « Run workflow ») : seul le plan du site est alors renvoyé.
 name: Indexation — articles Conseils (Bing et Google)
 on:
   push:
     branches: [main]
     paths: ["content/conseils/**"]
+  workflow_dispatch:
 jobs:
   indexnow:
     runs-on: ubuntu-latest
