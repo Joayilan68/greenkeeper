@@ -42,7 +42,7 @@ if (!SUPABASE_URL || !SUPABASE_ANON) console.warn("[seo] Supabase non configuré
 
 const suivi = (campagne) => `<script>(function(){try{
 var p=new URLSearchParams(location.search),ref=document.referrer||"",K="mg360_utm_capture",src=(p.get("utm_source")||"").toLowerCase().trim();
-if(!src){src="direct";var m=[[/instagram\\./i,"instagram"],[/tiktok\\./i,"tiktok"],[/facebook\\.|fb\\.com/i,"facebook"],[/(twitter|x)\\.com/i,"twitter"],[/youtube\\.|youtu\\.be/i,"youtube"],[/linkedin\\./i,"linkedin"],[/google\\.|bing\\.|duckduckgo\\./i,"google"],[/mail\\.|gmail|outlook|yahoo/i,"email"]];
+if(!src){src="direct";var m=[[/instagram\\./i,"instagram"],[/tiktok\\./i,"tiktok"],[/facebook\\.|fb\\.com/i,"facebook"],[/(twitter|x)\\.com/i,"twitter"],[/youtube\\.|youtu\\.be/i,"youtube"],[/pinterest|pin\\.it/i,"pinterest"],[/linkedin\\./i,"linkedin"],[/google\\.|bing\\.|duckduckgo\\./i,"google"],[/mail\\.|gmail|outlook|yahoo/i,"email"]];
 if(ref&&!/mongazon360\\./i.test(ref)){src="autre";for(var i=0;i<m.length;i++)if(m[i][0].test(ref)){src=m[i][1];break;}}}
 var cap=null;try{cap=JSON.parse(sessionStorage.getItem(K));}catch(e){}
 if(!cap){cap={source:src,medium:p.get("utm_medium")||"conseils",campaign:p.get("utm_campaign")||"${campagne}",referer:ref,landingPath:location.pathname+location.search,capturedAt:new Date().toISOString()};sessionStorage.setItem(K,JSON.stringify(cap));}

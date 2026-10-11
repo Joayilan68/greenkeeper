@@ -43,6 +43,78 @@ function MiniChart({ data, valueKey, color = "#43a047", unit = "" }) {
   );
 }
 
+// Position moyenne de toutes nos pages dans Google, par mois (Search Console) : courbe à axe inversé (1 en haut),
+// repères 1 / 3 / 10 / 20…, valeur du dernier mois, évolution sur un mois, détail au survol ou au toucher et tableau.
+const virgule = (n) => String(n).replace(".", ",");
+const nomMois = (m, long) => new Date(`${m}-01T12:00:00Z`).toLocaleDateString("fr-FR",
+  long ? { month: "long", year: "numeric" } : { month: "short" });
+
+function PositionChart({ mois }) {
+  const [survol, setSurvol] = useState(null);
+  if (!mois?.length) return <div style={{ fontSize:11, color:"#81c784" }}>Pas encore de données Google.</div>;
+  const W = 320, H = 150, GAUCHE = 30, DROITE = 16, HAUT = 14, BAS = 24;
+  const max = Math.max(10, Math.ceil(Math.max(...mois.map(m => m.position)) / 10) * 10);
+  const x = (i) => mois.length === 1 ? (GAUCHE + W - DROITE) / 2 : GAUCHE + (i * (W - GAUCHE - DROITE)) / (mois.length - 1);
+  const y = (p) => HAUT + ((p - 1) * (H - HAUT - BAS)) / (max - 1);
+  // Repères par ordre d'importance (top 3, fin de la 1re page…), sans étiquettes qui se chevauchent
+  const reperes = [3, 10, 1, 20, 30, 50, 70, 100].filter(v => v <= max)
+    .reduce((garde, v) => garde.every(g => Math.abs(y(g) - y(v)) >= 11) ? [...garde, v] : garde, []);
+  const enCours = new Date().toISOString().slice(0, 7);
+  const der = mois[mois.length - 1], prec = mois[mois.length - 2];
+  const ecart = prec ? Math.round((prec.position - der.position) * 10) / 10 : null; // positif = on remonte
+  const m = survol !== null ? mois[survol] : null;
+  return (
+    <div>
+      <div style={{ display:"flex", alignItems:"baseline", gap:8, marginBottom:6 }}>
+        <span style={{ fontSize:26, fontWeight:800, color:"#e8f5e9" }}>{virgule(der.position)}</span>
+        <span style={{ fontSize:11, color:"#81c784" }}>{nomMois(der.mois, true)}{der.mois === enCours ? " (en cours)" : ""}</span>
+        {ecart !== null && ecart !== 0 && (
+          <span style={{ fontSize:11, fontWeight:700, color: ecart > 0 ? "#66BB6A" : "#ef9a9a" }}>
+            {ecart > 0 ? "▲ gagne" : "▼ perd"} {virgule(Math.abs(ecart))} place{Math.abs(ecart) >= 2 ? "s" : ""} sur un mois
+          </span>
+        )}
+      </div>
+      <div style={{ position:"relative", maxWidth:420 }}>
+        <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display:"block" }} role="img"
+          aria-label={`Position moyenne sur Google par mois : ${mois.map(p => `${nomMois(p.mois, true)} ${virgule(p.position)}`).join(", ")}`}>
+          {reperes.map(v => (
+            <g key={v}>
+              <line x1={GAUCHE} x2={W - DROITE} y1={y(v)} y2={y(v)} stroke="rgba(255,255,255,0.12)" strokeWidth={1} />
+              <text x={GAUCHE - 6} y={y(v) + 3} textAnchor="end" fill="#81c784" fontSize={9}>{v}</text>
+            </g>
+          ))}
+          {mois.length > 1 && <polyline points={mois.map((p, i) => `${x(i)},${y(p.position)}`).join(" ")}
+            fill="none" stroke="#66BB6A" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />}
+          {mois.map((p, i) => (
+            <g key={p.mois}>
+              <circle cx={x(i)} cy={y(p.position)} r={4} fill="#66BB6A" stroke="#1e3b2b" strokeWidth={2} />
+              <text x={x(i)} y={H - 8} textAnchor="middle" fill="#81c784" fontSize={9}>{nomMois(p.mois)}</text>
+              <circle cx={x(i)} cy={y(p.position)} r={14} fill="transparent" style={{ cursor:"pointer" }}
+                onMouseEnter={() => setSurvol(i)} onMouseLeave={() => setSurvol(null)} onClick={() => setSurvol(survol === i ? null : i)} />
+            </g>
+          ))}
+          <text x={x(mois.length - 1)} y={y(der.position) - 9} textAnchor="middle" fill="#e8f5e9" fontSize={10} fontWeight={700}>{virgule(der.position)}</text>
+        </svg>
+        {m && (
+          <div style={{ position:"absolute", top:4, left:`${Math.min(70, Math.max(0, (x(survol) / W) * 100 - 15))}%`, background:"#0d2519",
+            border:"1px solid rgba(255,255,255,0.15)", borderRadius:8, padding:"6px 8px", fontSize:10, color:"#e8f5e9", pointerEvents:"none", whiteSpace:"nowrap" }}>
+            <b>{nomMois(m.mois, true)}{m.mois === enCours ? " (en cours)" : ""}</b><br />
+            Position {virgule(m.position)} · {m.affichages.toLocaleString("fr-FR")} affichages · {m.clics} clics
+          </div>
+        )}
+      </div>
+      <div style={{ marginTop:8 }}>
+        {mois.slice().reverse().map(p => (
+          <div key={p.mois} style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:"#a5d6a7", padding:"2px 0", fontVariantNumeric:"tabular-nums" }}>
+            <span>{nomMois(p.mois, true)}{p.mois === enCours ? " (en cours)" : ""}</span>
+            <span>position {virgule(p.position)} · {p.affichages.toLocaleString("fr-FR")} aff. · {p.clics} clics</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function KPI({ icon, label, value, sub, color = "#a5d6a7" }) {
   return (
     <div style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:14, padding:"14px 10px", textAlign:"center" }}>
@@ -63,6 +135,7 @@ const SOURCE_META = {
   facebook:  { icon: "📘", label: "Facebook",  color: "#90caf9" },
   twitter:   { icon: "🐦", label: "Twitter/X", color: "#81d4fa" },
   youtube:   { icon: "📺", label: "YouTube",   color: "#ef9a9a" },
+  pinterest: { icon: "📌", label: "Pinterest", color: "#ff8a80" },
   google:    { icon: "🔍", label: "Google",    color: "#ffcc80" },
   email:     { icon: "✉️", label: "Email",     color: "#ce93d8" },
   linkedin:  { icon: "💼", label: "LinkedIn",  color: "#9fa8da" },
@@ -200,6 +273,7 @@ export default function Pilotage() {
 
   // ── Réseaux sociaux (saisie manuelle mensuelle) ─────────────────────────────
   const [social, setSocial]             = useState(null);
+  const [seo, setSeo]                   = useState(null);
   const [loadingSocial, setLoadingSocial] = useState(false);
   const [socialForm, setSocialForm]     = useState(null); // { mois:"YYYY-MM", rows:[{compte,plateforme,followers}] }
   const [savingSocial, setSavingSocial] = useState(false);
@@ -258,6 +332,16 @@ export default function Pilotage() {
       if (data.success) setErrorsData(data);
     } catch {}
   }
+
+  // Position moyenne sur Google (Search Console), lue à l'ouverture de l'onglet Activité : données mises à jour une fois par jour
+  async function fetchSeo() {
+    try {
+      const token = await getToken();
+      const res   = await fetch("/api/stats?type=seo", { headers: { Authorization: `Bearer ${token}` } });
+      setSeo(await res.json());
+    } catch {}
+  }
+  useEffect(() => { if (isAdmin && tab === "activite" && !seo) fetchSeo(); }, [isAdmin, tab]); // eslint-disable-line
 
   // Vérification en direct des services (appelée à l'ouverture de l'onglet, pas toutes les 60 s)
   async function fetchServices() {
@@ -515,6 +599,17 @@ export default function Pilotage() {
                 <MiniChart data={users.siteVisits.byDay} valueKey="count" color="#4FC3F7" />
                 <div style={{ fontSize:10, color:"#4a7c5c", marginTop:6, lineHeight:1.5 }}>
                   Visiteurs non connectés, toutes pages confondues (accueil, essai, démo, mentions…), 1 par appareil/jour. Les connectés sont dans « Actifs ». Robots (Google…) exclus depuis le 26/09/2026 au soir.
+                </div>
+              </div>
+            )}
+            {seo && (
+              <div style={card()}>
+                <div style={cardTitle}><span>🔎 Position moyenne sur Google — par mois</span></div>
+                {seo.success
+                  ? <PositionChart mois={seo.mois} />
+                  : <div style={{ fontSize:11, color:"#ffcc80" }}>Données Google indisponibles : {seo.error}</div>}
+                <div style={{ fontSize:10, color:"#4a7c5c", marginTop:6, lineHeight:1.5 }}>
+                  Toutes nos pages, d'après la Search Console (moyenne pondérée par les affichages). Plus c'est bas, mieux c'est : 1 à 3 = top 3, jusqu'à 10 = première page. Le mois en cours est provisoire. Quand de nouvelles pages apparaissent loin dans Google, la moyenne peut reculer le temps qu'elles montent.
                 </div>
               </div>
             )}
@@ -1113,7 +1208,7 @@ export default function Pilotage() {
                 <div key={i} style={{ display:"flex", gap:6, alignItems:"center", marginBottom:8 }}>
                   <select value={r.plateforme} onChange={e => setSocialForm(f => { const rows=[...f.rows]; rows[i]={...rows[i],plateforme:e.target.value}; return {...f,rows}; })}
                     style={{ background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:8, padding:"7px 6px", color:"#e8f5e9", fontSize:12, fontFamily:"inherit" }}>
-                    {["instagram","tiktok","facebook","youtube","twitter","linkedin","autre"].map(p => {
+                    {["instagram","tiktok","facebook","youtube","pinterest","twitter","linkedin","autre"].map(p => {
                       const pm = SOURCE_META[p] || SOURCE_META.autre;
                       return <option key={p} value={p}>{pm.icon} {pm.label}</option>;
                     })}

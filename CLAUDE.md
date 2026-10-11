@@ -63,9 +63,10 @@
   (`scripts/gsc-stats.mjs plan`, secret GitHub `GSC_SERVICE_ACCOUNT_JSON`) ; Google lit la date `maj` de l'article et décide
   seul de l'indexation. Demande d'indexation à la main dans la Search Console en complément (une dizaine par jour).
 - Stats Google : `scripts/gsc-stats.mjs` lit la Search Console, clics et positions, ou état d'indexation des pages avec
-  `index` (compte de service `mongazon360-stats`, autorisation « Complète » pour l'envoi du plan du site) ; sa clé est dans
-  la variable `GSC_SERVICE_ACCOUNT_JSON` de l'environnement cloud de Claude et le secret GitHub du même nom, jamais dans le
-  dépôt ni affichée. Sert au point des stats tous les 15 jours et au choix des articles à améliorer.
+  `index` (compte de service `mongazon360-stats`, autorisation « Complète » pour l'envoi du plan du site) ; jeton et position
+  moyenne par mois dans `api/searchConsole.cjs`, aussi utilisé par Pilotage → Activité (`/api/stats?type=seo`). Sa clé est
+  dans la variable `GSC_SERVICE_ACCOUNT_JSON` (Vercel Production et Preview, secret GitHub, environnement cloud de Claude),
+  jamais dans le dépôt ni affichée. Sert au point des stats tous les 15 jours et au choix des articles à améliorer.
 
 ## Offres et Premium offerts
 - Premium offert (famille, bêta…) : règle unique `api/premium.cjs` (date de fin incluse, vide = à vie), gestion
