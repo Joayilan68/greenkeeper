@@ -141,7 +141,7 @@ ${a.html}</article>${encadreProduits(a.produits ? a.produits.split(",").map(x =>
 export function aProposPage(html) {
   const jsonLd = { "@context": "https://schema.org", "@type": "AboutPage", name: "Qui sommes-nous", url: `${SITE}/a-propos`,
     inLanguage: "fr", about: { "@type": "Organization", name: "Mongazon360", url: SITE, email: "contact@mongazon360.fr",
-      logo: `${SITE}/icon-512x512.png` } };
+      logo: `${SITE}/icon-512x512.png`, founder: { "@type": "Person", name: "Jordan" } } };
   const body = `<div class="crumb"><a href="/">Accueil</a> › Qui sommes-nous</div><article>${html}</article>${cta("a-propos")}`;
   return page({ title: "Qui sommes-nous ? — Mongazon360®",
     description: "Mongazon360, application française d'entretien du gazon : qui l'édite, comment sont construits ses conseils et sa base agronomique, comment nous contacter.",

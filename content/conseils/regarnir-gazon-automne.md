@@ -5,11 +5,11 @@ saison: automne
 date: 2026-09-25
 maj: 2026-10-11
 produits: regarnissage, engraisStarter
-image: /images/conseils/gazon-clairseme.jpg
-image_alt: Gazon clairsemé et abîmé, avec des zones de terre nue
+image: /images/conseils/regarnissage-avant-apres.jpg
+image_alt: Notre pelouse avant le regarnissage, clairsemée avec de la terre nue, puis dense et régulière 6 semaines après
 ---
 
-Après un été sec, une pelouse présente souvent des zones clairsemées, des trous ou des plaques jaunies. Bonne nouvelle : **l'automne est la meilleure saison de l'année pour regarnir**. Le sol est encore chaud, les pluies reviennent et les mauvaises herbes poussent moins vite. Voici la méthode complète, étape par étape.
+Après un été sec, une pelouse présente souvent des zones clairsemées, des trous ou des plaques jaunies. Bonne nouvelle : **l'automne est la meilleure saison de l'année pour regarnir**. Le sol est encore chaud, les pluies reviennent et les mauvaises herbes poussent moins vite. Voici la méthode complète, étape par étape. La photo ci-dessus est celle de notre propre pelouse : clairsemée avant le regarnissage, dense et régulière 6 semaines plus tard.
 
 > **En bref**
 > - **Quand ?** De mi-août à mi-novembre selon la région, tant que le sol dépasse 10 °C et que le gel est encore loin.
@@ -99,8 +99,6 @@ Une graine qui a commencé à germer puis qui sèche est perdue. Évitez aussi d
 
 Attendez que l'herbe nouvelle atteigne **8 à 10 cm**, puis tondez à 6 cm environ avec une lame bien affûtée, qui coupe sans arracher les jeunes plantules. Ne retirez jamais plus d'un tiers de la hauteur.
 
-<figure><img src="/images/conseils/gazon-dense.jpg" alt="Gazon dense et régulier vu de près" width="1200" height="800" loading="lazy" /><figcaption>Le résultat visé : un gazon dense et régulier, sans trous. Photo Mongazon360.</figcaption></figure>
-
 ## Et l'engrais ?
 
 Sur les zones regarnies, attendez que le jeune gazon soit dense, **environ 6 semaines après le semis**, pour un engrais « spécial semis », plus riche en phosphore : trop tôt, il brûle les jeunes racines. Sur le reste de la pelouse, l'[engrais d'automne](/conseils/engrais-gazon-automne) se fait normalement. N'appliquez ni désherbant ni anti-mousse sur les zones regarnies pendant au moins deux mois.
@@ -126,6 +124,10 @@ Environ 25 g par m² sur les zones clairsemées, et 35 g par m² sur les zones t
 ### Faut-il mettre du terreau sur les graines de gazon ?
 
 Ce n'est pas indispensable : l'essentiel est que les graines touchent le sol. Un voile de terreau fin aide sur une surface irrégulière, sans jamais ensevelir le gazon existant.
+
+### Combien de temps pour voir le résultat d'un regarnissage ?
+
+La levée prend 1 à 3 semaines selon les graminées ; comptez environ 6 semaines pour retrouver un gazon dense. C'est le délai qu'il a fallu à notre propre pelouse (photo en haut de l'article).
 
 ### Combien de temps arroser après un regarnissage ?
 

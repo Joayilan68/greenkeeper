@@ -16,7 +16,7 @@ Une pelouse fatiguée, pleine de mousse, de trous et de mauvaises herbes, n'a pa
 > - **Les premières semaines** : pas d'engrais d'été pendant 60 jours, pas de tonte basse pendant 45 jours.
 > - **Résultat** : une pelouse nettement plus dense en 2 à 3 mois.
 
-<figure class="duo"><img src="/images/conseils/pelouse-avant.jpg" alt="Pelouse clairsemée et irrégulière, avant la rénovation" width="1200" height="800" loading="lazy" /><img src="/images/conseils/pelouse-apres.jpg" alt="La même pelouse, dense et uniforme, après" width="1200" height="800" loading="lazy" /><figcaption>Avant / après : la même pelouse, clairsemée et irrégulière, puis dense et uniforme. Photos Mongazon360.</figcaption></figure>
+<figure class="duo"><img src="/images/conseils/pelouse-avant.jpg" alt="Pelouse clairsemée et irrégulière, avant la rénovation" width="1200" height="800" loading="lazy" /><img src="/images/conseils/pelouse-apres.jpg" alt="La même pelouse, dense et uniforme, après" width="1200" height="800" loading="lazy" /><figcaption>Avant / après : notre pelouse, clairsemée et irrégulière, puis dense et uniforme. Photos Mongazon360.</figcaption></figure>
 
 ## Rénover ou refaire entièrement ?
 
