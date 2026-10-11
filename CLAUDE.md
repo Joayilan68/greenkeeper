@@ -51,6 +51,10 @@
   générée par `scripts/seo-build.mjs` (règle dans `vercel.json`).
 - Bob : ses consignes listent les fonctions réelles de l'app ; toute nouvelle fonction doit y être ajoutée.
 - Search Console : ne pas retirer les balises `google-site-verification` de `index.html`.
+- Pinterest : une épingle par article (1000 × 1500 : photo de notre pelouse, saison, titre), fichier
+  `public/images/pinterest/<slug>.jpg` lu par Pinterest : ne jamais le supprimer ni le renommer. Nouvel article : créer
+  son épingle au même format et l'importer dans Pinterest (fichier .csv), lien vers l'article suivi de
+  `?utm_source=pinterest&utm_medium=social&utm_campaign=<slug>` (source « pinterest » dans Pilotage → Activité).
 - Indexation : à chaque mise en prod qui touche `content/conseils`, `.github/workflows/indexnow.yml` signale les articles
   modifiés à Bing par IndexNow (`scripts/indexnow.mjs`, clé publique `public/<clé>.txt`) et renvoie le plan du site à Google
   (`scripts/gsc-stats.mjs plan`, secret GitHub `GSC_SERVICE_ACCOUNT_JSON`) ; Google lit la date `maj` de l'article et décide
