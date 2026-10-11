@@ -61,4 +61,5 @@ du premier onglet).
 - 11/10/2026 — Décision de Jordan : envoi automatique à Bing (IndexNow) des articles Conseils modifiés, à chaque mise en
   prod ; mis en place le jour même (clé publique sur le site, tâche GitHub après chaque mise en prod d'articles). Accès en
   lecture seule aux stats de la Search Console configuré par Jordan (compte de service Google Cloud « mongazon360-stats »,
-  variable GSC_SERVICE_ACCOUNT_JSON de l'environnement Claude), pour le point des stats tous les 15 jours.
+  variable GSC_SERVICE_ACCOUNT_JSON de l'environnement Claude), vérifié le jour même : 31 clics et 1 535 affichages sur
+  Google du 11/09 au 09/10 (position moyenne 13,7), lus par `scripts/gsc-stats.mjs` pour le point des stats tous les 15 jours.
