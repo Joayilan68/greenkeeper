@@ -1,12 +1,18 @@
 ---
-title: Gel et pelouse : les erreurs à éviter en hiver
-description: Marcher sur le gazon gelé, tondre, saler, laisser la neige tassée : les erreurs qui abîment la pelouse en hiver, et comment la protéger jusqu'au printemps.
+title: Pelouse gelée : que faire ? Les erreurs à éviter en hiver
+description: Marcher sur le gazon gelé, tondre, saler, tasser la neige : les erreurs qui abîment la pelouse en hiver, et comment la protéger du gel jusqu'au printemps.
 saison: hiver
 date: 2026-09-25
-maj: 2026-09-27
+maj: 2026-10-11
 ---
 
 Le gazon supporte bien le froid : les graminées de nos pelouses sont faites pour passer l'hiver. Ce qui abîme vraiment une pelouse en hiver, ce sont surtout **quelques erreurs** faites pendant les périodes de gel, de givre ou de neige. Voici lesquelles, et comment les éviter.
+
+> **En bref**
+> - **Le gel ne tue pas le gazon** : nos graminées sont faites pour passer l'hiver.
+> - **Ce qui l'abîme** : marcher ou tondre sur un gazon gelé ou givré, le sel de déneigement, les tas de neige tassée, les objets laissés sur l'herbe.
+> - **Le bon réflexe** : attendre le dégel complet, souvent en fin de matinée, avant de marcher sur la pelouse.
+> - **Avant l'hiver** : dernière tonte à 5-6 cm et feuilles ramassées.
 
 ## Pourquoi le gazon gelé est-il fragile ?
 
@@ -40,7 +46,7 @@ Une couche de neige naturelle **protège** plutôt la pelouse du froid. En revan
 
 ## Erreur n°6 : entrer dans l'hiver avec un gazon trop long ou étouffé
 
-Une herbe trop haute se couche sous la neige et la pluie, et une couche de feuilles maintient l'humidité : deux conditions qui favorisent les maladies. Faites une **dernière tonte à environ 5 à 6 cm** et ramassez les feuilles (voir [préparer son gazon pour l'hiver](/conseils/preparer-gazon-hiver)).
+Une herbe trop haute se couche sous la neige et la pluie, et une couche de feuilles maintient l'humidité : deux conditions qui favorisent les maladies. Faites une **dernière tonte à environ 5 à 6 cm** en novembre et ramassez les feuilles (voir [la dernière tonte avant l'hiver](/conseils/derniere-tonte-pelouse) et [entretien du gazon en hiver](/conseils/preparer-gazon-hiver)).
 
 ## Et les jeunes semis d'automne ?
 
@@ -50,9 +56,27 @@ Les gazons semés tardivement sont les plus exposés : le gel peut **soulever la
 
 1. **Attendez que le sol se ressuie** avant de marcher ou de tondre.
 2. **Retirez les feuilles et débris** apportés par le vent.
-3. **Observez les plaques suspectes** : une plaque ronde et feutrée après la neige signale souvent une fusariose. Ratissez-la légèrement pour l'aérer.
-4. **Ne vous précipitez pas sur l'engrais** : le premier apport de printemps se fait quand le gazon repart vraiment : en mars, parfois dès février quand le sol se réchauffe tôt (sud, ouest), sol au-dessus de 8 °C et sans gel annoncé.
+3. **Observez les plaques suspectes** : une plaque ronde et feutrée après la neige signale souvent une fusariose. Ratissez-la légèrement pour l'aérer (voir [maladies du gazon](/conseils/maladies-gazon)).
+4. **Ne vous précipitez pas sur l'engrais** : le premier apport de printemps se fait quand le gazon repart vraiment, en février-mars, et en mars seulement dans le Nord et le Nord-Est, sans gel annoncé (voir [quel engrais et quand](/conseils/engrais-gazon)).
+
+## Questions fréquentes
+
+### Peut-on marcher sur une pelouse gelée ?
+
+Mieux vaut l'éviter : les brins gelés cassent sous le pied et vos traces apparaissent en brun quelques jours plus tard. Attendez le dégel complet, souvent en fin de matinée.
+
+### Le gel tue-t-il le gazon ?
+
+Non : les graminées de nos pelouses supportent le froid. Ce sont surtout le piétinement, la tonte et le sel pendant le gel qui l'abîment. Seuls les semis très tardifs peuvent souffrir quand le gel soulève la terre.
+
+### Faut-il protéger la pelouse du gel ?
+
+Il n'y a rien à couvrir : laissez la pelouse dégagée, sans objets ni bâches, et évitez d'y marcher pendant le gel. La neige, elle, la protège plutôt : laissez-la fondre sans la tasser.
+
+### Peut-on tondre après le gel ?
+
+Pas en hiver : on ne tond pas de décembre à février. Au printemps, tondez seulement sur un gazon sec, jamais gelé ni détrempé (voir [la première tonte](/conseils/premiere-tonte-printemps)).
 
 ## Mongazon360 vous prévient avant le gel
 
-Mongazon360 surveille la météo de votre commune et vous envoie une **alerte gel** : ne pas tondre, protéger les jeunes semis, éviter de marcher sur le gazon gelé. Au printemps, en cas de plaque suspecte, le diagnostic photo de Bob vous aide à distinguer dégâts du gel, maladie et carence.
+Mongazon360 surveille la météo de votre commune et vous envoie une **alerte gel** dès que la nuit à venir annonce 2 °C ou moins : ne pas tondre, protéger les jeunes semis, éviter de marcher sur le gazon gelé. Avec une station météo Ecowitt connectée, ce sont les températures mesurées dans votre jardin qui comptent. Au printemps, en cas de plaque suspecte, le diagnostic photo de Bob vous aide à distinguer dégâts du gel, maladie et carence.

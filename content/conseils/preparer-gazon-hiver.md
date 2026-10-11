@@ -18,7 +18,7 @@ Une pelouse qui entre en hiver en bonne santé est une pelouse qui **repart vite
 
 Le gazon continue de pousser tant que le sol dépasse environ 6 à 8 °C. En automne, la pousse ralentit : **espacez les tontes** au rythme de la croissance, en gardant la règle d'or de ne jamais couper plus d'un tiers de la hauteur.
 
-**La dernière tonte de l'année** intervient quand l'herbe ne pousse presque plus, souvent en novembre. Visez une hauteur **d'environ 5 à 6 cm** :
+**La dernière tonte de l'année** intervient quand l'herbe ne pousse presque plus, souvent en novembre (voir [la dernière tonte avant l'hiver](/conseils/derniere-tonte-pelouse)). Visez une hauteur **d'environ 5 à 6 cm** :
 
 - trop long, le gazon se couche, retient l'humidité et favorise la moisissure des neiges ;
 - trop court, il se protège mal du froid et laisse la place à la mousse.
