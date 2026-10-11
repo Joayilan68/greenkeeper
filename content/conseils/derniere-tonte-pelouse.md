@@ -80,7 +80,7 @@ Non. Une tonte trop courte affaiblit le gazon face au froid et favorise la mouss
 
 ### Faut-il ramasser l'herbe de la dernière tonte ?
 
-Oui : en fin de saison, l'herbe coupée se décompose lentement et forme une couche humide qui étouffe le gazon et favorise les maladies.
+Oui : en fin de saison, l'herbe coupée se décompose lentement et forme une couche humide qui étouffe le gazon et favorise les maladies. Le [mulching](/conseils/mulching-pelouse) reprendra au printemps.
 
 ### Que faire si l'herbe est encore haute en décembre ?
 

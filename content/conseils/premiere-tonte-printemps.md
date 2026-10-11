@@ -68,7 +68,7 @@ Tondre ras dès la première fois « pour avoir moins à tondre ensuite » est l
 
 ## Ramasser ou laisser l'herbe ?
 
-Pour la **première tonte, ramassez** : l'herbe coupée est plus longue et humide, et le gazon a besoin de lumière et d'air. Ensuite, dès que les tontes deviennent régulières et que les coupes sont fines, le **mulching** (laisser l'herbe finement broyée sur place) nourrit la pelouse.
+Pour la **première tonte, ramassez** : l'herbe coupée est plus longue et humide, et le gazon a besoin de lumière et d'air. Ensuite, dès que les tontes deviennent régulières et que les coupes sont fines, le **[mulching](/conseils/mulching-pelouse)** (laisser l'herbe finement broyée sur place) nourrit la pelouse.
 
 ## Et ensuite ?
 

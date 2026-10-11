@@ -6,7 +6,7 @@ date: 2026-10-11
 produits: regarnissage, aeration
 ---
 
-Maison neuve, terrain remanié, vieille pelouse à refaire entièrement : **créer une pelouse par semis** est à la portée de tous, et bien moins cher que le gazon en plaques. Mais la réussite se joue avant même d'ouvrir le sac de graines : **c'est la préparation du sol qui fait la pelouse**. Voici la méthode complète, de la terre nue à la première tonte.
+Maison neuve, terrain remanié, vieille pelouse à refaire entièrement : **créer une pelouse par semis** est à la portée de tous, et bien moins cher que le gazon en plaques. Mais la réussite se joue avant même d'ouvrir le sac de graines : **c'est la préparation du sol qui fait la pelouse**. Voici la méthode complète, de la terre nue à la première tonte. Plus pressé ? Le [gazon en plaques](/conseils/gazon-en-plaques) donne une pelouse verte en un jour, pour un coût nettement plus élevé.
 
 > **En bref**
 > - **Quand ?** Pendant la fenêtre de semis de votre région, au printemps ou, mieux, à la fin de l'été et en automne, avec un sol à au moins 10 °C.

@@ -4,6 +4,8 @@ description: Pelouse clairsemée, moussue, envahie ? Rénovez-la sans tout retou
 saison: printemps
 date: 2026-10-11
 produits: verticut, regarnissage, aeration
+image: /images/conseils/gazon-dense.jpg
+image_alt: Gazon dense et régulier vu de près
 ---
 
 Une pelouse fatiguée, pleine de mousse, de trous et de mauvaises herbes, n'a pas forcément besoin d'être entièrement refaite. Tant qu'il reste du gazon sur une bonne partie de la surface, **une rénovation suffit** : on retire ce qui l'étouffe, on décompacte le sol, on ressème dans l'existant, et on soigne la reprise. Plus rapide et bien moins cher qu'une création, avec un résultat visible en quelques semaines.
@@ -13,6 +15,8 @@ Une pelouse fatiguée, pleine de mousse, de trous et de mauvaises herbes, n'a pa
 > - **Le programme** : tonte courte, scarification profonde, aération si le sol est tassé, sursemis, roulage, arrosage intensif pendant un mois.
 > - **Les premières semaines** : pas d'engrais d'été pendant 60 jours, pas de tonte basse pendant 45 jours.
 > - **Résultat** : une pelouse nettement plus dense en 2 à 3 mois.
+
+<figure class="duo"><img src="/images/conseils/pelouse-avant.jpg" alt="Pelouse clairsemée et irrégulière, avant la rénovation" width="1200" height="800" loading="lazy" /><img src="/images/conseils/pelouse-apres.jpg" alt="La même pelouse, dense et uniforme, après" width="1200" height="800" loading="lazy" /><figcaption>Avant / après : la même pelouse, clairsemée et irrégulière, puis dense et uniforme. Photos Mongazon360.</figcaption></figure>
 
 ## Rénover ou refaire entièrement ?
 

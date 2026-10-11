@@ -18,7 +18,7 @@ Le robot tondeuse a conquis les jardins : il tond un peu chaque jour, sans bruit
 ## Pourquoi le robot est bon pour le gazon
 
 - **Il coupe très peu à chaque passage** : il respecte naturellement la règle d'or de ne jamais couper plus d'un tiers de la hauteur.
-- **Il fait du mulching en continu** : les brins très courts tombent au sol et le nourrissent.
+- **Il fait du [mulching](/conseils/mulching-pelouse) en continu** : les brins très courts tombent au sol et le nourrissent.
 - **La tonte fréquente densifie le gazon**, qui étouffe mieux mousse et mauvaises herbes.
 
 À condition d'être bien réglé.

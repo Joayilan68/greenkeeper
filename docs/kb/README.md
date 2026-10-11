@@ -21,5 +21,6 @@ Onglets les plus utilisés par le code :
 | Parcours Semis | `api/parcoursEngine.cjs`, `src/pages/Parcours.jsx` |
 | Température Sol & ET0 | `src/lib/zonesGazon.json` (semis 10 °C, pousse 8 °C), `api/parcoursEngine.cjs` |
 | Règles complémentaires | 1re tonte, reprise du printemps, notifications d'hiver, kits, relances, anti-fatigue |
+| Sujets complémentaires | articles Conseils et Bob : champignons et ronds de sorcière, gazon en plaques, mulching |
 
 L'onglet « Journal » trace chaque évolution de la base.

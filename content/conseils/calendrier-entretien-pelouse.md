@@ -4,6 +4,8 @@ description: Tonte, engrais, scarification, semis, mousse : le calendrier comple
 saison: hiver
 date: 2026-10-11
 produits: engraisAutomne, engraisStarter
+image: /images/conseils/pelouse-apres.jpg
+image_alt: Pelouse dense et bien entretenue dans un jardin, au soleil
 ---
 
 Une belle pelouse ne demande pas forcément plus de travail qu'une pelouse quelconque : elle demande **les bons gestes au bon moment**. Un engrais épandu trop tôt est perdu, une scarification en plein été épuise le gazon, une tonte en février l'abîme. Voici le calendrier complet de l'entretien du gazon, mois par mois, avec les ajustements selon votre région.

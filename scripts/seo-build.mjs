@@ -1,11 +1,12 @@
 // scripts/seo-build.mjs — exécuté après « vite build »
 // 1. Pages publiques de l'app (src/lib/seoPages.json) : dist/<page>/index.html avec leur titre,
 //    description, adresse canonique et balises de partage (lues sans JavaScript).
-// 2. Rubrique « Conseils gazon » : articles Markdown de content/conseils → pages HTML statiques.
+// 2. Rubrique « Conseils gazon » : articles Markdown de content/conseils → pages HTML statiques,
+//    et page « Qui sommes-nous » (content/a-propos.md → dist/a-propos/index.html).
 // 3. dist/sitemap.xml, dist/conseils.json et dist/produits.json (articles et catalogue Amazon lus par Bob).
-import { readFileSync, writeFileSync, mkdirSync, readdirSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from "node:fs";
 import { marked } from "marked";
-import { articlePage, indexPage } from "./conseils-template.mjs";
+import { articlePage, indexPage, aProposPage } from "./conseils-template.mjs";
 import AMAZON_PRODUCTS from "../src/lib/amazonProducts.js";
 
 const SITE  = "https://mongazon360.fr";
@@ -23,7 +24,7 @@ function render(page) {
   let html = base;
   html = set(html, /<title>[^<]*<\/title>/, `<title>${t}</title>`);
   html = set(html, /(<meta name="description" content=")[^"]*(")/, `$1${d}$2`);
-  html = set(html, /(<meta name="robots" content=")[^"]*(")/, `$1${page.noindex ? "noindex, follow" : "index, follow"}$2`);
+  html = set(html, /(<meta name="robots" content=")[^"]*(")/, `$1${page.noindex ? "noindex, follow" : "index, follow, max-image-preview:large"}$2`);
   html = set(html, /(<link rel="canonical" href=")[^"]*(")/, `$1${url}$2`);
   html = set(html, /(<meta property="og:url"\s+content=")[^"]*(")/, `$1${url}$2`);
   html = set(html, /(<meta property="og:title"\s+content=")[^"]*(")/, `$1${t}$2`);
@@ -52,12 +53,14 @@ for (const page of pages) {
 // ── Conseils gazon ──────────────────────────────────────────────────────────
 // Chaque fichier : en-tête « clé: valeur » entre deux lignes « --- » (title, description,
 // saison = automne|hiver|printemps|ete, date AAAA-MM-JJ, maj facultative, brouillon: oui pour masquer,
-// produits facultatif = catégories du catalogue Amazon pour l'encadré « matériel conseillé »).
+// produits facultatif = catégories du catalogue Amazon pour l'encadré « matériel conseillé »,
+// image facultative = photo de public/images/conseils avec son texte de remplacement image_alt).
 const articles = readdirSync("content/conseils").filter(f => f.endsWith(".md")).map(f => {
   const [, head, md] = readFileSync(`content/conseils/${f}`, "utf8").match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/)
     || (() => { throw new Error(`[seo] en-tête manquant : ${f}`); })();
   const meta = Object.fromEntries(head.split("\n").map(l => [l.slice(0, l.indexOf(":")).trim(), l.slice(l.indexOf(":") + 1).trim()]));
   for (const k of ["title", "description", "saison", "date"]) if (!meta[k]) throw new Error(`[seo] ${f} : « ${k} » manquant`);
+  if (meta.image && (!existsSync(`public${meta.image}`) || !meta.image_alt)) throw new Error(`[seo] ${f} : image introuvable ou sans image_alt`);
   return { ...meta, slug: f.replace(/\.md$/, ""), html: marked.parse(md) };
 }).filter(a => a.brouillon !== "oui").sort((a, b) => a.date.localeCompare(b.date));
 
@@ -77,17 +80,25 @@ writeFileSync("dist/conseils/index.html", indexPage(articles));
 writeFileSync("dist/conseils.json", JSON.stringify(articles.map(({ slug, title, saison }) => ({ slug, title, saison }))));
 
 
+// « À lire aussi » : les articles les plus liés à celui-ci (liens dans un sens ou dans l'autre), puis ceux de la même saison
+const liens = new Map(articles.map(a => [a.slug, new Set([...a.html.matchAll(/href="\/conseils\/([a-z0-9-]+)"/g)].map(m => m[1]))]));
+const proximite = (a, o) => (liens.get(a.slug).has(o.slug) ? 2 : 0) + (liens.get(o.slug).has(a.slug) ? 2 : 0) + (o.saison === a.saison ? 1 : 0);
 for (const a of articles) {
-  const autres = articles.filter(o => o.slug !== a.slug && o.saison === a.saison).slice(0, 3);
+  const autres = articles.filter(o => o.slug !== a.slug)
+    .sort((x, y) => proximite(a, y) - proximite(a, x) || (y.maj || y.date).localeCompare(x.maj || x.date)).slice(0, 3);
   mkdirSync(`dist/conseils/${a.slug}`, { recursive: true });
   writeFileSync(`dist/conseils/${a.slug}/index.html`, articlePage(a, autres, produits));
 }
+
+mkdirSync("dist/a-propos", { recursive: true });
+writeFileSync("dist/a-propos/index.html", aProposPage(marked.parse(readFileSync("content/a-propos.md", "utf8"))));
 
 const today = new Date().toISOString().slice(0, 10);
 const urls  = [
   ...pages.filter(p => !p.noindex).map(p =>
     `  <url><loc>${SITE}${p.path === "/" ? "/" : p.path}</loc><lastmod>${today}</lastmod><priority>${p.priority}</priority></url>`),
   `  <url><loc>${SITE}/conseils</loc><lastmod>${today}</lastmod><priority>0.8</priority></url>`,
+  `  <url><loc>${SITE}/a-propos</loc><lastmod>${today}</lastmod><priority>0.5</priority></url>`,
   ...articles.map(a => `  <url><loc>${SITE}/conseils/${a.slug}</loc><lastmod>${a.maj || a.date}</lastmod><priority>0.7</priority></url>`),
 ];
 writeFileSync("dist/sitemap.xml",

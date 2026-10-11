@@ -72,7 +72,7 @@ La fréquence découle de la règle du tiers (tout le détail dans [quand tondre
 - **Gazon sec** : une herbe mouillée se coupe mal et bourre le carter.
 - **Variez le sens de tonte** d'une fois sur l'autre : l'herbe se redresse mieux et le sol se tasse moins.
 - **Pas en pleine chaleur** : tondez le matin ou en fin de journée.
-- **Pensez au mulching** : l'herbe finement broyée laissée sur place nourrit le sol et garde l'humidité, à condition de tondre régulièrement.
+- **Pensez au [mulching](/conseils/mulching-pelouse)** : l'herbe finement broyée laissée sur place nourrit le sol et garde l'humidité, à condition de tondre régulièrement.
 
 ## Comment connaître votre hauteur de coupe réelle ?
 

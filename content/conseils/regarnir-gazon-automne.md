@@ -5,6 +5,8 @@ saison: automne
 date: 2026-09-25
 maj: 2026-10-11
 produits: regarnissage, engraisStarter
+image: /images/conseils/gazon-clairseme.jpg
+image_alt: Gazon clairsemé et abîmé, avec des zones de terre nue
 ---
 
 Après un été sec, une pelouse présente souvent des zones clairsemées, des trous ou des plaques jaunies. Bonne nouvelle : **l'automne est la meilleure saison de l'année pour regarnir**. Le sol est encore chaud, les pluies reviennent et les mauvaises herbes poussent moins vite. Voici la méthode complète, étape par étape.
@@ -96,6 +98,8 @@ Une graine qui a commencé à germer puis qui sèche est perdue. Évitez aussi d
 ## Étape 7 : la première tonte
 
 Attendez que l'herbe nouvelle atteigne **8 à 10 cm**, puis tondez à 6 cm environ avec une lame bien affûtée, qui coupe sans arracher les jeunes plantules. Ne retirez jamais plus d'un tiers de la hauteur.
+
+<figure><img src="/images/conseils/gazon-dense.jpg" alt="Gazon dense et régulier vu de près" width="1200" height="800" loading="lazy" /><figcaption>Le résultat visé : un gazon dense et régulier, sans trous. Photo Mongazon360.</figcaption></figure>
 
 ## Et l'engrais ?
 

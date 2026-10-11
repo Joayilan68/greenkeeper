@@ -29,6 +29,7 @@ Une pelouse qui jaunit inquiète toujours. Pourtant, **les causes sont nombreuse
 | Plaques rondes beige-rosé, duvet blanc, d'octobre à avril | **Fusariose** |
 | Petites taches couleur paille de 5 à 8 cm, par rosées prolongées | **Dollar spot** |
 | Poudre orangée qui colle aux chaussures, fin d'été | **Rouille** |
+| Cercle d'herbe morte ou vert foncé, parfois avec des champignons | **Rond de sorcière** (voir [champignons dans la pelouse](/conseils/champignons-pelouse)) |
 | Traces de pas brunes après le gel | **Piétinement d'un gazon gelé** |
 | Pointes des brins blanchies ou déchiquetées | **Lame émoussée** |
 | Tache nette de la forme d'un objet | **Objet posé** (bâche, piscine, jouet) |

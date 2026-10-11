@@ -19,6 +19,8 @@ blockquote{margin:18px 0;padding:12px 16px;background:#e8f5e9;border-left:4px so
 .shop{margin:32px 0 0;padding:18px;border:1px solid #dfe8e1;border-radius:16px;background:#fff}.shop h2{margin:0 0 4px;font-size:19px}
 .shop a{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid #eef3ef;text-decoration:none;color:#1f2d24;font-size:15px}
 .shop a span:last-child{white-space:nowrap;color:#2e7d32;font-weight:700}.shop .kit{margin:10px 0 0;font-size:14px}.shop small{display:block;font-size:12px;color:#5b6f61;margin-top:8px;line-height:1.5}
+article img{max-width:100%;height:auto;border-radius:12px;display:block}.hero{margin:0 0 22px}figure{margin:22px 0}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:8px}figcaption{grid-column:1/-1;font-size:13px;color:#5b6f61;margin-top:4px}
 .card{display:block;background:#fff;border:1px solid #dfe8e1;border-radius:14px;padding:16px;text-decoration:none;color:#1f2d24}.card b{color:#1a4731;font-size:17px}
 .card span{display:block;font-size:14px;color:#5b6f61;margin-top:4px}.season{font-size:12px;font-weight:700;color:#2e7d32;text-transform:uppercase;letter-spacing:.06em;margin:26px 0 8px}
 footer{border-top:1px solid #dfe8e1;background:#fff}footer div{max-width:760px;margin:0 auto;padding:18px 20px;font-size:12px;color:#5b6f61}footer a{color:#5b6f61;margin-right:12px}
@@ -54,7 +56,10 @@ body:JSON.stringify({path:location.pathname,os:ios?"ios":/Android/i.test(ua)?"an
 const SAISONS = { automne: "🍂 Automne", hiver: "❄️ Hiver", printemps: "🌱 Printemps", ete: "☀️ Été" };
 const frDate = (d) => new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 
-function page({ title, description, path, ogType, jsonLd, body, campagne }) {
+// Image de partage : photo de l'article (1200 × 800) si elle existe, sinon l'image générale du site
+const IMAGE_SITE = { src: "/og-image.jpg", largeur: 1200, hauteur: 630 };
+
+function page({ title, description, path, ogType, jsonLd, body, campagne, image = IMAGE_SITE }) {
   const url = SITE + path;
   return `<!DOCTYPE html>
 <html lang="fr">
@@ -63,7 +68,7 @@ function page({ title, description, path, ogType, jsonLd, body, campagne }) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(description)}" />
-<meta name="robots" content="index, follow" />
+<meta name="robots" content="index, follow, max-image-preview:large" />
 <link rel="canonical" href="${url}" />
 <link rel="icon" href="/favicon.ico" sizes="48x48" />
 <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png" />
@@ -71,15 +76,15 @@ function page({ title, description, path, ogType, jsonLd, body, campagne }) {
 <meta property="og:url" content="${url}" />
 <meta property="og:title" content="${esc(title)}" />
 <meta property="og:description" content="${esc(description)}" />
-<meta property="og:image" content="${SITE}/og-image.jpg" />
-<meta property="og:image:width" content="1200" />
-<meta property="og:image:height" content="630" />
+<meta property="og:image" content="${SITE}${image.src}" />
+<meta property="og:image:width" content="${image.largeur}" />
+<meta property="og:image:height" content="${image.hauteur}" />
 <meta property="og:locale" content="fr_FR" />
 <meta property="og:site_name" content="Mongazon360®" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="${esc(title)}" />
 <meta name="twitter:description" content="${esc(description)}" />
-<meta name="twitter:image" content="${SITE}/og-image.jpg" />
+<meta name="twitter:image" content="${SITE}${image.src}" />
 <script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
 <style>${CSS}</style>
 <script defer src="/_vercel/insights/script.js"></script>
@@ -88,7 +93,7 @@ function page({ title, description, path, ogType, jsonLd, body, campagne }) {
 <header><div class="bar"><a class="logo" href="/"><img src="/icon-192.png" alt="" />Mongazon360<sup>®</sup></a><a class="btn" href="${essai(campagne)}">Diagnostic gratuit</a></div></header>
 <main>${body}</main>
 ${suivi(campagne)}
-<footer><div><a href="/conseils">Conseils gazon</a><a href="/mentions-legales">Mentions légales</a><a href="/confidentialite">Confidentialité</a><a href="/cookies">Cookies</a><br />© ${new Date().getFullYear()} Mongazon360® — marque déposée et enregistrée à l'EUIPO</div></footer>
+<footer><div><a href="/conseils">Conseils gazon</a><a href="/a-propos">Qui sommes-nous</a><a href="/mentions-legales">Mentions légales</a><a href="/confidentialite">Confidentialité</a><a href="/cookies">Cookies</a><br />© ${new Date().getFullYear()} Mongazon360® — marque déposée et enregistrée à l'EUIPO</div></footer>
 </body>
 </html>
 `;
@@ -109,12 +114,14 @@ function encadreProduits(cles, produits, campagne) {
 <small>Liens partenaires Amazon : en tant que Partenaire Amazon, Mongazon360® perçoit une commission sur les achats éligibles, sans surcoût pour vous. Prix indicatifs.</small></div>`;
 }
 
+// Photo d'article (en-tête « image » et « image_alt ») : public/images/conseils, 1200 × 800 px, sans métadonnées
 export function articlePage(a, autres, produits = {}) {
   const path = `/conseils/${a.slug}`;
+  const image = a.image ? { src: a.image, largeur: 1200, hauteur: 800 } : IMAGE_SITE;
   const jsonLd = { "@context": "https://schema.org", "@graph": [
-    { "@type": "Article", headline: a.title, description: a.description, image: `${SITE}/og-image.jpg`,
+    { "@type": "Article", headline: a.title, description: a.description, image: `${SITE}${image.src}`,
       datePublished: a.date, dateModified: a.maj || a.date, inLanguage: "fr",
-      author: { "@type": "Organization", name: "Mongazon360", url: SITE },
+      author: { "@type": "Organization", name: "Mongazon360", url: `${SITE}/a-propos` },
       publisher: { "@type": "Organization", name: "Mongazon360", logo: { "@type": "ImageObject", url: `${SITE}/icon-512x512.png` } },
       mainEntityOfPage: `${SITE}${path}` },
     { "@type": "BreadcrumbList", itemListElement: [
@@ -124,9 +131,21 @@ export function articlePage(a, autres, produits = {}) {
   const lies = autres.length ? `<h2>À lire aussi</h2><div class="cards">${autres.map(o =>
     `<a class="card" href="/conseils/${o.slug}"><b>${esc(o.title)}</b><span>${esc(o.description)}</span></a>`).join("")}</div>` : "";
   const body = `<div class="crumb"><a href="/">Accueil</a> › <a href="/conseils">Conseils gazon</a></div>
-<article><h1>${esc(a.title)}</h1><div class="meta">${SAISONS[a.saison] || ""} · Mis à jour le ${frDate(a.maj || a.date)} · Par l'équipe Mongazon360</div>
+<article><h1>${esc(a.title)}</h1><div class="meta">${SAISONS[a.saison] || ""} · Mis à jour le ${frDate(a.maj || a.date)} · Par <a href="/a-propos">l'équipe Mongazon360</a></div>
+${a.image ? `<img class="hero" src="${esc(a.image)}" alt="${esc(a.image_alt)}" width="1200" height="800" fetchpriority="high" />` : ""}
 ${a.html}</article>${encadreProduits(a.produits ? a.produits.split(",").map(x => x.trim()) : [], produits, a.slug)}${cta(a.slug)}${lies}`;
-  return page({ title: `${a.title} — Mongazon360®`, description: a.description, path, ogType: "article", jsonLd, body, campagne: a.slug });
+  return page({ title: `${a.title} — Mongazon360®`, description: a.description, path, ogType: "article", jsonLd, body, campagne: a.slug, image });
+}
+
+// Page « Qui sommes-nous » (content/a-propos.md) : qui édite Mongazon360 et d'où viennent ses conseils
+export function aProposPage(html) {
+  const jsonLd = { "@context": "https://schema.org", "@type": "AboutPage", name: "Qui sommes-nous", url: `${SITE}/a-propos`,
+    inLanguage: "fr", about: { "@type": "Organization", name: "Mongazon360", url: SITE, email: "contact@mongazon360.fr",
+      logo: `${SITE}/icon-512x512.png` } };
+  const body = `<div class="crumb"><a href="/">Accueil</a> › Qui sommes-nous</div><article>${html}</article>${cta("a-propos")}`;
+  return page({ title: "Qui sommes-nous ? — Mongazon360®",
+    description: "Mongazon360, application française d'entretien du gazon : qui l'édite, comment sont construits ses conseils et sa base agronomique, comment nous contacter.",
+    path: "/a-propos", ogType: "website", jsonLd, body, campagne: "a-propos" });
 }
 
 export function indexPage(articles) {
