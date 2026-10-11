@@ -136,6 +136,7 @@ const SOURCE_META = {
   facebook:  { icon: "📘", label: "Facebook",  color: "#90caf9" },
   twitter:   { icon: "🐦", label: "Twitter/X", color: "#81d4fa" },
   youtube:   { icon: "📺", label: "YouTube",   color: "#ef9a9a" },
+  pinterest: { icon: "📌", label: "Pinterest", color: "#ff8a80" },
   google:    { icon: "🔍", label: "Google",    color: "#ffcc80" },
   email:     { icon: "✉️", label: "Email",     color: "#ce93d8" },
   linkedin:  { icon: "💼", label: "LinkedIn",  color: "#9fa8da" },
@@ -1209,7 +1210,7 @@ export default function Pilotage() {
                 <div key={i} style={{ display:"flex", gap:6, alignItems:"center", marginBottom:8 }}>
                   <select value={r.plateforme} onChange={e => setSocialForm(f => { const rows=[...f.rows]; rows[i]={...rows[i],plateforme:e.target.value}; return {...f,rows}; })}
                     style={{ background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:8, padding:"7px 6px", color:"#e8f5e9", fontSize:12, fontFamily:"inherit" }}>
-                    {["instagram","tiktok","facebook","youtube","twitter","linkedin","autre"].map(p => {
+                    {["instagram","tiktok","facebook","youtube","pinterest","twitter","linkedin","autre"].map(p => {
                       const pm = SOURCE_META[p] || SOURCE_META.autre;
                       return <option key={p} value={p}>{pm.icon} {pm.label}</option>;
                     })}

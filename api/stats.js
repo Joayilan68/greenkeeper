@@ -507,7 +507,7 @@ async function fetchAllClerkUsers({ fresh = false } = {}) {
 function aggregateClerkSources(clerkUsers) {
   const counts = {
     direct: 0, instagram: 0, tiktok: 0, facebook: 0,
-    twitter: 0, youtube: 0, google: 0, email: 0,
+    twitter: 0, youtube: 0, pinterest: 0, google: 0, email: 0,
     linkedin: 0, conseils: 0, bilan: 0, autre: 0,
   };
 

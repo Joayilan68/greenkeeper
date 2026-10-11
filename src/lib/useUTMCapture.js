@@ -23,6 +23,7 @@ const REFERER_MAP = [
   { match: /facebook\.com|fb\.com/i,source: "facebook"  },
   { match: /(twitter|x)\.com/i,     source: "twitter"   },
   { match: /youtube\.com|youtu\.be/i, source: "youtube" },
+  { match: /pinterest|pin\.it/i,    source: "pinterest" },
   { match: /linkedin\.com/i,        source: "linkedin"  },
   { match: /google\./i,             source: "google"    },
   { match: /bing\./i,               source: "google"    },
@@ -39,7 +40,7 @@ function normalizeSource(rawSource) {
   if (["yt"].includes(s))          return "youtube";
   if (["x", "tw"].includes(s))     return "twitter";
   if (["li"].includes(s))          return "linkedin";
-  const known = ["instagram","tiktok","facebook","twitter","youtube","google","email","linkedin","direct"];
+  const known = ["instagram","tiktok","facebook","twitter","youtube","pinterest","google","email","linkedin","direct"];
   if (known.includes(s)) return s;
   return s;
 }

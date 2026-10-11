@@ -91,3 +91,9 @@ du premier onglet).
   de toutes nos pages, par mois, dans Pilotage → Activité ; fait sur STA (recette de décembre n° 40), en attente de la clé
   GSC_SERVICE_ACCOUNT_JSON dans Vercel. Premiers chiffres : 9,4 en septembre, 16,4 en octobre (en cours), avec plus
   d'affichages (631 puis 928) : les nouvelles pages entrent loin dans Google avant de monter.
+- 11/10/2026 — Go prod de Jordan pour les épingles Pinterest (style validé) : 42 épingles, une par article Conseils
+  (photos de sa pelouse, saison, titre), en ligne sur le site le jour même. 5 fichiers d'import remis à Jordan, un par
+  tableau (Pelouse en automne, Pelouse : les bases, Pelouse en hiver, Pelouse au printemps, Pelouse en été), liens suivis
+  dans Pilotage (source « pinterest »). À faire par Jordan : créer le compte Pinterest professionnel, importer un fichier
+  par jour, envoyer le code de revendication du site. Pinterest reconnu comme source dans Pilotage sur STA (recette de
+  décembre n° 41).
