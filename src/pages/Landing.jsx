@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { trackFunnel, trackFunnelOncePerSession } from "../lib/funnel";
 import { codeRecu } from "../lib/codeParrainage";
+import { RESEAUX } from "../lib/reseaux";
 
 const G = {
   bg:      "linear-gradient(165deg,#0F2F1F 0%,#164a2b 45%,#0d2519 100%)",
@@ -238,6 +239,11 @@ export default function Landing() {
             <a href="/mentions-legales" style={{ color:G.soft, textDecoration:"none" }}>Mentions légales</a>
             <a href="/confidentialite" style={{ color:G.soft, textDecoration:"none" }}>Confidentialité</a>
             <a href="/cgu" style={{ color:G.soft, textDecoration:"none" }}>CGU</a>
+          </div>
+          <div style={{ display:"flex", gap:16, justifyContent:"center", flexWrap:"wrap", fontSize:12, marginTop:10 }}>
+            {RESEAUX.map(r => (
+              <a key={r.nom} href={r.url} target="_blank" rel="me noopener" style={{ color:G.soft, textDecoration:"none" }}>{r.nom}</a>
+            ))}
           </div>
           <div style={{ fontSize:10.5, color:G.faint, marginTop:14, lineHeight:1.6, maxWidth:360, margin:"14px auto 0" }}>
             Mongazon360® est une marque déposée et enregistrée à l'EUIPO — protégée dans les 27 pays de l'Union européenne.

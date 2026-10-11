@@ -97,3 +97,7 @@ du premier onglet).
   dans Pilotage (source « pinterest »). À faire par Jordan : créer le compte Pinterest professionnel, importer un fichier
   par jour, envoyer le code de revendication du site. Pinterest reconnu comme source dans Pilotage sur STA (recette de
   décembre n° 41).
+- 11/10/2026 — Adresses des réseaux de Mongazon360 envoyées par Jordan (Instagram, Facebook, TikTok, YouTube) : liens
+  « Suivez-nous » en bas de l'accueil et des pages Conseils, profils déclarés à Google, sur STA le jour même (recette de
+  décembre n° 42), en attente du go prod. Compte Pinterest en cours de création par Jordan ; rappel programmé le 12/10 à
+  9 h (import des épingles, revendication du site, annuaires).
