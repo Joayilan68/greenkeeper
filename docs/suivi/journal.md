@@ -120,3 +120,8 @@ du premier onglet).
   professionnel). Il donne les statistiques et permet de booster les publications, mais le gestionnaire de publicités,
   Meta Business Suite et l'API (automatisation des abonnés) restent réservés aux Pages. Ligne « Bob gazon — convertir le
   profil en Page Facebook » à passer « En cours » (50 %), note mise à jour en conséquence.
+- 11/10/2026 — Correction de l'entrée précédente : la Page Facebook « Mongazon360 » existe déjà (103 abonnés, c'est elle
+  qui est en lien en bas du site). Ligne « Bob gazon — convertir le profil en Page Facebook » à passer « Terminé » (100 %),
+  note : « Sans objet : la Page Mongazon360 existe (statistiques, pubs) ; profil Bob Gazon en mode professionnel. Reste
+  conseillé : compte Facebook personnel de Jordan administrateur de la Page, pour ne pas la perdre si le profil de la
+  mascotte est fermé. » L'automatisation des abonnés (ligne en pause) pourra passer par cette Page.
