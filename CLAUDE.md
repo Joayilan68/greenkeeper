@@ -50,7 +50,8 @@
   métadonnées) ; « À lire aussi » = les articles les plus liés entre eux. Page « Qui sommes-nous » : `content/a-propos.md`,
   générée par `scripts/seo-build.mjs` (règle dans `vercel.json`).
 - Bob : ses consignes listent les fonctions réelles de l'app ; toute nouvelle fonction doit y être ajoutée.
-- Search Console : ne pas retirer les balises `google-site-verification` de `index.html`.
+- Search Console et Pinterest : ne pas retirer les balises `google-site-verification` et `p:domain_verify` de
+  `index.html` (site revendiqué).
 - Réseaux sociaux : profils officiels dans `src/lib/reseaux.js` (pied de page de l'accueil et des pages Conseils,
   profils déclarés à Google), même liste dans les données structurées de `index.html`.
 - Pinterest : une épingle par article (1000 × 1500 : photo de notre pelouse, saison, titre), fichier
