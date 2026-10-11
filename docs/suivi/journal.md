@@ -113,3 +113,10 @@ du premier onglet).
   pour une application) ; French Tech Est et Alsace reportés à novembre, avec le communiqué de presse.
 - 11/10/2026 — AlternativeTo abandonné : le site exige que l'application soit disponible en anglais, or Mongazon360 est
   en français uniquement. Étape « annuaires » terminée (mairie de Sierentz, Les Pépites Tech).
+- 11/10/2026 — Go prod de Jordan, en prod le jour même : carte « Position moyenne sur Google » de Pilotage → Activité
+  (clé GSC_SERVICE_ACCOUNT_JSON ajoutée dans Vercel par Jordan), Pinterest reconnu comme source dans Pilotage, consignes
+  de Bob sans nombre figé de guides (recette, exceptions n° 17 à 19).
+- 11/10/2026 — Facebook : le profil « Bob Gazon » est en mode professionnel (capture de Jordan : tableau de bord
+  professionnel). Il donne les statistiques et permet de booster les publications, mais le gestionnaire de publicités,
+  Meta Business Suite et l'API (automatisation des abonnés) restent réservés aux Pages. Ligne « Bob gazon — convertir le
+  profil en Page Facebook » à passer « En cours » (50 %), note mise à jour en conséquence.
