@@ -34,7 +34,7 @@ Souvent, plusieurs causes s'additionnent.
 
 ## Étape 1 : traiter la mousse avec un anti-mousse
 
-Le traitement le plus répandu est l'**anti-mousse à base de sulfate de fer** :
+Le traitement le plus répandu est l'**anti-mousse à base de sulfate de fer** (voir [sulfate de fer sur la pelouse](/conseils/sulfate-de-fer-pelouse)) :
 
 - appliquez-le quand la mousse est active : **en septembre, ou en mars-avril** ;
 - sur un gazon humide, sans pluie forte annoncée dans les heures qui suivent, et hors période de gel ;

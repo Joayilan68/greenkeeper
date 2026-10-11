@@ -74,7 +74,7 @@ Quelques exemples :
 - **Levée** : de la 3e à la 6e semaine environ ; on espace les arrosages et on fait la première tonte quand l'herbe atteint 8 à 10 cm.
 - **Consolidation** : vers 6 à 8 semaines, le gazon est dense ; c'est le moment du premier engrais.
 
-Pour la méthode complète, voir [semer une pelouse au printemps](/conseils/semer-gazon-printemps) et [regarnir son gazon à l'automne](/conseils/regarnir-gazon-automne).
+Pour la méthode complète, voir [créer une pelouse](/conseils/creer-pelouse), [semer du gazon au printemps](/conseils/semer-gazon-printemps) et [regarnir sa pelouse en automne](/conseils/regarnir-gazon-automne), et pour les délais, [combien de temps pour que le gazon pousse](/conseils/temps-pousse-gazon).
 
 ## Questions fréquentes
 

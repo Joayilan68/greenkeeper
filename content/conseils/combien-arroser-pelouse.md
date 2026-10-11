@@ -3,10 +3,16 @@ title: Combien arroser sa pelouse ? La bonne dose et le bon rythme
 description: Combien de litres par m², à quelle fréquence, à quelle heure ? La méthode simple pour arroser juste, économiser l'eau et garder un gazon vert tout l'été.
 saison: ete
 date: 2026-09-25
-maj: 2026-09-27
+maj: 2026-10-11
 ---
 
 L'arrosage est le poste où l'on se trompe le plus : trop souvent, trop peu, au mauvais moment. Résultat, on consomme beaucoup d'eau pour un gazon aux racines paresseuses, qui jaunit à la première chaleur. **Arroser juste, c'est arroser moins souvent mais plus profondément.** Voici la méthode.
+
+> **En bref**
+> - **Combien ?** En été, 20 à 30 mm par semaine pluie comprise dans la moitié nord et l'ouest, 30 à 45 mm dans le Sud ; 1 mm = 1 litre par m².
+> - **À quel rythme ?** Environ 2 arrosages par semaine de 10 à 15 mm sur un sol équilibré, plutôt qu'un peu chaque jour.
+> - **À quelle heure ?** Tôt le matin, entre 5 h et 8 h ; jamais le soir sur un sol argileux ou tassé.
+> - **Et la pluie ?** Si la veille et le jour même cumulent 8 mm ou plus, on n'arrose pas.
 
 ## Combien d'eau faut-il à une pelouse ?
 
@@ -46,7 +52,9 @@ En pratique, un gazon bien installé a besoin en été d'environ **20 à 30 mm p
 
 Le test le plus simple : **posez quelques boîtes à fond plat** (boîtes de conserve, pots) sur la pelouse et lancez l'arrosage. Chronométrez le temps nécessaire pour obtenir 10 mm d'eau dans les boîtes. Vous connaissez alors la durée d'arrosage de votre installation, et vous vérifiez au passage que l'eau est bien répartie.
 
-Un **pluviomètre** vous indique aussi la pluie réellement tombée chez vous : à déduire de vos arrosages.
+Un **pluviomètre** vous indique aussi la pluie réellement tombée chez vous : à déduire de vos arrosages. Si la veille et le jour même cumulent **8 mm ou plus**, l'arrosage est inutile ; au-delà de 2 mm, réduisez la dose de moitié, et de 80 % au-delà de 5 mm.
+
+Avec un arrosage automatique, la durée se calcule à partir du débit de vos arroseurs (voir [arrosage automatique de la pelouse](/conseils/arrosage-automatique-pelouse)).
 
 ## Les signes que le gazon a soif
 
@@ -71,6 +79,24 @@ Pendant les sécheresses, des **arrêtés préfectoraux** limitent ou interdisen
 ## Et un gazon fraîchement semé ?
 
 C'est l'exception : un semis doit rester humide en surface, avec **2 à 3 petits arrosages par jour** jusqu'à la levée, puis un espacement progressif (voir [semer un gazon au printemps](/conseils/semer-gazon-printemps)).
+
+## Questions fréquentes
+
+### Combien de litres d'eau par m² pour une pelouse ?
+
+1 mm d'eau correspond à 1 litre par m². Un arrosage de 10 à 15 mm apporte donc 10 à 15 litres par m², environ deux fois par semaine en été sur un sol équilibré.
+
+### Faut-il arroser la pelouse tous les jours ?
+
+Non, sauf un semis en cours de germination, ou un sol sableux en canicule. Arroser un peu chaque jour garde les racines en surface.
+
+### Arroser la pelouse le matin ou le soir ?
+
+Le matin, entre 5 h et 8 h. Le soir, l'herbe reste humide toute la nuit et les maladies se développent ; sur un sol argileux ou tassé, c'est à proscrire.
+
+### Faut-il arroser la pelouse en hiver ?
+
+Non dans la plupart des régions. Dans le Sud, le Sud-Ouest et en Corse, un arrosage réduit peut être utile en période sèche.
 
 ## Mongazon360 calcule votre arrosage
 

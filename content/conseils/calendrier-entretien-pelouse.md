@@ -43,17 +43,19 @@ Quand le sol descend sous 5 °C, le gazon entre en dormance : il ne pousse plus.
 
 ## Mars : la reprise
 
+Tout le programme du printemps, étape par étape : [préparer sa pelouse au printemps](/conseils/preparer-pelouse-printemps).
+
 - **Première tonte**, à la date indicative de votre région (du 1er mars dans le Sud au 1er avril dans le Nord-Est), ou plus tôt si le sol atteint 8 °C. Tondez haut : 6 cm pour un gazon universel (voir [la première tonte](/conseils/premiere-tonte-printemps)).
 - **Scarification**, environ 2 semaines après la première tonte, pour retirer le feutre et la mousse (voir [scarifier sa pelouse](/conseils/scarifier-pelouse)).
 - **Aération** d'un sol tassé (voir [le carottage](/conseils/aerer-pelouse-carottage)), mais jamais le même jour que la scarification.
 - **Anti-mousse** sur une mousse active (voir [mousse dans la pelouse](/conseils/mousse-pelouse)).
-- **Engrais de démarrage** : en février-mars, en mars seulement dans le Nord et le Nord-Est, quand les maximales atteignent 10 °C (voir [quel engrais et quand](/conseils/engrais-gazon)).
+- **Engrais de démarrage** : en février-mars, en mars seulement dans le Nord et le Nord-Est, quand les maximales atteignent 10 °C (voir [engrais gazon de printemps](/conseils/engrais-gazon-printemps)).
 - **Regarnissage** juste après la scarification, mais jamais avant l'ouverture de la fenêtre de semis.
 - **Arrosage** : il reprend dès mars si le printemps est sec.
 
 ## Avril et mai : la pleine pousse
 
-- **Tonte** : 1 à 2 fois par semaine en avril, 2 à 3 fois en mai, à 5-6 cm pour un gazon universel (voir [la hauteur de tonte](/conseils/hauteur-tonte-gazon)).
+- **Tonte** : 1 à 2 fois par semaine en avril, 2 à 3 fois en mai, à 5-6 cm pour un gazon universel (voir [quand tondre la pelouse](/conseils/quand-tondre-pelouse) et [la hauteur de tonte](/conseils/hauteur-tonte-gazon)).
 - **Semis et regarnissage** : c'est la fenêtre de printemps dans la plupart des régions, dès que le sol dépasse 10 °C (voir [quand semer le gazon](/conseils/quand-semer-gazon) et [semer au printemps](/conseils/semer-gazon-printemps)).
 - **Scarification et anti-mousse** encore possibles en avril ; **aération** en avril sur un sol argileux ou tassé.
 - **Désherbage manuel** d'avril à octobre, par temps sec (voir [désherber sans produit chimique](/conseils/desherber-pelouse-sans-chimie)).
@@ -62,7 +64,7 @@ Quand le sol descend sous 5 °C, le gazon entre en dormance : il ne pousse plus.
 ## Juin, juillet et août : protéger le gazon de la chaleur
 
 - **Tonte plus haute** : on remonte d'un centimètre en été (6 à 7 cm pour un gazon universel, 7 à 8 cm en canicule), et on ne retire jamais plus d'un tiers de la hauteur.
-- **Arrosage tôt le matin**, entre 5 et 8 h, copieux mais espacé ; jamais le soir sur un sol argileux (voir [combien arroser sa pelouse](/conseils/combien-arroser-pelouse) et [la pelouse en canicule](/conseils/pelouse-canicule)).
+- **Arrosage tôt le matin**, entre 5 et 8 h, copieux mais espacé ; jamais le soir sur un sol argileux (voir [combien arroser sa pelouse](/conseils/combien-arroser-pelouse), [l'arrosage automatique](/conseils/arrosage-automatique-pelouse) et [la pelouse en canicule](/conseils/pelouse-canicule)).
 - **Pas de semis en juillet** : la chaleur et la sécheresse font échouer la levée.
 - **En août**, la fenêtre des semis d'automne s'ouvre dans le Nord (mi-août), puis dans le Nord-Est et le Centre (fin août).
 

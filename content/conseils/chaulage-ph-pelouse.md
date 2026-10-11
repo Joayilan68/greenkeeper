@@ -105,7 +105,7 @@ Non, seulement tant que le pH reste sous 6. Refaites un test un an après l'appo
 
 ### Peut-on chauler un sol calcaire ?
 
-Non. Si la terre mousse au contact du vinaigre ou si le pH dépasse 7, la chaux aggraverait la situation.
+Non. Si la terre mousse au contact du vinaigre ou si le pH dépasse 7, la chaux aggraverait la situation (voir [pelouse sur sol calcaire](/conseils/pelouse-sol-calcaire)).
 
 ## Mongazon360 et votre sol
 
