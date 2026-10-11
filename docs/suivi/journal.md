@@ -76,4 +76,4 @@ du premier onglet).
 - 11/10/2026 — Indexation Google : Jordan a passé le compte de service « mongazon360-stats » en autorisation « Complète »
   dans la Search Console et ajouté sa clé en secret GitHub (GSC_SERVICE_ACCOUNT_JSON). Plan du site (48 pages) renvoyé à
   Google le jour même ; demandes d'indexation manuelles bloquées par le quota de Google après 3 articles. Renvoi
-  automatique du plan du site à chaque mise en prod d'articles : prêt sur STA, en attente du go prod de Jordan.
+  automatique du plan du site à chaque mise en prod d'articles : go prod de Jordan le jour même, en prod le 11/10.
