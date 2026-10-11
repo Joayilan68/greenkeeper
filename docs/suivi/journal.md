@@ -77,3 +77,9 @@ du premier onglet).
   dans la Search Console et ajouté sa clé en secret GitHub (GSC_SERVICE_ACCOUNT_JSON). Plan du site (48 pages) renvoyé à
   Google le jour même ; demandes d'indexation manuelles bloquées par le quota de Google après 3 articles. Renvoi
   automatique du plan du site à chaque mise en prod d'articles : go prod de Jordan le jour même, en prod le 11/10.
+- 11/10/2026 — Go prod de Jordan pour les réglages techniques du référencement, mis en prod le jour même : grand aperçu
+  des images autorisé pour Google, photos d'articles (avant/après fournies par Jordan, dans 3 articles), page « Qui
+  sommes-nous », « À lire aussi » par sujet. Jordan valide l'ajout à la base de connaissances de 3 sujets (champignons et
+  ronds de sorcière, gazon en plaques, mulching) : onglet « Sujets complémentaires » et 3 articles en prod (rubrique de
+  42 articles). Leviers suivants pour le top 3 : liens d'autres sites (créateurs, presse, Pinterest, annuaires), outils
+  et calendriers par région, photos supplémentaires de Jordan.
