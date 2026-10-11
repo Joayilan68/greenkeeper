@@ -5,4 +5,5 @@ export const RESEAUX = [
   { nom: "Facebook",  url: "https://www.facebook.com/profile.php?id=61577135771534" },
   { nom: "TikTok",    url: "https://www.tiktok.com/@bob_mongazon360" },
   { nom: "YouTube",   url: "https://www.youtube.com/@mongazon360" },
+  { nom: "Pinterest", url: "https://www.pinterest.com/mongazon360" },
 ];
