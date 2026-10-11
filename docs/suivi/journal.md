@@ -101,3 +101,6 @@ du premier onglet).
   « Suivez-nous » en bas de l'accueil et des pages Conseils, profils déclarés à Google, sur STA le jour même (recette de
   décembre n° 42), en attente du go prod. Compte Pinterest en cours de création par Jordan ; rappel programmé le 12/10 à
   9 h (import des épingles, revendication du site, annuaires).
+- 11/10/2026 — Go prod de Jordan pour les liens vers les réseaux sociaux : en prod le jour même (recette, exceptions
+  n° 15). Jordan crée le compte Pinterest (sans annonces ; objectifs : trafic vers le site, audience, notoriété) ; son
+  adresse rejoindra la liste des réseaux.
