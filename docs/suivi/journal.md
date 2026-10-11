@@ -66,3 +66,10 @@ du premier onglet).
 - 11/10/2026 — mongazon360.fr inscrit par Jordan sur Bing Webmaster Tools, par import depuis la Search Console : site
   vérifié automatiquement, plan du site (27 pages) repris. Premières stats Bing sous 48 h ; les articles envoyés par
   IndexNow y sont visibles dans le menu « IndexNow ». Ne pas retirer l'autorisation Google donnée à Bing (vérification).
+- 11/10/2026 — Décision de Jordan : publier dès maintenant tous les articles Conseils utiles au référencement, y compris
+  ceux prévus plus tard dans le plan. Mis en prod le jour même en deux vagues : 21 nouveaux articles (calendrier mois par
+  mois, dernière tonte, vers blancs, maladies, taupes, engrais, choix du gazon, dates de semis, printemps, engrais de
+  printemps, créer et rénover une pelouse, temps de pousse, quand tondre, ombre, arrosage automatique, sulfate de fer, sol
+  calcaire, pelouse naturelle, fourmis, biostimulant) et 11 articles retravaillés ; rubrique de 39 articles, envoyés à
+  Bing par IndexNow. Sujets non couverts par la base, proposés à Jordan : champignons et ronds de sorcière, gazon en
+  plaques, mulching. À faire par Jordan : demander l'indexation des 21 nouvelles adresses dans la Search Console.

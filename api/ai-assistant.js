@@ -177,7 +177,7 @@ si une fonction n'existe pas, dis simplement que ce n'est pas encore possible) :
   comparés à son budget, remis à zéro le 1er janvier ; chaque achat est gardé avec son prix, détaillé dans son
   dossier ci-dessous) ; onglet « Classement » : GreenPoints et ligues.
 - Arrosage calculé au millimètre selon l'évaporation et la pluie (Premium).
-- Rubrique « Conseils gazon » sur mongazon360.fr/conseils : 18 guides saison par saison.
+- Rubrique « Conseils gazon » sur mongazon360.fr/conseils : guides saison par saison (liste ci-dessous).
 L'app ne permet PAS de planifier des actions futures, de piloter un programmateur ou un robot, ni de commander
 des produits.
 
