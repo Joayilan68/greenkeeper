@@ -7,28 +7,12 @@
 //   NODE_USE_ENV_PROXY=1 node scripts/gsc-stats.mjs index
 //   NODE_USE_ENV_PROXY=1 node scripts/gsc-stats.mjs plan
 // Compte de service mongazon360-stats@mongazon360-seo.iam.gserviceaccount.com, utilisateur « Complète » de la propriété
-// https://mongazon360.fr/ (nécessaire pour envoyer le plan du site ; stats et indexation se lisent en lecture seule).
-// Sa clé JSON est dans la variable GSC_SERVICE_ACCOUNT_JSON (environnement cloud de Claude, secret GitHub du même nom) :
-// jamais dans le dépôt, jamais affichée. Les 2 derniers jours, encore incomplets dans la Search Console, sont exclus.
-import { createSign } from "node:crypto";
+// https://mongazon360.fr/ (nécessaire pour envoyer le plan du site ; stats et indexation se lisent en lecture seule) ;
+// jeton et clé : api/searchConsole.cjs. Les 2 derniers jours, encore incomplets dans la Search Console, sont exclus.
+import { SITE, LECTURE, ECRITURE, jeton } from "../api/searchConsole.cjs";
 
-const SITE = "https://mongazon360.fr/";
 const args = process.argv.slice(2);
-
-let cle;
-try { cle = JSON.parse(process.env.GSC_SERVICE_ACCOUNT_JSON); } catch { cle = null; }
-if (!cle?.private_key || !cle?.client_email) throw new Error("[gsc] variable GSC_SERVICE_ACCOUNT_JSON absente ou invalide");
-
-const b64url = (objet) => Buffer.from(JSON.stringify(objet)).toString("base64url");
-const maintenant = Math.floor(Date.now() / 1000);
-const entete = `${b64url({ alg: "RS256", typ: "JWT" })}.${b64url({
-  iss: cle.client_email, scope: `https://www.googleapis.com/auth/webmasters${args[0] === "plan" ? "" : ".readonly"}`,
-  aud: "https://oauth2.googleapis.com/token", iat: maintenant, exp: maintenant + 3600 })}`;
-const assertion = `${entete}.${createSign("RSA-SHA256").update(entete).sign(cle.private_key, "base64url")}`;
-const reponse = await fetch("https://oauth2.googleapis.com/token", { method: "POST",
-  body: new URLSearchParams({ grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer", assertion }) });
-const { access_token } = await reponse.json();
-if (!access_token) throw new Error(`[gsc] jeton refusé par Google (${reponse.status})`);
+const access_token = await jeton(args[0] === "plan" ? ECRITURE : LECTURE);
 
 const appel = async (url, corps) => {
   const res = await fetch(url, { method: "POST", body: JSON.stringify(corps),

@@ -86,3 +86,8 @@ du premier onglet).
 - 11/10/2026 — Jordan confirme que les photos avant/après sont celles de sa pelouse (après : 6 semaines après un
   regarnissage) et accepte que son prénom figure sur la page « Qui sommes-nous » (fondateur) : légendes et page mises à
   jour en prod le jour même.
+- 11/10/2026 — Plan « liens » validé par Jordan (bases, communauté, créateurs, presse). Pas encore de compte Pinterest ;
+  comptes Instagram, Facebook, TikTok et YouTube existants. Demande de Jordan : graphique de la position moyenne Google
+  de toutes nos pages, par mois, dans Pilotage → Activité ; fait sur STA (recette de décembre n° 40), en attente de la clé
+  GSC_SERVICE_ACCOUNT_JSON dans Vercel. Premiers chiffres : 9,4 en septembre, 16,4 en octobre (en cours), avec plus
+  d'affichages (631 puis 928) : les nouvelles pages entrent loin dans Google avant de monter.

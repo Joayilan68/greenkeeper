@@ -5,6 +5,7 @@
 //   GET /api/stats?type=revenue  → stats Stripe
 //   GET /api/stats?type=users    → stats Clerk + sources UTM des inscrits
 //   GET /api/stats?type=errors   → erreurs (error_events) regroupées par problème + état des tâches planifiées
+//   GET /api/stats?type=seo      → position moyenne de nos pages dans Google, par mois (Search Console)
 //   GET /api/stats?type=services → vérification en direct des services externes (Pilotage → Services)
 //   GET|POST /api/stats?type=social → followers des réseaux sociaux (saisie mensuelle, Pilotage → Réseaux)
 //   GET|POST /api/stats?type=guests → Premium offerts (Pilotage → Finances)
@@ -16,6 +17,7 @@ const { verifiedUserId, ADMIN_EMAILS } = require("./auth.cjs");
 const { createClerkClient } = require("@clerk/backend");
 const { createClient }      = require("@supabase/supabase-js");
 const { statsRelances }     = require("./relances.cjs");
+const { cleDisponible, positionsParMois } = require("./searchConsole.cjs");
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 
 module.exports = async function handler(req, res) {
@@ -51,9 +53,21 @@ module.exports = async function handler(req, res) {
   if (type === "users")   return handleUsers(req, res);
   if (type === "errors")   return handleErrors(req, res);
   if (type === "services") return handleServices(req, res);
+  if (type === "seo")      return handleSeo(req, res);
 
-  return res.status(400).json({ error: 'Paramètre ?type=revenue|users|social|errors|services|guests|codes requis' });
+  return res.status(400).json({ error: 'Paramètre ?type=revenue|users|social|errors|services|seo|guests|codes requis' });
 };
+
+// ── Référencement Google : position moyenne de toutes nos pages, par mois (Pilotage → Activité) ──
+async function handleSeo(req, res) {
+  if (!cleDisponible()) return res.status(200).json({ success: false, error: "Clé GSC_SERVICE_ACCOUNT_JSON absente de Vercel" });
+  try {
+    return res.status(200).json({ success: true, mois: await positionsParMois() });
+  } catch (e) {
+    await require("./alerting.cjs").reportServerError("Pilotage — position moyenne Google", e);
+    return res.status(200).json({ success: false, error: e.message });
+  }
+}
 
 // ── Réseaux sociaux (followers — saisie manuelle mensuelle) ───────────────────
 const SB_URL = process.env.SUPABASE_URL;
