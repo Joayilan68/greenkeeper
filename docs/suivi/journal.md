@@ -83,3 +83,6 @@ du premier onglet).
   ronds de sorcière, gazon en plaques, mulching) : onglet « Sujets complémentaires » et 3 articles en prod (rubrique de
   42 articles). Leviers suivants pour le top 3 : liens d'autres sites (créateurs, presse, Pinterest, annuaires), outils
   et calendriers par région, photos supplémentaires de Jordan.
+- 11/10/2026 — Jordan confirme que les photos avant/après sont celles de sa pelouse (après : 6 semaines après un
+  regarnissage) et accepte que son prénom figure sur la page « Qui sommes-nous » (fondateur) : légendes et page mises à
+  jour en prod le jour même.
