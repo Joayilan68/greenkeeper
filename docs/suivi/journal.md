@@ -104,3 +104,6 @@ du premier onglet).
 - 11/10/2026 — Go prod de Jordan pour les liens vers les réseaux sociaux : en prod le jour même (recette, exceptions
   n° 15). Jordan crée le compte Pinterest (sans annonces ; objectifs : trafic vers le site, audience, notoriété) ; son
   adresse rejoindra la liste des réseaux.
+- 11/10/2026 — Compte Pinterest de Mongazon360 créé par Jordan (pinterest.com/mongazon360, sans annonces) ; premier
+  fichier d'épingles importé (Pelouse en automne). Site revendiqué par la balise Pinterest mise en prod le jour même,
+  profil Pinterest ajouté aux liens « Suivez-nous » (recette, exceptions n° 16).
