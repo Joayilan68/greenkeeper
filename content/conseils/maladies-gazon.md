@@ -74,6 +74,10 @@ Une plaque malade se répare souvent seule quand la météo change. Sinon, gratt
 
 ## Questions fréquentes
 
+### Les champignons à chapeau sont-ils une maladie du gazon ?
+
+Non : ils décomposent du bois ou des racines enfouis et ne s'attaquent pas au gazon. Les ronds de sorcière se traitent à part (voir [champignons dans la pelouse](/conseils/champignons-pelouse)).
+
 ### Comment reconnaître la fusariose ?
 
 Des plaques rondes de 2 à 20 cm, beige-rosé, parfois couvertes d'un duvet blanc-rosé le matin, qui apparaissent par temps froid et humide, d'octobre à avril.

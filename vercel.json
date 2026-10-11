@@ -116,7 +116,7 @@
       "destination": "/sw.js"
     },
     {
-      "source": "/:page(essai|demo|mentions-legales|confidentialite|cgu|cgv|cookies|login|signup)",
+      "source": "/:page(essai|demo|mentions-legales|confidentialite|cgu|cgv|cookies|login|signup|a-propos)",
       "destination": "/:page/index.html"
     },
     {
