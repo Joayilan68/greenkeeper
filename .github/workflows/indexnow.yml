@@ -1,0 +1,20 @@
+# Signale à Bing (IndexNow) les articles Conseils modifiés, une fois la mise en prod en ligne (scripts/indexnow.mjs).
+name: IndexNow — articles Conseils
+on:
+  push:
+    branches: [main]
+    paths: ["content/conseils/**"]
+jobs:
+  indexnow:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Attendre la fin du déploiement Vercel
+        run: sleep 240
+      - name: Signaler les articles modifiés
+        run: node scripts/indexnow.mjs $(git diff --name-only ${{ github.event.before }} ${{ github.sha }} -- content/conseils)
