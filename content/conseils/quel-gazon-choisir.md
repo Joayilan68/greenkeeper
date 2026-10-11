@@ -46,6 +46,8 @@ Pour les jardins où l'on joue, court et passe beaucoup. À base de **ray-grass 
 
 ## Le gazon d'ombre : pour les jardins sous les arbres
 
+Le guide complet : [gazon à l'ombre](/conseils/gazon-ombre).
+
 À l'ombre, le gazon classique s'éclaircit et la mousse gagne. Les mélanges d'ombre, à base de **fétuque rouge et d'agrostide**, tolèrent mieux le manque de lumière.
 
 - **Tonte haute** : 6 à 8 cm, jamais sous 5 cm, tous les 10 à 12 jours : les feuilles plus longues captent davantage de lumière.

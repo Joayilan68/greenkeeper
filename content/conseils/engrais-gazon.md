@@ -37,6 +37,8 @@ Retenez une idée simple : **l'azote fait pousser, le potassium endurcit.** On p
 
 ### L'engrais de démarrage, en février-mars
 
+Tout le détail dans [engrais gazon de printemps](/conseils/engrais-gazon-printemps).
+
 C'est le réveil du gazon. Attendez des maximales d'au moins 8 °C, sans gel ; dans le Nord et le Nord-Est, attendez mars et des maximales de 10 °C. L'azote n'est vraiment absorbé que lorsque le sol atteint 8 °C : trop tôt, l'engrais est perdu. Au printemps, il s'épand idéalement **juste après la scarification**, sur la pelouse en place (voir [scarifier sa pelouse](/conseils/scarifier-pelouse)) ; les zones regarnies attendent que le jeune gazon soit dense.
 
 ### L'engrais d'été, en mai-juin

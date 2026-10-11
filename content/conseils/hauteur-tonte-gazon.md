@@ -1,12 +1,18 @@
 ---
-title: À quelle hauteur tondre son gazon ? Le guide saison par saison
-description: Tondre trop court est l'erreur n°1 des pelouses. La bonne hauteur selon la saison, le type de gazon et l'ombre, la règle du tiers et la bonne fréquence de tonte.
+title: Hauteur de tonte : à quelle hauteur tondre sa pelouse ?
+description: Tondre trop court est l'erreur n°1. La bonne hauteur de coupe selon la saison et le type de gazon, la règle du tiers et comment régler sa tondeuse.
 saison: ete
 date: 2026-09-25
-maj: 2026-09-27
+maj: 2026-10-11
 ---
 
 Si vous ne deviez retenir qu'un conseil pour améliorer votre pelouse, ce serait celui-ci : **tondez plus haut**. La tonte trop rase est la cause la plus fréquente d'un gazon clairsemé, jaune en été et envahi par la mousse et les mauvaises herbes. Voici les bonnes hauteurs, saison par saison.
+
+> **En bref**
+> - **Gazon universel** : 5 à 6 cm au printemps et en automne, 6 à 7 cm en été, 7 à 8 cm en canicule ; jamais sous 4 cm.
+> - **La règle du tiers** : ne jamais couper plus d'un tiers de la hauteur de l'herbe en une fois.
+> - **À l'ombre**, plus haut : 6 à 8 cm, jamais sous 5 cm.
+> - **Mesurez** votre hauteur réelle : les chiffres de la tondeuse ne sont pas des centimètres.
 
 ## Pourquoi la hauteur compte autant
 
@@ -53,7 +59,7 @@ Voir aussi [première tonte de printemps](/conseils/premiere-tonte-printemps) et
 
 ## À quelle fréquence tondre ?
 
-La fréquence découle de la règle du tiers :
+La fréquence découle de la règle du tiers (tout le détail dans [quand tondre la pelouse](/conseils/quand-tondre-pelouse)) :
 
 - **en pleine pousse** (mai à août) : **2 à 3 fois par semaine** (environ tous les 4 jours) ;
 - **au printemps et à l'automne** (mars-avril, septembre-octobre) : **1 à 2 fois par semaine** ;
@@ -76,6 +82,24 @@ Les chiffres de la manette de la tondeuse (1 à 7, par exemple) ne correspondent
 
 Le robot tond un peu chaque jour : il respecte naturellement la règle du tiers. Réglez-le **dans la même fourchette** que ci-dessus, en le remontant en été (voir [robot tondeuse : réglages et entretien](/conseils/robot-tondeuse-reglages-entretien)).
 
+## Questions fréquentes
+
+### Quelle est la bonne hauteur de tonte pour une pelouse ?
+
+Pour un gazon universel, le plus courant : 5 à 6 cm au printemps et en automne, 6 à 7 cm en été, 7 à 8 cm en canicule. Jamais sous 4 cm.
+
+### Faut-il tondre plus haut en été ?
+
+Oui : remontez d'un centimètre en été, et d'un de plus en canicule. L'herbe haute fait de l'ombre au sol, garde l'humidité et souffre moins de la chaleur.
+
+### Tondre court fait-il moins tondre ?
+
+Non : le gazon repousse aussi vite, mais plus faible. Il jaunit, s'éclaircit, et la mousse et les mauvaises herbes s'installent.
+
+### À quelle hauteur tondre avant l'hiver ?
+
+À 5-6 cm pour un gazon universel, lors de la dernière tonte de novembre (voir [la dernière tonte avant l'hiver](/conseils/derniere-tonte-pelouse)).
+
 ## Mongazon360 vous donne le bon rythme
 
-Le plan d'entretien de Mongazon360 vous indique chaque mois **la hauteur et le rythme de tonte** adaptés à la saison, et reporte la tonte quand la pluie, le vent ou le gel sont annoncés dans votre commune. Si vous avez un robot tondeuse, les rappels de tonte deviennent de simples vérifications.
+Mongazon360 vous indique **la hauteur de tonte** adaptée à la saison et à votre type de gazon, un centimètre plus haut si vous avez choisi l'objectif « Gazon naturel », et vous propose la tonte au bon rythme dans l'onglet « Aujourd'hui ». Elle est reportée quand la pluie, le gel ou le grand vent sont annoncés dans votre commune. Si vous avez un robot tondeuse, les rappels de tonte deviennent de simples vérifications.

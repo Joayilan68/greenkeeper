@@ -64,7 +64,7 @@ Une **poudre blanche farineuse** sur les brins, surtout à l'ombre, d'avril à j
 
 ## Et les traitements ?
 
-Les fongicides chimiques ne sont plus autorisés pour les particuliers. Les solutions :
+Les fongicides chimiques ne sont plus autorisés pour les particuliers (voir [pelouse naturelle](/conseils/pelouse-naturelle-sans-chimie)). Les solutions :
 
 - **la prévention** ci-dessus, de loin la plus efficace ;
 - **le biocontrôle** : soufre contre l'oïdium ; bicarbonate de soude, huile essentielle de thym ou purin d'ortie en préventif ;
