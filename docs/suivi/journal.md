@@ -107,3 +107,7 @@ du premier onglet).
 - 11/10/2026 — Compte Pinterest de Mongazon360 créé par Jordan (pinterest.com/mongazon360, sans annonces) ; premier
   fichier d'épingles importé (Pelouse en automne). Site revendiqué par la balise Pinterest mise en prod le jour même,
   profil Pinterest ajouté aux liens « Suivez-nous » (recette, exceptions n° 16).
+- 11/10/2026 — Annuaires : demande d'inscription faite par Jordan dans l'annuaire des entreprises de la mairie de Sierentz
+  et fiche Les Pépites Tech créée (publication après file d'attente) ; AlternativeTo en cours (textes en anglais fournis).
+  PagesJaunes et 118000 écartés sur proposition de Claude (fiche INSEE en diffusion partielle, adresse affichée, peu utiles
+  pour une application) ; French Tech Est et Alsace reportés à novembre, avec le communiqué de presse.
