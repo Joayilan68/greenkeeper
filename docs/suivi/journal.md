@@ -73,3 +73,7 @@ du premier onglet).
   calcaire, pelouse naturelle, fourmis, biostimulant) et 11 articles retravaillés ; rubrique de 39 articles, envoyés à
   Bing par IndexNow. Sujets non couverts par la base, proposés à Jordan : champignons et ronds de sorcière, gazon en
   plaques, mulching. À faire par Jordan : demander l'indexation des 21 nouvelles adresses dans la Search Console.
+- 11/10/2026 — Indexation Google : Jordan a passé le compte de service « mongazon360-stats » en autorisation « Complète »
+  dans la Search Console et ajouté sa clé en secret GitHub (GSC_SERVICE_ACCOUNT_JSON). Plan du site (48 pages) renvoyé à
+  Google le jour même ; demandes d'indexation manuelles bloquées par le quota de Google après 3 articles. Renvoi
+  automatique du plan du site à chaque mise en prod d'articles : prêt sur STA, en attente du go prod de Jordan.

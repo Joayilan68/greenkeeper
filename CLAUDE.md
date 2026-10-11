@@ -49,13 +49,14 @@
   La liste des articles est publiée dans `/conseils.json` : Bob (api/ai-assistant.js) y renvoie automatiquement.
 - Bob : ses consignes listent les fonctions réelles de l'app ; toute nouvelle fonction doit y être ajoutée.
 - Search Console : ne pas retirer les balises `google-site-verification` de `index.html`.
-- Bing (IndexNow) : clé publique `public/<clé>.txt` ; à chaque mise en prod qui touche `content/conseils`,
-  `.github/workflows/indexnow.yml` signale les articles modifiés (`scripts/indexnow.mjs`). Google n'utilise pas IndexNow :
-  plan du site (date `maj` de l'article) et demande d'indexation dans la Search Console.
-- Stats Google : `scripts/gsc-stats.mjs` lit la Search Console en lecture seule, clics et positions, ou état d'indexation
-  des pages avec `index` (compte de service `mongazon360-stats`, « Accès limité ») ; sa clé est dans la variable
-  `GSC_SERVICE_ACCOUNT_JSON` de l'environnement cloud de Claude, jamais dans le dépôt ni affichée. Sert au point des stats
-  tous les 15 jours et au choix des articles à améliorer.
+- Indexation : à chaque mise en prod qui touche `content/conseils`, `.github/workflows/indexnow.yml` signale les articles
+  modifiés à Bing par IndexNow (`scripts/indexnow.mjs`, clé publique `public/<clé>.txt`) et renvoie le plan du site à Google
+  (`scripts/gsc-stats.mjs plan`, secret GitHub `GSC_SERVICE_ACCOUNT_JSON`) ; Google lit la date `maj` de l'article et décide
+  seul de l'indexation. Demande d'indexation à la main dans la Search Console en complément (une dizaine par jour).
+- Stats Google : `scripts/gsc-stats.mjs` lit la Search Console, clics et positions, ou état d'indexation des pages avec
+  `index` (compte de service `mongazon360-stats`, autorisation « Complète » pour l'envoi du plan du site) ; sa clé est dans
+  la variable `GSC_SERVICE_ACCOUNT_JSON` de l'environnement cloud de Claude et le secret GitHub du même nom, jamais dans le
+  dépôt ni affichée. Sert au point des stats tous les 15 jours et au choix des articles à améliorer.
 
 ## Offres et Premium offerts
 - Premium offert (famille, bêta…) : règle unique `api/premium.cjs` (date de fin incluse, vide = à vie), gestion

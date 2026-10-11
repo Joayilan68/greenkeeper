@@ -1,5 +1,6 @@
-# Signale à Bing (IndexNow) les articles Conseils modifiés, une fois la mise en prod en ligne (scripts/indexnow.mjs).
-name: IndexNow — articles Conseils
+# Une fois la mise en prod en ligne : signale à Bing (IndexNow) les articles Conseils modifiés (scripts/indexnow.mjs)
+# et renvoie le plan du site à Google (scripts/gsc-stats.mjs plan, secret GitHub GSC_SERVICE_ACCOUNT_JSON).
+name: Indexation — articles Conseils (Bing et Google)
 on:
   push:
     branches: [main]
@@ -16,5 +17,9 @@ jobs:
           node-version: 20
       - name: Attendre la fin du déploiement Vercel
         run: sleep 240
-      - name: Signaler les articles modifiés
+      - name: Signaler les articles modifiés à Bing
         run: node scripts/indexnow.mjs $(git diff --name-only ${{ github.event.before }} ${{ github.sha }} -- content/conseils)
+      - name: Renvoyer le plan du site à Google
+        run: node scripts/gsc-stats.mjs plan
+        env:
+          GSC_SERVICE_ACCOUNT_JSON: ${{ secrets.GSC_SERVICE_ACCOUNT_JSON }}
