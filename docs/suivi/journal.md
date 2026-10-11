@@ -58,3 +58,7 @@ du premier onglet).
   mousse, feuilles mortes, entretien d'hiver, hivernage du matériel. Indexation des 3 premiers demandée par Jordan.
   Automatisation proposée : stats Search Console lues par l'API (compte de service en lecture seule, à créer par Jordan) ;
   envoi automatique des pages modifiées à Bing par IndexNow (à décider).
+- 11/10/2026 — Décision de Jordan : envoi automatique à Bing (IndexNow) des articles Conseils modifiés, à chaque mise en
+  prod ; mis en place le jour même (clé publique sur le site, tâche GitHub après chaque mise en prod d'articles). Accès en
+  lecture seule aux stats de la Search Console configuré par Jordan (compte de service Google Cloud « mongazon360-stats »,
+  variable GSC_SERVICE_ACCOUNT_JSON de l'environnement Claude), pour le point des stats tous les 15 jours.
