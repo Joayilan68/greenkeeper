@@ -63,3 +63,6 @@ du premier onglet).
   lecture seule aux stats de la Search Console configuré par Jordan (compte de service Google Cloud « mongazon360-stats »,
   variable GSC_SERVICE_ACCOUNT_JSON de l'environnement Claude), vérifié le jour même : 31 clics et 1 535 affichages sur
   Google du 11/09 au 09/10 (position moyenne 13,7), lus par `scripts/gsc-stats.mjs` pour le point des stats tous les 15 jours.
+- 11/10/2026 — mongazon360.fr inscrit par Jordan sur Bing Webmaster Tools, par import depuis la Search Console : site
+  vérifié automatiquement, plan du site (27 pages) repris. Premières stats Bing sous 48 h ; les articles envoyés par
+  IndexNow y sont visibles dans le menu « IndexNow ». Ne pas retirer l'autorisation Google donnée à Bing (vérification).
