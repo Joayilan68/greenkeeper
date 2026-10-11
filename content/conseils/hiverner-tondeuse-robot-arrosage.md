@@ -16,7 +16,7 @@ En fin de saison, on a vite fait de ranger la tondeuse au fond du garage et d'ou
 
 ## Quand hiverner ?
 
-Après la **dernière tonte de l'année**, en général en novembre, et dans tous les cas **avant les premières gelées** pour l'arrosage. Les alertes gel de Mongazon360 vous préviennent quand elles sont annoncées dans votre commune.
+Après la **[dernière tonte de l'année](/conseils/derniere-tonte-pelouse)**, en général en novembre, et dans tous les cas **avant les premières gelées** pour l'arrosage. Les alertes gel de Mongazon360 vous préviennent quand elles sont annoncées dans votre commune.
 
 ## Hivernage de la tondeuse thermique
 

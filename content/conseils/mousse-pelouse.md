@@ -56,7 +56,7 @@ Là où la mousse était dense, le sol est souvent nu après le passage du râte
 - **Sol acide** : faites un **[chaulage](/conseils/chaulage-ph-pelouse)** (chaux calcaire, ou dolomitique pour un pH entre 5 et 6) à l'automne, à la dose correspondant au pH mesuré. Espacez chaulage et sulfate de fer d'au moins 3 à 4 semaines.
 - **Sol tassé** : aérez avec un aérateur à carottes ou une fourche-bêche, puis étalez un peu de sable ou de terreau (voir [carottage de la pelouse](/conseils/aerer-pelouse-carottage)).
 - **Mauvais drainage** : sablage régulier, et dans les cas sérieux, drain ou reprofilage des zones en creux.
-- **Ombre** : éclaircissez les arbres ou les haies si possible, remontez la hauteur de tonte à 6-8 cm et semez des variétés adaptées à l'ombre. Sous un couvert très dense, un couvre-sol sera plus réaliste que le gazon.
+- **Ombre** : éclaircissez les arbres ou les haies si possible, remontez la hauteur de tonte à 6-8 cm et semez des variétés adaptées à l'ombre (voir [quel gazon choisir](/conseils/quel-gazon-choisir)). Sous un couvert très dense, un couvre-sol sera plus réaliste que le gazon.
 - **Tonte trop basse** : ne descendez jamais sous 4 cm pour un gazon universel (5 cm à l'ombre), et ne retirez jamais plus d'un tiers de la hauteur en une fois.
 - **Gazon affamé** : apportez un engrais adapté au printemps et à l'automne. Un gazon dense ne laisse pas de place à la mousse.
 

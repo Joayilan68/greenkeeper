@@ -19,7 +19,7 @@ Chaque automne, la même question revient : faut-il vraiment ramasser les feuill
 Une couche de feuilles posée sur la pelouse agit comme une bâche :
 
 - **elle prive l'herbe de lumière** : le gazon jaunit, puis s'éclaircit en quelques semaines ;
-- **elle maintient l'humidité** au niveau du sol : c'est le terrain idéal pour la **mousse** et pour les maladies d'automne et d'hiver, comme la fusariose ou la moisissure des neiges ;
+- **elle maintient l'humidité** au niveau du sol : c'est le terrain idéal pour la **mousse** et pour les [maladies d'automne et d'hiver](/conseils/maladies-gazon), comme la fusariose ou la moisissure des neiges ;
 - **elle bloque l'eau, l'air et l'engrais** d'automne ;
 - **elle attire limaces et escargots**, qui trouvent refuge dessous.
 

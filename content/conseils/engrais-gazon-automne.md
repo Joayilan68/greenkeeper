@@ -80,7 +80,7 @@ Sur un semis ou un regarnissage récent, un engrais « starter », plus riche en
 
 ### Combien d'engrais par an pour une pelouse ?
 
-Un par saison, quatre au plus par an, avec au moins 90 jours entre deux apports. Seule exception : l'engrais d'hiver, possible 45 jours après celui d'automne.
+Un par saison, quatre au plus par an, avec au moins 90 jours entre deux apports. Seule exception : l'engrais d'hiver, possible 45 jours après celui d'automne (voir [le calendrier des engrais de l'année](/conseils/engrais-gazon)).
 
 ### Faut-il arroser après l'engrais ?
 
