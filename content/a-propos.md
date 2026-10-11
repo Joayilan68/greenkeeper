@@ -2,6 +2,10 @@
 
 Mongazon360 est une application française qui aide chacun à entretenir sa pelouse : elle indique, jour après jour, quoi faire et quand, selon la météo de votre commune, votre type de gazon et votre sol. La rubrique [Conseils gazon](/conseils) rassemble ses guides pratiques, en accès libre.
 
+## Qui est derrière Mongazon360 ?
+
+Mongazon360 a été créée par **Jordan**, son fondateur. Les photos de nos articles viennent de sa propre pelouse : clairsemée et abîmée, elle a retrouvé sa densité 6 semaines après un regarnissage (voir [regarnir sa pelouse](/conseils/regarnir-gazon-automne)).
+
 ## Notre mission
 
 Rendre l'entretien du gazon simple et juste : le bon geste au bon moment, sans gaspiller l'eau ni les produits, et sans produits chimiques interdits aux particuliers.
