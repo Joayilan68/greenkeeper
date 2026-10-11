@@ -52,7 +52,8 @@
 - Bing (IndexNow) : clé publique `public/<clé>.txt` ; à chaque mise en prod qui touche `content/conseils`,
   `.github/workflows/indexnow.yml` signale les articles modifiés (`scripts/indexnow.mjs`). Google n'utilise pas IndexNow :
   plan du site (date `maj` de l'article) et demande d'indexation dans la Search Console.
-- Stats Google : `scripts/gsc-stats.mjs` lit la Search Console en lecture seule (compte de service `mongazon360-stats`,
+- Stats Google : `scripts/gsc-stats.mjs` lit la Search Console en lecture seule, clics et positions ou état d'indexation des
+  pages (`index`) (compte de service `mongazon360-stats`,
   « Accès limité ») ; sa clé est dans la variable `GSC_SERVICE_ACCOUNT_JSON` de l'environnement cloud de Claude, jamais
   dans le dépôt ni affichée. Sert au point des stats tous les 15 jours et au choix des articles à améliorer.
 
