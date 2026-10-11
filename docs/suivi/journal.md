@@ -111,3 +111,5 @@ du premier onglet).
   et fiche Les Pépites Tech créée (publication après file d'attente) ; AlternativeTo en cours (textes en anglais fournis).
   PagesJaunes et 118000 écartés sur proposition de Claude (fiche INSEE en diffusion partielle, adresse affichée, peu utiles
   pour une application) ; French Tech Est et Alsace reportés à novembre, avec le communiqué de presse.
+- 11/10/2026 — AlternativeTo abandonné : le site exige que l'application soit disponible en anglais, or Mongazon360 est
+  en français uniquement. Étape « annuaires » terminée (mairie de Sierentz, Les Pépites Tech).
