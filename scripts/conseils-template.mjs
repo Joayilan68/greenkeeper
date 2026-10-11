@@ -1,6 +1,7 @@
 // scripts/conseils-template.mjs — gabarit HTML statique de la rubrique « Conseils gazon »
 // (pages complètes sans JavaScript : lisibles par Google et par les aperçus de partage).
 import { ROBOT_UA } from "../src/lib/platform.js";
+import { RESEAUX } from "../src/lib/reseaux.js";
 const SITE = "https://mongazon360.fr";
 export const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 
@@ -93,7 +94,7 @@ function page({ title, description, path, ogType, jsonLd, body, campagne, image 
 <header><div class="bar"><a class="logo" href="/"><img src="/icon-192.png" alt="" />Mongazon360<sup>®</sup></a><a class="btn" href="${essai(campagne)}">Diagnostic gratuit</a></div></header>
 <main>${body}</main>
 ${suivi(campagne)}
-<footer><div><a href="/conseils">Conseils gazon</a><a href="/a-propos">Qui sommes-nous</a><a href="/mentions-legales">Mentions légales</a><a href="/confidentialite">Confidentialité</a><a href="/cookies">Cookies</a><br />© ${new Date().getFullYear()} Mongazon360® — marque déposée et enregistrée à l'EUIPO</div></footer>
+<footer><div><a href="/conseils">Conseils gazon</a><a href="/a-propos">Qui sommes-nous</a><a href="/mentions-legales">Mentions légales</a><a href="/confidentialite">Confidentialité</a><a href="/cookies">Cookies</a><br />Suivez-nous : ${RESEAUX.map(r => `<a href="${esc(r.url)}" rel="me noopener" target="_blank">${r.nom}</a>`).join("")}<br />© ${new Date().getFullYear()} Mongazon360® — marque déposée et enregistrée à l'EUIPO</div></footer>
 </body>
 </html>
 `;
@@ -141,7 +142,7 @@ ${a.html}</article>${encadreProduits(a.produits ? a.produits.split(",").map(x =>
 export function aProposPage(html) {
   const jsonLd = { "@context": "https://schema.org", "@type": "AboutPage", name: "Qui sommes-nous", url: `${SITE}/a-propos`,
     inLanguage: "fr", about: { "@type": "Organization", name: "Mongazon360", url: SITE, email: "contact@mongazon360.fr",
-      logo: `${SITE}/icon-512x512.png`, founder: { "@type": "Person", name: "Jordan" } } };
+      logo: `${SITE}/icon-512x512.png`, founder: { "@type": "Person", name: "Jordan" }, sameAs: RESEAUX.map(r => r.url) } };
   const body = `<div class="crumb"><a href="/">Accueil</a> › Qui sommes-nous</div><article>${html}</article>${cta("a-propos")}`;
   return page({ title: "Qui sommes-nous ? — Mongazon360®",
     description: "Mongazon360, application française d'entretien du gazon : qui l'édite, comment sont construits ses conseils et sa base agronomique, comment nous contacter.",

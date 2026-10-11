@@ -51,6 +51,8 @@
   générée par `scripts/seo-build.mjs` (règle dans `vercel.json`).
 - Bob : ses consignes listent les fonctions réelles de l'app ; toute nouvelle fonction doit y être ajoutée.
 - Search Console : ne pas retirer les balises `google-site-verification` de `index.html`.
+- Réseaux sociaux : profils officiels dans `src/lib/reseaux.js` (pied de page de l'accueil et des pages Conseils,
+  profils déclarés à Google), même liste dans les données structurées de `index.html`.
 - Pinterest : une épingle par article (1000 × 1500 : photo de notre pelouse, saison, titre), fichier
   `public/images/pinterest/<slug>.jpg` lu par Pinterest : ne jamais le supprimer ni le renommer. Nouvel article : créer
   son épingle au même format et l'importer dans Pinterest (fichier .csv), lien vers l'article suivi de
