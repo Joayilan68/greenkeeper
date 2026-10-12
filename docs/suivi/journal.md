@@ -131,3 +131,6 @@ du premier onglet).
 - 12/10/2026 — Jordan confirme que tous les profils de Mongazon360 (Instagram, Facebook, TikTok, YouTube, Pinterest)
   ont le lien mongazon360.fr dans leur présentation : étape 1 du plan « liens » terminée, à part l'import des épingles
   Pinterest (un fichier par jour jusqu'au 15/10).
+- 12/10/2026 — Pinterest : Jordan a importé les 4 derniers fichiers d'un coup ; 37 épingles sur 42 publiées (5 tableaux).
+  5 épingles du premier fichier, « Pelouse en automne », n'ont jamais été publiées (maladies, mousse, regarnissage,
+  scarification, vers blancs) : fichier complémentaire de 5 épingles remis à Jordan le jour même.
