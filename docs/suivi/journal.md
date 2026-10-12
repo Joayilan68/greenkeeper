@@ -128,3 +128,6 @@ du premier onglet).
 - 11/10/2026 — Jordan confirme que son compte Facebook personnel est administrateur de la Page Mongazon360. Ligne « Bob
   gazon — convertir le profil en Page Facebook » : « Terminé » (100 %), note « Sans objet : la Page Mongazon360 existe
   (statistiques, pubs), administrée par le compte personnel de Jordan ; profil Bob Gazon en mode professionnel. »
+- 12/10/2026 — Jordan confirme que tous les profils de Mongazon360 (Instagram, Facebook, TikTok, YouTube, Pinterest)
+  ont le lien mongazon360.fr dans leur présentation : étape 1 du plan « liens » terminée, à part l'import des épingles
+  Pinterest (un fichier par jour jusqu'au 15/10).
