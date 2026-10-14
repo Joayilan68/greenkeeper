@@ -134,3 +134,6 @@ du premier onglet).
 - 12/10/2026 — Pinterest : Jordan a importé les 4 derniers fichiers d'un coup ; 37 épingles sur 42 publiées (5 tableaux).
   5 épingles du premier fichier, « Pelouse en automne », n'ont jamais été publiées (maladies, mousse, regarnissage,
   scarification, vers blancs) : fichier complémentaire de 5 épingles remis à Jordan le jour même.
+- 14/10/2026 — Pinterest : les 42 épingles sont publiées (fichier complémentaire des 5 épingles d'automne importé par
+  Jordan). Google : 36 articles sur 42 indexés (25 le 11/10) ; Jordan a demandé à la main l'indexation des 6 restants
+  (temps de pousse, ombre, sulfate de fer, arrosage automatique, préparer au printemps, fourmis).
