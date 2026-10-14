@@ -137,3 +137,7 @@ du premier onglet).
 - 14/10/2026 — Pinterest : les 42 épingles sont publiées (fichier complémentaire des 5 épingles d'automne importé par
   Jordan). Google : 36 articles sur 42 indexés (25 le 11/10) ; Jordan a demandé à la main l'indexation des 6 restants
   (temps de pousse, ombre, sulfate de fer, arrosage automatique, préparer au printemps, fourmis).
+- 14/10/2026 — Plan « liens », étape 2 « Communauté » lancée par Jordan : règles (une ou deux réponses avec lien par semaine
+  et par groupe, toujours dire qu'il s'agit de notre site) et première liste de 8 questions de saison avec réponses prêtes
+  à adapter (mousse, semis en octobre, dernière tonte, feuilles, engrais d'automne, champignons, vers blancs, taupes).
+  Listes suivantes préparées avec le point des stats (25/10, puis le 10 et le 25 de chaque mois).
