@@ -141,3 +141,6 @@ du premier onglet).
   et par groupe, toujours dire qu'il s'agit de notre site) et première liste de 8 questions de saison avec réponses prêtes
   à adapter (mousse, semis en octobre, dernière tonte, feuilles, engrais d'automne, champignons, vers blancs, taupes).
   Listes suivantes préparées avec le point des stats (25/10, puis le 10 et le 25 de chaque mois).
+- 15/10/2026 — Communauté : premier post de Jordan (compte Facebook « Bob Gazon ») dans le groupe « Passion gazon France » :
+  photo de sa pelouse regarnie 45 jours plus tôt sans engrais, 275 j'aime, 8 partages, 59 commentaires (tous traités). Le
+  15/10, 5 visites venues de Facebook et 17 de Google (meilleure journée Google à ce jour), 26 visites au total.
