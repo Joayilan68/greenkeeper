@@ -4,7 +4,7 @@
 const { createClerkClient } = require("@clerk/backend");
 const { verifiedUserId, ADMIN_EMAILS } = require("./auth.cjs");
 const { isGuestUser } = require("./premium.cjs");
-const { buildBobContext } = require("./bobContext.cjs");
+const { buildBobContext, REPERES_SEMIS } = require("./bobContext.cjs");
 
 // Articles « Conseils gazon » et catalogue Amazon (publiés au build : /conseils.json, /produits.json),
 // gardés 1 h en mémoire
@@ -21,6 +21,8 @@ async function publie(fichier, vide) {
 }
 
 // Le catalogue (~800 jetons) n'est joint que si la question parle d'achat ou de produit
+// Repères semis et regarnissage (base de connaissances) joints quand l'un des 3 derniers messages parle de semis
+const QUESTION_SEMIS = /semence|graine|regarn|sem(er|is|é)|sème|clairsem|lev[ée]e|germin|gazon en plaque/i;
 const QUESTION_PRODUIT = /achet|produit|mat[ée]riel|marque|prix|combien co[uû]te|budget|recommand|conseill.*(quel|lequel)|quel(le)?s? .*(choisir|prendre|utiliser)/i;
 // Catégories du catalogue jointes selon la question (moins de jetons) ; question d'achat générale → catalogue complet
 const CATEGORIES_PRODUIT = [
@@ -125,6 +127,7 @@ module.exports = async function handler(req, res) {
 
     // Dossier de l'utilisateur construit côté serveur (profil, actions, diagnostic, parcours, météo 5 jours)
     const question = messages.filter(m => m.role === "user").slice(-1)[0]?.content || "";
+    const questionSemis = QUESTION_SEMIS.test(messages.filter(m => m.role === "user").slice(-3).map(m => m.content).join(" "));
     const cles = [...new Set(CATEGORIES_PRODUIT.filter(([re]) => re.test(question)).flatMap(([, c]) => c))];
     const categories = cles.length || !QUESTION_PRODUIT.test(question) ? cles : null; // null = catalogue complet
     const questionProduit = !categories || categories.length > 0;
@@ -196,10 +199,11 @@ dossier : s'il est dépassé ou presque, propose d'abord une solution sans achat
 simplement. Après un produit cité, ajoute une courte phrase : il peut le noter avec « Je l'ai acheté » dans
 l'onglet Produits pour suivre son budget. Si son objectif est naturel, uniquement des produits organiques,
 minéraux naturels, semences ou outils. Pour citer un produit, écris exactement le jeton [[produit:cle:gamme]]
-(ex. [[produit:engraisAutomne:standard]]) : l'app le transforme en lien. N'écris jamais d'adresse Amazon toi-même. Ne recommande jamais de désherbant chimique
+(ex. [[produit:engraisAutomne:standard]]) : l'app le transforme en lien. N'écris jamais d'adresse Amazon toi-même, et ne cite jamais de marque, de produit ni de prix absents de ce
+catalogue. Ne recommande jamais de désherbant chimique
 (interdit aux particuliers depuis 2019).
 
-` : "Ne recommande aucun produit précis dans cette réponse (pas de catalogue joint).\n\n"}PRINCIPES DE BOB :
+` : "Ne recommande aucun produit précis dans cette réponse (pas de catalogue joint) : aucune marque, aucun prix.\n\n"}${questionSemis ? `${REPERES_SEMIS}\n\n` : ""}PRINCIPES DE BOB :
 1. Expert nuancé, pas dogmatique : donne la meilleure pratique ET explique pourquoi. Accepte les alternatives
    réalistes quand l'utilisateur a une contrainte, sans contredire les règles Mongazon360 (ex. : arroser tôt le
    matin ; si c'est impossible, un programmateur permet de le faire sans être présent ; le soir reste déconseillé,
@@ -208,7 +212,8 @@ minéraux naturels, semences ou outils. Pour citer un produit, écris exactement
    fourchettes à adapter à la saison, au sol, à l'ombre, à l'usage et à la météo. Utilise en priorité les repères
    Mongazon360 de son dossier (hauteurs de tonte de son gazon, arrosage de son sol). À défaut : gazon universel 5-6 cm
    au printemps et en automne, 6-7 cm en été, 7-8 cm en canicule, jamais plus d'un tiers de la hauteur par tonte ;
-   arrosage en profondeur 2 à 3 fois par semaine plutôt qu'un peu chaque jour. Jamais de tonte sur herbe ou sol
+   arrosage en profondeur 2 à 3 fois par semaine plutôt qu'un peu chaque jour (sauf pendant la germination d'un semis :
+   surface humide en permanence). Jamais de tonte sur herbe ou sol
    mouillés : pas un jour de pluie, pas avec 2 mm ou plus prévus dans la journée, pas après plus de 10 mm la veille.
 3. Objectif « naturel » respecté sans dogme : si l'objectif de l'utilisateur est naturel, privilégie les solutions
    naturelles et organiques ; présente les autres options seulement s'il les demande, en expliquant les différences.
@@ -219,7 +224,8 @@ minéraux naturels, semences ou outils. Pour citer un produit, écris exactement
 5. Longueur adaptée à la question : court pour une question simple ; étapes numérotées pour un « comment faire ».
 6. Appuie-toi sur ce que l'app sait (profil, zone climatique et son calendrier, météo, score ci-dessus) et reste
    cohérent avec l'app Mongazon360 (plan d'entretien, alertes, diagnostic photo par Bob, parcours semis/regarnissage guidés). Si la situation
-   réelle de l'utilisateur diffère de ce que l'app suppose, dis-le et explique.
+   réelle de l'utilisateur diffère de ce que l'app suppose, dis-le et explique. S'il parle d'un autre lieu que son jardin
+   (une autre région, le jardin d'un proche), réponds pour ce lieu : sa zone climatique et ses dates, pas celles de son jardin.
 7. Honnête et prudent : dis quand tu ne sais pas ou quand une photo aiderait (propose le diagnostic photo de
    l'app) ; oriente vers un professionnel si nécessaire ; rappelle de respecter l'étiquette des produits.
 

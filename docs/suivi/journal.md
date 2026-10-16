@@ -144,3 +144,9 @@ du premier onglet).
 - 15/10/2026 — Communauté : premier post de Jordan (compte Facebook « Bob Gazon ») dans le groupe « Passion gazon France » :
   photo de sa pelouse regarnie 45 jours plus tôt sans engrais, 275 j'aime, 8 partages, 59 commentaires (tous traités). Le
   15/10, 5 visites venues de Facebook et 17 de Google (meilleure journée Google à ce jour), 26 visites au total.
+- 16/10/2026 — Bob : réponse fausse sur le regarnissage dans les Landes signalée par Jordan (semis jusqu'en janvier avec un
+  sol à 5-10 °C, 10 à 15 mm d'eau par semaine, tonte à 3 cm après 2-3 semaines, graines enterrées, semences et prix
+  inventés, zone de son propre jardin appliquée aux Landes). Correction sur STA (recette de décembre n° 40) : repères
+  semis et regarnissage de la base joints aux questions de semis (fenêtres des 7 zones, méthode, arrosage de germination,
+  première tonte, engrais), réponse pour le lieu demandé, aucune marque ni aucun prix hors catalogue. À décider par Jordan :
+  test sur STA puis go prod, et essai d'un modèle plus puissant pour Bob.
