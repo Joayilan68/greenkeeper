@@ -156,3 +156,11 @@ du premier onglet).
   message allégé (seuls les articles proches de la question, 6 derniers messages, environ 4 000 jetons par question au
   lieu de 5 600), et limite gérée (nouvelle tentative après l'attente indiquée, sinon message d'attente et question non
   décomptée). Offre payante de Groq à envisager seulement quand Bob sera très sollicité.
+- 16/10/2026 — Ligne demandée par Jordan, à traiter rapidement (priorité 🔴 Urgente, date cible octobre 2026) :
+  « Bob — corrections à tester sur STA puis go prod » (repères semis et regarnissage de la base, modèle plus puissant,
+  message allégé, limite Groq gérée ; recette de décembre n° 40 et 41). À faire par Jordan : test sur STA (question des
+  Landes, arrosage, tonte, questions variées, Pilotage → Services), puis go prod.
+- 16/10/2026 — Communauté : Jordan a rejoint le groupe Facebook « Passion gazon France ». Les groupes Facebook ne sont pas
+  visibles depuis les moteurs de recherche : les 2 suivants sont à choisir par Jordan dans la recherche de groupes
+  Facebook (taille et activité). Hors Facebook, deux grandes communautés gazon (Forum Gazon, forum Gazoneo) ont leur propre
+  assistant IA : y répondre sans lien vers Mongazon360, sauf accord de leurs responsables.
