@@ -150,3 +150,9 @@ du premier onglet).
   semis et regarnissage de la base joints aux questions de semis (fenêtres des 7 zones, méthode, arrosage de germination,
   première tonte, engrais), réponse pour le lieu demandé, aucune marque ni aucun prix hors catalogue. À décider par Jordan :
   test sur STA puis go prod, et essai d'un modèle plus puissant pour Bob.
+- 16/10/2026 — Bob et l'offre gratuite de Groq (constat du jour : limite de 8 000 jetons par minute atteinte, une question
+  en demandant environ 5 600). Go de Jordan pour 3 changements, faits sur STA (recette de décembre n° 41) : Bob sur un
+  modèle plus puissant (openai/gpt-oss-120b, gratuit lui aussi, quota par minute séparé des recommandations du jour),
+  message allégé (seuls les articles proches de la question, 6 derniers messages, environ 4 000 jetons par question au
+  lieu de 5 600), et limite gérée (nouvelle tentative après l'attente indiquée, sinon message d'attente et question non
+  décomptée). Offre payante de Groq à envisager seulement quand Bob sera très sollicité.

@@ -933,14 +933,14 @@ async function handleServices(req, res) {
   const checks = await Promise.all([
     check({ name: "Groq (IA)", role: "Diagnostic photo, Bob, recommandations", cost: "Palier gratuit" }, async () => {
       if (!envOk("GROQ_API_KEY")) return { status: "ko", detail: "Clé GROQ_API_KEY absente" };
-      const { VISION_MODEL, TEXT_MODEL } = require("./aiModels.cjs");
+      const { VISION_MODEL, TEXT_MODEL, BOB_MODEL } = require("./aiModels.cjs");
       const r = await fetch("https://api.groq.com/openai/v1/models", { headers: { Authorization: `Bearer ${process.env.GROQ_API_KEY}` } });
       if (!r.ok) return { status: "ko", detail: `Clé refusée (HTTP ${r.status})` };
       const ids = new Set(((await r.json()).data || []).map(m => m.id));
-      const missing = [VISION_MODEL, TEXT_MODEL].filter(m => !ids.has(m));
+      const missing = [VISION_MODEL, TEXT_MODEL, BOB_MODEL].filter(m => !ids.has(m));
       return missing.length
         ? { status: "ko", detail: `Modèle(s) indisponible(s) chez Groq : ${missing.join(", ")} — l'IA ne fonctionne plus` }
-        : { status: "ok", detail: `Photo : ${VISION_MODEL} · Texte : ${TEXT_MODEL}` };
+        : { status: "ok", detail: `Photo : ${VISION_MODEL} · Bob : ${BOB_MODEL} · Conseils : ${TEXT_MODEL}` };
     }),
     check({ name: "Supabase", role: "Base de données (Irlande, UE)", cost: "Palier gratuit (500 Mo)" }, async () => {
       const sb = createClient(SB_URL, SB_KEY);

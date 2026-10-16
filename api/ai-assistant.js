@@ -36,6 +36,38 @@ const CATEGORIES_PRODUIT = [
   [/biostimul|stress|reprise/i, ["biostimulant"]],
 ];
 
+// Articles joints au message de Bob : les 4 plus proches de la conversation (racines communes avec le titre et
+// l'adresse) plutôt que la liste complète (environ 1 500 jetons) ; les liens de sa réponse sont ensuite vérifiés.
+const MOTS_VIDES = new Set(("les des une est qui que quoi pour avec dans mon mes son ses ton tes sur par pas aux moi toi "
+  + "plus comment quand quel quelle quels quelles faut faire peut puis cette ces elle elles ils nous vous mais tout tous "
+  + "bien tres gazon pelouse jardin").split(" "));
+const RACINES = [[/^tond|^tont/, "tonte"], [/^sem(?!ain)|^sèm/, "semis"], [/^jaun/, "jaune"], [/^taup/, "taupe"], [/^aer/, "aerer"]];
+const racines = (texte) => new Set(texte.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().split(/[^a-z]+/)
+  .filter(m => m.length >= 3 && !MOTS_VIDES.has(m)).map(m => RACINES.find(([re]) => re.test(m))?.[1] || m.slice(0, 5)));
+function articlesProches(articles, texte, n = 4) {
+  const q = racines(texte);
+  return articles.map(a => ({ a, score: [...racines(`${a.title} ${a.slug.replace(/-/g, " ")}`)].filter(r => q.has(r)).length }))
+    .filter(x => x.score > 0).sort((x, y) => y.score - x.score).slice(0, n).map(x => x.a);
+}
+// Liens vers mongazon360.fr/conseils/… : gardés seulement s'ils mènent à un article existant (sinon la rubrique)
+const verifierLiens = (texte, slugs) => texte
+  .replace(/\[([^\]]+)\]\(https:\/\/mongazon360\.fr\/conseils\/([a-z0-9-]+)\/?\)/g, (lien, titre, slug) => (slugs.has(slug) ? lien : titre))
+  .replace(/(^|[^(])https:\/\/mongazon360\.fr\/conseils\/([a-z0-9-]+)\/?/g, (lien, avant, slug) => (slugs.has(slug) ? lien : `${avant}https://mongazon360.fr/conseils`));
+
+// Appel Groq. Offre gratuite : limite de jetons par minute pour toute l'app ; si elle est atteinte et que l'attente
+// indiquée par Groq est courte, une seule nouvelle tentative.
+async function appelGroq(corps) {
+  for (let essai = 1; ; essai++) {
+    const r = await fetch("https://api.groq.com/openai/v1/chat/completions", { method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.GROQ_API_KEY}` }, body: JSON.stringify(corps) });
+    const data = await r.json();
+    const limite = r.status === 429 || data.error?.code === "rate_limit_exceeded";
+    const attente = limite && Number(/try again in ([\d.]+)s/.exec(data.error?.message || "")?.[1]);
+    if (attente && essai === 1 && attente <= 10) { await new Promise(ok => setTimeout(ok, attente * 1000 + 300)); continue; }
+    return { data, limite };
+  }
+}
+
 const prix = (n) => `${Number(n).toFixed(2).replace(".", ",")} €`;
 
 // [[produit:cle:gamme]] écrit par Bob → lien affilié Amazon (les jetons inconnus sont retirés)
@@ -119,15 +151,16 @@ module.exports = async function handler(req, res) {
 
   try {
     const { profile = {}, score = 0, month = 1 } = req.body;
-    // Seuls les derniers échanges sont transmis (coût et pertinence maîtrisés)
-    const messages = (req.body.messages || []).slice(-10)
+    // Seuls les 6 derniers messages sont transmis, réponses de Bob raccourcies (limite Groq de jetons par minute)
+    const messages = (req.body.messages || []).slice(-6)
       .filter(m => (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
-      .map(m => ({ role: m.role, content: m.content.slice(0, 2000) }));
+      .map(m => ({ role: m.role, content: m.content.slice(0, m.role === "user" ? 1000 : 600) }));
     if (!messages.length) throw new Error("Messages manquants");
 
     // Dossier de l'utilisateur construit côté serveur (profil, actions, diagnostic, parcours, météo 5 jours)
     const question = messages.filter(m => m.role === "user").slice(-1)[0]?.content || "";
-    const questionSemis = QUESTION_SEMIS.test(messages.filter(m => m.role === "user").slice(-3).map(m => m.content).join(" "));
+    const recents = messages.filter(m => m.role === "user").slice(-3).map(m => m.content).join(" ");
+    const questionSemis = QUESTION_SEMIS.test(recents);
     const cles = [...new Set(CATEGORIES_PRODUIT.filter(([re]) => re.test(question)).flatMap(([, c]) => c))];
     const categories = cles.length || !QUESTION_PRODUIT.test(question) ? cles : null; // null = catalogue complet
     const questionProduit = !categories || categories.length > 0;
@@ -185,7 +218,7 @@ L'app ne permet PAS de planifier des actions futures, de piloter un programmateu
 des produits.
 
 ARTICLES « CONSEILS GAZON » DE MONGAZON360 :
-${articles.map(a => `- ${a.title} — https://mongazon360.fr/conseils/${a.slug}`).join("\n") || "- (liste indisponible)"}
+${articlesProches(articles, recents).map(a => `- ${a.title} — https://mongazon360.fr/conseils/${a.slug}`).join("\n") || "- (aucun article ne correspond à cette question)"}
 Quand un de ces articles correspond directement à la question, termine ta réponse par UNE seule ligne :
 « 👉 Pour aller plus loin : [titre de l'article](adresse exacte ci-dessus) ». Jamais plus d'un lien, jamais
 d'autre adresse que celles de cette liste, et aucun lien si aucun article ne correspond vraiment.
@@ -235,32 +268,28 @@ STYLE :
 - Emojis avec parcimonie.
 - Slogan de l'app : "Tant qu'il y a gazon, il y a match" 🌿`;
 
-    const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type":  "application/json",
-        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
-      },
-      body: JSON.stringify({
-        model:                 require("./aiModels.cjs").TEXT_MODEL,
-        max_completion_tokens: 900,
-        temperature:           0.7,
-        // gpt-oss est un modèle de raisonnement : sans ces réglages, il peut
-        // renvoyer son raisonnement interne dans la réponse. On le désactive
-        // pour que Bob ne renvoie QUE sa réponse finale.
-        reasoning_effort:  "low",   // raisonnement minimal (réponses simples + rapides)
-        include_reasoning: false,   // ne pas inclure le raisonnement dans la réponse
-        messages: [
-          { role:"system", content: systemPrompt },
-          ...messages
-        ]
-      })
+    const { data, limite } = await appelGroq({
+      model:                 require("./aiModels.cjs").BOB_MODEL,
+      max_completion_tokens: 800,
+      temperature:           0.7,
+      // gpt-oss est un modèle de raisonnement : sans ces réglages, il peut renvoyer son raisonnement interne dans
+      // la réponse. On le réduit et on ne garde que la réponse finale.
+      reasoning_effort:  "low",
+      include_reasoning: false,
+      messages: [{ role: "system", content: systemPrompt }, ...messages],
     });
-
-    const data = await groqRes.json();
+    if (limite) {
+      // Trop de questions dans la minute (offre gratuite de Groq) : la question est rendue et Bob fait patienter
+      if (consumed?.row_id) await supabase.from("rate_limits").delete().eq("id", consumed.row_id);
+      await require("./alerting.cjs").reportServerError("Assistant IA Bob — limite Groq atteinte", new Error(data.error?.message || "rate limit"));
+      return res.json({ success: true, busy: true,
+        reply: "🌱 Je reçois beaucoup de questions en ce moment : repose-moi la tienne dans une minute (elle ne t'est pas décomptée).",
+        ...(consumed ? { remaining: consumed.remaining + 1, limit: quota.limit, period: quota.period } : {}) });
+    }
     if (data.error) throw new Error("Groq: " + (data.error.message || JSON.stringify(data.error)));
 
-    const reply = lierProduits(data.choices?.[0]?.message?.content || "Désolé, je n'ai pas pu générer une réponse.", produits);
+    const reply = verifierLiens(lierProduits(data.choices?.[0]?.message?.content || "Désolé, je n'ai pas pu générer une réponse.", produits),
+      new Set(articles.map(a => a.slug)));
     res.json({ success:true, reply, ...(consumed ? { remaining: consumed.remaining, limit: quota.limit, period: quota.period } : {}) });
 
   } catch (e) {
