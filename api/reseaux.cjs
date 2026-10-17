@@ -5,7 +5,7 @@
 // créneau du matin ou du soir. Jeton de la page sans expiration dans META_PAGE_TOKEN (Vercel) ; le compte Instagram
 // professionnel est celui relié à la page. Visuels JPEG publics (public/images/reseaux), lus par Meta au moment de publier.
 
-const META = "https://graph.facebook.com/v23.0";
+const META = "https://graph.facebook.com/v26.0";
 const IMAGE_TEST = "https://mongazon360.fr/images/conseils/regarnissage-avant-apres.jpg";
 const pause = (ms) => new Promise(r => setTimeout(r, ms));
 const jourParis = (ms = Date.now()) => new Date(ms).toLocaleDateString("sv-SE", { timeZone: "Europe/Paris" });

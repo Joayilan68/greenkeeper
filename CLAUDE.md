@@ -66,7 +66,7 @@
   `publications` (serveur uniquement, RLS sans politique), visuels JPEG sur `main` dans `public/images/reseaux/<lot>/` (lus
   par Meta sur mongazon360.fr, retirés 3 semaines après) ; Jordan valide dans Pilotage → Réseaux ; la tâche du matin (vers
   7-8 h, pour le dimanche) ou du soir (vers 16-17 h, pour lundi, mercredi et vendredi ; rattrape aussi le matin) publie les
-  validées du jour sur la page et l'Instagram (Graph API v23.0) ; jour passé : plus publiée. Jeton de la page sans expiration
+  validées du jour sur la page et l'Instagram (Graph API v26.0) ; jour passé : plus publiée. Jeton de la page sans expiration
   dans la variable Vercel `META_PAGE_TOKEN` (Sensitive, Production et Preview), saisi par Jordan : jamais dans la
   conversation ni dans le dépôt ; contrôle dans Pilotage → Services.
 - Pinterest : une épingle par article (1000 × 1500 : photo de notre pelouse, saison, titre), fichier
