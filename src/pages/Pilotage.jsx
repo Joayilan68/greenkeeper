@@ -48,6 +48,9 @@ function MiniChart({ data, valueKey, color = "#43a047", unit = "" }) {
 const virgule = (n) => String(n).replace(".", ",");
 const nomMois = (m, long) => new Date(`${m}-01T12:00:00Z`).toLocaleDateString("fr-FR",
   long ? { month: "long", year: "numeric" } : { month: "short" });
+// Taux de clic du mois : part des affichages qui ont donné un clic.
+const tauxClic = (p) => p.affichages ? Math.round((p.clics / p.affichages) * 1000) / 10 : null;
+const taux = (p) => { const t = tauxClic(p); return t === null ? "—" : `${virgule(t)} %`; };
 
 function PositionChart({ mois }) {
   const [survol, setSurvol] = useState(null);
@@ -65,7 +68,7 @@ function PositionChart({ mois }) {
   const m = survol !== null ? mois[survol] : null;
   return (
     <div>
-      <div style={{ display:"flex", alignItems:"baseline", gap:8, marginBottom:6 }}>
+      <div style={{ display:"flex", alignItems:"baseline", gap:8, marginBottom:2, flexWrap:"wrap" }}>
         <span style={{ fontSize:26, fontWeight:800, color:"#e8f5e9" }}>{virgule(der.position)}</span>
         <span style={{ fontSize:11, color:"#81c784" }}>{nomMois(der.mois, true)}{der.mois === enCours ? " (en cours)" : ""}</span>
         {ecart !== null && ecart !== 0 && (
@@ -73,6 +76,9 @@ function PositionChart({ mois }) {
             {ecart > 0 ? "▲ gagne" : "▼ perd"} {virgule(Math.abs(ecart))} place{Math.abs(ecart) >= 2 ? "s" : ""} sur un mois
           </span>
         )}
+      </div>
+      <div style={{ fontSize:11, color:"#a5d6a7", marginBottom:6, fontVariantNumeric:"tabular-nums" }}>
+        Taux de clic <b style={{ color:"#e8f5e9" }}>{taux(der)}</b> · {der.clics} clic{der.clics >= 2 ? "s" : ""} pour {der.affichages.toLocaleString("fr-FR")} affichage{der.affichages >= 2 ? "s" : ""}
       </div>
       <div style={{ position:"relative", maxWidth:420 }}>
         <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display:"block" }} role="img"
@@ -99,15 +105,15 @@ function PositionChart({ mois }) {
           <div style={{ position:"absolute", top:4, left:`${Math.min(70, Math.max(0, (x(survol) / W) * 100 - 15))}%`, background:"#0d2519",
             border:"1px solid rgba(255,255,255,0.15)", borderRadius:8, padding:"6px 8px", fontSize:10, color:"#e8f5e9", pointerEvents:"none", whiteSpace:"nowrap" }}>
             <b>{nomMois(m.mois, true)}{m.mois === enCours ? " (en cours)" : ""}</b><br />
-            Position {virgule(m.position)} · {m.affichages.toLocaleString("fr-FR")} affichages · {m.clics} clics
+            Position {virgule(m.position)} · {m.affichages.toLocaleString("fr-FR")} affichages · {m.clics} clics · {taux(m)} de clic
           </div>
         )}
       </div>
       <div style={{ marginTop:8 }}>
         {mois.slice().reverse().map(p => (
-          <div key={p.mois} style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:"#a5d6a7", padding:"2px 0", fontVariantNumeric:"tabular-nums" }}>
+          <div key={p.mois} style={{ display:"flex", justifyContent:"space-between", gap:8, flexWrap:"wrap", fontSize:10, color:"#a5d6a7", padding:"2px 0", fontVariantNumeric:"tabular-nums" }}>
             <span>{nomMois(p.mois, true)}{p.mois === enCours ? " (en cours)" : ""}</span>
-            <span>position {virgule(p.position)} · {p.affichages.toLocaleString("fr-FR")} aff. · {p.clics} clics</span>
+            <span>position {virgule(p.position)} · {p.affichages.toLocaleString("fr-FR")} aff. · {p.clics} clics · {taux(p)}</span>
           </div>
         ))}
       </div>
@@ -609,7 +615,7 @@ export default function Pilotage() {
                   ? <PositionChart mois={seo.mois} />
                   : <div style={{ fontSize:11, color:"#ffcc80" }}>Données Google indisponibles : {seo.error}</div>}
                 <div style={{ fontSize:10, color:"#4a7c5c", marginTop:6, lineHeight:1.5 }}>
-                  Toutes nos pages, d'après la Search Console (moyenne pondérée par les affichages). Plus c'est bas, mieux c'est : 1 à 3 = top 3, jusqu'à 10 = première page. Le mois en cours est provisoire. Quand de nouvelles pages apparaissent loin dans Google, la moyenne peut reculer le temps qu'elles montent.
+                  Toutes nos pages, d'après la Search Console (moyenne pondérée par les affichages). Plus c'est bas, mieux c'est : 1 à 3 = top 3, jusqu'à 10 = première page. Le mois en cours est provisoire. Quand de nouvelles pages apparaissent loin dans Google, la moyenne peut reculer le temps qu'elles montent. Le taux de clic (clics ÷ affichages) dit combien d'affichages donnent une visite : il suit mieux les progrès réels que la position, qui recule mécaniquement quand on apparaît sur de nouvelles requêtes.
                 </div>
               </div>
             )}
