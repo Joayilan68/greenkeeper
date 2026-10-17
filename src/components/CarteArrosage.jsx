@@ -10,6 +10,12 @@ export default function CarteArrosage({ arrosage, proposition, onCommande, envoi
         {arrosage.suspendu === "veille" ? " · en veille" : arrosage.suspendu ? " · programmes suspendus" : ""}
         {arrosage.enLigne === false ? " · hors ligne" : ""}
       </div>
+      {typeof arrosage.capteur?.humidite === "number" && (
+        <div style={{ fontSize:11, color:"#90caf9", marginBottom:6 }}>
+          🌱 Capteur : sol à {arrosage.capteur.humidite} % d'humidité{typeof arrosage.capteur.temperature === "number" ? `, ${String(arrosage.capteur.temperature).replace(".", ",")} °C` : ""}
+          {" "}(relevé à {new Date(arrosage.capteur.at).toLocaleTimeString("fr-FR", { hour:"2-digit", minute:"2-digit" })})
+        </div>
+      )}
       {proposition && onCommande && (
         <div style={{ marginTop:8, background:"rgba(255,255,255,0.05)", borderRadius:10, padding:"10px 12px" }}>
           <div style={{ fontSize:12, color:"#e8f5e9", marginBottom: proposition.boutons.length ? 8 : 0, lineHeight:1.5 }}>💡 {proposition.message}</div>

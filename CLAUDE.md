@@ -105,6 +105,10 @@
 - Arrosage : Gardena par la même connexion Husqvarna Group (l'API « GARDENA smart system » doit être rattachée à
   l'application Husqvarna ; 700 requêtes/semaine pour toute l'app : lecture au plus toutes les 10 min) ; Rachio par la clé
   API de l'utilisateur. Lancement d'une zone seulement le matin (heures de la base, src/lib/arrosageConnecte.js).
+- Capteurs de sol : Gardena smart Sensor (lu avec l'arrosage Gardena) ou capteur Ecowitt de la station ; règle de la base
+  (« Température Sol & ET0 ») et seuils par type de sol dans `src/lib/capteurSol.json`, partagés par l'app (calcul
+  d'arrosage) et le serveur (notification du soir, Bob). Sol humide → pas d'arrosage, sol sec → arrosage conseillé,
+  ignorés pendant un parcours de semis ; température du sol mesurée → jour 0 de la météo et fenêtre de semis du jour.
 
 ## Fichier de suivi (roadmap)
 - Google Sheet « MG360_Suivi_Projet » (premier onglet), lu en direct par Pilotage → Roadmap.

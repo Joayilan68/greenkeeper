@@ -212,8 +212,9 @@ export default function Today() {
   const plan  = MONTHLY_PLAN[month];
   // ✅ Débit depuis Supabase (profile.debit_arrosage_mmh) prioritaire sur localStorage
   const debitMmH = profile?.debit_arrosage_mmh || getDebitMmH();
+  // Parcours de semis avant consolidation : capteur de sol ignoré (la sonde mesure sous les graines, base)
   const _arrosRaw = profile && weather
-    ? calcArrosage(month, profile, weather, history, debitMmH)
+    ? calcArrosage(month, profile, phaseP && phaseP.phase < 5 ? { ...weather, sol: null } : weather, history, debitMmH)
     : null;
   // arros = résultat utilisable (null si skip ou pas calculé)
   const arros = (_arrosRaw && !_arrosRaw.skip) ? _arrosRaw : null;

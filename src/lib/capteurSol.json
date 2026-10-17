@@ -1,0 +1,14 @@
+{
+  "_source": "Base de connaissances, onglet « Température Sol & ET0 », capteurs du jardin (validé par Jordan le 17/10/2026). Humidité du sol en % (humidité volumique) : FAO-56, capacité au champ et point de flétrissement par texture ; gazon de climat tempéré, arrosage quand 40 % de l'eau utile est consommée. Utilisé par src/lib/lawn.js (app) et api/equipements.cjs (notifications, Bob).",
+  "validiteHeures": 3,
+  "pluieMaxSolSec": 3,
+  "defaut": "limoneux",
+  "seuils": {
+    "sableux":  { "sec": 11, "humide": 15 },
+    "limoneux": { "sec": 25, "humide": 32 },
+    "calcaire": { "sec": 25, "humide": 32 },
+    "argileux": { "sec": 30, "humide": 35 },
+    "humifere": { "sec": 30, "humide": 35 },
+    "compacte": { "sec": 30, "humide": 35 }
+  }
+}

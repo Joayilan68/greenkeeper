@@ -6,7 +6,7 @@
 // → cohérence parfaite garantie entre les deux pages
 // ═══════════════════════════════════════════════════════════════════════════════
 
-import { MONTHLY_PLAN, pluieUtile } from "./lawn";
+import { MONTHLY_PLAN, pluieUtile, solSecSansPluie } from "./lawn";
 import CALENDRIER from "./calendrierActions.json";
 import ZONES from "./zonesGazon.json";
 import TONTE from "./tonteGazon.json";
@@ -185,6 +185,7 @@ export const ACTIONS_PLAN = [
       return Math.max(1, Math.floor(7 / freq));
     },
     getBlocked: (w, profile) => {
+      if (solSecSansPluie(w, profile?.sol)) return { blocked: false }; // capteur : sol sec malgré la pluie de la veille
       const pluie = pluieUtile(w); // pluie du jour et de la veille
       if (pluie >= 10) return { blocked: true, raison: "Forte pluie — arrosage inutile aujourd'hui" };
       if (pluie >= 8)  return { blocked: true, raison: `Pluie ${pluie}mm (hier et aujourd'hui) — arrosage inutile aujourd'hui` };
@@ -194,8 +195,10 @@ export const ACTIONS_PLAN = [
     detail:        (plan, arros, profile, month, zone) => {
       // Arrosage automatique déclaré → on ne dit pas "arrosez" mais "réglez le programmateur"
       const prefix = hasArrosageAuto(profile) ? "Réglez votre programmateur — " : "";
+      const capteur = arros?.capteur;
       return arros
-        ? `${prefix}${arros.freq}x/sem · ${arros.mm}mm/session · ${arros.minutes}min · Précipitations déduites`
+        ? `${prefix}${arros.freq}x/sem · ${arros.mm}mm/session · ${arros.minutes}min · ${capteur?.etat === "sec"
+          ? `Sol sec mesuré (${capteur.humidite} %)` : `Précipitations déduites${capteur ? ` · sol mesuré ${capteur.humidite} %` : ""}`}`
         : `${prefix}${MONTHLY_PLAN[month]?.arrosage_freq || 2}x/semaine recommandé`;
     },
     weatherDriven: true, // délégué à calcArrosage — s'affiche seulement si arros !== null
@@ -517,6 +520,11 @@ export function buildActions(profile, weather, history, score, month, arros) {
           daysLeft: arros.joursRestants ?? 1,
           blockedReason: `Prochain arrosage dans ${arros.joursRestants ?? 1}j`,
         };
+      }
+      // Capteur de sol : sol encore humide
+      if (reason === "sol_humide") {
+        return { ...base, status: "blocked", daysLeft: null,
+          blockedReason: `Sol encore humide (${arros.capteur.humidite} % mesurés) — arrosage inutile aujourd'hui` };
       }
       // Pluie forte (≥10mm) ou précipitations suffisantes après déduction
       if (reason === "precip" || reason === "precip_partial") {

@@ -17,7 +17,8 @@ function cmAutomower(robot) {
 }
 // Onglet « Arrosage Précis » (src/lib/arrosageSol.json, partagé avec le plan annuel) : volume, fréquence et heure selon le sol
 const ARROSAGE = require("../src/lib/arrosageSol.json");
-const { mesuresStation, etatRobot, etatArrosage } = require("./equipements.cjs");
+const { mesuresStation, etatRobot, etatArrosage, mesureSol, etatSol } = require("./equipements.cjs");
+const CAPTEUR_SOL = require("../src/lib/capteurSol.json");
 
 const DIAG_MAX_JOURS = 60; // un diagnostic plus ancien ne décrit plus l'état actuel
 // Valeurs stockées sans accents → libellés lisibles
@@ -148,8 +149,18 @@ async function buildBobContext(supabase, { userId, premium, clientProfile = {}, 
   if (st) {
     const v = (x, u) => typeof x === "number" ? `${String(x).replace(".", ",")} ${u}` : null;
     const mesures = [v(st.temp, "°C"), st.humidite !== null && `humidité ${v(st.humidite, "%")}`, st.pluie_jour !== null && `pluie tombée aujourd'hui ${v(st.pluie_jour, "mm")}`,
-      st.vent !== null && `vent ${v(st.vent, "km/h")}`, st.sol_humidite !== null && `humidité du sol ${v(st.sol_humidite, "%")}`].filter(Boolean);
+      st.vent !== null && `vent ${v(st.vent, "km/h")}`].filter(Boolean);
     l.push(`Station météo connectée dans son jardin (mesure de ${new Date(st.at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" })}) : ${mesures.join(", ")} — plus fiable que les prévisions pour ce qui s'est passé aujourd'hui`);
+  }
+  // Capteur d'humidité du sol (base, « Température Sol & ET0 ») : état du sol selon les seuils de son type de sol
+  const capteur = await mesureSol(supabase, userId, st).catch(() => null);
+  if (capteur) {
+    const seuils = CAPTEUR_SOL.seuils[sol] || CAPTEUR_SOL.seuils[CAPTEUR_SOL.defaut];
+    const VERDICTS = { humide: "sol encore humide : pas d'arrosage aujourd'hui", sec: "sol sec : arrosage conseillé le matin, sans attendre l'intervalle habituel",
+      normal: "humidité normale : arrosage selon le calcul habituel" };
+    l.push(`Capteur d'humidité du sol ${capteur.source === "gardena" ? "Gardena" : "Ecowitt"} : ${String(capteur.humidite).replace(".", ",")} %`
+      + `${typeof capteur.temperature === "number" ? `, sol à ${String(capteur.temperature).replace(".", ",")} °C` : ""} — ${VERDICTS[etatSol(capteur.humidite, sol)]}`
+      + ` (pour son sol : arroser sous ${seuils.sec} %, humide dès ${seuils.humide} % ; capteur ignoré pendant un semis ou un regarnissage)`);
   }
 
   return l.map(x => `- ${x}`).join("\n");

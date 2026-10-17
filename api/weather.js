@@ -13,10 +13,11 @@
 // Tout est défensif : si le cache échoue OU si l'agrégation échoue, on
 // retombe sur un appel direct / la donnée de base. Jamais de blocage.
 // Station météo connectée (api/equipements.cjs) : ses mesures corrigent le jour 0 pour l'utilisateur
-// connecté qui en a une ; la réponse porte alors aussi « station » (dernière mesure).
+// connecté qui en a une ; la réponse porte alors aussi « station » (dernière mesure). Capteur de sol (Gardena
+// ou Ecowitt) : « sol » (humidité, température) et température du sol mesurée au jour 0.
 
 const { verifiedUserId } = require("./auth.cjs");
-const { mesuresStation, appliquerStation } = require("./equipements.cjs");
+const { mesuresStation, appliquerStation, mesureSol, appliquerSol } = require("./equipements.cjs");
 
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // sécurité : borne max même si fenêtre longue
 
@@ -126,7 +127,7 @@ function aggregateHourlyToDaily(data) {
   }
 }
 
-// Station météo connectée de l'utilisateur (jeton Clerk présent) : mesures du jardin appliquées au jour 0.
+// Station météo et capteur de sol de l'utilisateur (jeton Clerk présent) : mesures du jardin appliquées au jour 0.
 // Jamais mis en cache (le cache est partagé par coordonnées) ; sans station ou en cas d'erreur, météo inchangée.
 // Séries quotidiennes ramenées à aujourd'hui (index 0) ; la pluie de la veille reste dans daily.precip_veille
 function sansVeille(data) {
@@ -142,7 +143,9 @@ async function avecStation(req, supabase, data) {
   try {
     const userId = await verifiedUserId(req);
     const m = userId && await mesuresStation(supabase, userId);
-    return m ? { ...data, daily: appliquerStation(data.daily, m), station: m } : data;
+    const sol = userId && await mesureSol(supabase, userId, m);
+    if (!m && !sol) return data;
+    return { ...data, daily: appliquerSol(m ? appliquerStation(data.daily, m) : data.daily, sol), ...(m ? { station: m } : {}), ...(sol ? { sol } : {}) };
   } catch (e) {
     console.warn("weather.js station :", e.message);
     return data;

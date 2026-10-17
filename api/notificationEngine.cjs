@@ -16,6 +16,7 @@
 const { zoneFromLatLon, ZONES } = require("./parcoursEngine.cjs");
 const CALENDRIER = require("../src/lib/calendrierActions.json");
 const PLUIE_TONTE = require("../src/lib/tonteGazon.json").pluie;
+const CAPTEUR_SOL = require("../src/lib/capteurSol.json");
 
 // Mois où une action est proposée : même calendrier et mêmes exceptions que le plan d'entretien de l'app
 // (moisCalendrier de src/lib/planEntretien.js) — une notification ne propose jamais une action hors saison
@@ -177,6 +178,8 @@ function checkParcoursActif(parcoursState, weather, slot) {
 // besoin = et0 du jour ; pluie = precip 24h. ratio = pluie/besoin.
 //   >=0.80 → annulé (message positif)   ; 0.20-0.80 → complément ; <0.20 → arrosage
 // Si pas d'ET₀ (free ou météo indispo) → fallback simple sur precip.
+// Capteur d'humidité du sol (weather.sol, base « Température Sol & ET0 ») d'abord : sol humide → pas d'arrosage ;
+// sol sec et moins de 3 mm de pluie → arrosage demain matin.
 // ─────────────────────────────────────────────────────────────────────────────
 function decideArrosageSoir(weather, profile) {
   if (!weather) return null;
@@ -184,6 +187,19 @@ function decideArrosageSoir(weather, profile) {
   const pluie = weather.precip; // mm 24h
   // Arrosage automatique/programmateur déclaré → on parle de RÉGLER, pas d'arroser.
   const auto = hasArrosageAuto(profile);
+
+  const sol = weather.sol;
+  if (sol?.etat === "humide") {
+    return { title: "✓ Pas d'arrosage demain matin",
+      body: `Sol encore humide (${sol.humidite} % mesurés par votre capteur) : inutile d'arroser, économisez l'eau.` };
+  }
+  if (sol?.etat === "sec" && !((Number(pluie) || 0) >= CAPTEUR_SOL.pluieMaxSolSec)) {
+    return auto
+      ? { title: "💧 Ajustez votre programmateur",
+          body: `Sol sec (${sol.humidite} % mesurés par votre capteur) : programmez un arrosage demain matin tôt.` }
+      : { title: "💧 Arrosage demain matin",
+          body: `Sol sec (${sol.humidite} % mesurés par votre capteur) : arrosez demain matin tôt, moins d'évaporation et de maladies.` };
+  }
 
   // Cas premium : bilan hydrique quantitatif
   if (typeof et0 === "number" && et0 > 0) {

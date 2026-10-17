@@ -203,7 +203,10 @@ si une fonction n'existe pas, dis simplement que ce n'est pas encore possible) :
   planning et, pour un Automower à réglage électrique, d'ajuster sa hauteur de coupe à celle de la saison ; envoyée au
   robot seulement si l'utilisateur valide. Robot Mammotion (modèles sortis à partir de 2025, identifiants créés sur
   developer.mammotion.com) : état du robot, proposition de le faire rentrer à sa base quand la tonte est déconseillée ou
-  de reprendre une tonte en pause ; ses tâches programmées se suspendent dans l'app Mammotion. Connexion d'un arrosage Gardena ou Rachio : dans « Aujourd'hui »,
+  de reprendre une tonte en pause ; ses tâches programmées se suspendent dans l'app Mammotion. Capteur d'humidité du sol
+  (Gardena smart Sensor lu avec l'arrosage Gardena, ou capteur de la station Ecowitt) : sol encore humide → pas d'arrosage
+  ce jour-là ; sol sec → arrosage conseillé le matin ; seuils selon le type de sol ; ignoré pendant un semis ou un
+  regarnissage ; la température du sol mesurée sert aussi à la fenêtre de semis. Connexion d'un arrosage Gardena ou Rachio : dans « Aujourd'hui »,
   proposition d'arroser chaque zone à la dose du jour (le matin seulement), de suspendre les programmes quand la pluie suffit
   ou de mettre en veille l'hiver, envoyée seulement si l'utilisateur valide. Autres marques et caméras : pas encore disponibles.
 - Parcours guidés « Création de gazon » et « Regarnissage » : fenêtre de semis selon la température du sol, étapes

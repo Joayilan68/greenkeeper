@@ -285,10 +285,11 @@ module.exports = async function handler(req, res) {
 
       // Cache météo par zone arrondie (1 fetch/zone/exécution → protège le quota)
       const weatherCache = {}; // séries Open-Meteo par coordonnées (partagées entre utilisateurs)
-      // Utilisateurs ayant une station météo connectée : mesures du jardin appliquées au jour 0
-      const { data: stationsData } = await supabase.from("equipements").select("user_id").eq("type", "station");
-      const avecStation = new Set((stationsData || []).map(e => e.user_id));
-      const { mesuresStation, appliquerStation } = require("./equipements.cjs");
+      // Utilisateurs ayant une station météo ou un arrosage Gardena (capteur de sol) : mesures du jardin appliquées au jour 0
+      const { data: stationsData } = await supabase.from("equipements").select("user_id, type, marque").in("type", ["station", "arrosage"]);
+      const avecStation = new Set((stationsData || []).filter(e => e.type === "station").map(e => e.user_id));
+      const avecGardena = new Set((stationsData || []).filter(e => e.marque === "gardena").map(e => e.user_id));
+      const { mesuresStation, appliquerStation, mesureSol, appliquerSol, etatSol } = require("./equipements.cjs");
       async function getWeatherForUser(profile, userId) {
         const lat = profile && profile.lat;
         const lon = profile && profile.lon;
@@ -306,9 +307,14 @@ module.exports = async function handler(req, res) {
         }
         let d = weatherCache[key];
         if (!d) return null;
+        let m = null, sol = null;
         if (avecStation.has(userId)) {
-          const m = await mesuresStation(supabase, userId).catch(() => null);
+          m = await mesuresStation(supabase, userId).catch(() => null);
           if (m) d = appliquerStation(d, m);
+        }
+        if (m || avecGardena.has(userId)) {
+          sol = await mesureSol(supabase, userId, m).catch(() => null);
+          d = appliquerSol(d, sol);
         }
         // On expose au moteur la météo du JOUR (index 0)
         return {
@@ -321,6 +327,7 @@ module.exports = async function handler(req, res) {
           humidity: d.relative_humidity_2m_mean ? d.relative_humidity_2m_mean[0] : null,
           soil_temp: d.soil_temp ? d.soil_temp[0] : null,
           et0:      d.et0 ? d.et0[0] : null,
+          sol:      sol ? { humidite: sol.humidite, etat: etatSol(sol.humidite, profile?.sol) } : null,
         };
       }
 

@@ -13,9 +13,16 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useProfile } from "../lib/useProfile";
 import { useParcours } from "../lib/useParcours";
-import { calcSemences } from "../lib/lawn";
+import { calcSemences, solMesure } from "../lib/lawn";
+import { useWeather } from "../lib/WeatherContext";
 import { useGreenPoints } from "../lib/useGreenPoints";
 import { appShell, btn } from "../lib/styles";
+
+// Température du sol mesurée aujourd'hui par le capteur du jardin : elle passe avant l'estimation saisonnière (base)
+const solDuJour = (weather) => {
+  const t = solMesure(weather?.sol)?.temperature;
+  return typeof t === "number" ? { soilTemp: t, soilTempSource: "reel" } : { soilTempSource: "estime" };
+};
 
 const VERT = "#43a047";
 
@@ -23,6 +30,7 @@ export default function Parcours() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const { profile } = useProfile();
+  const { weather } = useWeather();
   const { parcours, aUnParcoursActif, analyserFenetre, analyserPhase, creerParcours, demarrerParcours, validerJalon, loading, reload } = useParcours();
 
   // Type initial depuis l'URL (?type=creation|regarnissage) posé par les boutons de Mon Gazon
@@ -54,7 +62,7 @@ export default function Parcours() {
       const verdict = await analyserFenetre({
         lat: profile?.lat,
         lon: profile?.lon,
-        soilTempSource: "estime", // sol réel = Premium ; ici estimation saisonnière
+        ...(quand === "asap" ? solDuJour(weather) : { soilTempSource: "estime" }), // sinon estimation saisonnière
         month: new Date().getMonth() + 1,
         dateSemis,
       });
@@ -305,6 +313,7 @@ function PopupVerdict({ popup, labelType, busy, onClose, onConfirmer }) {
 // sinon message de surveillance.
 // ─────────────────────────────────────────────────────────────────────────────
 function EnAttenteParcours({ parcours, profile, analyserFenetre, demarrerParcours, onRetour, onReload }) {
+  const { weather } = useWeather();
   const [verdict, setVerdict] = useState(null);
   const [busy, setBusy] = useState(false);
   const [erreur, setErreur] = useState(null);
@@ -315,7 +324,7 @@ function EnAttenteParcours({ parcours, profile, analyserFenetre, demarrerParcour
       try {
         const v = await analyserFenetre({
           lat: profile?.lat, lon: profile?.lon,
-          soilTempSource: "estime",
+          ...solDuJour(weather),
           month: new Date().getMonth() + 1,
           dateSemis: new Date().toISOString().slice(0, 10),
         });

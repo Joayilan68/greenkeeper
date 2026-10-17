@@ -80,6 +80,8 @@ export function WeatherProvider({ children, isPaid }) {
         et0:           daily.et0 ? daily.et0[i] : null,
         soil_temp:     daily.soil_temp ? daily.soil_temp[i] : null,
         soil_moisture: daily.soil_moisture ? daily.soil_moisture[i] : null,
+        // Capteur de sol du jardin (api/weather.js) : mesure du jour, lue par le calcul d'arrosage (lawn.js)
+        sol:           i === 0 ? d.sol || null : null,
       }));
       setWeek(days);
       setWeather(days[0]);

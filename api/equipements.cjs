@@ -1,7 +1,7 @@
 // api/equipements.cjs
 // Équipements connectés (table equipements, accès serveur uniquement) : clés d'accès chiffrées,
 // connecteurs Ecowitt, Netatmo et Davis (station météo), Husqvarna Automower, Gardena SILENO et Mammotion (robot tondeuse),
-// Gardena et Rachio (arrosage), application des mesures du jardin à la météo du jour.
+// Gardena et Rachio (arrosage), capteurs de sol Gardena et Ecowitt, application des mesures du jardin à la météo du jour.
 // Utilisé par api/objets.js (écran « Mes équipements »), api/weather.js (app), api/send.js
 // (notifications) et api/bobContext.cjs (Bob). Aucune donnée n'est gardée au-delà de la dernière mesure.
 
@@ -207,6 +207,34 @@ function appliquerStation(daily, m) {
   borne("temperature_2m_max", m.temp, Math.max);
   borne("windspeed_10m_max", m.vent, Math.max);
   return d;
+}
+
+// ── Capteur d'humidité du sol (base, « Température Sol & ET0 », capteurs du jardin ; seuils src/lib/capteurSol.json) ──
+// Gardena smart Sensor (dernière lecture enregistrée avec l'arrosage Gardena, sans nouvel appel : quota Gardena), sinon
+// capteur Ecowitt de la station ; une mesure de plus de 3 h est ignorée.
+const CAPTEUR_SOL = require("../src/lib/capteurSol.json");
+
+function etatSol(humidite, typeSol) {
+  if (typeof humidite !== "number") return null;
+  const s = CAPTEUR_SOL.seuils[typeSol] || CAPTEUR_SOL.seuils[CAPTEUR_SOL.defaut];
+  return humidite >= s.humide ? "humide" : humidite < s.sec ? "sec" : "normal";
+}
+
+async function mesureSol(supabase, userId, station) {
+  const recente = (at) => at && Date.now() - Date.parse(at) < CAPTEUR_SOL.validiteHeures * 3600 * 1000;
+  const { data } = await supabase.from("equipements").select("mesures").eq("user_id", userId).eq("type", "arrosage").eq("marque", "gardena").maybeSingle();
+  const c = data?.mesures?.capteur;
+  if (typeof c?.humidite === "number" && recente(c.at)) return { humidite: c.humidite, temperature: c.temperature ?? null, at: c.at, source: "gardena" };
+  if (typeof station?.sol_humidite === "number" && recente(station.at)) return { humidite: station.sol_humidite, temperature: null, at: station.at, source: "ecowitt" };
+  return null;
+}
+
+// Température du sol mesurée : remplace l'estimation du jour 0 (base : la mesure du jardin passe avant Open-Meteo)
+function appliquerSol(daily, sol) {
+  if (!daily || typeof sol?.temperature !== "number") return daily;
+  const serie = Array.isArray(daily.soil_temp) ? [...daily.soil_temp] : Array(daily.time?.length || 1).fill(null);
+  serie[0] = sol.temperature;
+  return { ...daily, soil_temp: serie };
 }
 
 // ── Husqvarna Automower Connect (developer.husqvarnagroup.cloud) ─────────────────────────────
@@ -501,7 +529,12 @@ async function lieuGardena(acces, id, nom) {
     id: v.id, nom: v.attributes?.name?.value || "Vanne", activite: val(v.attributes?.activity), etat: val(v.attributes?.state),
   }));
   const robots = services.filter(x => x.type === "MOWER").map(m => robotGardena(m, commun(m), id));
-  return { id, nom: nom || d?.data?.attributes?.name || "Mon jardin", zones, robots };
+  // Capteur smart Sensor : humidité (%) et température du sol, avec l'heure de sa dernière mesure
+  const s = services.find(x => x.type === "SENSOR")?.attributes;
+  const capteur = typeof s?.soilHumidity?.value === "number"
+    ? { humidite: s.soilHumidity.value, temperature: s.soilTemperature?.value ?? null, at: s.soilHumidity.timestamp || new Date().toISOString() }
+    : null;
+  return { id, nom: nom || d?.data?.attributes?.name || "Mon jardin", zones, robots, capteur };
 }
 
 async function jardinsGardena(acces) {
@@ -630,7 +663,7 @@ async function commandeArrosage(supabase, userId, { commande, zone, minutes }) {
 }
 
 module.exports = {
-  chiffrer, dechiffrer, stationsEcowitt, mesuresEcowitt, mesuresStation, appliquerStation,
+  chiffrer, dechiffrer, stationsEcowitt, mesuresEcowitt, mesuresStation, appliquerStation, etatSol, mesureSol, appliquerSol,
   urlConnexionNetatmo, jetonsNetatmo, stationsNetatmo, stationsDavis, mesuresDavis,
   urlConnexionHusqvarna, verifierEtat, jetonsHusqvarna, robotsHusqvarna, etatRobot, commandeRobot, revoquerHusqvarna,
   jetonMammotion, robotsMammotion,

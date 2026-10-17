@@ -1,3 +1,5 @@
+import CAPTEUR_SOL from "./capteurSol.json";
+
 // arrosage_base = besoin HEBDOMADAIRE total en mm (agronomique)
 // arrosage_freq = nombre de sessions d'arrosage par semaine recommandées
 export const MONTHLY_PLAN = {
@@ -58,11 +60,32 @@ export function getDebitMmH() {
 // Pluie qui compte pour l'arrosage du jour : celle du jour et celle de la veille (base, « Pluie et arrosage »)
 export const pluieUtile = (w) => Math.round(((Number(w?.precip) || 0) + (Number(w?.precip_veille) || 0)) * 10) / 10;
 
+// Capteur d'humidité du sol (base, « Température Sol & ET0 ») : mesure de moins de 3 h, ou null
+export const solMesure = (sol) => sol?.at && Date.now() - Date.parse(sol.at) < CAPTEUR_SOL.validiteHeures * 3600000 ? sol : null;
+
+// État du sol selon les seuils de son type : « humide », « sec », « normal », ou null sans mesure récente
+export function etatSol(sol, typeSol) {
+  const m = solMesure(sol);
+  if (typeof m?.humidite !== "number") return null;
+  const s = CAPTEUR_SOL.seuils[typeSol] || CAPTEUR_SOL.seuils[CAPTEUR_SOL.defaut];
+  return m.humidite >= s.humide ? "humide" : m.humidite < s.sec ? "sec" : "normal";
+}
+
+// Sol mesuré sec et moins de 3 mm de pluie du jour : la mesure passe avant l'estimation (intervalle, pluie de la veille)
+export const solSecSansPluie = (w, typeSol) => etatSol(w?.sol, typeSol) === "sec" && (Number(w?.precip) || 0) < CAPTEUR_SOL.pluieMaxSolSec;
+
+// Capteur de sol : sol humide → pas d'arrosage ; sol sec sans pluie → dose entière sans attendre l'intervalle habituel ;
+// entre les deux, calcul habituel. Le parcours de semis garde son propre calcul (calcArrosageSemis).
 export function calcArrosage(month, profile, weather, history = [], debitMmH = DEBIT_DEFAULT_MMH) {
   const plan = MONTHLY_PLAN[month];
   const baseHebdo = plan?.arrosage_base ?? 0;
   const freq      = plan?.arrosage_freq ?? 0;
   if (baseHebdo === 0 || freq === 0) return { skip: true, reason: "off_season" };
+
+  const sol = etatSol(weather?.sol, profile?.sol);
+  const capteur = sol ? { humidite: weather.sol.humidite, etat: sol } : null;
+  if (sol === "humide") return { skip: true, reason: "sol_humide", capteur };
+  const solSec = solSecSansPluie(weather, profile?.sol);
 
   // ── Vérification historique — intervalle adaptatif selon fréquence ────────
   // Ex : 3x/sem → intervalle min = floor(7/3) = 2 jours = 48h
@@ -79,7 +102,7 @@ export function calcArrosage(month, profile, weather, history = [], debitMmH = D
     .filter(Boolean)
     .sort((a, b) => b - a)[0];
 
-  if (dernierArrosage) {
+  if (dernierArrosage && !solSec) {
     const heuresDepuis = (maintenant - dernierArrosage) / (1000 * 60 * 60);
     if (heuresDepuis < intervalHeures) {
     const joursRestants = Math.ceil((intervalHeures - (maintenant - dernierArrosage) / (1000 * 60 * 60)) / 24);
@@ -97,8 +120,8 @@ export function calcArrosage(month, profile, weather, history = [], debitMmH = D
     if (weather.temp_max > 30)      mm *= 1.3;
     else if (weather.temp_max > 25) mm *= 1.15;
 
-    // Pluie du jour et de la veille → réduit ou annule (base, « Pluie et arrosage »)
-    const pluie = pluieUtile(weather);
+    // Pluie du jour et de la veille → réduit ou annule (base, « Pluie et arrosage ») ; sol mesuré sec : dose entière
+    const pluie = solSec ? 0 : pluieUtile(weather);
     if (pluie >= 10) return { skip: true, reason: "precip", precip: pluie };
     if (pluie > 5)   mm = Math.max(0, mm - pluie * 0.8);
     else if (pluie > 2) mm = Math.max(0, mm - pluie * 0.5);
@@ -118,7 +141,7 @@ export function calcArrosage(month, profile, weather, history = [], debitMmH = D
   // Durée = dose ÷ débit × 60 min
   const minutes = Math.round((mm / debitMmH) * 60);
 
-  return { mm, minutes, freq, debitMmH, intervalHeures };
+  return { mm, minutes, freq, debitMmH, intervalHeures, capteur };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -37,8 +37,8 @@ async function connexionGardena(supabase, userId, jetons, objet) {
   const libre = (type) => type === demande || !(actuels || []).some(e => e.type === type && e.marque !== "gardena");
   const lignes = [];
   if (avecZones && libre("arrosage")) {
-    const { id, nom, zones } = avecZones;
-    lignes.push({ type: "arrosage", appareil: id, nom, mesures: { id, nom, zones, suspendu: null } });
+    const { id, nom, zones, capteur } = avecZones;
+    lignes.push({ type: "arrosage", appareil: id, nom, mesures: { id, nom, zones, capteur, suspendu: null } });
   }
   if (avecRobot && libre("robot")) {
     const r = avecRobot.robots[0];

@@ -11,15 +11,17 @@ export function propositionsArrosage(eq, { arros, arrosSkip, horsSaison, sol, he
   if (!eq || !eq.zones?.length) return null;
   const gardena = eq.marque === "gardena";
   const pluie = ["precip", "precip_partial"].includes(arrosSkip?.reason);
+  const solHumide = arrosSkip?.reason === "sol_humide"; // capteur de sol (base, « Température Sol & ET0 »)
   if (horsSaison) return eq.suspendu === "veille" ? null
     : { message: "Hors saison d'arrosage dans ta zone.", boutons: [{ commande: "veille", label: "💤 Mettre l'arrosage en veille pour l'hiver" }] };
-  if (eq.suspendu === "veille" || (gardena && eq.suspendu && !pluie)) return {
-    message: eq.suspendu === "veille" ? "La saison d'arrosage a repris." : "La pluie est passée : les programmes peuvent reprendre.",
+  if (eq.suspendu === "veille" || (gardena && eq.suspendu && !pluie && !solHumide)) return {
+    message: eq.suspendu === "veille" ? "La saison d'arrosage a repris." : "Plus rien ne justifie la pause : les programmes peuvent reprendre.",
     boutons: [{ commande: "reprendre", label: "▶️ Reprendre les programmes" }],
   };
-  if (pluie) return eq.suspendu ? null : {
-    message: "La pluie suffit aujourd'hui : inutile que les programmes arrosent.",
-    boutons: [{ commande: "suspendre", label: gardena ? "⏸️ Suspendre les programmes" : "⏸️ Suspendre 24 h (pluie)" }],
+  if (pluie || solHumide) return eq.suspendu ? null : {
+    message: solHumide ? `Sol encore humide (${arrosSkip.capteur.humidite} % mesurés) : inutile que les programmes arrosent aujourd'hui.`
+      : "La pluie suffit aujourd'hui : inutile que les programmes arrosent.",
+    boutons: [{ commande: "suspendre", label: gardena ? "⏸️ Suspendre les programmes" : `⏸️ Suspendre 24 h${solHumide ? "" : " (pluie)"}` }],
   };
   if (!arros?.minutes) return null;
   const { debut, fin } = fenetreMatin(sol);
