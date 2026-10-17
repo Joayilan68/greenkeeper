@@ -158,15 +158,23 @@ const REGIONS_ZONE = { nord: "Nord-Pas-de-Calais", nord_est: "Alsace, Lorraine, 
   ouest: "Bretagne, Normandie, Pays de la Loire, côte atlantique", centre: "Île-de-France, Centre, Bourgogne, Auvergne-Rhône-Alpes",
   sud_ouest: "Toulouse, Gers, Landes, Pays basque", sud: "Provence, Languedoc, Côte d'Azur" };
 const jourMois = ([m, j]) => `${String(j).padStart(2, "0")}/${String(m).padStart(2, "0")}`;
+// Mois de scarification et d'aération du calendrier unique (src/lib/calendrierActions.json)
+const CAL = require("../src/lib/calendrierActions.json");
+const NOMS_MOIS = ["", "janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+const mois = (liste) => liste.map(m => NOMS_MOIS[m]).join(", ").replace(/, ([^,]*)$/, " ou $1");
 const REPERES_SEMIS = `REPÈRES SEMIS ET REGARNISSAGE (base de connaissances Mongazon360 : à suivre, ne jamais les contredire) :
 - Germination : sol d'au moins 10 °C ; au-delà de 25 à 28 °C selon la zone, il fait trop chaud. Jamais de semis en hiver
   ni sur un sol froid ou gelé : les graines pourrissent ou sont mangées par les oiseaux.
 - Fenêtres de semis optimales par zone (si l'utilisateur parle d'un autre lieu que son jardin, prends la zone de ce lieu) :
 ${Object.entries(ZONES).map(([cle, z]) => `  ${z.label}${REGIONS_ZONE[cle] ? ` (${REGIONS_ZONE[cle]})` : ""} : printemps ${jourMois(z.printemps.debutOptimal)} → `
   + `${jourMois(z.printemps.finOptimal)}, automne ${jourMois(z.automne.debutOptimal)} → ${jourMois(z.automne.finOptimal)}`).join("\n")}
-  Après la fin de la fenêtre d'automne, il est trop tard : on gratte les zones abîmées et on sème au début de la fenêtre
-  de printemps. Situe toujours ta réponse par rapport à la date du jour de son dossier : fenêtre ouverte (jusqu'à quelle
-  date), pas encore ouverte (à partir de quand) ou déjà passée (la prochaine).
+  Après la fin de la fenêtre d'automne, il est trop tard pour semer : on attend le début de la fenêtre de printemps, et c'est
+  juste avant ce semis qu'on griffe ou scarifie les zones abîmées. D'ici là : ramasser les feuilles, garder la hauteur de
+  tonte habituelle de la saison, ne pas scarifier. Situe toujours ta réponse par rapport à la date du jour de son dossier :
+  fenêtre ouverte (jusqu'à quelle date), pas encore ouverte (à partir de quand) ou déjà passée (la prochaine).
+- Calendrier Mongazon360 : scarification en ${mois(CAL.scarification.mois)} seulement (jamais sur un gazon d'ombre) ;
+  aération en ${mois(CAL.aeration.mois)} (${mois(CAL.aeration.sols.argileux)} sur sol argileux ou compacté). La tonte courte
+  (2,5 à 4 cm) se fait uniquement juste avant de semer ; le reste du temps, la hauteur de la saison de son gazon.
 - Méthode : juste avant le semis, tondre plus court que d'habitude (2,5 à 4 cm) et ramasser ; griffer ou scarifier,
   ramasser feutre et mousse ; si le sol est tassé, l'aérer aussi, mais pas le même jour que la scarification ; semer environ
   25 g/m² sur une zone clairsemée, 35 g/m² sur sol nu, en deux passages croisés ; faire descendre les graines au contact

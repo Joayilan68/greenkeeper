@@ -174,3 +174,6 @@ du premier onglet).
   engrais à 6 semaines distingué de l'interdiction de désherbant et d'anti-mousse pendant 2 mois, réponse située par
   rapport à la date du jour (fenêtre ouverte, à venir ou passée), tonte courte « juste avant le semis », aération pas le
   même jour que la scarification, arrosage en pluie fine (pas de goutte-à-goutte), plusieurs fois par jour par temps sec.
+- 17/10/2026 — 2e test de Bob sur STA (« regarnir en ce moment à Lyon ? ») : fenêtre passée bien signalée, prochaine fenêtre
+  et parcours guidé justes. Retouches : pas de scarification hors calendrier (mars, avril, septembre) ni de tonte courte
+  avant l'hiver (repères tirés du calendrier unique), parenthèse vide retirée quand un produit cité n'existe pas.

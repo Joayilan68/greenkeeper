@@ -75,7 +75,7 @@ function lierProduits(texte, produits) {
   return texte.replace(/\[\[produit:([a-zA-Z]+):([a-z]+)\]\]/g, (_, cle, tier) => {
     const p = produits[cle]?.tiers?.[tier];
     return p ? `[🛒 ${p.label} (${p.marque}, ~${prix(p.prix)})](${p.url})` : "";
-  });
+  }).replace(/\s*\((?:par ex(?:emple)?\.?|ex\.)?\s*\)/g, "");
 }
 const { createClient }      = require("@supabase/supabase-js");
 
