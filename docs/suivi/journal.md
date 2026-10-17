@@ -200,3 +200,7 @@ du premier onglet).
   n° 40 à 43. Avant la prod de décembre : accord écrit de Mammotion pour une app payante (ou connexion OAuth fournie par
   Mammotion). Suite proposée : Segway Navimow (accès développeur à demander), capteurs de sol Gardena et Ecowitt (règle
   d'arrosage à valider pour la base de connaissances), accords écrits Husqvarna Group et Netatmo.
+- 17/10/2026 — Règle « arroser selon l'humidité du sol » validée par Jordan et ajoutée à la base de connaissances (onglet
+  « Température Sol & ET0 ») : seuils FAO-56 par type de sol, sol humide → pas d'arrosage, sol sec → arrosage conseillé,
+  capteur ignoré pendant un semis, température du sol mesurée utilisée pour la journée. Codée sur STA (capteurs Gardena
+  smart Sensor et Ecowitt) ; recette de décembre n° 44 à 47. Seuils de départ à ajuster avec les premiers jardins équipés.
