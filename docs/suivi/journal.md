@@ -186,3 +186,4 @@ du premier onglet).
   et 21 validés). Go prod de Jordan pour le taux de clic de la carte « Position moyenne sur Google » (Pilotage →
   Activité) : en prod le 17/10/2026, recette « Déjà en prod (exceptions) » n° 22 ; la recette de décembre est renumérotée
   (vérifications finales n° 40 à 42).
+- 17/10/2026 — Taux de clic de Pilotage vérifié en prod par Jordan : OK (recette « Déjà en prod », n° 22 validé).
