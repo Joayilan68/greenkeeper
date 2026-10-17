@@ -164,6 +164,11 @@ du premier onglet).
   visibles depuis les moteurs de recherche : les 2 suivants sont à choisir par Jordan dans la recherche de groupes
   Facebook (taille et activité). Hors Facebook, deux grandes communautés gazon (Forum Gazon, forum Gazoneo) ont leur propre
   assistant IA : y répondre sans lien vers Mongazon360, sauf accord de leurs responsables.
+- 16/10/2026 — Pilotage → Activité : ajout du taux de clic (clics ÷ affichages) dans la carte « Position moyenne sur
+  Google ». Demande de Jordan après constat d'une position moyenne de 14 en octobre : la position moyenne recule
+  mécaniquement quand le site apparaît sur de nouvelles requêtes, le taux de clic suit mieux les progrès réels.
+  Aucune donnée nouvelle à récupérer (clics et affichages déjà renvoyés par `api/searchConsole.cjs`), calcul côté app.
+  Affiché sous la position, dans la bulle au toucher et sur chaque ligne du tableau des mois. Recette de décembre n° 42.
 - 17/10/2026 — Test de Bob sur STA par Jordan (regarnir dans les Landes, puis à Lyon) : zones, dates, température du sol,
   dose, arrosage de germination, première tonte et produit du catalogue désormais justes. Petites retouches faites sur STA :
   engrais à 6 semaines distingué de l'interdiction de désherbant et d'anti-mousse pendant 2 mois, réponse située par
