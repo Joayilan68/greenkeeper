@@ -182,3 +182,7 @@ du premier onglet).
   Ligne « Bob — corrections à tester sur STA puis go prod » terminée. Le taux de clic de Pilotage reste sur STA jusqu'en
   décembre. Recette : les 2 lignes de Bob passent dans « Déjà en prod (exceptions) » (n° 20 et 21) ; le taux de clic
   devient le n° 40 de la recette de décembre.
+- 17/10/2026 — Test de Bob en prod par Jordan : OK, et Groq OK dans Pilotage → Services (recette « Déjà en prod », n° 20
+  et 21 validés). Go prod de Jordan pour le taux de clic de la carte « Position moyenne sur Google » (Pilotage →
+  Activité) : en prod le 17/10/2026, recette « Déjà en prod (exceptions) » n° 22 ; la recette de décembre est renumérotée
+  (vérifications finales n° 40 à 42).
