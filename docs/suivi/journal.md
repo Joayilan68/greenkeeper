@@ -177,3 +177,8 @@ du premier onglet).
 - 17/10/2026 — 2e test de Bob sur STA (« regarnir en ce moment à Lyon ? ») : fenêtre passée bien signalée, prochaine fenêtre
   et parcours guidé justes. Retouches : pas de scarification hors calendrier (mars, avril, septembre) ni de tonte courte
   avant l'hiver (repères tirés du calendrier unique), parenthèse vide retirée quand un produit cité n'existe pas.
+- 17/10/2026 — Go prod de Jordan pour les corrections de Bob, et uniquement elles : repères semis et regarnissage de la base
+  (avec les retouches des 2 tests sur STA), modèle plus puissant (openai/gpt-oss-120b), message allégé, limite Groq gérée.
+  Ligne « Bob — corrections à tester sur STA puis go prod » terminée. Le taux de clic de Pilotage reste sur STA jusqu'en
+  décembre. Recette : les 2 lignes de Bob passent dans « Déjà en prod (exceptions) » (n° 20 et 21) ; le taux de clic
+  devient le n° 40 de la recette de décembre.
