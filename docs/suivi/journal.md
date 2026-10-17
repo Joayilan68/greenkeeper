@@ -209,3 +209,8 @@ du premier onglet).
   de notre pelouse, liens suivis dans Pilotage → Activité) ; Jordan garde ce qui lui plaît et programme dans Meta Business
   Suite. Premier lot : 7 publications du 19 au 31/10. Bob dans les groupes Facebook reste géré par Jordan. Community manager
   à envisager en février si les réseaux amènent des inscrits.
+- 17/10/2026 — Règles des lots de comm fixées par Jordan : la page Facebook et l'Instagram de Mongazon360 ont leurs
+  publications jusqu'au 31/10 inclus (lot du 17/10 : n° 3 à 7 gardés ; 19 et 21/10 déjà programmés par Jordan avec un autre
+  outil). Désormais, chaque samedi matin, la tâche « Lot de comm du samedi » livre la semaine qui commence 8 jours plus tard
+  (4 publications : lundi, mercredi, vendredi 18 h 30, dimanche 10 h) ; Jordan programme dans Meta Business Suite le samedi.
+  Premier lot automatique : samedi 24/10 pour la semaine du 1er au 7 novembre.

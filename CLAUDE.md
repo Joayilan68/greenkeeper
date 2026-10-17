@@ -55,6 +55,13 @@
   `index.html` (site revendiqué).
 - Réseaux sociaux : profils officiels dans `src/lib/reseaux.js` (pied de page de l'accueil et des pages Conseils,
   profils déclarés à Google), même liste dans les données structurées de `index.html`.
+- Lots de comm (page Facebook et Instagram de Mongazon360, décision de Jordan du 17/10/2026) : chaque samedi matin, la tâche
+  programmée « Lot de comm du samedi » prépare la semaine qui commence 8 jours plus tard (du dimanche au samedi) :
+  4 publications (lundi, mercredi, vendredi 18 h 30, dimanche 10 h), texte Facebook avec un lien suivi
+  (`utm_source=facebook`), légende Instagram (lien en bio, hashtags), visuel 1080 × 1350 (photo de notre pelouse ou Bob, sans
+  métadonnées). Livrés sur la page « Lots de comm Mongazon360 » (même lien chaque semaine) et en fichiers dans la conversation ;
+  Jordan programme dans Meta Business Suite le samedi. Conseils tirés des articles et de la base, fonctions de l'app en prod
+  uniquement. Bob dans les groupes Facebook reste géré par Jordan.
 - Pinterest : une épingle par article (1000 × 1500 : photo de notre pelouse, saison, titre), fichier
   `public/images/pinterest/<slug>.jpg` lu par Pinterest : ne jamais le supprimer ni le renommer. Nouvel article : créer
   son épingle au même format et l'importer dans Pinterest (fichier .csv), lien vers l'article suivi de
