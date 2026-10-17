@@ -204,3 +204,8 @@ du premier onglet).
   « Température Sol & ET0 ») : seuils FAO-56 par type de sol, sol humide → pas d'arrosage, sol sec → arrosage conseillé,
   capteur ignoré pendant un semis, température du sol mesurée utilisée pour la journée. Codée sur STA (capteurs Gardena
   smart Sensor et Ecowitt) ; recette de décembre n° 44 à 47. Seuils de départ à ajuster avec les premiers jardins équipés.
+- 17/10/2026 — Réseaux sociaux : pour libérer du temps à Jordan, Claude prépare les publications de la page Facebook et du
+  compte Instagram de Mongazon360 par lots de 2 semaines (textes conformes à la base, visuels 1080 × 1350 tirés des photos
+  de notre pelouse, liens suivis dans Pilotage → Activité) ; Jordan garde ce qui lui plaît et programme dans Meta Business
+  Suite. Premier lot : 7 publications du 19 au 31/10. Bob dans les groupes Facebook reste géré par Jordan. Community manager
+  à envisager en février si les réseaux amènent des inscrits.
