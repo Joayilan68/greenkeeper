@@ -972,6 +972,11 @@ module.exports = async function handler(req, res) {
         } catch (e) { await require("./alerting.cjs").reportServerError("IA Groq indisponible", e); }
       }
 
+      // ── Publications Facebook et Instagram validées dans Pilotage, au créneau prévu (reseaux.cjs) ──
+      let publications = 0;
+      try { publications = await require("./reseaux.cjs").publierCreneau(supabase, slot); }
+      catch (e) { await require("./alerting.cjs").reportServerError("Publications réseaux en échec", e, { "Créneau": slot }); }
+
       // ── Veille de marque — créneau SOIR : noms de domaine proches de Mongazon360 (veilleMarque.cjs) ──
       if (slot === "soir") {
         try { await require("./veilleMarque.cjs").veilleDomaines(today); }
@@ -989,8 +994,8 @@ module.exports = async function handler(req, res) {
       }
       await alerting.setStatus(`cron_${slot}`, { date: today, at: new Date().toISOString(), pushSent, emailSent, emailFallbackSent, photosPurgees });
 
-      console.log(`[CRON ${slot}] reminders:`, remindersData?.length || 0, "pushSent:", pushSent, "emailSent:", emailSent, "emailFallbackSent:", emailFallbackSent, "skipped:", skipped, "parcoursSent:", parcoursSent, "parcoursTermines:", parcoursTermines, "trialRelances:", trialRelances, "baselineSent:", baselineSent, "premiumOffertsExpires:", premiumOffertsExpires, "offreEmails:", offreEmails, "relancesPush:", relancesPush, "relancesEmail:", relancesEmail, "relancesBob:", relancesBob, "photosPurgees:", photosPurgees, "parrainsRecompenses:", parrainsRecompenses, "robotsRelances:", robotsRelances);
-      return res.json({ success: true, date: today, slot, pushSent, emailSent, emailFallbackSent, skipped, parcoursSent, parcoursTermines, trialRelances, baselineSent, premiumOffertsExpires, offreEmails, relancesPush, relancesEmail, relancesBob, photosPurgees, parrainsRecompenses, robotsRelances, reminders: remindersData?.length || 0 });
+      console.log(`[CRON ${slot}] reminders:`, remindersData?.length || 0, "pushSent:", pushSent, "emailSent:", emailSent, "emailFallbackSent:", emailFallbackSent, "skipped:", skipped, "parcoursSent:", parcoursSent, "parcoursTermines:", parcoursTermines, "trialRelances:", trialRelances, "baselineSent:", baselineSent, "premiumOffertsExpires:", premiumOffertsExpires, "offreEmails:", offreEmails, "relancesPush:", relancesPush, "relancesEmail:", relancesEmail, "relancesBob:", relancesBob, "photosPurgees:", photosPurgees, "parrainsRecompenses:", parrainsRecompenses, "robotsRelances:", robotsRelances, "publications:", publications);
+      return res.json({ success: true, date: today, slot, pushSent, emailSent, emailFallbackSent, skipped, parcoursSent, parcoursTermines, trialRelances, baselineSent, premiumOffertsExpires, offreEmails, relancesPush, relancesEmail, relancesBob, photosPurgees, parrainsRecompenses, robotsRelances, publications, reminders: remindersData?.length || 0 });
     } catch (e) {
       await require("./alerting.cjs").reportServerError("Tâche planifiée en échec", e, { "Créneau": req.query.slot || "matin" });
       return res.status(500).json({ error: e.message });

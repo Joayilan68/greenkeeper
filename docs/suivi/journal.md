@@ -214,3 +214,10 @@ du premier onglet).
   outil). Désormais, chaque samedi matin, la tâche « Lot de comm du samedi » livre la semaine qui commence 8 jours plus tard
   (4 publications : lundi, mercredi, vendredi 18 h 30, dimanche 10 h) ; Jordan programme dans Meta Business Suite le samedi.
   Premier lot automatique : samedi 24/10 pour la semaine du 1er au 7 novembre.
+- 17/10/2026 — Publication automatique des lots de comm (go de Jordan : « Lets go pour automatisation de cette tâche ») : faite
+  sur STA. Chaque samedi, le lot arrive dans Pilotage → Réseaux ; Jordan valide (une par une ou tout le lot) ; la tâche du
+  matin ou du soir publie les validées du jour sur la page Facebook et l'Instagram de Mongazon360 (API de Meta, gratuite).
+  Créneaux fixés par les tâches planifiées : dimanche vers 7-8 h, lundi, mercredi et vendredi vers 16-17 h (au lieu de
+  10 h et 18 h 30). Guide de connexion Meta envoyé à Jordan (app Meta, clé META_PAGE_TOKEN saisie par Jordan dans Vercel).
+  Pour publier automatiquement dès novembre : go prod de Jordan et accord pour pousser chaque samedi les visuels de la
+  semaine sur main (public/images/reseaux). Recette de décembre n° 48 à 51 (vérifications finales renumérotées 52 à 54).
