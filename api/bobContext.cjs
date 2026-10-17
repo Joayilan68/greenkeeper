@@ -142,4 +142,44 @@ async function buildBobContext(supabase, { userId, premium, clientProfile = {}, 
   return l.map(x => `- ${x}`).join("\n");
 }
 
-module.exports = { buildBobContext };
+// Repères semis et regarnissage de la base de connaissances, joints au message de Bob quand la conversation parle de
+// semis (api/ai-assistant.js) : fenêtres optimales par zone (src/lib/zonesGazon.json, comme les parcours guidés),
+// méthode, arrosage de germination, première tonte et engrais. Bob ne doit jamais inventer une période ou une dose.
+const REGIONS_ZONE = { nord: "Nord-Pas-de-Calais", nord_est: "Alsace, Lorraine, Champagne, Franche-Comté",
+  ouest: "Bretagne, Normandie, Pays de la Loire, côte atlantique", centre: "Île-de-France, Centre, Bourgogne, Auvergne-Rhône-Alpes",
+  sud_ouest: "Toulouse, Gers, Landes, Pays basque", sud: "Provence, Languedoc, Côte d'Azur" };
+const jourMois = ([m, j]) => `${String(j).padStart(2, "0")}/${String(m).padStart(2, "0")}`;
+// Mois de scarification et d'aération du calendrier unique (src/lib/calendrierActions.json)
+const CAL = require("../src/lib/calendrierActions.json");
+const NOMS_MOIS = ["", "janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+const mois = (liste) => liste.map(m => NOMS_MOIS[m]).join(", ").replace(/, ([^,]*)$/, " ou $1");
+const REPERES_SEMIS = `REPÈRES SEMIS ET REGARNISSAGE (base de connaissances Mongazon360 : à suivre, ne jamais les contredire) :
+- Germination : sol d'au moins 10 °C ; au-delà de 25 à 28 °C selon la zone, il fait trop chaud. Jamais de semis en hiver
+  ni sur un sol froid ou gelé : les graines pourrissent ou sont mangées par les oiseaux.
+- Fenêtres de semis optimales par zone (si l'utilisateur parle d'un autre lieu que son jardin, prends la zone de ce lieu) :
+${Object.entries(ZONES).map(([cle, z]) => `  ${z.label}${REGIONS_ZONE[cle] ? ` (${REGIONS_ZONE[cle]})` : ""} : printemps ${jourMois(z.printemps.debutOptimal)} → `
+  + `${jourMois(z.printemps.finOptimal)}, automne ${jourMois(z.automne.debutOptimal)} → ${jourMois(z.automne.finOptimal)}`).join("\n")}
+  Après la fin de la fenêtre d'automne, il est trop tard pour semer : on attend le début de la fenêtre de printemps, et c'est
+  juste avant ce semis qu'on griffe ou scarifie les zones abîmées. D'ici là : ramasser les feuilles, garder la hauteur de
+  tonte habituelle de la saison, ne pas scarifier. Situe toujours ta réponse par rapport à la date du jour de son dossier :
+  fenêtre ouverte (jusqu'à quelle date), pas encore ouverte (à partir de quand) ou déjà passée (la prochaine).
+- Calendrier Mongazon360 : scarification en ${mois(CAL.scarification.mois)} seulement (jamais sur un gazon d'ombre) ;
+  aération en ${mois(CAL.aeration.mois)} (${mois(CAL.aeration.sols.argileux)} sur sol argileux ou compacté). La tonte courte
+  (2,5 à 4 cm) se fait uniquement juste avant de semer ; le reste du temps, la hauteur de la saison de son gazon.
+- Méthode : juste avant le semis, tondre plus court que d'habitude (2,5 à 4 cm) et ramasser ; griffer ou scarifier,
+  ramasser feutre et mousse ; si le sol est tassé, l'aérer aussi, mais pas le même jour que la scarification ; semer environ
+  25 g/m² sur une zone clairsemée, 35 g/m² sur sol nu, en deux passages croisés ; faire descendre les graines au contact
+  du sol au râteau léger, sans les enterrer ; rouler légèrement ; au plus un voile de terreau fin, sans ensevelir le gazon
+  en place.
+- Arrosage de germination : surface humide en permanence pendant environ 3 semaines, en pluie fine (pas de goutte-à-goutte),
+  chaque jour, et plusieurs petits arrosages par jour par temps sec et ensoleillé, sauf s'il pleut assez (exception à la
+  règle « en profondeur 2 à 3 fois par semaine »).
+- Levée : 7 à 10 jours pour le ray-grass, 10 à 21 jours pour les fétuques, jusqu'à 3 semaines pour le pâturin.
+- Première tonte : quand l'herbe nouvelle atteint 8 à 10 cm, à environ 6 cm, lame affûtée, jamais plus d'un tiers de la
+  hauteur ; jamais sous 5 cm pendant 45 jours.
+- Ni désherbant ni anti-mousse sur les zones semées pendant au moins 2 mois. L'engrais, lui, se met environ 6 semaines
+  après le semis (engrais « spécial semis »), pas avant.
+- L'app accompagne tout cela avec les parcours guidés « Regarnissage » et « Création de gazon » : fenêtre de semis
+  calculée avec la température du sol de sa commune, puis étapes jour par jour.`;
+
+module.exports = { buildBobContext, REPERES_SEMIS };

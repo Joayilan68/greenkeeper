@@ -1,6 +1,9 @@
 {
   "regions": ["dub1"],
   "functions": {
+    "api/ai-assistant.js": {
+      "maxDuration": 30
+    },
     "api/analyze-lawn.js": {
       "maxDuration": 30
     },
