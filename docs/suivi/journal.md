@@ -187,3 +187,9 @@ du premier onglet).
   Activité) : en prod le 17/10/2026, recette « Déjà en prod (exceptions) » n° 22 ; la recette de décembre est renumérotée
   (vérifications finales n° 40 à 42).
 - 17/10/2026 — Taux de clic de Pilotage vérifié en prod par Jordan : OK (recette « Déjà en prod », n° 22 validé).
+- 17/10/2026 — Influenceurs : constat de Jordan, les créateurs 100 % gazon voient l'app comme un concurrent (refus de
+  Dr. Gazon). Décision : priorité aux créateurs jardin généralistes avec une partie pelouse et aux créateurs robots et
+  jardin connecté. Pistes proposées, à valider par Jordan : Bob, mascotte de la marque, comme visage sur les réseaux
+  (appel à l'action : diagnostic gratuit sans inscription), marques connectées (Husqvarna, Gardena) en partenaires
+  techniques plutôt qu'en envoi de matériel, revendeurs-installateurs de robots, pros prescripteurs, programme créateurs
+  en libre accès quand les codes créateurs seront en prod.
