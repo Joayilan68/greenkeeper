@@ -193,3 +193,10 @@ du premier onglet).
   (appel à l'action : diagnostic gratuit sans inscription), marques connectées (Husqvarna, Gardena) en partenaires
   techniques plutôt qu'en envoi de matériel, revendeurs-installateurs de robots, pros prescripteurs, programme créateurs
   en libre accès quand les codes créateurs seront en prod.
+- 17/10/2026 — Priorité de Jordan : agrandir la liste des équipements connectables (robots, arrosage, stations) avant de
+  proposer quoi que ce soit aux marques. Pas de rendez-vous réguliers en plus pour Bob (temps de Jordan) : Bob continue de
+  répondre dans les groupes Facebook. Fait sur STA : robot Mammotion (API publique, identifiants personnels créés sur
+  developer.mammotion.com, modèles sortis à partir de 2025) et station Davis (WeatherLink v2) ; recette de décembre
+  n° 40 à 43. Avant la prod de décembre : accord écrit de Mammotion pour une app payante (ou connexion OAuth fournie par
+  Mammotion). Suite proposée : Segway Navimow (accès développeur à demander), capteurs de sol Gardena et Ecowitt (règle
+  d'arrosage à valider pour la base de connaissances), accords écrits Husqvarna Group et Netatmo.
