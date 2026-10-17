@@ -23,10 +23,16 @@ async function appelMeta(chemin, params = {}, methode = "GET") {
   return d;
 }
 
-// Page et compte Instagram professionnel reliés au jeton
+// Page et compte Instagram professionnel reliés au jeton ; une clé de compte Facebook au lieu de celle de la page est
+// signalée avec le nom du compte
 async function compteMeta() {
-  const d = await appelMeta("me", { fields: "id,name,instagram_business_account{id,username}" });
-  return { pageId: d.id, page: d.name, instagramId: d.instagram_business_account?.id || null, instagram: d.instagram_business_account?.username || null };
+  const moi = await appelMeta("me", { fields: "id,name" });
+  const d = await appelMeta("me", { fields: "instagram_business_account{id,username}" }).catch((e) => {
+    throw /nonexisting field/.test(e.message)
+      ? new Error(`La clé META_PAGE_TOKEN est celle du compte Facebook « ${moi.name} », pas celle de la page : reprendre la valeur access_token de la page dans la réponse de me/accounts`)
+      : e;
+  });
+  return { pageId: moi.id, page: moi.name, instagramId: d.instagram_business_account?.id || null, instagram: d.instagram_business_account?.username || null };
 }
 
 async function publierFacebook(compte, pub) {
