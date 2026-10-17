@@ -164,3 +164,8 @@ du premier onglet).
   visibles depuis les moteurs de recherche : les 2 suivants sont à choisir par Jordan dans la recherche de groupes
   Facebook (taille et activité). Hors Facebook, deux grandes communautés gazon (Forum Gazon, forum Gazoneo) ont leur propre
   assistant IA : y répondre sans lien vers Mongazon360, sauf accord de leurs responsables.
+- 17/10/2026 — Test de Bob sur STA par Jordan (regarnir dans les Landes, puis à Lyon) : zones, dates, température du sol,
+  dose, arrosage de germination, première tonte et produit du catalogue désormais justes. Petites retouches faites sur STA :
+  engrais à 6 semaines distingué de l'interdiction de désherbant et d'anti-mousse pendant 2 mois, réponse située par
+  rapport à la date du jour (fenêtre ouverte, à venir ou passée), tonte courte « juste avant le semis », aération pas le
+  même jour que la scarification, arrosage en pluie fine (pas de goutte-à-goutte), plusieurs fois par jour par temps sec.
