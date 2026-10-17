@@ -5,9 +5,12 @@
 //   POST { action: "stations", applicationKey, apiKey }        → stations du compte Ecowitt
 //   POST { action: "ajouter", applicationKey, apiKey, mac, nom } → connexion de la station (clés chiffrées)
 //   POST { action: "netatmo" }                → adresse de connexion au compte Netatmo (station météo)
+//   POST { action: "davis_stations", apiKey, apiSecret }          → stations du compte WeatherLink (Davis)
+//   POST { action: "davis", apiKey, apiSecret, station, nom }     → connexion de la station Davis (clés chiffrées)
 //   POST { action: "husqvarna" }              → adresse de connexion au compte Husqvarna
+//   POST { action: "mammotion", clientId, clientSecret }          → connexion du robot Mammotion (identifiants chiffrés)
 //   POST { action: "robot", commande, niveau } → commande validée par l'utilisateur (repos_journee, repos_long, reprendre ;
-//                                               hauteur avec niveau 1-9 pour un Automower)
+//                                               hauteur avec niveau 1-9 pour un Automower ; rentrer, reprendre pour un Mammotion)
 //   POST { action: "gardena" }                → adresse de connexion au compte Husqvarna Group pour l'arrosage Gardena
 //   POST { action: "gardena_robot" }          → idem pour le robot Gardena SILENO
 //   POST { action: "rachio_programmateurs", apiKey } → programmateurs du compte Rachio
@@ -110,7 +113,8 @@ module.exports = async function handler(req, res) {
       return res.json({ equipements: data || [], station, robot, arrosage });
     }
 
-    const { action, applicationKey, apiKey, mac, nom, id, commande, programmateur, zone, minutes, niveau } = req.body || {};
+    const { action, applicationKey, apiKey, apiSecret, mac, station, nom, id, commande, programmateur, zone, minutes, niveau,
+      clientId, clientSecret } = req.body || {};
     const cles = { applicationKey: String(applicationKey || "").trim(), apiKey: String(apiKey || "").trim() };
 
     if (action === "stations") {
@@ -142,6 +146,39 @@ module.exports = async function handler(req, res) {
     if (action === "netatmo") {
       if (!process.env.NETATMO_CLIENT_ID) return res.status(503).json({ error: "Connexion Netatmo pas encore disponible" });
       return res.json({ url: E.urlConnexionNetatmo(userId, adresseRetour(req)) });
+    }
+
+    if (action === "davis_stations" || action === "davis") {
+      const davis = { apiKey: String(apiKey || "").trim(), apiSecret: String(apiSecret || "").trim() };
+      if (!davis.apiKey || !davis.apiSecret) return res.status(400).json({ error: "API Key v2 et API Secret requis" });
+      let mesures;
+      try {
+        if (action === "davis_stations") return res.json({ stations: await E.stationsDavis(davis) });
+        if (!station) return res.status(400).json({ error: "Station requise" });
+        mesures = await E.mesuresDavis({ ...davis, station: String(station) }); // vérifie l'accès avant d'enregistrer
+      } catch (e) { return res.status(400).json({ error: e.message }); }
+      const { error } = await supabase.from("equipements").upsert({
+        user_id: userId, type: "station", marque: "davis", appareil: String(station), nom: String(nom || "Ma station").slice(0, 60),
+        secret: E.chiffrer(davis), statut: "connecte", erreur: null, mesures, mesures_at: new Date().toISOString(),
+      }, { onConflict: "user_id,type" });
+      if (error) throw error;
+      return res.json({ ok: true });
+    }
+
+    if (action === "mammotion") {
+      let jeton, robots;
+      try {
+        jeton = await E.jetonMammotion({ clientId: String(clientId || "").trim(), clientSecret: String(clientSecret || "").trim() });
+        robots = await E.robotsMammotion(jeton.access);
+      } catch (e) { return res.status(400).json({ error: e.message }); }
+      if (!robots.length) return res.status(400).json({ error: "Aucun robot sur ce compte Mammotion (l'accès ne couvre que les modèles sortis depuis 2025)" });
+      const robot = robots[0]; // un robot par compte dans l'app pour l'instant
+      const { error } = await supabase.from("equipements").upsert({
+        user_id: userId, type: "robot", marque: "mammotion", appareil: robot.id, nom: robot.nom.slice(0, 60),
+        secret: E.chiffrer(jeton), statut: "connecte", erreur: null, mesures: robot, mesures_at: new Date().toISOString(),
+      }, { onConflict: "user_id,type" });
+      if (error) throw error;
+      return res.json({ ok: true });
     }
 
     if (action === "rachio_programmateurs" || action === "rachio") {

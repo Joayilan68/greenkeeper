@@ -136,10 +136,14 @@ async function buildBobContext(supabase, { userId, premium, clientProfile = {}, 
     + `${arrosage.suspendu === "veille" ? ", en veille" : arrosage.suspendu ? ", programmes suspendus" : ""} — pour lancer une zone ou suspendre, l'utilisateur valide la proposition dans « Aujourd'hui »`);
   if (robot) {
     const ACT = { mowing: "en train de tondre", going_home: "rentre à sa base", charging: "en charge", leaving: "part tondre",
-      parked_in_cs: "garé à sa base", stopped_in_garden: "arrêté sur la pelouse" };
-    l.push(`Robot tondeuse ${robot.marque === "gardena" ? "Gardena" : "Husqvarna"} connecté (${robot.nom}${robot.modele ? `, ${robot.modele}` : ""}) : ${robot.erreur ? `en erreur (code ${robot.erreur})` : ACT[robot.activite] || robot.etat || "état inconnu"}`
+      parked_in_cs: "garé à sa base", stopped_in_garden: "arrêté sur la pelouse", standby: "à l'arrêt",
+      mapping: "en train de cartographier la pelouse", updating: "en mise à jour" };
+    const MARQUES = { husqvarna: "Husqvarna", gardena: "Gardena", mammotion: "Mammotion" };
+    l.push(`Robot tondeuse ${MARQUES[robot.marque]} connecté (${robot.nom}${robot.modele ? `, ${robot.modele}` : ""}) : ${robot.erreur ? `en erreur${robot.erreur === true ? "" : ` (code ${robot.erreur})`}` : ACT[robot.activite] || robot.etat || "état inconnu"}`
       + `${robot.force === "force_park" || robot.restriction === "park_override" ? ", mis au repos" : ""}${typeof robot.hauteur === "number" ? `, hauteur de coupe au niveau ${robot.hauteur} sur 9${cmAutomower(robot) !== null ? ` (${String(cmAutomower(robot)).replace(".", ",")} cm)` : ""}` : ""}`
-      + " — pour le mettre au repos ou le relancer, l'utilisateur valide la proposition dans « Aujourd'hui »");
+      + (robot.marque === "mammotion"
+        ? " — pour le faire rentrer à sa base ou reprendre une tonte en pause, l'utilisateur valide la proposition dans « Aujourd'hui » ; ses tâches programmées se suspendent dans l'app Mammotion"
+        : " — pour le mettre au repos ou le relancer, l'utilisateur valide la proposition dans « Aujourd'hui »"));
   }
   if (st) {
     const v = (x, u) => typeof x === "number" ? `${String(x).replace(".", ",")} ${u}` : null;

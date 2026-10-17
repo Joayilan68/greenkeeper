@@ -86,6 +86,9 @@
 - Netatmo (station) : connexion OAuth (accès en lecture `read_station`), adresse de retour `https://<domaine>/api/objets`
   à déclarer dans l'application Netatmo (dev.netatmo.com) ; variables Vercel `NETATMO_CLIENT_ID` et `NETATMO_CLIENT_SECRET`
   (Production et Preview). Mesures : module extérieur, pluviomètre (pluie depuis minuit), anémomètre ; ignorées au-delà de 3 h.
+- Davis (station) : « API Key v2 » et secret créés par l'utilisateur sur weatherlink.com (API WeatherLink v2), chiffrés ;
+  relevé des capteurs extérieurs (ISS) d'un WeatherLink Live ou d'une console WeatherLink, toutes les 15 min avec l'offre
+  gratuite ; ignoré au-delà de 3 h.
 - Husqvarna (robot) : connexion OAuth, adresse de retour `https://<domaine>/api/objets` à déclarer dans l'application
   Husqvarna (PROD et alias Staging) ; variables Vercel `HUSQVARNA_CLIENT_ID` (Application key) et
   `HUSQVARNA_CLIENT_SECRET`. Mode Proposition : aucune commande envoyée au robot sans validation de l'utilisateur.
@@ -95,6 +98,10 @@
 - Robot Gardena SILENO : même connexion Husqvarna Group (une connexion Gardena enregistre l'arrosage et le robot du
   compte, jetons partagés : renouvelés et révoqués ensemble). Gardena n'a pas de repos d'une durée donnée : « repos jusqu'à
   demain matin » = repos jusqu'à nouvel ordre puis planning relancé par la tâche du matin (`reprendreRobotsGardena`).
+- Robot Mammotion : identifiants personnels (client_id, client_secret) créés par l'utilisateur sur developer.mammotion.com,
+  chiffrés, jeton d'une heure redemandé avec eux ; l'API ne couvre que les modèles sortis à partir de 2025 et ne sait ni
+  mettre au repos pour une durée ni suspendre les tâches programmées : proposition de retour à la base quand la tonte est
+  déconseillée, ou de reprise d'une tonte en pause.
 - Arrosage : Gardena par la même connexion Husqvarna Group (l'API « GARDENA smart system » doit être rattachée à
   l'application Husqvarna ; 700 requêtes/semaine pour toute l'app : lecture au plus toutes les 10 min) ; Rachio par la clé
   API de l'utilisateur. Lancement d'une zone seulement le matin (heures de la base, src/lib/arrosageConnecte.js).

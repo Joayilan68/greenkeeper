@@ -1,7 +1,7 @@
 // api/equipements.cjs
 // Équipements connectés (table equipements, accès serveur uniquement) : clés d'accès chiffrées,
-// connecteurs Ecowitt et Netatmo (station météo), Husqvarna Automower et Gardena SILENO (robot tondeuse), Gardena et Rachio
-// (arrosage), application des mesures du jardin à la météo du jour.
+// connecteurs Ecowitt, Netatmo et Davis (station météo), Husqvarna Automower, Gardena SILENO et Mammotion (robot tondeuse),
+// Gardena et Rachio (arrosage), application des mesures du jardin à la météo du jour.
 // Utilisé par api/objets.js (écran « Mes équipements »), api/weather.js (app), api/send.js
 // (notifications) et api/bobContext.cjs (Bob). Aucune donnée n'est gardée au-delà de la dernière mesure.
 
@@ -135,6 +135,41 @@ async function mesuresNetatmo(supabase, eq) {
   return st.mesures;
 }
 
+// ── Davis (WeatherLink v2, weatherlink.github.io/v2-api) : « API Key v2 » et secret créés par le propriétaire sur
+// weatherlink.com. Offre gratuite : relevé des capteurs extérieurs (ISS) toutes les 15 minutes, par un WeatherLink Live
+// ou une console WeatherLink ; °F et mph convertis ; un relevé de plus de 3 h est ignoré.
+const WEATHERLINK = "https://api.weatherlink.com/v2";
+
+async function appelWeatherlink({ apiKey, apiSecret }, chemin) {
+  const r = await fetch(`${WEATHERLINK}/${chemin}?${new URLSearchParams({ "api-key": apiKey })}`, {
+    headers: { "X-Api-Secret": apiSecret }, signal: AbortSignal.timeout(8000),
+  });
+  if (r.status === 401 || r.status === 403) throw new Error("Clé ou secret WeatherLink refusés");
+  if (r.status === 429) throw new Error("Limite de requêtes WeatherLink atteinte, réessaie plus tard");
+  const d = await r.json().catch(() => null);
+  if (!r.ok || !d) throw new Error(`WeatherLink : erreur ${r.status}`);
+  return d;
+}
+
+async function stationsDavis(cles) {
+  return ((await appelWeatherlink(cles, "stations")).stations || []).map(s => ({ id: String(s.station_id), nom: s.station_name || "Station Davis" }));
+}
+
+async function mesuresDavis({ apiKey, apiSecret, station }) {
+  const d = await appelWeatherlink({ apiKey, apiSecret }, `current/${station}`);
+  const iss = (d.sensors || []).filter(s => [10, 23].includes(s.data_structure_type)) // ISS : WeatherLink Live, console WeatherLink
+    .map(s => s.data?.[0]).find(r => r && Date.now() - r.ts * 1000 < VALIDITE_MS);
+  const num = (v) => typeof v === "number" ? v : null;
+  const celsius = (f) => f === null ? null : Math.round((f - 32) * 50 / 9) / 10;
+  const kmh = (mph) => mph === null ? null : Math.round(mph * 16.09344) / 10;
+  const m = {
+    temp: celsius(num(iss?.temp)), humidite: num(iss?.hum), pluie_jour: num(iss?.rainfall_daily_mm),
+    vent: kmh(num(iss?.wind_speed_last)), rafale: kmh(num(iss?.wind_speed_hi_last_10_min)), sol_humidite: null,
+  };
+  if (m.temp === null && m.pluie_jour === null) throw new Error("Pas de relevé récent des capteurs extérieurs Davis");
+  return m;
+}
+
 // ── Station de l'utilisateur : dernière mesure (relue si elle a plus de 10 minutes) ───────────
 async function mesuresStation(supabase, userId) {
   const { data: eq } = await supabase.from("equipements").select("*")
@@ -143,7 +178,9 @@ async function mesuresStation(supabase, userId) {
   const age = eq.mesures_at ? Date.now() - Date.parse(eq.mesures_at) : Infinity;
   if (eq.mesures && age < FRAICHEUR_MS) return { ...eq.mesures, at: eq.mesures_at, nom: eq.nom, marque: eq.marque };
   try {
-    const mesures = eq.marque === "netatmo" ? await mesuresNetatmo(supabase, eq) : await mesuresEcowitt({ ...dechiffrer(eq.secret), mac: eq.appareil });
+    const mesures = eq.marque === "netatmo" ? await mesuresNetatmo(supabase, eq)
+      : eq.marque === "davis" ? await mesuresDavis({ ...dechiffrer(eq.secret), station: eq.appareil })
+      : await mesuresEcowitt({ ...dechiffrer(eq.secret), mac: eq.appareil });
     const at = new Date().toISOString();
     await supabase.from("equipements").update({ mesures, mesures_at: at, statut: "connecte", erreur: null }).eq("id", eq.id);
     return { ...mesures, at, nom: eq.nom, marque: eq.marque };
@@ -274,7 +311,8 @@ async function etatRobot(supabase, userId) {
       const at = new Date().toISOString();
       return { ...(await actualiserGardena(supabase, eq, at)), at };
     }
-    const robot = (await robotsHusqvarna(await accesHusqvarna(supabase, eq))).find(r => r.id === eq.appareil);
+    const robot = eq.marque === "mammotion" ? await robotMammotionLu(await accesMammotion(supabase, eq), eq.appareil)
+      : (await robotsHusqvarna(await accesHusqvarna(supabase, eq))).find(r => r.id === eq.appareil);
     if (!robot) throw new Error("Robot introuvable sur le compte Husqvarna");
     const at = new Date().toISOString();
     await supabase.from("equipements").update({ mesures: robot, mesures_at: at, statut: "connecte", erreur: null }).eq("id", eq.id);
@@ -312,9 +350,16 @@ async function hauteurAutomower(supabase, eq, niveau) {
 }
 
 async function commandeRobot(supabase, userId, commande, niveau) {
-  if (!COMMANDES[commande] && commande !== "hauteur") throw new Error("Commande inconnue");
   const { data: eq } = await supabase.from("equipements").select("*").eq("user_id", userId).eq("type", "robot").maybeSingle();
   if (!eq) throw new Error("Aucun robot connecté");
+  if (eq.marque === "mammotion") {
+    if (!COMMANDES_MAMMOTION[commande]) throw new Error("Commande inconnue");
+    const d = await appelMammotion(await accesMammotion(supabase, eq), "mower/action", { deviceId: eq.appareil, action: COMMANDES_MAMMOTION[commande] });
+    if (d?.commandResult === false) throw new Error(`Mammotion : ${d.resultMessage || "commande refusée par le robot"}`);
+    await supabase.from("equipements").update({ mesures_at: null }).eq("id", eq.id); // état relu au prochain affichage
+    return;
+  }
+  if (!COMMANDES[commande] && commande !== "hauteur") throw new Error("Commande inconnue");
   if (commande === "hauteur") {
     await hauteurAutomower(supabase, eq, niveau);
     await supabase.from("equipements").update({ mesures_at: null }).eq("id", eq.id); // réglage relu au prochain affichage
@@ -341,6 +386,71 @@ async function revoquerHusqvarna(supabase, eq) {
       body: new URLSearchParams({ token: refresh || "", client_id: process.env.HUSQVARNA_CLIENT_ID }) });
   } catch { /* la suppression des jetons chez nous suffit */ }
 }
+
+// ── Mammotion (developer.mammotion.com) : identifiants personnels (client_id, client_secret) créés par l'utilisateur sur
+// le portail développeur, chiffrés avec le jeton d'accès d'une heure, redemandé avec ces identifiants à son expiration.
+// L'API ne couvre que les modèles sortis depuis 2025 et ne sait ni mettre au repos pour une durée ni suspendre les tâches
+// programmées : l'app propose de faire rentrer le robot à sa base quand la tonte est déconseillée, ou de reprendre une tonte en pause.
+const MAMMOTION_ID = "https://id.mammotion.com/oauth2/token";
+const MAMMOTION_API = "https://api-open.mammotion.com/v1";
+
+async function jetonMammotion({ clientId, clientSecret }) {
+  const r = await fetch(MAMMOTION_ID, {
+    method: "POST", signal: AbortSignal.timeout(8000),
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ client_id: clientId, client_secret: clientSecret, grant_type: "client_credentials" }),
+  });
+  const corps = await r.json().catch(() => ({}));
+  const d = corps.data?.access_token ? corps.data : corps; // jeton à plat (documentation) ou dans { code, data } (portail)
+  if (!r.ok || !d.access_token) throw new Error("Identifiants Mammotion refusés : vérifie le client_id et le client_secret");
+  return { clientId, clientSecret, access: d.access_token, expire: Date.now() + (Number(d.expires_in) || 3600) * 1000 };
+}
+
+// Jeton d'accès valable (redemandé et réenregistré s'il expire dans moins de 2 minutes)
+async function accesMammotion(supabase, eq) {
+  const j = dechiffrer(eq.secret);
+  if (j.expire - Date.now() > 120000) return j.access;
+  const neuf = await jetonMammotion(j);
+  await supabase.from("equipements").update({ secret: chiffrer(neuf) }).eq("id", eq.id);
+  return neuf.access;
+}
+
+async function appelMammotion(acces, chemin, corps) {
+  const r = await fetch(`${MAMMOTION_API}/${chemin}`, {
+    method: corps ? "POST" : "GET", signal: AbortSignal.timeout(8000),
+    headers: { Authorization: `Bearer ${acces}`, "Content-Type": "application/json" },
+    ...(corps ? { body: JSON.stringify(corps) } : {}),
+  });
+  const d = await r.json().catch(() => null);
+  // Jeton refusé : HTTP 401 ou code 401 dans une réponse HTTP 200
+  if (r.status === 401 || r.status === 403 || d?.code === 401) throw new Error("Mammotion refuse l'accès : recrée tes identifiants et reconnecte le robot");
+  if (r.status === 429) throw new Error("Trop de demandes envoyées à Mammotion, réessaie dans quelques minutes");
+  if (!r.ok || !d) throw new Error(`Mammotion : erreur ${r.status}`);
+  if (d.code !== 0) throw new Error(`Mammotion : ${d.msg || "erreur"}`);
+  return d.data;
+}
+
+// Robot ramené aux valeurs du robot Automower (src/lib/robot.js) ; erreur = true : anomalie sans code
+const ACTIVITES_MAMMOTION = { Working: "mowing", Returning: "going_home", Mapping: "mapping", Updating: "updating" };
+function robotMammotion(d) {
+  return {
+    id: d.id, marque: "mammotion", nom: d.nickname || d.name || "Mammotion", modele: d.model || null,
+    activite: ACTIVITES_MAMMOTION[d.status] || (d.status === "Standby" ? (d.chargeStatus === 1 ? "charging" : "standby") : null),
+    etat: d.status === "Paused" ? "paused" : null, batterie: d.batteryLevel ?? null, erreur: d.status === "Abnormal",
+    force: null, restriction: null, prochaine_tonte: null, hauteur: null, connecte: d.online === 1 && d.status !== "Offline",
+  };
+}
+
+async function robotMammotionLu(acces, id) {
+  const d = await appelMammotion(acces, `mower/${id}`);
+  return robotMammotion(Array.isArray(d) ? d[0] : d); // l'exemple de la documentation renvoie un tableau d'un élément
+}
+
+async function robotsMammotion(acces) {
+  return Promise.all(((await appelMammotion(acces, "mowers")) || []).map(m => robotMammotionLu(acces, m.id)));
+}
+
+const COMMANDES_MAMMOTION = { rentrer: "RETURN", reprendre: "RESUME" };
 
 // ── Gardena smart system (compte Husqvarna Group) : arrosage et robots SILENO ; arrosage Rachio (clé API) ──
 // Lecture à l'affichage, au plus toutes les 10 min et en une requête pour l'arrosage et le robot du même jardin
@@ -521,8 +631,9 @@ async function commandeArrosage(supabase, userId, { commande, zone, minutes }) {
 
 module.exports = {
   chiffrer, dechiffrer, stationsEcowitt, mesuresEcowitt, mesuresStation, appliquerStation,
-  urlConnexionNetatmo, jetonsNetatmo, stationsNetatmo,
+  urlConnexionNetatmo, jetonsNetatmo, stationsNetatmo, stationsDavis, mesuresDavis,
   urlConnexionHusqvarna, verifierEtat, jetonsHusqvarna, robotsHusqvarna, etatRobot, commandeRobot, revoquerHusqvarna,
+  jetonMammotion, robotsMammotion,
   jardinsGardena, reprendreRobotsGardena, programmateursRachio, etatArrosage, commandeArrosage,
   minutesJusquaDemain7h,
 };

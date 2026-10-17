@@ -49,9 +49,12 @@ const RETOURS_GARDENA_ROBOT = {
 const A_VENIR = [
   { icone:"📷", titre:"Caméra", texte:"Une photo de ta pelouse chaque semaine, analysée comme un diagnostic." },
 ];
+const NOMS_STATION = { netatmo:"Netatmo", ecowitt:"Ecowitt", davis:"Davis" };
+const NOMS_ROBOT = { husqvarna:"Husqvarna Automower", gardena:"Gardena SILENO", mammotion:"Mammotion" };
+const lien = { background:"none", border:"none", padding:0, color:"#81c784", fontSize:11, cursor:"pointer", textDecoration:"underline" };
 
-// Mes équipements (depuis Mon Gazon) : station météo Netatmo ou Ecowitt, robot Husqvarna ou Gardena et arrosage Gardena ou Rachio
-// connectés ; caméras à venir
+// Mes équipements (depuis Mon Gazon) : station météo Netatmo, Ecowitt ou Davis, robot Husqvarna, Gardena ou Mammotion et
+// arrosage Gardena ou Rachio connectés ; caméras à venir
 export default function Equipements() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
@@ -59,6 +62,9 @@ export default function Equipements() {
   const { donnees, erreur, setErreur, envoi, charger, action } = useEquipements();
   const [cles, setCles] = useState({ applicationKey:"", apiKey:"" });
   const [stations, setStations] = useState(null);
+  const [clesDavis, setClesDavis] = useState({ apiKey:"", apiSecret:"" });
+  const [stationsDavis, setStationsDavis] = useState(null);
+  const [idsMammotion, setIdsMammotion] = useState({ clientId:"", clientSecret:"" });
   const retourHq = RETOURS_HUSQVARNA[params.get("husqvarna")] || RETOURS_GARDENA[params.get("gardena")]
     || RETOURS_GARDENA_ROBOT[params.get("gardena_robot")] || RETOURS_NETATMO[params.get("netatmo")];
   const [cleRachio, setCleRachio] = useState("");
@@ -89,6 +95,20 @@ export default function Equipements() {
   const connecterRachio = async (p) => {
     if (!await action({ action:"rachio", apiKey: cleRachio, programmateur: p.id })) return;
     setCleRachio(""); setProgrammateurs(null); charger();
+  };
+  const chercherDavis = async () => {
+    const d = await action({ action:"davis_stations", ...clesDavis });
+    if (!d) return;
+    setStationsDavis(d.stations);
+    if (!d.stations.length) setErreur("Aucune station sur ce compte WeatherLink.");
+  };
+  const connecterDavis = async (s) => {
+    if (!await action({ action:"davis", ...clesDavis, station: s.id, nom: s.nom })) return;
+    setClesDavis({ apiKey:"", apiSecret:"" }); setStationsDavis(null); charger();
+  };
+  const connecterMammotion = async () => {
+    if (!await action({ action:"mammotion", ...idsMammotion })) return;
+    setIdsMammotion({ clientId:"", clientSecret:"" }); charger();
   };
 
   // Robot ou arrosage connecté : déclaré aussi dans le profil (rappels et conseils adaptés à l'équipement)
@@ -125,7 +145,7 @@ export default function Equipements() {
           {eq && (
             <>
               <div style={{ fontSize:12, color: eq.statut === "erreur" ? "#f9a825" : "#a5d6a7", margin:"6px 0 10px" }}>
-                {eq.nom} · {eq.marque === "netatmo" ? "Netatmo" : "Ecowitt"} · {eq.statut === "erreur" ? `⚠️ ${eq.erreur}` : "✓ connectée"}
+                {eq.nom} · {NOMS_STATION[eq.marque]} · {eq.statut === "erreur" ? `⚠️ ${eq.erreur}` : "✓ connectée"}
               </div>
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
                 {[["🌡️", nombre(m?.temp, "°C"), "Température"], ["💧", nombre(m?.pluie_jour, "mm"), "Pluie aujourd'hui"],
@@ -146,7 +166,7 @@ export default function Equipements() {
               {eq.statut === "erreur" && eq.marque === "netatmo" && (
                 <button onClick={() => connexion("netatmo")} disabled={envoi} style={{ ...bouton, display:"block", marginBottom:10 }}>Reconnecter ma station Netatmo</button>
               )}
-              <button onClick={() => retirer(eq.id)} disabled={envoi} style={{ background:"none", border:"none", padding:0, color:"#81c784", fontSize:11, cursor:"pointer", textDecoration:"underline" }}>
+              <button onClick={() => retirer(eq.id)} disabled={envoi} style={lien}>
                 Déconnecter la station (l'accès est effacé)
               </button>
             </>
@@ -185,8 +205,34 @@ export default function Equipements() {
                   ))}
                 </div>
               )}
+              <div style={{ fontSize:11, fontWeight:700, color:"#e8f5e9", margin:"14px 0 0" }}>Davis (Vantage Pro2 ou Vantage Vue, avec WeatherLink Live ou console WeatherLink)</div>
+              <div style={{ fontSize:11, color:"#81c784", lineHeight:1.6, margin:"6px 0 10px" }}>
+                1. Sur <a href="https://www.weatherlink.com/account" target="_blank" rel="noopener noreferrer" style={{ color:"#a5d6a7" }}>weatherlink.com</a>, ouvre ton compte et touche « Generate v2 Key » : une <strong>API Key v2</strong> et un <strong>API Secret</strong> s'affichent.<br/>
+                2. Colle-les ci-dessous, puis choisis ta station.
+              </div>
+              <label style={{ fontSize:11, color:"#81c784" }}>API Key v2
+                <input value={clesDavis.apiKey} onChange={e => setClesDavis({ ...clesDavis, apiKey: e.target.value })} autoComplete="off" style={champ} />
+              </label>
+              <div style={{ height:8 }} />
+              <label style={{ fontSize:11, color:"#81c784" }}>API Secret
+                <input value={clesDavis.apiSecret} onChange={e => setClesDavis({ ...clesDavis, apiSecret: e.target.value })} autoComplete="off" style={champ} />
+              </label>
+              {!stationsDavis?.length ? (
+                <button onClick={chercherDavis} disabled={envoi || !clesDavis.apiKey || !clesDavis.apiSecret} style={{ ...bouton, marginTop:12, opacity: clesDavis.apiKey && clesDavis.apiSecret ? 1 : 0.5 }}>
+                  {envoi ? "Recherche…" : "Trouver ma station Davis"}
+                </button>
+              ) : (
+                <div style={{ marginTop:12 }}>
+                  <div style={{ fontSize:11, color:"#81c784", marginBottom:6 }}>Station à connecter :</div>
+                  {stationsDavis.map(s => (
+                    <button key={s.id} onClick={() => connecterDavis(s)} disabled={envoi} style={{ ...bouton, display:"block", width:"100%", marginBottom:6 }}>
+                      {envoi ? "Connexion…" : `📡 ${s.nom}`}
+                    </button>
+                  ))}
+                </div>
+              )}
               <div style={{ fontSize:10, color:"#4a7c5c", lineHeight:1.5, marginTop:10 }}>
-                Netatmo : connexion sur le site de Netatmo, Mongazon360 ne voit jamais ton mot de passe ; accès en lecture seule, retirable dans ton compte Netatmo. Ecowitt : clés chiffrées, supprimables sur ecowitt.net. Dans les deux cas, tu peux déconnecter la station ici à tout moment. Autres marques de stations : en préparation.
+                Netatmo : connexion sur le site de Netatmo, Mongazon360 ne voit jamais ton mot de passe ; accès en lecture seule, retirable dans ton compte Netatmo. Ecowitt et Davis : clés chiffrées, supprimables sur ecowitt.net ou régénérables sur weatherlink.com. Dans tous les cas, tu peux déconnecter la station ici à tout moment. Autres marques de stations : en préparation.
               </div>
             </>
           )}
@@ -198,17 +244,21 @@ export default function Equipements() {
           {eqRobot ? (
             <>
               <div style={{ fontSize:12, color: eqRobot.statut === "erreur" ? "#f9a825" : "#a5d6a7", margin:"6px 0 8px" }}>
-                {eqRobot.nom} · {eqRobot.marque === "gardena" ? "Gardena SILENO" : "Husqvarna Automower"} · {eqRobot.statut === "erreur" ? `⚠️ ${eqRobot.erreur}` : "✓ connecté"}
+                {eqRobot.nom} · {NOMS_ROBOT[eqRobot.marque]} · {eqRobot.statut === "erreur" ? `⚠️ ${eqRobot.erreur}` : "✓ connecté"}
               </div>
               <div style={{ fontSize:11, color:"#a5d6a7", lineHeight:1.6, marginBottom:10 }}>
-                Dans « Aujourd'hui », l'app te propose de mettre ton robot au repos (pluie, gel, vent, semis en cours, hors saison) ou de relancer son planning : rien n'est envoyé au robot sans ta validation.
+                {eqRobot.marque === "mammotion"
+                  ? "Dans « Aujourd'hui », l'app te propose de le faire rentrer à sa base quand la tonte est déconseillée (pluie, gel, vent, semis en cours, hors saison) ou de reprendre une tonte en pause : rien n'est envoyé au robot sans ta validation."
+                  : "Dans « Aujourd'hui », l'app te propose de mettre ton robot au repos (pluie, gel, vent, semis en cours, hors saison) ou de relancer son planning : rien n'est envoyé au robot sans ta validation."}
               </div>
-              {eqRobot.statut === "erreur" && (
+              {eqRobot.statut === "erreur" && (eqRobot.marque === "mammotion" ? (
+                <div style={{ fontSize:11, color:"#81c784", lineHeight:1.6, marginBottom:10 }}>Si tes identifiants ont été réinitialisés, déconnecte le robot puis reconnecte-le avec les nouveaux.</div>
+              ) : (
                 <button onClick={() => connexion(eqRobot.marque === "gardena" ? "gardena_robot" : "husqvarna")} disabled={envoi} style={{ ...bouton, marginBottom:10 }}>Reconnecter mon robot</button>
-              )}
+              ))}
               <div>
-                <button onClick={() => retirer(eqRobot.id)} disabled={envoi} style={{ background:"none", border:"none", padding:0, color:"#81c784", fontSize:11, cursor:"pointer", textDecoration:"underline" }}>
-                  Déconnecter le robot (l'accès est révoqué)
+                <button onClick={() => retirer(eqRobot.id)} disabled={envoi} style={lien}>
+                  Déconnecter le robot (l'accès est {eqRobot.marque === "mammotion" ? "effacé" : "révoqué"})
                 </button>
               </div>
             </>
@@ -221,8 +271,23 @@ export default function Equipements() {
               <button onClick={() => connexion("husqvarna")} disabled={envoi} style={bouton}>{envoi ? "Ouverture…" : "Connecter mon Automower"}</button>
               <div style={{ fontSize:11, fontWeight:700, color:"#e8f5e9", margin:"14px 0 6px" }}>Gardena SILENO (application GARDENA smart system)</div>
               <button onClick={() => connexion("gardena_robot")} disabled={envoi} style={bouton}>{envoi ? "Ouverture…" : "Connecter mon robot Gardena"}</button>
+              <div style={{ fontSize:11, fontWeight:700, color:"#e8f5e9", margin:"14px 0 0" }}>Mammotion (modèles sortis à partir de 2025)</div>
+              <div style={{ fontSize:11, color:"#81c784", lineHeight:1.6, margin:"6px 0 10px" }}>
+                1. Sur <a href="https://developer.mammotion.com" target="_blank" rel="noopener noreferrer" style={{ color:"#a5d6a7" }}>developer.mammotion.com</a>, connecte-toi avec ton compte Mammotion et touche « Create Credentials » : note le <strong>client_id</strong> et le <strong>client_secret</strong>, affichés une seule fois.<br/>
+                2. Colle-les ci-dessous.
+              </div>
+              <label style={{ fontSize:11, color:"#81c784" }}>client_id
+                <input value={idsMammotion.clientId} onChange={e => setIdsMammotion({ ...idsMammotion, clientId: e.target.value })} autoComplete="off" style={champ} />
+              </label>
+              <div style={{ height:8 }} />
+              <label style={{ fontSize:11, color:"#81c784" }}>client_secret
+                <input value={idsMammotion.clientSecret} onChange={e => setIdsMammotion({ ...idsMammotion, clientSecret: e.target.value })} autoComplete="off" style={champ} />
+              </label>
+              <button onClick={connecterMammotion} disabled={envoi || !idsMammotion.clientId || !idsMammotion.clientSecret} style={{ ...bouton, marginTop:12, opacity: idsMammotion.clientId && idsMammotion.clientSecret ? 1 : 0.5 }}>
+                {envoi ? "Connexion…" : "Connecter mon robot Mammotion"}
+              </button>
               <div style={{ fontSize:10, color:"#4a7c5c", lineHeight:1.5, marginTop:10 }}>
-                Tu te connectes sur le site du groupe Husqvarna (Husqvarna et Gardena) : Mongazon360 ne voit jamais ton mot de passe. Si ton arrosage Gardena est sur le même compte, il est connecté en même temps. Autres marques de robots : en préparation.
+                Husqvarna et Gardena : tu te connectes sur le site du groupe Husqvarna, Mongazon360 ne voit jamais ton mot de passe ; si ton arrosage Gardena est sur le même compte, il est connecté en même temps. Mammotion : identifiants chiffrés ; les réinitialiser sur developer.mammotion.com coupe l'accès. Autres marques de robots : en préparation.
               </div>
             </>
           )}
@@ -242,7 +307,7 @@ export default function Equipements() {
               {eqArrosage.statut === "erreur" && eqArrosage.marque === "gardena" && (
                 <button onClick={() => connexion("gardena")} disabled={envoi} style={{ ...bouton, marginBottom:10 }}>Reconnecter Gardena</button>
               )}
-              <button onClick={() => retirer(eqArrosage.id)} disabled={envoi} style={{ background:"none", border:"none", padding:0, color:"#81c784", fontSize:11, cursor:"pointer", textDecoration:"underline" }}>
+              <button onClick={() => retirer(eqArrosage.id)} disabled={envoi} style={lien}>
                 Déconnecter l'arrosage (l'accès est effacé)
               </button>
             </>

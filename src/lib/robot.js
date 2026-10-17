@@ -1,19 +1,21 @@
 // src/lib/robot.js
-// Robot tondeuse connecté (Husqvarna Automower, Gardena SILENO) : état lisible et proposition du mode « Proposition ».
-// La proposition suit la tonte telle que la calcule « Aujourd'hui » (calendrier unique, météo, 1re tonte de la
-// zone, parcours de semis) : le robot n'est jamais invité à tondre quand l'app le déconseille. Les jours où il peut
+// Robot tondeuse connecté (Husqvarna Automower, Gardena SILENO, Mammotion) : état lisible et proposition du mode
+// « Proposition ». La proposition suit la tonte telle que la calcule « Aujourd'hui » (calendrier unique, météo, 1re tonte
+// de la zone, parcours de semis) : le robot n'est jamais invité à tondre quand l'app le déconseille. Les jours où il peut
 // tondre, l'app propose d'ajuster sa hauteur de coupe à celle de la saison (base, « Tonte Précise »).
 import HAUTEURS from "./automowerHauteurs.json";
 import { hauteurSaison } from "./planEntretien";
 
 const ACTIVITES = {
   mowing: "tond", going_home: "rentre à sa base", charging: "en charge à sa base", leaving: "part tondre",
-  parked_in_cs: "garé à sa base", stopped_in_garden: "arrêté sur la pelouse",
+  parked_in_cs: "garé à sa base", stopped_in_garden: "arrêté sur la pelouse", standby: "à l'arrêt, prêt à tondre",
+  mapping: "cartographie la pelouse", updating: "mise à jour en cours",
 };
+const APPLIS = { husqvarna: "Husqvarna", gardena: "Gardena smart", mammotion: "Mammotion" };
 
 export function etatRobot(r) {
   if (!r.connecte) return "hors ligne (pas de réseau)";
-  if (r.erreur || ["error", "fatal_error", "error_at_power_up"].includes(r.etat)) return `⚠️ en erreur (code ${r.erreur}) : voir l'app ${r.marque === "gardena" ? "Gardena smart" : "Husqvarna"}`;
+  if (r.erreur || ["error", "fatal_error", "error_at_power_up"].includes(r.etat)) return `⚠️ en erreur${r.erreur === true ? "" : ` (code ${r.erreur})`} : voir l'app ${APPLIS[r.marque]}`;
   if (r.etat === "off") return "éteint";
   if (r.etat === "paused") return "en pause";
   return ACTIVITES[r.activite] || "état inconnu";
@@ -57,8 +59,9 @@ function propositionHauteur(r, profile, month) {
 export function propositionRobot(r, tonte, { profile, month } = {}) {
   if (!r || !tonte || !r.connecte || r.erreur || r.etat === "off") return null;
   const interdite = tonte.status === "off_season" || tonte.status === "blocked";
+  const long = tonte.status === "off_season" || tonte.parcoursBloque || String(tonte.blockedReason || "").startsWith("Trop tôt");
+  if (r.marque === "mammotion") return propositionMammotion(r, tonte, interdite, long);
   if (interdite && !auRepos(r)) {
-    const long = tonte.status === "off_season" || tonte.parcoursBloque || String(tonte.blockedReason || "").startsWith("Trop tôt");
     return {
       commande: long ? "repos_long" : "repos_journee",
       bouton: long ? "⏸️ Mettre au repos jusqu'à nouvel ordre" : `⏸️ Mettre au repos jusqu'à demain ${r.marque === "gardena" ? "matin" : "7 h"}`,
@@ -67,4 +70,16 @@ export function propositionRobot(r, tonte, { profile, month } = {}) {
   }
   if (!interdite && auRepos(r)) return { commande: "reprendre", bouton: "▶️ Relancer son planning", raison: "Rien n'empêche la tonte aujourd'hui" };
   return interdite ? null : propositionHauteur(r, profile, month);
+}
+
+// Mammotion : l'API ne sait ni mettre au repos pour une durée ni suspendre les tâches programmées, d'où le retour à la base
+// pendant une tonte déconseillée, et la reprise d'une tonte en pause quand rien ne l'empêche
+function propositionMammotion(r, tonte, interdite, long) {
+  if (interdite && r.activite === "mowing") {
+    const raison = tonte.blockedReason || "Hors saison de tonte dans ta zone";
+    return { commande: "rentrer", bouton: "🏠 Le faire rentrer à sa base",
+      raison: long ? `${raison}. Pense aussi à suspendre ses tâches programmées dans l'app Mammotion.` : raison };
+  }
+  if (!interdite && r.etat === "paused") return { commande: "reprendre", bouton: "▶️ Reprendre la tonte", raison: "Rien n'empêche la tonte aujourd'hui" };
+  return null;
 }
