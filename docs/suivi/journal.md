@@ -227,3 +227,6 @@ du premier onglet).
   de page obtenue par l'explorateur de Meta a été invalidée par la déconnexion de la session Facebook : la clé retenue est
   celle d'un utilisateur système du portefeuille (sans expiration, indépendante des sessions), l'app en déduit le jeton de
   la page à chaque passage.
+- 18/10/2026 — Test de la connexion Meta validé sur STA par Jordan avec la clé de l'utilisateur système « Publications
+  Mongazon360 » : page Mongazon360 et Instagram @mongazon360, rien publié (recette de décembre n° 48). Reste à publier
+  l'app Meta (sinon les publications ne sont visibles que par ses administrateurs) et le go prod de Jordan.
