@@ -18,6 +18,7 @@
 //   POST { action: "rachio", apiKey, programmateur }  → connexion du programmateur Rachio (clé chiffrée)
 //   POST { action: "arrosage", commande, zone, minutes } → commande validée (arroser, suspendre, veille, reprendre)
 //   POST { action: "retirer", id }            → déconnexion (clés effacées)
+//   POST { action: "demande_equipement", type, marque, modele } → équipement que l'utilisateur aimerait connecter (anonyme)
 
 const { createClient } = require("@supabase/supabase-js");
 const { verifiedUserId } = require("./auth.cjs");
@@ -162,6 +163,16 @@ module.exports = async function handler(req, res) {
         user_id: userId, type: "station", marque: "davis", appareil: String(station), nom: String(nom || "Ma station").slice(0, 60),
         secret: E.chiffrer(davis), statut: "connecte", erreur: null, mesures, mesures_at: new Date().toISOString(),
       }, { onConflict: "user_id,type" });
+      if (error) throw error;
+      return res.json({ ok: true });
+    }
+
+    if (action === "demande_equipement") {
+      const { type: genre, marque, modele } = req.body;
+      const marqueNette = String(marque || "").trim().slice(0, 60);
+      if (!["station", "robot", "arrosage", "capteur", "autre"].includes(genre) || !marqueNette) return res.status(400).json({ error: "Type et marque requis" });
+      const { error } = await supabase.from("equipements_demandes")
+        .insert({ type: genre, marque: marqueNette, modele: String(modele || "").trim().slice(0, 80) || null });
       if (error) throw error;
       return res.json({ ok: true });
     }

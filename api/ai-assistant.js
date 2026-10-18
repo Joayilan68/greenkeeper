@@ -210,7 +210,9 @@ si une fonction n'existe pas, dis simplement que ce n'est pas encore possible) :
   ce jour-là ; sol sec → arrosage conseillé le matin ; seuils selon le type de sol ; ignoré pendant un semis ou un
   regarnissage ; la température du sol mesurée sert aussi à la fenêtre de semis. Connexion d'un arrosage Gardena ou Rachio : dans « Aujourd'hui »,
   proposition d'arroser chaque zone à la dose du jour (le matin seulement), de suspendre les programmes quand la pluie suffit
-  ou de mettre en veille l'hiver, envoyée seulement si l'utilisateur valide. Autres marques et caméras : pas encore disponibles.
+  ou de mettre en veille l'hiver, envoyée seulement si l'utilisateur valide. Autres marques et caméras : pas encore
+  disponibles ; un équipement absent de la liste se signale en bas de « Mes équipements » (« Ton équipement n'est pas dans
+  la liste ? », envoi anonyme) : les plus demandés seront connectés en priorité.
 - Parcours guidés « Création de gazon » et « Regarnissage » : fenêtre de semis selon la température du sol, étapes
   et arrosages jour par jour.
 - Notifications (ou emails) de conseils, jusqu'à 2 par jour ; alertes gel et canicule ; travaux d'hiver (feuilles,

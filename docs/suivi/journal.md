@@ -244,3 +244,6 @@ du premier onglet).
   « Votre équipement n'est pas dans la liste ? », et la préparation des articles de novembre. Fait sur STA : connexion des
   stations publiant sur Weather Underground (identifiant de la station et clé API de l'utilisateur, chiffrée ; politique de
   confidentialité 6.3 au 18/10/2026, Bob) ; recette de décembre n° 48.
+- 18/10/2026 — Fait sur STA : formulaire « Ton équipement n'est pas dans la liste ? » en bas de « Mes équipements »
+  (type, marque, modèle ; demandes anonymes, table equipements_demandes créée sur les deux projets) et synthèse dans
+  Pilotage → Activité (carte « Équipements demandés ») ; consignes de Bob ; recette de décembre n° 49 et 50.

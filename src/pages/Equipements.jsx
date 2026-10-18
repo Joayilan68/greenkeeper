@@ -49,13 +49,13 @@ const RETOURS_GARDENA_ROBOT = {
 const A_VENIR = [
   { icone:"📷", titre:"Caméra", texte:"Une photo de ta pelouse chaque semaine, analysée comme un diagnostic." },
 ];
+const TYPES_DEMANDE = [["robot", "Robot tondeuse"], ["arrosage", "Arrosage"], ["station", "Station météo"], ["capteur", "Capteur de sol"], ["autre", "Autre"]];
 const NOMS_STATION = { netatmo:"Netatmo", ecowitt:"Ecowitt", davis:"Davis", wunderground:"Weather Underground" };
 const NOMS_ROBOT = { husqvarna:"Husqvarna Automower", gardena:"Gardena SILENO", mammotion:"Mammotion" };
 const lien = { background:"none", border:"none", padding:0, color:"#81c784", fontSize:11, cursor:"pointer", textDecoration:"underline" };
 
 // Mes équipements (depuis Mon Gazon) : station météo Netatmo, Ecowitt, Davis ou publiant sur Weather Underground, robot
-// Husqvarna, Gardena ou Mammotion et
-// arrosage Gardena ou Rachio connectés ; caméras à venir
+// Husqvarna, Gardena ou Mammotion et arrosage Gardena ou Rachio connectés ; équipement non listé à signaler ; caméras à venir
 export default function Equipements() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
@@ -66,6 +66,8 @@ export default function Equipements() {
   const [clesDavis, setClesDavis] = useState({ apiKey:"", apiSecret:"" });
   const [stationsDavis, setStationsDavis] = useState(null);
   const [clesWu, setClesWu] = useState({ station:"", apiKey:"" });
+  const [demande, setDemande] = useState({ type:"robot", marque:"", modele:"" });
+  const [demandeEnvoyee, setDemandeEnvoyee] = useState(false);
   const [idsMammotion, setIdsMammotion] = useState({ clientId:"", clientSecret:"" });
   const retourHq = RETOURS_HUSQVARNA[params.get("husqvarna")] || RETOURS_GARDENA[params.get("gardena")]
     || RETOURS_GARDENA_ROBOT[params.get("gardena_robot")] || RETOURS_NETATMO[params.get("netatmo")];
@@ -111,6 +113,9 @@ export default function Equipements() {
   const connecterWu = async () => {
     if (!await action({ action:"wunderground", ...clesWu })) return;
     setClesWu({ station:"", apiKey:"" }); charger();
+  };
+  const envoyerDemande = async () => {
+    if (await action({ action:"demande_equipement", ...demande })) setDemandeEnvoyee(true);
   };
   const connecterMammotion = async () => {
     if (!await action({ action:"mammotion", ...idsMammotion })) return;
@@ -308,7 +313,7 @@ export default function Equipements() {
                 {envoi ? "Connexion…" : "Connecter mon robot Mammotion"}
               </button>
               <div style={{ fontSize:10, color:"#4a7c5c", lineHeight:1.5, marginTop:10 }}>
-                Husqvarna et Gardena : tu te connectes sur le site du groupe Husqvarna, Mongazon360 ne voit jamais ton mot de passe ; si ton arrosage Gardena est sur le même compte, il est connecté en même temps. Mammotion : identifiants chiffrés ; les réinitialiser sur developer.mammotion.com coupe l'accès. Autres marques de robots : en préparation.
+                Husqvarna et Gardena : tu te connectes sur le site du groupe Husqvarna, Mongazon360 ne voit jamais ton mot de passe ; si ton arrosage Gardena est sur le même compte, il est connecté en même temps. Mammotion : identifiants chiffrés ; les réinitialiser sur developer.mammotion.com coupe l'accès. Autre marque de robot : dis-le-nous en bas de page.
               </div>
             </>
           )}
@@ -350,7 +355,7 @@ export default function Equipements() {
                 <button key={p.id} onClick={() => connecterRachio(p)} disabled={envoi} style={{ ...bouton, display:"block", width:"100%", marginTop:8 }}>💧 {p.nom}</button>
               ))}
               <div style={{ fontSize:10, color:"#4a7c5c", lineHeight:1.5, marginTop:10 }}>
-                Gardena : connexion sur le site du groupe Husqvarna, Mongazon360 ne voit jamais ton mot de passe. Rachio : clé chiffrée, révocable sur app.rach.io. Autres marques : en préparation.
+                Gardena : connexion sur le site du groupe Husqvarna, Mongazon360 ne voit jamais ton mot de passe. Rachio : clé chiffrée, révocable sur app.rach.io. Autre marque : dis-le-nous en bas de page.
               </div>
             </>
           )}
@@ -371,6 +376,35 @@ export default function Equipements() {
             En attendant, indique ton équipement dans ton profil : l'app adapte déjà ses conseils.{" "}
             <span onClick={() => navigate("/setup")} style={{ textDecoration:"underline", cursor:"pointer" }}>Mon profil →</span>
           </div>
+        </div>
+
+        <div style={card()}>
+          <div style={{ fontSize:14, fontWeight:800, color:"#F1F8F2", marginBottom:4 }}>🙋 Ton équipement n'est pas dans la liste ?</div>
+          {demandeEnvoyee ? (
+            <div style={{ fontSize:12, color:"#a5d6a7", lineHeight:1.6 }}>✅ Merci, c'est noté : les équipements les plus demandés seront connectés en priorité.</div>
+          ) : (
+            <>
+              <div style={{ fontSize:11, color:"#a5d6a7", lineHeight:1.6, marginBottom:8 }}>
+                Dis-nous lequel : les équipements les plus demandés seront connectés en priorité. Envoi anonyme.
+              </div>
+              <label style={{ fontSize:11, color:"#81c784" }}>Type
+                <select value={demande.type} onChange={e => setDemande({ ...demande, type: e.target.value })} style={champ}>
+                  {TYPES_DEMANDE.map(([valeur, libelle]) => <option key={valeur} value={valeur}>{libelle}</option>)}
+                </select>
+              </label>
+              <div style={{ height:8 }} />
+              <label style={{ fontSize:11, color:"#81c784" }}>Marque
+                <input value={demande.marque} onChange={e => setDemande({ ...demande, marque: e.target.value })} maxLength={60} placeholder="ex. Worx, Bosch, Rain Bird" style={champ} />
+              </label>
+              <div style={{ height:8 }} />
+              <label style={{ fontSize:11, color:"#81c784" }}>Modèle (facultatif)
+                <input value={demande.modele} onChange={e => setDemande({ ...demande, modele: e.target.value })} maxLength={80} style={champ} />
+              </label>
+              <button onClick={envoyerDemande} disabled={envoi || !demande.marque.trim()} style={{ ...bouton, marginTop:12, opacity: demande.marque.trim() ? 1 : 0.5 }}>
+                {envoi ? "Envoi…" : "Envoyer"}
+              </button>
+            </>
+          )}
         </div>
 
         <div onClick={() => navigate("/my-lawn")} style={{ textAlign:"center", fontSize:12, color:"#81c784", textDecoration:"underline", cursor:"pointer", margin:"8px 0 24px" }}>

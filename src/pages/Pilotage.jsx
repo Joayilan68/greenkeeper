@@ -8,6 +8,7 @@ import RoadmapTab from "../components/RoadmapTab";
 import PremiumOffertsCard from "../components/PremiumOffertsCard";
 import CodesCreateursCard from "../components/CodesCreateursCard";
 import PublicationsCard from "../components/PublicationsCard";
+import DemandesEquipementsCard from "../components/DemandesEquipementsCard";
 import { CHARGES_ACTIVES, CHARGES_PREVUES, STRIPE_FEES, URSSAF_RATE, montant } from "../lib/charges";
 
 function eur(n) { return (Math.round((n||0)*100)/100).toFixed(2) + "€"; }
@@ -799,6 +800,7 @@ export default function Pilotage() {
             {loadingUsers && (
               <div style={{ textAlign:"center", color:"#81c784", fontSize:12, padding:16 }}>🔄 Chargement données Clerk...</div>
             )}
+            <DemandesEquipementsCard getToken={getToken} />
           </>
         )}
 

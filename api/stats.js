@@ -11,6 +11,7 @@
 //   GET|POST /api/stats?type=guests → Premium offerts (Pilotage → Finances)
 //   GET|POST /api/stats?type=codes → codes créateurs et parrainage (Pilotage → Finances)
 //   GET|POST /api/stats?type=publications → lots de comm Facebook et Instagram (Pilotage → Réseaux)
+//   GET /api/stats?type=demandes_equipements → équipements que les utilisateurs aimeraient connecter (Pilotage → Activité)
 
 // Emails admin — exclus de TOUTES les stats (règle "admins exclus de tout")
 const { verifiedUserId, ADMIN_EMAILS } = require("./auth.cjs");
@@ -49,6 +50,7 @@ module.exports = async function handler(req, res) {
   if (type === "guests") return handleGuests(req, res);
   if (type === "codes")  return handleCodes(req, res);
   if (type === "publications") return handlePublications(req, res);
+  if (type === "demandes_equipements") return handleDemandesEquipements(req, res);
   // Réseaux sociaux : lecture (GET ?type=social) + écriture (POST)
   if (type === "social" || req.method === "POST") return handleSocial(req, res);
   if (type === "revenue") return handleRevenue(req, res);
@@ -57,8 +59,28 @@ module.exports = async function handler(req, res) {
   if (type === "services") return handleServices(req, res);
   if (type === "seo")      return handleSeo(req, res);
 
-  return res.status(400).json({ error: 'Paramètre ?type=revenue|users|social|errors|services|seo|guests|codes|publications requis' });
+  return res.status(400).json({ error: 'Paramètre ?type=revenue|users|social|errors|services|seo|guests|codes|publications|demandes_equipements requis' });
 };
+
+// ── Équipements que les utilisateurs aimeraient connecter (Mes équipements, anonyme) — Pilotage → Activité ──
+// Regroupés par type et marque (casse ignorée), du plus demandé au moins demandé, avec quelques modèles cités
+async function handleDemandesEquipements(req, res) {
+  try {
+    const { data, error } = await createClient(SB_URL, SB_KEY).from("equipements_demandes")
+      .select("type, marque, modele, created_at").order("created_at", { ascending: false }).limit(2000);
+    if (error) throw error;
+    const groupes = {};
+    for (const d of data || []) {
+      const g = groupes[`${d.type}|${d.marque.trim().toLowerCase()}`] ||= { type: d.type, marque: d.marque.trim(), nombre: 0, modeles: [], derniere: d.created_at };
+      g.nombre++;
+      if (d.modele && g.modeles.length < 5 && !g.modeles.some(m => m.toLowerCase() === d.modele.toLowerCase())) g.modeles.push(d.modele);
+    }
+    return res.json({ success: true, total: data?.length || 0, demandes: Object.values(groupes).sort((a, b) => b.nombre - a.nombre) });
+  } catch (e) {
+    await require("./alerting.cjs").reportServerError("Pilotage — équipements demandés", e);
+    return res.status(500).json({ success: false, error: e.message });
+  }
+}
 
 // ── Référencement Google : position moyenne de toutes nos pages, par mois (Pilotage → Activité) ──
 async function handleSeo(req, res) {

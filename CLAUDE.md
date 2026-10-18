@@ -101,6 +101,9 @@
   `api/equipements.cjs`. Clés d'accès des utilisateurs chiffrées (AES-256-GCM) avec la variable Vercel
   `EQUIPEMENTS_SECRET` (Production et Preview) : ne jamais la changer sans reconnecter les équipements.
 - Toute décision prise avec un équipement suit le calendrier unique et la base de connaissances.
+- Équipements demandés : formulaire « Ton équipement n'est pas dans la liste ? » en bas de « Mes équipements » (type,
+  marque, modèle), demandes anonymes dans la table `equipements_demandes` (serveur uniquement, RLS sans politique),
+  synthèse dans Pilotage → Activité : choix des prochains connecteurs et chiffres à présenter aux marques.
 - Netatmo (station) : connexion OAuth (accès en lecture `read_station`), adresse de retour `https://<domaine>/api/objets`
   à déclarer dans l'application Netatmo (dev.netatmo.com) ; variables Vercel `NETATMO_CLIENT_ID` et `NETATMO_CLIENT_SECRET`
   (Production et Preview). Mesures : module extérieur, pluviomètre (pluie depuis minuit), anémomètre ; ignorées au-delà de 3 h.
