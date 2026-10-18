@@ -247,3 +247,8 @@ du premier onglet).
 - 18/10/2026 — Fait sur STA : formulaire « Ton équipement n'est pas dans la liste ? » en bas de « Mes équipements »
   (type, marque, modèle ; demandes anonymes, table equipements_demandes créée sur les deux projets) et synthèse dans
   Pilotage → Activité (carte « Équipements demandés ») ; consignes de Bob ; recette de décembre n° 49 et 50.
+- 18/10/2026 — Articles Conseils de novembre publiés en prod (exception Conseils, main fusionné dans Staging) :
+  « Semer du gazon en novembre : est-il trop tard ? », « Pelouse détrempée, flaques d'eau : que faire en hiver ? »,
+  « Oiseaux qui picorent la pelouse : pourquoi, et que faire ? » et « Pelouse jaune ou terne en hiver : normal ou
+  inquiétant ? » (46 articles). Liens vers ces articles ajoutés dans 6 articles existants. Épingles Pinterest créées ;
+  fichier d'import des 4 épingles envoyé à Jordan (tableaux « Pelouse en automne » et « Pelouse en hiver »).
