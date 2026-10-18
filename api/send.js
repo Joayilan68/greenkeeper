@@ -276,6 +276,25 @@ module.exports = async function handler(req, res) {
       const parcoursMap = {};
       (parcoursActifsData || []).forEach(p => { parcoursMap[p.user_id] = p; });
 
+      // Diagnostic de suivi à proposer ce matin (actions importantes récentes, diagnostics photo d'avant)
+      const suiviMap = {};
+      if (slot === "matin") {
+        try {
+          const depuis = (j) => new Date(Date.now() - j * 86400000).toISOString();
+          const [{ data: actionsRows }, { data: diagRows }] = await Promise.all([
+            supabase.from("histories").select("user_id, action, date").gte("created_at", depuis(60)),
+            supabase.from("diagnostics").select("user_id, created_at, score_visuel").not("score_visuel", "is", null).gte("created_at", depuis(120)),
+          ]);
+          const { suiviAProposer } = require("./suiviDiagnostic.cjs");
+          const parUser = (rows) => (rows || []).reduce((m, r) => { (m[r.user_id] ||= []).push(r); return m; }, {});
+          const diagsParUser = parUser(diagRows);
+          for (const [uid, history] of Object.entries(parUser(actionsRows))) {
+            const suivi = suiviAProposer({ history, diagnostics: (diagsParUser[uid] || []).map(d => ({ date: d.created_at, score: d.score_visuel })) });
+            if (suivi) suiviMap[uid] = suivi;
+          }
+        } catch (e) { await require("./alerting.cjs").reportServerError("Tâche planifiée — diagnostic de suivi", e); }
+      }
+
       // Destinataires des conseils par email : consentement « notifications » sans abonnement push
       const emailConseilMap = {}; // user_id → { email, prenom }
       if ((consentsData || []).some(c => c.notifications && !subMap[c.user_id])) {
@@ -402,6 +421,7 @@ module.exports = async function handler(req, res) {
               notifLog: remMap[u.id]?.notif_log, month, slot, today,
               gami: null, parcours: parcoursState?.termine ? null : parcoursState,
               joursInactif: 7, // sans gamification ni astuce : l'action la plus utile
+              suivi: suiviMap[u.id] || null,
             });
             let probleme = null;
             const premier = !!etape && !(u.private_metadata?.demarrage || []).length;
@@ -497,6 +517,7 @@ module.exports = async function handler(req, res) {
           gami: profile.gamification || null,
           parcours: parcoursState,
           joursInactif: joursInactifMap[user_id] ?? 0,
+          suivi: suiviMap[user_id] || null,
         });
 
         if (!decision) continue;

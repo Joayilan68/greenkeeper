@@ -409,6 +409,19 @@ function checkTravauxHiver(profile, weather, month, notifLog, today) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// NIVEAU 4 — Diagnostic de suivi : nouvelle photo à comparer avec celle d'avant une action importante (regarnissage,
+// scarification, anti-mousse, désherbage), au bout du délai de la base (api/suiviDiagnostic.cjs). Une fois par action :
+// le journal couvre 14 jours, la proposition 7. Matin.
+// ─────────────────────────────────────────────────────────────────────────────
+function checkSuiviDiagnostic(suivi, notifLog) {
+  if (!suivi || (notifLog?.history || []).some(x => x.type === "suivi_diagnostic")) return null;
+  const sujet = suivi.libelle.charAt(0).toUpperCase() + suivi.libelle.slice(1);
+  return { priority: 4, type: "suivi_diagnostic", url: "/diagnostic",
+    title: `📸 ${sujet} a ${suivi.jours} jours`,
+    body: "Refais une photo du même endroit : Bob la compare avec celle d'avant et te montre ce qui a changé." };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // NIVEAU 4 ter — Bilan de saison prêt (page /bilan) : une fois, entre le 15 et le 28 novembre
 // ─────────────────────────────────────────────────────────────────────────────
 function checkBilanSaison(month, today, notifLog) {
@@ -472,7 +485,7 @@ function decideNotification(ctx) {
   const {
     profile = {}, weather = null, reminderPrefs = {}, history = [],
     notifLog = null, month = null, slot = "matin", today = null,
-    gami = null, parcours: parcoursState = null, joursInactif = 0,
+    gami = null, parcours: parcoursState = null, joursInactif = 0, suivi = null,
   } = ctx || {};
 
   const sent = sentTodayInfo(notifLog, today);
@@ -530,6 +543,7 @@ function decideNotification(ctx) {
   const candidates = [
     checkEntretienDu(profile, reminderPrefs, history, month, weather, today), // 3 (N08)
     checkMaladie(weather, profile, month, notifLog, today),   // 3 bis
+    checkSuiviDiagnostic(suivi, notifLog),            // 4 (diagnostic de suivi)
     checkBilanSaison(month, today, notifLog),         // 4 (bilan de saison, novembre)
     checkTravauxHiver(profile, weather, month, notifLog, today), // 4 (travaux d'hiver)
     checkConseilMeteo(weather, profile, month),       // 4

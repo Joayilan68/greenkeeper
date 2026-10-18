@@ -1,5 +1,5 @@
 // src/pages/Diagnostic.jsx
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser, useAuth } from "@clerk/clerk-react";
 import { useProfile } from "../lib/useProfile";
@@ -11,6 +11,8 @@ import { useHistory } from "../lib/useHistory";
 import { card, cardTitle, btn, scroll, header } from "../lib/styles";
 import ComparatifPremium from "../components/ComparatifPremium";
 import ConfianceDiagnostic, { PhotoAReprendre } from "../components/ConfianceDiagnostic";
+import { PropositionSuivi, ComparaisonSuivi } from "../components/SuiviDiagnostic";
+import { suiviAProposer, comparaisonSuivi } from "../lib/suiviDiagnostic";
 import { useParcours } from "../lib/useParcours";
 import { moisCalendrier, zoneClimatique } from "../lib/planEntretien";
 
@@ -101,6 +103,33 @@ export default function Diagnostic() {
   const { score } = calcLawnScore({ weather, profile, history, month: new Date().getMonth()+1 });
   const canUse = isPaid || isAdmin;
 
+  // Diagnostics enregistrés (Supabase) + ceux de cet appareil pas encore remontés (même photo = même diagnostic)
+  const allDiags = useMemo(() => {
+    const urls = new Set(histoSupabase.map(d => d.image_url));
+    return [
+      ...histoSupabase.map(d => ({
+        id: d.id,
+        date: d.created_at,
+        imageUrl: d.image_url,
+        analysis: {
+          etat_general: d.etat_general,
+          score_visuel: d.score_visuel,
+          resume: d.resume,
+          emoji: d.score_visuel >= 80 ? "😊" : d.score_visuel >= 60 ? "😐" : d.score_visuel >= 40 ? "😟" : "😰",
+          problemes: d.problemes || [],
+          points_positifs: d.points_positifs || [],
+          actions_urgentes: d.actions_urgentes || [],
+          confiance: d.confiance,
+          observations: d.observations || [],
+        }
+      })),
+      ...diagnostics.filter(d => !urls.has(d.imageUrl)),
+    ].sort((a, b) => new Date(b.date) - new Date(a.date));
+  }, [histoSupabase, diagnostics]);
+  // Diagnostic de suivi : photo proposée après une action importante, comparée à celle d'avant
+  const diagsSuivi = allDiags.map(d => ({ date: d.date, score: d.analysis.score_visuel, imageUrl: d.imageUrl, problemes: d.analysis.problemes }));
+  const suivi = suiviAProposer({ history, diagnostics: diagsSuivi });
+
   const handleFile = async (file) => {
     if (!file) return;
     setError("");
@@ -168,7 +197,8 @@ export default function Diagnostic() {
         setView("reprendre");
         return;
       }
-      const diag = { id: Date.now().toString(), date: data.date, imageUrl: data.imageUrl, analysis: data.analysis, scoreAvant: score };
+      const diag = { id: Date.now().toString(), date: data.date, imageUrl: data.imageUrl, analysis: data.analysis, scoreAvant: score,
+        suivi: comparaisonSuivi({ history, diagnostics: diagsSuivi, apres: { score: data.analysis.score_visuel, problemes: data.analysis.problemes } }) };
       save(diag);
       setResult(diag);
       setView("result");
@@ -311,6 +341,7 @@ export default function Diagnostic() {
           </div>
         ) : (
           <>
+            {suivi && <PropositionSuivi suivi={suivi} />}
             <div style={{ ...card(), background:"linear-gradient(135deg,rgba(15,47,31,0.7),rgba(27,94,32,0.4))", border:"1px solid rgba(102,187,106,0.25)", textAlign:"center", padding:24 }}>
               <div style={{ fontSize:52, marginBottom:12 }}>📸</div>
               <div style={{ fontSize:16, fontWeight:800, color:"#F1F8F2", marginBottom:8 }}>Photographiez votre gazon</div>
@@ -446,6 +477,8 @@ export default function Diagnostic() {
             )}
             <div style={{ fontSize:13, color:"#81c784", lineHeight:1.6, fontStyle:"italic" }}>"{analysis.resume}"</div>
           </div>
+
+          {result.suivi && <ComparaisonSuivi comparaison={result.suivi} imageApres={imageUrl} scoreApres={analysis.score_visuel} />}
 
           <ConfianceDiagnostic analysis={analysis} onReprendre={() => { setPreview(null); setImageB64(null); fileRef.current.click(); }} />
 
@@ -600,31 +633,7 @@ export default function Diagnostic() {
         <div style={scroll}>
           {histoLoading ? (
             <div style={{ textAlign:"center", padding:40, color:"#81c784" }}>Chargement...</div>
-          ) : (() => {
-            // Fusionner Supabase (priorité) + localStorage (fallback)
-            const supaIds = new Set(histoSupabase.map(d => d.public_id));
-            const localOnly = diagnostics.filter(d => !supaIds.has(d.publicId));
-            const allDiags = [
-              ...histoSupabase.map(d => ({
-                id: d.id,
-                date: d.created_at,
-                imageUrl: d.image_url,
-                analysis: {
-                  etat_general: d.etat_general,
-                  score_visuel: d.score_visuel,
-                  resume: d.resume,
-                  emoji: d.score_visuel >= 80 ? "😊" : d.score_visuel >= 60 ? "😐" : d.score_visuel >= 40 ? "😟" : "😰",
-                  problemes: d.problemes || [],
-                  points_positifs: d.points_positifs || [],
-                  actions_urgentes: d.actions_urgentes || [],
-                  confiance: d.confiance,
-                  observations: d.observations || [],
-                }
-              })),
-              ...localOnly,
-            ].sort((a, b) => new Date(b.date) - new Date(a.date));
-
-            return allDiags.length === 0 ? (
+          ) : allDiags.length === 0 ? (
               <div style={{ ...card(), textAlign:"center", padding:24 }}>
                 <div style={{ fontSize:40, marginBottom:12 }}>📷</div>
                 <div style={{ fontSize:14, color:"#81c784" }}>Aucun diagnostic encore</div>
@@ -653,8 +662,7 @@ export default function Diagnostic() {
                   </div>
                 </div>
               );
-            });
-          })()}
+            })}
           <button onClick={reset} style={{ ...btn.ghost, marginBottom:24 }}>← Retour accueil</button>
         </div>
       </div>

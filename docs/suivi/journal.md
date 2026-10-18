@@ -273,3 +273,10 @@ du premier onglet).
   enregistrement ; essai sans compte : une photo à reprendre ne consomme pas le diagnostic gratuit. Colonnes confiance et
   observations ajoutées aux tables diagnostics et diagnostics_anon (STA et PROD). Bob (consignes, contexte) ; recette de
   décembre n° 51 à 53.
+- 18/10/2026 — Fait sur STA (chantier 2) : diagnostic de suivi. 30 jours après un regarnissage, une scarification ou un
+  anti-mousse, 21 jours après un désherbage (actions validées dans Aujourd'hui), l'onglet Diagnostic propose pendant 7
+  jours de refaire une photo du même endroit, avec une notification du matin (une fois par action) ; le résultat compare
+  au diagnostic fait dans les 45 jours avant l'action (photos avant / après, écart de score, problèmes réglés, encore là,
+  nouveaux). Délais tirés de la base de connaissances (levée J21-J45 du parcours, anti-mousse 30 j et désherbage 21 j
+  entre deux traitements) ; à valider par Jordan, puis à ajouter à la base : le délai de 30 jours après une scarification
+  et la règle du suivi elle-même (proposition dans « Règles complémentaires »). Recette de décembre n° 54 à 56.
