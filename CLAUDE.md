@@ -55,23 +55,24 @@
   `index.html` (site revendiqué).
 - Réseaux sociaux : profils officiels dans `src/lib/reseaux.js` (pied de page de l'accueil et des pages Conseils,
   profils déclarés à Google), même liste dans les données structurées de `index.html`.
-- Lots de comm (page Facebook et Instagram de Mongazon360, décision de Jordan du 17/10/2026) : chaque samedi matin, la tâche
-  programmée « Lot de comm du samedi » prépare la semaine qui commence 8 jours plus tard (du dimanche au samedi) :
-  4 publications (lundi, mercredi, vendredi 18 h 30, dimanche 10 h), texte Facebook avec un lien suivi
+- Lots de comm (page Facebook et Instagram de Mongazon360, décisions de Jordan des 17 et 18/10/2026) : chaque samedi matin,
+  la tâche programmée « Lot de comm du samedi » prépare la semaine qui commence 8 jours plus tard (du dimanche au samedi) :
+  4 publications (dimanche 8 h, lundi, mercredi et vendredi 16 h 30, heure de Paris), texte Facebook avec un lien suivi
   (`utm_source=facebook`), légende Instagram (lien en bio, hashtags), visuel 1080 × 1350 (photo de notre pelouse ou Bob, sans
-  métadonnées). Livrés sur la page « Lots de comm Mongazon360 » (même lien chaque semaine) et en fichiers dans la conversation ;
-  Jordan programme dans Meta Business Suite le samedi. Conseils tirés des articles et de la base, fonctions de l'app en prod
-  uniquement. Bob dans les groupes Facebook reste géré par Jordan.
-- Publication automatique des lots (`api/reseaux.cjs`, sur STA depuis le 17/10/2026) : lot inséré dans la table
-  `publications` (serveur uniquement, RLS sans politique), visuels JPEG sur `main` dans `public/images/reseaux/<lot>/` (lus
-  par Meta sur mongazon360.fr, retirés 3 semaines après) ; Jordan valide dans Pilotage → Réseaux ; la tâche du matin (vers
-  7-8 h, pour le dimanche) ou du soir (vers 16-17 h, pour lundi, mercredi et vendredi ; rattrape aussi le matin) publie les
-  validées du jour sur la page et l'Instagram (Graph API v26.0) ; jour passé : plus publiée. Clé dans la variable Vercel
-  `META_PAGE_TOKEN` (Sensitive, Production et Preview) : jeton sans expiration d'un utilisateur système du portefeuille
-  business « Ayfer Ozkan Krebs » (propriétaire de la page et de l'Instagram), qui donne le jeton de la page à chaque passage ;
-  pas de jeton lié à une session Facebook (invalidé à la déconnexion). Saisie par Jordan : jamais dans la conversation ni
-  dans le dépôt ; contrôle dans Pilotage → Services. App Meta « Mongazon360 Publications » (administrateurs : Jordan et
-  Ayfer).
+  métadonnées). Conseils tirés des articles et de la base, fonctions de l'app en prod uniquement. Bob dans les groupes
+  Facebook reste géré par Jordan.
+- Publication automatique des lots (`api/reseaux.cjs`, go prod de Jordan du 18/10/2026) : lot inséré dans la table
+  `publications` de la PROD (serveur uniquement, RLS sans politique ; colonne `heure` = heure de Paris), visuels JPEG poussés
+  sur `main` dans `public/images/reseaux/<lot>/` (lus par Meta sur mongazon360.fr, retirés 3 semaines après) ; Jordan valide
+  dans Pilotage → Réseaux. Publication à l'heure prévue par `POST /api/send?type=publications`, appelé toutes les 15 min par
+  pg_cron (Supabase PROD, tâche `publications-reseaux`, extension pg_net), tâches planifiées de Vercel en secours ; jour
+  passé : plus publiée ; une publication n'est jamais publiée deux fois (statut `en_cours`). Graph API v26.0. Clé dans la
+  variable Vercel `META_PAGE_TOKEN` (Sensitive, Production et Preview) : jeton sans expiration de l'utilisateur système
+  « Publications Mongazon360 » du portefeuille business « Ayfer Ozkan Krebs » (propriétaire de la page et de l'Instagram),
+  qui donne le jeton de la page à chaque passage ; pas de jeton lié à une session Facebook (invalidé à la déconnexion).
+  Saisie par Jordan : jamais dans la conversation ni dans le dépôt ; contrôle dans Pilotage → Services. App Meta
+  « Mongazon360 Publications » (administrateurs : Jordan et Ayfer), à garder publiée : sinon les publications ne sont
+  visibles que par ses administrateurs.
 - Pinterest : une épingle par article (1000 × 1500 : photo de notre pelouse, saison, titre), fichier
   `public/images/pinterest/<slug>.jpg` lu par Pinterest : ne jamais le supprimer ni le renommer. Nouvel article : créer
   son épingle au même format et l'importer dans Pinterest (fichier .csv), lien vers l'article suivi de

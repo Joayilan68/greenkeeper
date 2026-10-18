@@ -1,7 +1,7 @@
 // src/components/PublicationsCard.jsx
 // Pilotage → Réseaux : lots de comm Facebook et Instagram préparés chaque samedi (api/reseaux.cjs).
-// Jordan valide ou refuse chaque publication ; la tâche planifiée publie les validées le jour prévu, au créneau du matin
-// (vers 7-8 h) ou du soir (vers 16-17 h) ; jour passé : plus d'action possible. Test de la connexion Meta sans rien publier.
+// Jordan valide ou refuse chaque publication ; une publication validée part le jour et à l'heure prévus (heure de Paris) ;
+// jour passé : plus d'action possible. Test de la connexion Meta sans rien publier.
 import { useState, useEffect } from "react";
 import { card, cardTitle } from "../lib/styles";
 
@@ -9,11 +9,11 @@ const small = { border:"none", borderRadius:8, padding:"7px 10px", fontSize:12, 
 const vert = { ...small, background:"linear-gradient(135deg,#43a047,#2e7d32)", color:"#fff" };
 const gris = { ...small, background:"rgba(255,255,255,0.08)", color:"#c8e6c9" };
 const STATUTS = {
-  a_valider: { label:"À valider", color:"#f9a825" }, validee: { label:"Validée", color:"#90caf9" },
+  a_valider: { label:"À valider", color:"#f9a825" }, validee: { label:"Validée", color:"#90caf9" }, en_cours: { label:"En cours", color:"#90caf9" },
   publiee: { label:"Publiée", color:"#66bb6a" }, refusee: { label:"Refusée", color:"#9e9e9e" }, erreur: { label:"Erreur", color:"#ef9a9a" },
 };
-const CRENEAUX = { matin:"matin (vers 7-8 h)", soir:"soir (vers 16-17 h)" };
 const jour = (d) => new Date(`${d}T12:00:00`).toLocaleDateString("fr-FR", { weekday:"short", day:"numeric", month:"short" });
+const heure = (t) => { const [h, m] = t.split(":"); return `${+h} h${m === "00" ? "" : ` ${m}`}`; };
 // Visuel servi par le site lui-même (aperçu aussi visible sur STA)
 const apercu = (url) => url.replace(/^https:\/\/mongazon360\.fr(?=\/)/, "");
 
@@ -60,7 +60,7 @@ export default function PublicationsCard({ getToken }) {
     <div style={card()}>
       <div style={cardTitle}><span>📣 Publications Facebook et Instagram</span><span style={{ fontSize:11, color:"#f9a825" }}>{pubs ? `${aValider} à valider` : "…"}</span></div>
       <div style={{ fontSize:11, color:"#81c784", lineHeight:1.6, marginBottom:8 }}>
-        Chaque samedi, le lot de la semaine suivante arrive ici. Une publication validée part toute seule le jour prévu, au créneau du matin ou du soir, sur la page Facebook et le compte Instagram de Mongazon360.
+        Chaque samedi, le lot de la semaine suivante arrive ici. Une publication validée part toute seule le jour et à l'heure prévus sur la page Facebook et le compte Instagram de Mongazon360.
       </div>
       {msg && <div style={{ fontSize:12, color: msg.startsWith("✅") ? "#a5d6a7" : "#ef9a9a", marginBottom:8, lineHeight:1.5 }}>{msg}</div>}
       {pubs && !pubs.length && <div style={{ fontSize:12, color:"#a5d6a7", marginBottom:8 }}>Aucune publication pour l'instant : le prochain lot arrive samedi.</div>}
@@ -81,7 +81,7 @@ export default function PublicationsCard({ getToken }) {
                   <img src={apercu(p.visuel)} alt="" width="64" height="80" loading="lazy" style={{ width:64, height:80, objectFit:"cover", borderRadius:8, flexShrink:0 }} />
                   <div style={{ minWidth:0, flex:1, display:"grid", gap:4 }}>
                     <div style={{ display:"flex", justifyContent:"space-between", gap:6, alignItems:"baseline" }}>
-                      <span style={{ fontSize:11, color:"#81c784" }}>{jour(p.date_publication)} · {CRENEAUX[p.creneau]}</span>
+                      <span style={{ fontSize:11, color:"#81c784" }}>{jour(p.date_publication)} · {heure(p.heure)}</span>
                       <span style={{ fontSize:11, fontWeight:700, color:s.color, whiteSpace:"nowrap" }}>{s.label}</span>
                     </div>
                     <div style={{ fontSize:13, fontWeight:700, color:"#e8f5e9" }}>{p.titre}</div>

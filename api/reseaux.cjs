@@ -1,15 +1,17 @@
 // api/reseaux.cjs
 // Publication automatique des lots de comm sur la page Facebook et le compte Instagram de Mongazon360 (Graph API de Meta).
 // Table publications (accès serveur uniquement) : lot préparé chaque samedi pour la semaine suivante, validé par Jordan
-// dans Pilotage → Réseaux (api/stats.js ?type=publications), publié par la tâche planifiée (api/send.js) le jour prévu, au
-// créneau du matin ou du soir. Clé META_PAGE_TOKEN (Vercel) : jeton d'un utilisateur système du portefeuille business, sans
-// expiration (ou jeton de la page) ; le compte Instagram professionnel est celui relié à la page. Visuels JPEG publics
-// (public/images/reseaux), lus par Meta au moment de publier.
+// dans Pilotage → Réseaux (api/stats.js ?type=publications), publié le jour et à l'heure prévus (heure de Paris) : appel de
+// api/send.js ?type=publications toutes les 15 min par pg_cron (Supabase PROD), tâches planifiées de Vercel en secours.
+// Clé META_PAGE_TOKEN (Vercel) : jeton d'un utilisateur système du portefeuille business, sans expiration (ou jeton de la
+// page) ; le compte Instagram professionnel est celui relié à la page. Visuels JPEG publics (public/images/reseaux), lus
+// par Meta au moment de publier.
 
 const META = "https://graph.facebook.com/v26.0";
 const IMAGE_TEST = "https://mongazon360.fr/images/conseils/regarnissage-avant-apres.jpg";
 const pause = (ms) => new Promise(r => setTimeout(r, ms));
 const jourParis = (ms = Date.now()) => new Date(ms).toLocaleDateString("sv-SE", { timeZone: "Europe/Paris" });
+const heureParis = (ms = Date.now()) => new Date(ms).toLocaleTimeString("sv-SE", { timeZone: "Europe/Paris" });
 
 async function appelMeta(chemin, params = {}, methode = "GET", jeton = process.env.META_PAGE_TOKEN) {
   if (!jeton) throw new Error("Connexion Meta pas encore faite (clé META_PAGE_TOKEN absente)");
@@ -79,24 +81,32 @@ async function publierUne(supabase, compte, pub) {
   }
 }
 
-// Jour passé : une publication validée n'est plus publiée (texte daté), une publication pas validée est écartée
+// Jour passé : une publication validée n'est plus publiée (texte daté), une publication pas validée est écartée, une
+// publication restée en cours (exécution interrompue) est à vérifier
 async function expirer(supabase, jour) {
   const table = () => supabase.from("publications");
   await table().update({ statut: "erreur", erreur: "Jour de publication passé : non publiée" }).eq("statut", "validee").lt("date_publication", jour);
   await table().update({ statut: "refusee", erreur: "Pas validée avant le jour prévu" }).eq("statut", "a_valider").lt("date_publication", jour);
+  await table().update({ statut: "erreur", erreur: "Publication interrompue : vérifier la page et Instagram" }).eq("statut", "en_cours").lt("date_publication", jour);
 }
 
-// Tâche planifiée : publications validées du jour pour ce créneau ; le soir rattrape aussi celles du matin (validées après
-// le passage du matin)
-async function publierCreneau(supabase, creneau, jour = jourParis()) {
+// Publications validées du jour dont l'heure est passée (validée en retard : publiée au passage suivant). Chacune est
+// réservée (statut en_cours) avant d'être publiée : deux appels simultanés ne la publient jamais deux fois.
+async function publierDues(supabase, ms = Date.now()) {
+  const jour = jourParis(ms);
   await expirer(supabase, jour);
   const { data, error } = await supabase.from("publications").select("*")
-    .eq("statut", "validee").eq("date_publication", jour).in("creneau", creneau === "soir" ? ["matin", "soir"] : ["matin"]);
+    .eq("statut", "validee").eq("date_publication", jour).lte("heure", heureParis(ms)).order("heure");
   if (error) throw error;
   if (!data?.length) return 0;
   const compte = await compteMeta();
   let n = 0;
-  for (const pub of data) if (await publierUne(supabase, compte, pub)) n++;
+  for (const pub of data) {
+    const { data: prise, error: e } = await supabase.from("publications").update({ statut: "en_cours" })
+      .eq("id", pub.id).eq("statut", "validee").select("id");
+    if (e) throw e;
+    if (prise?.length && await publierUne(supabase, compte, pub)) n++;
+  }
   return n;
 }
 
@@ -104,7 +114,7 @@ async function publierCreneau(supabase, creneau, jour = jourParis()) {
 async function listePublications(supabase) {
   await expirer(supabase, jourParis());
   const { data, error } = await supabase.from("publications").select("*")
-    .gte("date_publication", jourParis(Date.now() - 14 * 86400000)).order("date_publication").order("creneau");
+    .gte("date_publication", jourParis(Date.now() - 14 * 86400000)).order("date_publication").order("heure");
   if (error) throw error;
   return data || [];
 }
@@ -126,7 +136,11 @@ async function actionPublication(supabase, { action, id, lot }) {
     if (!pub) throw new Error("Publication introuvable ou pas en erreur");
     if (pub.date_publication < jour) throw new Error("Jour de publication passé : publie-la à la main si elle est encore d'actualité");
     if (pub.date_publication > jour) return verifier(await table().update({ statut: "validee", erreur: null }).eq("id", id));
-    if (!await publierUne(supabase, await compteMeta(), pub)) throw new Error("Nouvel essai en échec : voir le message de la publication");
+    const compte = await compteMeta();
+    const { data: prise, error: e } = await table().update({ statut: "en_cours", erreur: null }).eq("id", id).eq("statut", "erreur").select("id");
+    if (e) throw e;
+    if (!prise?.length) throw new Error("Publication déjà en cours");
+    if (!await publierUne(supabase, compte, pub)) throw new Error("Nouvel essai en échec : voir le message de la publication");
     return;
   }
   throw new Error("Action inconnue");
@@ -142,4 +156,4 @@ async function testerMeta() {
   return { page: compte.page, instagram: compte.instagram };
 }
 
-module.exports = { compteMeta, publierCreneau, listePublications, actionPublication, testerMeta };
+module.exports = { compteMeta, publierDues, listePublications, actionPublication, testerMeta };

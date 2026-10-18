@@ -972,9 +972,9 @@ module.exports = async function handler(req, res) {
         } catch (e) { await require("./alerting.cjs").reportServerError("IA Groq indisponible", e); }
       }
 
-      // ── Publications Facebook et Instagram validées dans Pilotage, au créneau prévu (reseaux.cjs) ──
+      // ── Publications Facebook et Instagram validées dont l'heure est passée, en secours du déclencheur pg_cron (reseaux.cjs) ──
       let publications = 0;
-      try { publications = await require("./reseaux.cjs").publierCreneau(supabase, slot); }
+      try { publications = await require("./reseaux.cjs").publierDues(supabase); }
       catch (e) { await require("./alerting.cjs").reportServerError("Publications réseaux en échec", e, { "Créneau": slot }); }
 
       // ── Veille de marque — créneau SOIR : noms de domaine proches de Mongazon360 (veilleMarque.cjs) ──
@@ -1005,6 +1005,22 @@ module.exports = async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
   const { type } = req.query;
+
+  // ════════════════════════════════════════════════════════════════════════
+  // PUBLICATIONS — appelé toutes les 15 min par pg_cron (Supabase PROD) : publie les publications Facebook et Instagram
+  // validées dont l'heure est passée (sans effet sinon ; une publication n'est jamais publiée deux fois, reseaux.cjs)
+  // POST /api/send?type=publications
+  // ════════════════════════════════════════════════════════════════════════
+  if (type === "publications") {
+    try {
+      const { createClient } = require("@supabase/supabase-js");
+      const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+      return res.json({ success: true, publications: await require("./reseaux.cjs").publierDues(supabase) });
+    } catch (e) {
+      await require("./alerting.cjs").reportServerError("Publications réseaux en échec", e, { "Déclencheur": "pg_cron" });
+      return res.status(500).json({ error: e.message });
+    }
+  }
 
   // ════════════════════════════════════════════════════════════════════════
   // GUEST-STATUS — l'utilisateur a-t-il un accès invité ? (lecture SERVEUR)
