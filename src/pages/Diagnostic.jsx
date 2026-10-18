@@ -10,6 +10,7 @@ import { calcLawnScore } from "../lib/lawnScore";
 import { useHistory } from "../lib/useHistory";
 import { card, cardTitle, btn, scroll, header } from "../lib/styles";
 import ComparatifPremium from "../components/ComparatifPremium";
+import ConfianceDiagnostic, { PhotoAReprendre } from "../components/ConfianceDiagnostic";
 import { useParcours } from "../lib/useParcours";
 import { moisCalendrier, zoneClimatique } from "../lib/planEntretien";
 
@@ -161,6 +162,12 @@ export default function Diagnostic() {
       }
 
       if (!res.ok || data.error) throw new Error(data.error || "Erreur serveur");
+      // Photo inexploitable : pas de score ni d'historique, Bob explique comment la reprendre
+      if (data.analysis?.photo_exploitable === false) {
+        setResult({ analysis: data.analysis });
+        setView("reprendre");
+        return;
+      }
       const diag = { id: Date.now().toString(), date: data.date, imageUrl: data.imageUrl, analysis: data.analysis, scoreAvant: score };
       save(diag);
       setResult(diag);
@@ -187,6 +194,23 @@ export default function Diagnostic() {
     <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
       <button onClick={() => fileRef.current.click()}    style={{ ...btn.primary, fontSize:14, padding:"14px" }}>{label1}</button>
       <button onClick={() => galleryRef.current.click()} style={{ ...btn.ghost,   fontSize:14, padding:"14px" }}>{label2}</button>
+    </div>
+  );
+
+  const conseilsPhoto = (
+    <div style={card()}>
+      <div style={cardTitle}><span>💡 Pour un meilleur diagnostic</span></div>
+      {[
+        ["☀️","Lumière naturelle","Photographiez en plein jour, sans ombre portée"],
+        ["📐","Distance","À environ 50cm-1m du sol, gazon visible en entier"],
+        ["🎯","Cadrage","Incluez la zone problématique bien centrée"],
+        ["🔍","Netteté","Photo nette et bien exposée — pas de flou"],
+      ].map(([icon, label, tip]) => (
+        <div key={icon} style={{ display:"flex", gap:10, padding:"6px 0", borderBottom:"1px solid rgba(255,255,255,0.05)", fontSize:12 }}>
+          <span style={{ fontSize:16, minWidth:24 }}>{icon}</span>
+          <div><span style={{ fontWeight:700 }}>{label} — </span><span style={{ color:"#81c784" }}>{tip}</span></div>
+        </div>
+      ))}
     </div>
   );
 
@@ -299,20 +323,7 @@ export default function Diagnostic() {
               {photoButtons()}
             </div>
 
-            <div style={card()}>
-              <div style={cardTitle}><span>💡 Pour un meilleur diagnostic</span></div>
-              {[
-                ["☀️","Lumière naturelle","Photographiez en plein jour, sans ombre portée"],
-                ["📐","Distance","À environ 50cm-1m du sol, gazon visible en entier"],
-                ["🎯","Cadrage","Incluez la zone problématique bien centrée"],
-                ["🔍","Netteté","Photo nette et bien exposée — pas de flou"],
-              ].map(([icon, label, tip]) => (
-                <div key={icon} style={{ display:"flex", gap:10, padding:"6px 0", borderBottom:"1px solid rgba(255,255,255,0.05)", fontSize:12 }}>
-                  <span style={{ fontSize:16, minWidth:24 }}>{icon}</span>
-                  <div><span style={{ fontWeight:700 }}>{label} — </span><span style={{ color:"#81c784" }}>{tip}</span></div>
-                </div>
-              ))}
-            </div>
+            {conseilsPhoto}
 
             {diagnostics.length > 0 && (
               <div style={card()}>
@@ -389,6 +400,25 @@ export default function Diagnostic() {
     </div>
   );
 
+  // ── VUE PHOTO À REPRENDRE ─────────────────────────────────────────────────
+  if (view === "reprendre" && result) return (
+    <div>
+      <div style={header}>
+        <div style={{ fontSize:20, fontWeight:800, color:"#a5d6a7" }}>📷 Photo à reprendre</div>
+      </div>
+      <div style={scroll}>
+        {hiddenInputs}
+        <PhotoAReprendre analysis={result.analysis}>
+          <div style={{ marginTop:16 }}>{photoButtons("📷 Reprendre une photo")}</div>
+        </PhotoAReprendre>
+        {conseilsPhoto}
+        <button onClick={reset} style={{ background:"none", border:"none", color:"#81c784", fontSize:12, cursor:"pointer", paddingBottom:24 }}>
+          ← Retour à l'accueil diagnostic
+        </button>
+      </div>
+    </div>
+  );
+
   // ── VUE RÉSULTAT ──────────────────────────────────────────────────────────
   if (view === "result" && result) {
     const { analysis, imageUrl, scoreAvant } = result;
@@ -416,6 +446,8 @@ export default function Diagnostic() {
             )}
             <div style={{ fontSize:13, color:"#81c784", lineHeight:1.6, fontStyle:"italic" }}>"{analysis.resume}"</div>
           </div>
+
+          <ConfianceDiagnostic analysis={analysis} onReprendre={() => { setPreview(null); setImageB64(null); fileRef.current.click(); }} />
 
           <div style={{ borderRadius:16, overflow:"hidden" }}>
             <img src={imageUrl} alt="gazon analysé" style={{ width:"100%", maxHeight:200, objectFit:"cover", display:"block" }} />
@@ -533,6 +565,7 @@ export default function Diagnostic() {
               <div style={{ fontSize:13, color:etatColor, textTransform:"capitalize", marginBottom:6 }}>{analysis.etat_general}</div>
               <div style={{ fontSize:12, color:"#81c784", fontStyle:"italic" }}>"{analysis.resume}"</div>
             </div>
+            <ConfianceDiagnostic analysis={analysis} />
             {analysis.problemes?.length > 0 && (
               <div style={card()}>
                 <div style={cardTitle}><span>Problèmes détectés</span></div>
@@ -584,6 +617,8 @@ export default function Diagnostic() {
                   problemes: d.problemes || [],
                   points_positifs: d.points_positifs || [],
                   actions_urgentes: d.actions_urgentes || [],
+                  confiance: d.confiance,
+                  observations: d.observations || [],
                 }
               })),
               ...localOnly,

@@ -189,7 +189,9 @@ si une fonction n'existe pas, dis simplement que ce n'est pas encore possible) :
   du 15 novembre à fin février, bilan de saison (actions de l'année, badges, image à partager).
 - Onglet « Aujourd'hui » : les actions du jour proposées selon la météo (tonte, arrosage, engrais…), à valider
   une fois faites (elles vont dans l'historique, à la date du jour) ; minuteur d'arrosage.
-- Onglet « Diagnostic » : diagnostic photo de la pelouse par Bob.
+- Onglet « Diagnostic » : diagnostic photo de la pelouse par Bob (score, problèmes et solutions), avec son niveau de
+  confiance (élevée, moyenne ou faible) et ce qu'il a vu sur la photo ; si la photo ne permet pas de conclure (floue,
+  sombre, trop lointaine), Bob explique comment la reprendre et rien n'est enregistré.
 - Onglet « Mon Gazon » : profil du gazon, score détaillé, historique des actions ; « Mon plan gazon » : plan annuel
   personnalisé (12 mois d'entretien selon sa zone, son sol, son gazon et son équipement), achat unique à 0,99 €, en PDF.
   « Parraine tes amis » (Mon Gazon) : code et lien à partager ; l'ami a 1 mois de Premium offert à l'inscription, le

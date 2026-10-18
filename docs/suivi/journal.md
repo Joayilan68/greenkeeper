@@ -264,3 +264,12 @@ du premier onglet).
   ou avec une mauvaise clé refusés (vérifié). L'ancienne valeur de secours ne donne plus accès à rien (ancien rapport
   hebdomadaire retiré le 21/08/2026, anciennes versions du site supprimées par Vercel : vérifié). Recette « Déjà en prod »
   n° 27 et 28 ; contrôle de la tâche du matin le 19/10.
+- 18/10/2026 — Go de Jordan pour 5 chantiers, sur STA uniquement : (1) confiance du diagnostic et photo à reprendre,
+  (2) diagnostic de suivi à J+14 / J+30 avec avant / après, (3) correction des 5 écarts de calcul du Pilotage,
+  (4) notifications proposées après la première aide, (5) maquettes de la refonte (3 niveaux). Quand les 5 seront
+  fonctionnels sur STA, Jordan arbitrera ce qui part en prod.
+- 18/10/2026 — Fait sur STA (chantier 1) : diagnostic photo avec niveau de confiance (élevée, moyenne, faible) et « ce
+  que Bob a vu » ; photo inexploitable (floue, sombre, sans gazon) : écran « Photo à reprendre », sans score ni
+  enregistrement ; essai sans compte : une photo à reprendre ne consomme pas le diagnostic gratuit. Colonnes confiance et
+  observations ajoutées aux tables diagnostics et diagnostics_anon (STA et PROD). Bob (consignes, contexte) ; recette de
+  décembre n° 51 à 53.

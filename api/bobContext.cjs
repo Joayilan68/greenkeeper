@@ -71,7 +71,7 @@ async function buildBobContext(supabase, { userId, premium, clientProfile = {}, 
   const [{ data: prof }, { data: hist }, { data: diags }, { data: parcours }] = await Promise.all([
     supabase.from("profiles").select("data").eq("user_id", userId).maybeSingle(),
     supabase.from("histories").select("action, date").eq("user_id", userId).order("created_at", { ascending: false }).limit(12),
-    supabase.from("diagnostics").select("created_at, etat_general, score_visuel, problemes, actions_urgentes")
+    supabase.from("diagnostics").select("created_at, etat_general, score_visuel, confiance, problemes, actions_urgentes")
       .eq("user_id", userId).order("created_at", { ascending: false }).limit(1),
     supabase.from("parcours").select("type, statut, date_semis, date_prevue")
       .eq("user_id", userId).in("statut", ["actif", "en_attente_fenetre"]).limit(1),
@@ -116,7 +116,7 @@ async function buildBobContext(supabase, { userId, premium, clientProfile = {}, 
     const pbs = (Array.isArray(diag.problemes) ? diag.problemes : []).map(x => `${x.nom}${x.severite ? ` (${lisible(x.severite)})` : ""}`).join(", ");
     const urg = (Array.isArray(diag.actions_urgentes) ? diag.actions_urgentes : []).join(" ; ");
     l.push(`Dernier diagnostic photo (il y a ${ageDiag} j) : état ${diag.etat_general || "?"}, score visuel ${diag.score_visuel ?? "?"}/100` +
-      `${pbs ? ` · problèmes : ${pbs}` : ""}${urg ? ` · actions urgentes : ${urg}` : ""}`);
+      `${diag.confiance ? ` · confiance ${lisible(diag.confiance)}` : ""}${pbs ? ` · problèmes : ${pbs}` : ""}${urg ? ` · actions urgentes : ${urg}` : ""}`);
   } else {
     l.push("Pas de diagnostic photo récent.");
   }

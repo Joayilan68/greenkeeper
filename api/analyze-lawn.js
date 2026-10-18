@@ -9,6 +9,32 @@ const { isGuestUser } = require("./premium.cjs");
 
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 
+// Niveau de confiance, éléments observés et photo inexploitable : demandés aux trois analyses (gazon, synthétique, sans compte)
+const CONSEIL_PHOTO = "Reprends la photo en plein jour, sans ombre portée, à 50 cm - 1 m du sol, la zone concernée au centre et bien nette.";
+const CHAMPS_CONFIANCE = `"confiance":"elevee|moyenne|faible","observations":["..."],"photo_exploitable":true,"conseil_photo":""`;
+const CONSIGNE_CONFIANCE = `CONFIANCE : "confiance" = "elevee" si la photo est nette et les signes caractéristiques bien visibles, "moyenne" s'il reste un doute entre deux causes ou qu'un détail est peu visible, "faible" si la photo est floue, sombre, lointaine ou les signes peu caractéristiques. "observations" : 2 à 4 éléments réellement visibles sur la photo qui fondent ton diagnostic (couleur, densité, taches et leur taille, mousse, feuilles, terre nue…).
+Si la photo ne permet pas de diagnostiquer (pas de gazon, trop floue, trop sombre, trop lointaine, zone trop petite) : "photo_exploitable": false, explique pourquoi dans resume et, dans "conseil_photo", comment la reprendre en une phrase (en plein jour sans ombre portée, à 50 cm - 1 m du sol, zone concernée au centre, photo nette). Sinon "photo_exploitable": true ; "conseil_photo" seulement si la confiance est faible.`;
+
+// Confiance et observations normalisées ; photo inexploitable → aucun score (ni affiché, ni enregistré, ni comparé)
+function normaliserAnalyse(a) {
+  const confiance = String(a.confiance || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const conseil   = typeof a.conseil_photo === "string" ? a.conseil_photo.trim() : "";
+  const analyse = {
+    ...a,
+    confiance:         ["elevee", "moyenne", "faible"].includes(confiance) ? confiance : "moyenne",
+    observations:      (Array.isArray(a.observations) ? a.observations : []).filter(o => typeof o === "string" && o.trim()).slice(0, 4),
+    // un score nul sans aucun problème relevé = photo sans gazon, même si le modèle ne l'a pas signalée
+    photo_exploitable: a.photo_exploitable !== false && !(Number(a.score_visuel) === 0 && !(a.problemes || []).length),
+    conseil_photo:     conseil,
+  };
+  if (analyse.photo_exploitable) return analyse;
+  return { ...analyse, etat_general: null, score_visuel: null, emoji: "📷", problemes: [], points_positifs: [],
+    actions_urgentes: [], actions_prochaines: [], observations: [], conseil_photo: conseil || CONSEIL_PHOTO };
+}
+
+// Réponse du modèle sans JSON exploitable : le diagnostic est à relancer, sans score inventé
+const ANALYSE_ILLISIBLE = { photo_exploitable: false, resume: "Bob n'a pas réussi à analyser cette photo." };
+
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
@@ -219,9 +245,11 @@ Réponds UNIQUEMENT avec ce JSON valide (sans balises markdown) :
   "problemes": [{"id":"slug","nom":"Nom","description":"Description","severite":"faible|moyenne|elevee|critique","impact_score":<-30 à 0>,"solution":"Action mécanique uniquement"}],
   "points_positifs": ["Point 1"],
   "actions_urgentes": ["Action entretien synthétique uniquement"],
-  "actions_prochaines": ["Action entretien synthétique uniquement"]
+  "actions_prochaines": ["Action entretien synthétique uniquement"],
+  ${CHAMPS_CONFIANCE}
 }
-Problèmes synthétique à détecter : granulats tassés, drainage obstrué, décoloration UV, saleté, moisissures, dégradation fibres.`
+Problèmes synthétique à détecter : granulats tassés, drainage obstrué, décoloration UV, saleté, moisissures, dégradation fibres.
+${CONSIGNE_CONFIANCE}`
       : `Expert agronome gazon pour Mongazon360. Analyse cette photo et fournis un diagnostic.
 Contexte: ${profileCtx}. ${weatherCtx}. Score actuel: ${score}/100.
 ${reglesProfil ? `RÈGLES KB OBLIGATOIRES: ${reglesProfil}` : ""}
@@ -229,9 +257,9 @@ ${reglesSaison(moisActuel)}
 BARÈME score_visuel (échelle EXIGEANTE, à respecter strictement) : 90-100 exceptionnel (green de golf, aucun défaut visible, TRÈS RARE) · 75-89 excellent (dense et homogène, défauts mineurs seulement) · 60-74 bon (sain avec imperfections visibles = un BEAU GAZON ORDINAIRE bien entretenu) · 45-59 moyen (zones clairsemées, jaunissements, stress marqué) · 30-44 mauvais (zones mortes, maladie, mauvaises herbes) · 0-29 critique (très dégradé ou quasi inexistant).
 CALIBRAGE OBLIGATOIRE : (1) note ≥80 = RARE ; un beau gazon vert et dense "normal" est 60-74, PAS 90. (2) Ne pénalise QUE les défauts clairement VISIBLES sur la photo — n'invente jamais un défaut supposé. (3) La météo (chaleur, sécheresse, pluie) n'est PAS un défaut du gazon. (4) Exigeant mais juste : ni trop sévère ni trop généreux.
 Réponds UNIQUEMENT en JSON valide (sans markdown, sans texte autour), 3 problèmes MAXIMUM, descriptions courtes :
-{"etat_general":"excellent|bon|moyen|mauvais|critique","score_visuel":<0-100>,"emoji":"😊|😐|😟|😰|💀","resume":"2 phrases max adaptées au type et objectif","problemes":[{"id":"slug","nom":"Nom","description":"courte","severite":"faible|moyenne|elevee|critique","impact_score":<-30 à 0>,"solution":"action concrète adaptée au profil (bio si objectif naturel)"}],"points_positifs":["..."],"actions_urgentes":["..."],"actions_prochaines":["..."]}
+{"etat_general":"excellent|bon|moyen|mauvais|critique","score_visuel":<0-100>,"emoji":"😊|😐|😟|😰|💀","resume":"2 phrases max adaptées au type et objectif","problemes":[{"id":"slug","nom":"Nom","description":"courte","severite":"faible|moyenne|elevee|critique","impact_score":<-30 à 0>,"solution":"action concrète adaptée au profil (bio si objectif naturel)"}],"points_positifs":["..."],"actions_urgentes":["..."],"actions_prochaines":["..."],${CHAMPS_CONFIANCE}}
 Problèmes à détecter selon le type : Universel/Sport/Ornement = oïdium, helminthosporiose, fusariose, anthracnose, mousse, mauvaises herbes, zones mortes, manque eau, brûlures azote, sol compacté, tallage excessif, tonte incorrecte · Ombre = oïdium (prioritaire), mousse, tallage faible · Rustique = espèces indésirables, zones sèches · Bermuda = dormance vs maladie, pythium en été.
-Si la photo ne montre pas de gazon : score_visuel 0 et explique dans resume.`;
+${CONSIGNE_CONFIANCE}`;
 
     const groqBody = JSON.stringify({
       model:       require("./aiModels.cjs").VISION_MODEL, // qwen3.8 depuis le 14/09 (qwen3.6 décommissionné) — multimodal, params reasoning/JSON
@@ -326,23 +354,14 @@ Si la photo ne montre pas de gazon : score_visuel 0 et explique dans resume.`;
       const start = cleaned.indexOf("{");
       const end   = cleaned.lastIndexOf("}");
       if (start === -1 || end === -1) throw new Error("Pas de JSON trouvé");
-      analysis = JSON.parse(cleaned.slice(start, end + 1));
-    } catch {
-      // Fallback si l'IA ne retourne pas du JSON valide
-      analysis = {
-        etat_general:       "moyen",
-        score_visuel:       50,
-        emoji:              "😐",
-        resume:             "Analyse incomplète. Prenez une photo plus nette en pleine lumière.",
-        problemes:          [],
-        points_positifs:    [],
-        actions_urgentes:   ["Relancer le diagnostic avec une meilleure photo"],
-        actions_prochaines: []
-      };
+      analysis = normaliserAnalyse(JSON.parse(cleaned.slice(start, end + 1)));
+    } catch (e) {
+      await require("./alerting.cjs").reportServerError("Diagnostic photo — analyse illisible", e, { "Réponse": rawText.slice(0, 300) });
+      analysis = normaliserAnalyse(ANALYSE_ILLISIBLE);
     }
 
-    // ── 3. SAUVEGARDE SUPABASE ────────────────────────────────────────────
-    if (resolvedUserId) {
+    // ── 3. SAUVEGARDE SUPABASE (photo exploitable uniquement) ─────────────
+    if (resolvedUserId && analysis.photo_exploitable) {
       try {
         const { createClient } = require("@supabase/supabase-js");
         const supabase = createClient(
@@ -359,6 +378,8 @@ Si la photo ne montre pas de gazon : score_visuel 0 et explique dans resume.`;
           problemes:      analysis.problemes || [],
           points_positifs: analysis.points_positifs || [],
           actions_urgentes: analysis.actions_urgentes || [],
+          confiance:      analysis.confiance,
+          observations:   analysis.observations,
         });
       } catch (e) {
         console.error("Supabase save diagnostic:", e.message);
@@ -454,8 +475,8 @@ ${reglesSaison(new Date().getMonth() + 1)}
 BARÈME score_visuel (échelle EXIGEANTE) : 90-100 exceptionnel (green de golf, aucun défaut, TRÈS RARE) · 75-89 excellent (dense, homogène, défauts mineurs) · 60-74 bon (sain avec imperfections = un beau gazon ordinaire bien entretenu) · 45-59 moyen (zones clairsemées, jaunissements, stress) · 30-44 mauvais (zones mortes, maladie, herbes) · 0-29 critique.
 CALIBRAGE : (1) note ≥80 = RARE ; un beau gazon normal est 60-74, pas 90. (2) Ne pénalise QUE les défauts clairement visibles, n'invente rien. (3) La météo n'est PAS un défaut du gazon. (4) Exigeant mais juste.
 Réponds UNIQUEMENT en JSON valide (sans markdown), 3 problèmes MAXIMUM, descriptions courtes :
-{"etat_general":"excellent|bon|moyen|mauvais|critique","score_visuel":<0-100>,"emoji":"😊|😐|😟|😰|💀","resume":"2 phrases max","problemes":[{"id":"slug","nom":"Nom","description":"courte","severite":"faible|moyenne|elevee|critique","impact_score":<-30 à 0>,"solution":"action concrète"}],"points_positifs":["..."],"actions_urgentes":["..."],"actions_prochaines":["..."]}
-Si la photo ne montre pas de gazon : score_visuel 0 et explique dans resume.`;
+{"etat_general":"excellent|bon|moyen|mauvais|critique","score_visuel":<0-100>,"emoji":"😊|😐|😟|😰|💀","resume":"2 phrases max","problemes":[{"id":"slug","nom":"Nom","description":"courte","severite":"faible|moyenne|elevee|critique","impact_score":<-30 à 0>,"solution":"action concrète"}],"points_positifs":["..."],"actions_urgentes":["..."],"actions_prochaines":["..."],${CHAMPS_CONFIANCE}}
+${CONSIGNE_CONFIANCE}`;
   const groqBody = JSON.stringify({
     model: require("./aiModels.cjs").VISION_MODEL,
     max_tokens: 1000,
@@ -484,11 +505,10 @@ Si la photo ne montre pas de gazon : score_visuel 0 et explique dans resume.`;
     const cleaned = rawText.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
     const s = cleaned.indexOf("{"), e = cleaned.lastIndexOf("}");
     if (s === -1 || e === -1) throw new Error("no json");
-    analysis = JSON.parse(cleaned.slice(s, e + 1));
-  } catch {
-    analysis = { etat_general: "moyen", score_visuel: 50, emoji: "😐",
-      resume: "Analyse incomplète. Prends une photo plus nette en pleine lumière.",
-      problemes: [], points_positifs: [], actions_urgentes: ["Relancer avec une meilleure photo"], actions_prochaines: [] };
+    analysis = normaliserAnalyse(JSON.parse(cleaned.slice(s, e + 1)));
+  } catch (err) {
+    await require("./alerting.cjs").reportServerError("Diagnostic photo sans compte — analyse illisible", err, { "Réponse": rawText.slice(0, 300) });
+    analysis = normaliserAnalyse(ANALYSE_ILLISIBLE);
   }
   return { imageUrl, publicId, analysis };
 }
@@ -526,8 +546,13 @@ async function handleAnonymousDiagnostic(req, res) {
     const { imageUrl, publicId, analysis } = await runAnonDiagnostic({ imageBase64, mimeType, weather, score });
     try {
       const supabase = sbClientAnon();
-      // On ne consomme le quota qu'en cas de succès (diagnostic réellement rendu).
+      // Le diagnostic gratuit de l'appareil n'est consommé que par un diagnostic rendu ; une photo à reprendre
+      // ne compte que dans la limite par réseau (2 par jour).
       const nowIso = new Date().toISOString();
+      if (!analysis.photo_exploitable) {
+        await supabase.from("rate_limits").insert({ user_id: ip, endpoint: "anon_ip", count: 1, window_start: nowIso });
+        return res.json({ success: true, imageUrl, analysis, date: nowIso });
+      }
       await supabase.from("rate_limits").insert([
         { user_id: anonId, endpoint: "anon_device", count: 1, window_start: nowIso },
         { user_id: ip,     endpoint: "anon_ip",     count: 1, window_start: nowIso },
@@ -538,6 +563,7 @@ async function handleAnonymousDiagnostic(req, res) {
         resume: analysis.resume || null, problemes: analysis.problemes || [],
         points_positifs: analysis.points_positifs || [], actions_urgentes: analysis.actions_urgentes || [],
         actions_prochaines: analysis.actions_prochaines || [],
+        confiance: analysis.confiance, observations: analysis.observations,
       });
     } catch (e) { console.error("[MG360] anon save:", e.message); }
     return res.json({ success: true, imageUrl, analysis, date: new Date().toISOString() });
@@ -573,6 +599,7 @@ async function handleClaimAnon(req, res) {
       etat_general: row.etat_general, score_visuel: row.score_visuel, resume: row.resume,
       problemes: row.problemes || [], points_positifs: row.points_positifs || [],
       actions_urgentes: row.actions_urgentes || [],
+      confiance: row.confiance, observations: row.observations || [],
     });
     await supabase.from("diagnostics_anon").delete().eq("anon_id", anonId);
     return res.json({ success: true, claimed: true });

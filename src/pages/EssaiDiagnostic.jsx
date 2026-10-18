@@ -6,6 +6,7 @@ import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAnonId, setAnonPending } from "../lib/anonId";
 import { trackFunnel } from "../lib/funnel";
+import ConfianceDiagnostic, { PhotoAReprendre } from "../components/ConfianceDiagnostic";
 
 const G = {
   bg:     "linear-gradient(165deg,#0F2F1F 0%,#164a2b 45%,#0d2519 100%)",
@@ -50,7 +51,7 @@ const btnGhost = { background:"rgba(255,255,255,0.08)", border:"1px solid rgba(1
 
 export default function EssaiDiagnostic() {
   const navigate = useNavigate();
-  const [view, setView]       = useState("home");   // home | camera | result | wall
+  const [view, setView]       = useState("home");   // home | camera | reprendre | result | wall
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState("");
   const [preview, setPreview] = useState(null);
@@ -96,6 +97,8 @@ export default function EssaiDiagnostic() {
       if (!res.ok || data.error) throw new Error(data.message || data.error || "Erreur serveur");
 
       setResult({ analysis: data.analysis, imageUrl: data.imageUrl });
+      // Photo inexploitable : le diagnostic gratuit n'est pas consommé, on la fait reprendre
+      if (data.analysis?.photo_exploitable === false) { setView("reprendre"); return; }
       setView("result");
       trackFunnel("anon_diag_result", { score: data.analysis?.score_visuel ?? null });
     } catch (e) { setError(e.message); }
@@ -178,6 +181,20 @@ export default function EssaiDiagnostic() {
     </Shell>
   );
 
+  // ── PHOTO À REPRENDRE (diagnostic gratuit conservé) ──
+  if (view === "reprendre" && result) return (
+    <Shell>
+      {hidden}
+      <PhotoAReprendre analysis={result.analysis}>
+        <div style={{ fontSize:12.5, color:G.soft, margin:"12px 0 14px" }}>Ton diagnostic gratuit n'est pas utilisé : tu peux réessayer.</div>
+        <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+          <button onClick={() => fileRef.current.click()} style={btnPrimary}>📷 Reprendre une photo</button>
+          <button onClick={() => galleryRef.current.click()} style={btnGhost}>🖼️ Choisir depuis la galerie</button>
+        </div>
+      </PhotoAReprendre>
+    </Shell>
+  );
+
   // ── RÉSULTAT TEASÉ ──
   if (view === "result" && result) {
     const a = result.analysis;
@@ -193,6 +210,8 @@ export default function EssaiDiagnostic() {
           <div style={{ fontSize:14, fontWeight:800, color:etatColor, marginTop:4, textTransform:"capitalize" }}>{a.etat_general}</div>
           <div style={{ fontSize:13, color:G.soft, lineHeight:1.6, fontStyle:"italic", marginTop:10 }}>« {a.resume} »</div>
         </div>
+
+        <ConfianceDiagnostic analysis={a} />
 
         {result.imageUrl && <div style={{ borderRadius:16, overflow:"hidden", marginBottom:14 }}><img src={result.imageUrl} alt="ta pelouse" style={{ width:"100%", maxHeight:190, objectFit:"cover", display:"block" }} /></div>}
 
