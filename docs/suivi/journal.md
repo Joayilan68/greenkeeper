@@ -239,3 +239,8 @@ du premier onglet).
   décembre passés dans « Déjà en prod (exceptions) » (n° 23 à 26).
 - 18/10/2026 — App Meta « Mongazon360 Publications » publiée et test de la connexion Meta en prod par Jordan : OK (page
   Mongazon360 et Instagram @mongazon360, rien publié ; recette « Déjà en prod » n° 23 validé).
+- 18/10/2026 — Suite décidée par Jordan : sécuriser la tâche planifiée (go prod, en attente de la clé CRON_SECRET que
+  Jordan crée dans Vercel), puis sur STA les stations météo de toutes marques par Weather Underground et le formulaire
+  « Votre équipement n'est pas dans la liste ? », et la préparation des articles de novembre. Fait sur STA : connexion des
+  stations publiant sur Weather Underground (identifiant de la station et clé API de l'utilisateur, chiffrée ; politique de
+  confidentialité 6.3 au 18/10/2026, Bob) ; recette de décembre n° 48.

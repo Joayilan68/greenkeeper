@@ -148,7 +148,7 @@ export function MentionsLegales() {
 export function Confidentialite() {
   return (
     <div>
-      <PageHeader emoji="🔒" title="Politique de confidentialité" subtitle="Mise à jour : 17 octobre 2026" />
+      <PageHeader emoji="🔒" title="Politique de confidentialité" subtitle="Mise à jour : 18 octobre 2026" />
       <div style={scroll}>
 
         <Section title="1. Préambule">
@@ -251,7 +251,7 @@ export function Confidentialite() {
           </SubSection>
 
           <SubSection title="6.3 Fabricants des équipements connectés">
-            Si vous connectez un équipement (par exemple une station météo <strong style={{ color:"#a5d6a7" }}>Netatmo</strong>, <strong style={{ color:"#a5d6a7" }}>Ecowitt</strong> ou <strong style={{ color:"#a5d6a7" }}>Davis</strong>, un robot tondeuse <strong style={{ color:"#a5d6a7" }}>Husqvarna</strong>, <strong style={{ color:"#a5d6a7" }}>Gardena</strong> ou <strong style={{ color:"#a5d6a7" }}>Mammotion</strong>, un arrosage <strong style={{ color:"#a5d6a7" }}>Gardena</strong> ou <strong style={{ color:"#a5d6a7" }}>Rachio</strong>), Mongazon360 interroge le service en ligne du fabricant avec l'accès que vous lui avez donné (clés ou identifiants créés sur votre compte, ou connexion sur le site du fabricant), pour lire l'état et les mesures de votre appareil et, pour un robot ou un arrosage, lui transmettre les commandes que vous validez (mise au repos, reprise, retour à la base ou hauteur de coupe du robot ; arrosage d'une zone, suspension ou reprise des programmes). Le fabricant traite les données de votre appareil en qualité de responsable de traitement indépendant, selon sa propre politique de confidentialité, et ses serveurs peuvent être situés hors de l'Union européenne. Vous pouvez déconnecter l'équipement à tout moment dans « Mes équipements » : ses clés d'accès sont alors effacées ; vous pouvez aussi les révoquer directement sur votre compte chez le fabricant.
+            Si vous connectez un équipement (par exemple une station météo <strong style={{ color:"#a5d6a7" }}>Netatmo</strong>, <strong style={{ color:"#a5d6a7" }}>Ecowitt</strong>, <strong style={{ color:"#a5d6a7" }}>Davis</strong> ou publiant sur <strong style={{ color:"#a5d6a7" }}>Weather Underground</strong>, un robot tondeuse <strong style={{ color:"#a5d6a7" }}>Husqvarna</strong>, <strong style={{ color:"#a5d6a7" }}>Gardena</strong> ou <strong style={{ color:"#a5d6a7" }}>Mammotion</strong>, un arrosage <strong style={{ color:"#a5d6a7" }}>Gardena</strong> ou <strong style={{ color:"#a5d6a7" }}>Rachio</strong>), Mongazon360 interroge le service en ligne du fabricant avec l'accès que vous lui avez donné (clés ou identifiants créés sur votre compte, ou connexion sur le site du fabricant), pour lire l'état et les mesures de votre appareil et, pour un robot ou un arrosage, lui transmettre les commandes que vous validez (mise au repos, reprise, retour à la base ou hauteur de coupe du robot ; arrosage d'une zone, suspension ou reprise des programmes). Le fabricant traite les données de votre appareil en qualité de responsable de traitement indépendant, selon sa propre politique de confidentialité, et ses serveurs peuvent être situés hors de l'Union européenne. Vous pouvez déconnecter l'équipement à tout moment dans « Mes équipements » : ses clés d'accès sont alors effacées ; vous pouvez aussi les révoquer directement sur votre compte chez le fabricant.
           </SubSection>
 
           <SubSection title="6.4 Meta Platforms Ireland Limited (Meta Pixel)">

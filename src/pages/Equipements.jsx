@@ -49,11 +49,12 @@ const RETOURS_GARDENA_ROBOT = {
 const A_VENIR = [
   { icone:"📷", titre:"Caméra", texte:"Une photo de ta pelouse chaque semaine, analysée comme un diagnostic." },
 ];
-const NOMS_STATION = { netatmo:"Netatmo", ecowitt:"Ecowitt", davis:"Davis" };
+const NOMS_STATION = { netatmo:"Netatmo", ecowitt:"Ecowitt", davis:"Davis", wunderground:"Weather Underground" };
 const NOMS_ROBOT = { husqvarna:"Husqvarna Automower", gardena:"Gardena SILENO", mammotion:"Mammotion" };
 const lien = { background:"none", border:"none", padding:0, color:"#81c784", fontSize:11, cursor:"pointer", textDecoration:"underline" };
 
-// Mes équipements (depuis Mon Gazon) : station météo Netatmo, Ecowitt ou Davis, robot Husqvarna, Gardena ou Mammotion et
+// Mes équipements (depuis Mon Gazon) : station météo Netatmo, Ecowitt, Davis ou publiant sur Weather Underground, robot
+// Husqvarna, Gardena ou Mammotion et
 // arrosage Gardena ou Rachio connectés ; caméras à venir
 export default function Equipements() {
   const navigate = useNavigate();
@@ -64,6 +65,7 @@ export default function Equipements() {
   const [stations, setStations] = useState(null);
   const [clesDavis, setClesDavis] = useState({ apiKey:"", apiSecret:"" });
   const [stationsDavis, setStationsDavis] = useState(null);
+  const [clesWu, setClesWu] = useState({ station:"", apiKey:"" });
   const [idsMammotion, setIdsMammotion] = useState({ clientId:"", clientSecret:"" });
   const retourHq = RETOURS_HUSQVARNA[params.get("husqvarna")] || RETOURS_GARDENA[params.get("gardena")]
     || RETOURS_GARDENA_ROBOT[params.get("gardena_robot")] || RETOURS_NETATMO[params.get("netatmo")];
@@ -105,6 +107,10 @@ export default function Equipements() {
   const connecterDavis = async (s) => {
     if (!await action({ action:"davis", ...clesDavis, station: s.id, nom: s.nom })) return;
     setClesDavis({ apiKey:"", apiSecret:"" }); setStationsDavis(null); charger();
+  };
+  const connecterWu = async () => {
+    if (!await action({ action:"wunderground", ...clesWu })) return;
+    setClesWu({ station:"", apiKey:"" }); charger();
   };
   const connecterMammotion = async () => {
     if (!await action({ action:"mammotion", ...idsMammotion })) return;
@@ -231,8 +237,23 @@ export default function Equipements() {
                   ))}
                 </div>
               )}
+              <div style={{ fontSize:11, fontWeight:700, color:"#e8f5e9", margin:"14px 0 0" }}>Autre marque, si ta station publie sur Weather Underground (Froggit, Bresser, Ambient Weather…)</div>
+              <div style={{ fontSize:11, color:"#81c784", lineHeight:1.6, margin:"6px 0 10px" }}>
+                1. Sur <a href="https://www.wunderground.com/member/api-keys" target="_blank" rel="noopener noreferrer" style={{ color:"#a5d6a7" }}>wunderground.com</a>, connecté au compte de ta station, ouvre « API Keys » et crée une <strong>clé API</strong> (gratuite pour les stations actives).<br/>
+                2. Colle l'<strong>identifiant de ta station</strong> (par exemple ILYON123, écrit comme sur Weather Underground) et la clé, puis connecte-la.
+              </div>
+              <label style={{ fontSize:11, color:"#81c784" }}>Identifiant de la station
+                <input value={clesWu.station} onChange={e => setClesWu({ ...clesWu, station: e.target.value })} autoComplete="off" style={champ} />
+              </label>
+              <div style={{ height:8 }} />
+              <label style={{ fontSize:11, color:"#81c784" }}>Clé API
+                <input value={clesWu.apiKey} onChange={e => setClesWu({ ...clesWu, apiKey: e.target.value })} autoComplete="off" style={champ} />
+              </label>
+              <button onClick={connecterWu} disabled={envoi || !clesWu.station || !clesWu.apiKey} style={{ ...bouton, marginTop:12, opacity: clesWu.station && clesWu.apiKey ? 1 : 0.5 }}>
+                {envoi ? "Connexion…" : "Connecter ma station"}
+              </button>
               <div style={{ fontSize:10, color:"#4a7c5c", lineHeight:1.5, marginTop:10 }}>
-                Netatmo : connexion sur le site de Netatmo, Mongazon360 ne voit jamais ton mot de passe ; accès en lecture seule, retirable dans ton compte Netatmo. Ecowitt et Davis : clés chiffrées, supprimables sur ecowitt.net ou régénérables sur weatherlink.com. Dans tous les cas, tu peux déconnecter la station ici à tout moment. Autres marques de stations : en préparation.
+                Netatmo : connexion sur le site de Netatmo, Mongazon360 ne voit jamais ton mot de passe ; accès en lecture seule, retirable dans ton compte Netatmo. Ecowitt, Davis et Weather Underground : clés chiffrées, supprimables sur ecowitt.net ou wunderground.com, ou régénérables sur weatherlink.com. Dans tous les cas, tu peux déconnecter la station ici à tout moment.
               </div>
             </>
           )}

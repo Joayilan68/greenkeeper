@@ -1,6 +1,6 @@
 // api/equipements.cjs
 // Équipements connectés (table equipements, accès serveur uniquement) : clés d'accès chiffrées,
-// connecteurs Ecowitt, Netatmo et Davis (station météo), Husqvarna Automower, Gardena SILENO et Mammotion (robot tondeuse),
+// connecteurs Ecowitt, Netatmo, Davis et Weather Underground (station météo), Husqvarna Automower, Gardena SILENO et Mammotion (robot tondeuse),
 // Gardena et Rachio (arrosage), capteurs de sol Gardena et Ecowitt, application des mesures du jardin à la météo du jour.
 // Utilisé par api/objets.js (écran « Mes équipements »), api/weather.js (app), api/send.js
 // (notifications) et api/bobContext.cjs (Bob). Aucune donnée n'est gardée au-delà de la dernière mesure.
@@ -170,6 +170,41 @@ async function mesuresDavis({ apiKey, apiSecret, station }) {
   return m;
 }
 
+// ── Weather Underground (api.weather.com, PWS) : station de toute marque qui publie sur Weather Underground (Froggit,
+// Bresser, Ambient Weather…). Identifiant de la station et clé API créés par son propriétaire (wunderground.com/member/
+// api-keys, clé gratuite réservée aux stations actives, 1 500 appels par jour). Relevé de moins d'une heure, sinon réponse
+// vide (204) : la station ne publie plus. Unités métriques (°C, mm, km/h) ; pluie cumulée depuis minuit.
+const WUNDERGROUND = "https://api.weather.com/v2/pws/observations/current";
+
+async function releveWunderground({ apiKey, station }) {
+  const params = new URLSearchParams({ stationId: station, format: "json", units: "m", numericPrecision: "decimal", apiKey });
+  const r = await fetch(`${WUNDERGROUND}?${params}`, { signal: AbortSignal.timeout(8000) });
+  if (r.status === 401 || r.status === 403) throw new Error("Clé API Weather Underground refusée");
+  if (r.status === 204) throw new Error("Aucun relevé de cette station depuis une heure : vérifie l'identifiant (majuscules comprises)");
+  if (r.status === 429) throw new Error("Limite de requêtes Weather Underground atteinte, réessaie plus tard");
+  const o = r.ok ? (await r.json().catch(() => null))?.observations?.[0] : null;
+  if (!o) throw new Error(`Weather Underground : erreur ${r.status}`);
+  return o;
+}
+
+function mesuresReleveWunderground(o) {
+  const num = (v) => typeof v === "number" ? v : null;
+  const m = {
+    temp: num(o.metric?.temp), humidite: num(o.humidity), pluie_jour: num(o.metric?.precipTotal),
+    vent: num(o.metric?.windSpeed), rafale: num(o.metric?.windGust), sol_humidite: null,
+  };
+  if (m.temp === null && m.pluie_jour === null) throw new Error("La station n'envoie ni température ni pluie à Weather Underground");
+  return m;
+}
+
+// Connexion : vérifie l'accès et donne le nom de la station (quartier déclaré sur Weather Underground) et ses mesures
+async function stationWunderground(cles) {
+  const o = await releveWunderground(cles);
+  return { id: o.stationID || cles.station, nom: o.neighborhood || o.stationID || cles.station, mesures: mesuresReleveWunderground(o) };
+}
+
+const mesuresWunderground = async (cles) => mesuresReleveWunderground(await releveWunderground(cles));
+
 // ── Station de l'utilisateur : dernière mesure (relue si elle a plus de 10 minutes) ───────────
 async function mesuresStation(supabase, userId) {
   const { data: eq } = await supabase.from("equipements").select("*")
@@ -180,6 +215,7 @@ async function mesuresStation(supabase, userId) {
   try {
     const mesures = eq.marque === "netatmo" ? await mesuresNetatmo(supabase, eq)
       : eq.marque === "davis" ? await mesuresDavis({ ...dechiffrer(eq.secret), station: eq.appareil })
+      : eq.marque === "wunderground" ? await mesuresWunderground({ ...dechiffrer(eq.secret), station: eq.appareil })
       : await mesuresEcowitt({ ...dechiffrer(eq.secret), mac: eq.appareil });
     const at = new Date().toISOString();
     await supabase.from("equipements").update({ mesures, mesures_at: at, statut: "connecte", erreur: null }).eq("id", eq.id);
@@ -664,7 +700,7 @@ async function commandeArrosage(supabase, userId, { commande, zone, minutes }) {
 
 module.exports = {
   chiffrer, dechiffrer, stationsEcowitt, mesuresEcowitt, mesuresStation, appliquerStation, etatSol, mesureSol, appliquerSol,
-  urlConnexionNetatmo, jetonsNetatmo, stationsNetatmo, stationsDavis, mesuresDavis,
+  urlConnexionNetatmo, jetonsNetatmo, stationsNetatmo, stationsDavis, mesuresDavis, stationWunderground, mesuresWunderground,
   urlConnexionHusqvarna, verifierEtat, jetonsHusqvarna, robotsHusqvarna, etatRobot, commandeRobot, revoquerHusqvarna,
   jetonMammotion, robotsMammotion,
   jardinsGardena, reprendreRobotsGardena, programmateursRachio, etatArrosage, commandeArrosage,
