@@ -13,7 +13,6 @@
 //   GET|POST /api/stats?type=publications → lots de comm Facebook et Instagram (Pilotage → Réseaux)
 //   GET /api/stats?type=demandes_equipements → équipements que les utilisateurs aimeraient connecter (Pilotage → Activité)
 
-// Emails admin — exclus de TOUTES les stats (règle "admins exclus de tout")
 const { verifiedUserId, ADMIN_EMAILS } = require("./auth.cjs");
 
 const { createClerkClient } = require("@clerk/backend");
@@ -21,6 +20,21 @@ const { createClient }      = require("@supabase/supabase-js");
 const { statsRelances }     = require("./relances.cjs");
 const { cleDisponible, positionsParMois } = require("./searchConsole.cjs");
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
+
+// Comptes exclus de toutes les statistiques : admins, leurs adresses « + » (comptes de test, ex. jordankrebs1+essai@gmail.com)
+// et comptes marqués {"compteTest": true} dans les métadonnées publiques de Clerk
+const ADMIN_BASES = ADMIN_EMAILS.map(e => e.split("@"));
+function compteExclu(u) {
+  const email = (u.email_addresses?.find(e => e.id === u.primary_email_address_id)?.email_address
+    || u.email_addresses?.[0]?.email_address || "").toLowerCase();
+  const [local = "", domaine] = email.split("@");
+  return ADMIN_EMAILS.includes(email) || u.public_metadata?.compteTest === true
+    || ADMIN_BASES.some(([l, d]) => d === domaine && local.split("+")[0] === l);
+}
+
+// Jour (AAAA-MM-JJ) à l'heure de Paris : une inscription ou une visite à 0 h 30 compte pour le jour même
+const jourParis = (ms) => new Date(ms).toLocaleDateString("fr-CA", { timeZone: "Europe/Paris" });
+const libelleJour = (jour) => `${jour.slice(8, 10)}/${jour.slice(5, 7)}`;
 
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -193,7 +207,7 @@ async function handleRevenue(req, res) {
 
     // ── 1. Abonnements actifs ──────────────────────────────────────────────
     const subRes = await fetch(
-      "https://api.stripe.com/v1/subscriptions?status=active&limit=100&expand[]=data.items.data.price",
+      "https://api.stripe.com/v1/subscriptions?status=active&limit=100&expand[]=data.items.data.price&expand[]=data.latest_invoice",
       { headers: { "Authorization": `Bearer ${stripeKey}` } }
     );
     if (!subRes.ok) throw new Error("Stripe subscriptions error: " + subRes.status);
@@ -202,7 +216,9 @@ async function handleRevenue(req, res) {
 
     let premiumMonthly = 0;
     let premiumYearly  = 0;
-    let mrr            = 0;
+    let mensuels       = 0;   // € par mois des abonnements mensuels
+    let annuels        = 0;   // € par an des abonnements annuels, au montant de la dernière facture payée
+    let offresAnnuelles = 0;  // abonnés annuels facturés moins que le prix (offre saisonnière la 1re année)
 
     subs.forEach(sub => {
       const price    = sub.items?.data?.[0]?.price;
@@ -211,15 +227,18 @@ async function handleRevenue(req, res) {
 
       if (interval === "month") {
         premiumMonthly++;
-        mrr += amount;
+        mensuels += amount;
       } else if (interval === "year") {
         premiumYearly++;
-        mrr += amount / 12;
+        const facture = sub.latest_invoice?.status === "paid" ? sub.latest_invoice.amount_paid / 100 : amount;
+        if (facture < amount) offresAnnuelles++;
+        annuels += facture;
       }
     });
 
     const totalPremium = premiumMonthly + premiumYearly;
-    mrr = Math.round(mrr * 100) / 100;
+    const arrondi = (v) => Math.round(v * 100) / 100;
+    const mrr = arrondi(mensuels + annuels / 12);
 
     // ── 2. Revenus des 6 derniers mois ────────────────────────────────────
     const months = [];
@@ -281,8 +300,11 @@ async function handleRevenue(req, res) {
       premiumMonthly,
       premiumYearly,
       totalPremium,
+      mensuels: arrondi(mensuels),
+      annuels: arrondi(annuels),
+      offresAnnuelles,
       mrr,
-      arr: Math.round(mrr * 12 * 100) / 100,
+      arr: arrondi(mrr * 12),
       months,
       weeks,
       balance: { available, pending }
@@ -299,26 +321,25 @@ async function handleUsers(req, res) {
   try {
     // ✅ Pagination explicite + parsing format multi-version Clerk
     // Toutes les sources en parallèle (la page attendait auparavant chaque requête l'une après l'autre)
-    const [allUsersRaw, dauByDay, geo, diagRows, siteVisits, funnel, devices, sourceVisits, bob, notifs, presence] = await Promise.all([
-      fetchAllClerkUsers(), fetchDauByDay(), fetchGeoPoints(), fetchDiagnosticsRows(), fetchSiteVisits(), fetchFunnel(), fetchDevices(), fetchSourceVisits(), fetchBobUsage(), fetchNotifStats(), fetchPresence(),
+    const [allUsersRaw, geoRows, diagRows, siteVisits, funnel, devices, sourceVisits, bob, notifs, presenceRaw] = await Promise.all([
+      fetchAllClerkUsers(), fetchGeoRows(), fetchDiagnosticsRows(), fetchSiteVisits(), fetchFunnel(), fetchDevices(), fetchSourceVisits(), fetchBobUsage(), fetchNotifStats(), fetchPresence(),
     ]);
 
-    // Exclure les comptes admin de TOUTES les stats (règle "admins exclus de tout")
-    const allUsers = allUsersRaw.filter(u => {
-      const primary = u.email_addresses?.find(e => e.id === u.primary_email_address_id)?.email_address
-        || u.email_addresses?.[0]?.email_address || "";
-      return !ADMIN_EMAILS.includes(primary.toLowerCase());
-    });
+    // Admins et comptes de test exclus de TOUTES les stats (compteExclu)
+    const exclus   = new Set(allUsersRaw.filter(compteExclu).map(u => u.id));
+    const allUsers = allUsersRaw.filter(u => !exclus.has(u.id));
+    const presence = presenceRaw && presenceRaw.filter(r => !exclus.has(r.user_id));
 
     const now    = Date.now();
     const day7   = now - 7  * 24 * 60 * 60 * 1000;
     const day30  = now - 30 * 24 * 60 * 60 * 1000;
+    const jourInscription = new Map(allUsers.map(u => [u.id, jourParis(u.created_at)]));
+    const aujourdhui = jourParis(now);
 
     const total       = allUsers.length;
     const newLast7    = allUsers.filter(u => u.created_at > day7).length;
     const newLast30   = allUsers.filter(u => u.created_at > day30).length;
-    const startYear   = new Date(new Date().getFullYear(), 0, 1).getTime();
-    const newThisYear = allUsers.filter(u => u.created_at >= startYear).length;
+    const newThisYear = allUsers.filter(u => jourInscription.get(u.id).slice(0, 4) === aujourdhui.slice(0, 4)).length;
 
     // Grouper par semaine (8 dernières semaines)
     const weeks = [];
@@ -329,36 +350,27 @@ async function handleUsers(req, res) {
       weeks.push({ label: `S-${i === 0 ? "cette sem." : i}`, count });
     }
 
-    // Grouper par mois (6 derniers mois)
+    // Grouper par mois (6 derniers mois, à l'heure de Paris)
     const months = [];
+    const [annee, mois] = aujourdhui.split("-").map(Number);
     for (let i = 5; i >= 0; i--) {
-      const d     = new Date();
-      d.setMonth(d.getMonth() - i);
-      const year  = d.getFullYear();
-      const month = d.getMonth();
-      const count = allUsers.filter(u => {
-        const ud = new Date(u.created_at);
-        return ud.getFullYear() === year && ud.getMonth() === month;
-      }).length;
+      const d   = new Date(Date.UTC(annee, mois - 1 - i, 15));
+      const cle = d.toISOString().slice(0, 7);
       months.push({
-        label: d.toLocaleDateString("fr-FR", { month:"short", year:"2-digit" }),
-        count
+        label: d.toLocaleDateString("fr-FR", { month:"short", year:"2-digit", timeZone:"UTC" }),
+        count: allUsers.filter(u => jourInscription.get(u.id).startsWith(cle)).length,
       });
     }
 
-    // Nouveaux inscrits par JOUR (30 derniers jours) — exact, depuis created_at Clerk
-    const days = [];
-    for (let i = 29; i >= 0; i--) {
-      const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - i);
-      const start = d.getTime();
-      const end   = start + 24 * 60 * 60 * 1000;
-      const count = allUsers.filter(u => u.created_at >= start && u.created_at < end).length;
-      days.push({ label: d.toLocaleDateString("fr-FR", { day:"2-digit", month:"2-digit" }), count });
-    }
+    // Nouveaux inscrits par JOUR (30 derniers jours, à l'heure de Paris) — exact, depuis created_at Clerk
+    const jours30 = Array.from({ length: 30 }, (_, i) => jourParis(now - (29 - i) * 86400000));
+    const days = jours30.map(jour => ({ label: libelleJour(jour), count: allUsers.filter(u => jourInscription.get(u.id) === jour).length }));
 
-    // Nouveaux inscrits aujourd'hui (jour calendaire)
-    const startToday = new Date(); startToday.setHours(0, 0, 0, 0);
-    const newToday   = allUsers.filter(u => u.created_at >= startToday.getTime()).length;
+    // Nouveaux inscrits aujourd'hui (jour calendaire à Paris)
+    const newToday = days[days.length - 1].count;
+
+    // Actifs par jour (30 derniers jours) : comptes ayant utilisé l'app, hors admins et comptes de test
+    const dauByDay = presence ? jours30.map(jour => ({ label: libelleJour(jour), count: presence.filter(r => r.day === jour).length })) : [];
 
     // Sources UTM des inscrits (first-touch, unsafe_metadata Clerk)
     const clerkSources = aggregateClerkSources(allUsers);
@@ -379,7 +391,7 @@ async function handleUsers(req, res) {
       weeks,
       months,
       dauByDay,
-      geo,
+      geo: pointsGeo(geoRows, exclus),
       diagnostics,
       siteVisits,
       funnel,
@@ -564,39 +576,6 @@ function aggregateClerkSources(clerkUsers) {
   return counts;
 }
 
-// ── Helper : actifs/jour depuis la vue dau_by_day (service_role) ──────────────
-// Renvoie [{ label:"JJ/MM", count }] sur les 30 derniers jours.
-async function fetchDauByDay() {
-  try {
-    const supaUrl = process.env.SUPABASE_URL;
-    const supaKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!supaUrl || !supaKey) {
-      console.warn("stats-users: env vars manquantes pour dauByDay");
-      return [];
-    }
-
-    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-    const r = await fetch(
-      `${supaUrl}/rest/v1/dau_by_day?day=gte.${since}&order=day.asc`,
-      { headers: { "apikey": supaKey, "Authorization": `Bearer ${supaKey}` } }
-    );
-
-    if (!r.ok) {
-      console.warn("stats-users dauByDay HTTP:", r.status);
-      return [];
-    }
-
-    const rows = await r.json();
-    return rows.map(row => ({
-      label: new Date(row.day).toLocaleDateString("fr-FR", { day:"2-digit", month:"2-digit" }),
-      count: parseInt(row.count) || 0,
-    }));
-  } catch (e) {
-    console.warn("stats-users dauByDay:", e.message);
-    return [];
-  }
-}
-
 // ── Helper : diagnostics photo de tous les inscrits (hors admins) ──────────────
 // Total, 7 derniers jours, score visuel moyen, problèmes les plus détectés.
 async function fetchDiagnosticsRows() {
@@ -630,30 +609,32 @@ function diagnosticsStats(allRows, userIds) {
 }
 
 // ── Helper : points géographiques des inscrits (profiles.lat/lon agrégés) ─────
-// Regroupe par coordonnées arrondies (≈ même ville) avec un compteur.
-async function fetchGeoPoints() {
+// Regroupe par coordonnées arrondies (≈ même ville) avec un compteur, hors admins et comptes de test.
+async function fetchGeoRows() {
   try {
     if (!SB_URL || !SB_KEY) return [];
-    const r = await fetch(`${SB_URL}/rest/v1/profiles?select=data`, {
+    const r = await fetch(`${SB_URL}/rest/v1/profiles?select=user_id,data`, {
       headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
     });
-    if (!r.ok) return [];
-    const rows = await r.json();
-    const map  = new Map();
-    (rows || []).forEach(row => {
-      const d   = row.data || {};
-      const lat = parseFloat(d.lat), lon = parseFloat(d.lon);
-      if (!isFinite(lat) || !isFinite(lon)) return;
-      const key = `${lat.toFixed(2)},${lon.toFixed(2)}`;
-      const cur = map.get(key);
-      if (cur) { cur.count++; }
-      else map.set(key, { ville: String(d.ville || "").split(",")[0].trim(), lat: +lat.toFixed(3), lon: +lon.toFixed(3), count: 1 });
-    });
-    return [...map.values()].sort((a, b) => b.count - a.count);
+    return r.ok ? await r.json() : [];
   } catch (e) {
     console.warn("stats-users geo:", e.message);
     return [];
   }
+}
+
+function pointsGeo(rows, exclus) {
+  const map = new Map();
+  (rows || []).filter(row => !exclus.has(row.user_id)).forEach(row => {
+    const d   = row.data || {};
+    const lat = parseFloat(d.lat), lon = parseFloat(d.lon);
+    if (!isFinite(lat) || !isFinite(lon)) return;
+    const key = `${lat.toFixed(2)},${lon.toFixed(2)}`;
+    const cur = map.get(key);
+    if (cur) { cur.count++; }
+    else map.set(key, { ville: String(d.ville || "").split(",")[0].trim(), lat: +lat.toFixed(3), lon: +lon.toFixed(3), count: 1 });
+  });
+  return [...map.values()].sort((a, b) => b.count - a.count);
 }
 
 // ── Helper : entonnoir de conversion (vue funnel_events_by_day, 30 jours) ─────
@@ -724,7 +705,7 @@ function retentionCohortes(users, presence) {
   const debut = presence.reduce((m, r) => r.day < m ? r.day : m, presence[0].day);
   const derniere = new Map(); // compte → dernier jour d'utilisation
   for (const r of presence) if (!derniere.has(r.user_id) || r.day > derniere.get(r.user_id)) derniere.set(r.user_id, r.day);
-  const jour = (ms) => new Date(ms).toISOString().slice(0, 10);
+  const jour = jourParis;
   const age = (u) => Math.floor((Date.now() - u.created_at) / 86400000);
   const ecart = (u) => derniere.has(u.id) ? Math.floor((Date.parse(derniere.get(u.id)) - Date.parse(jour(u.created_at))) / 86400000) : -1;
 
@@ -752,18 +733,18 @@ async function fetchNotifStats() {
     if (error) throw new Error(error.message);
     const types = {};
     const suivis = [];
-    let push = 0, ouvertes = 0, emails = 0;
+    let push = 0, ouvertes = 0, emails = 0, emailsDemarrage = 0;
     for (const r of data || []) for (const h of r.notif_log?.history || []) {
       const t = String(h.type || "autre").replace(/^(entretien|maladie|urgence|conseil|gami|relance|demarrage|hiver|printemps|bilan)_.*/, "$1");
       if (t === "demarrage" || t === "relance") suivis.push({ user: r.user_id, date: h.date, type: t, canal: h.channel === "email" ? "email" : "push" });
-      if (h.channel === "email") { emails++; continue; }
+      if (h.channel === "email") { if (t === "demarrage" || t === "relance") emailsDemarrage++; else emails++; continue; }
       push++;
       if (h.opened) ouvertes++;
       types[t] = types[t] || { envoyees: 0, ouvertes: 0 };
       types[t].envoyees++;
       if (h.opened) types[t].ouvertes++;
     }
-    return { push, ouvertes, emails, parType: Object.entries(types).sort((a, b) => b[1].envoyees - a[1].envoyees), suivis };
+    return { push, ouvertes, emails, emailsDemarrage, parType: Object.entries(types).sort((a, b) => b[1].envoyees - a[1].envoyees), suivis };
   } catch (e) {
     console.warn("stats-users notifs:", e.message);
     return null;
@@ -896,7 +877,7 @@ async function fetchSiteVisits() {
     );
     if (!r.ok) return empty;
     const rows     = await r.json();
-    const todayStr = new Date().toLocaleDateString("fr-CA");
+    const todayStr = jourParis(Date.now());
     const byDay    = (rows || []).map(x => ({
       label: new Date(x.day).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" }),
       count: parseInt(x.count) || 0,

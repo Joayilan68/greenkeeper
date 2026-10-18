@@ -280,3 +280,10 @@ du premier onglet).
   nouveaux). Délais tirés de la base de connaissances (levée J21-J45 du parcours, anti-mousse 30 j et désherbage 21 j
   entre deux traitements) ; à valider par Jordan, puis à ajouter à la base : le délai de 30 jours après une scarification
   et la règle du suivi elle-même (proposition dans « Règles complémentaires »). Recette de décembre n° 54 à 56.
+- 18/10/2026 — Fait sur STA (chantier 3) : les 5 écarts de calcul du Pilotage relevés le 08/10 sont corrigés. Comptes de
+  test exclus de toutes les stats comme les admins (adresses « + » des emails admin, ou compte marqué {"compteTest": true}
+  dans les métadonnées publiques de Clerk) ; abonnés annuels comptés au montant réellement facturé (19,99 € la 1re année
+  avec l'offre saisonnière) dans le MRR, l'ARR et « Produits et charges » ; inscriptions, actifs et visiteurs du jour
+  comptés à l'heure de Paris ; carte des inscrits sans l'admin ni les comptes de test ; emails de démarrage et de relance
+  comptés à part des conseils par email. Recette de décembre n° 57 à 62 (dont la suppression de la vue dau_by_day après la
+  mise en prod).

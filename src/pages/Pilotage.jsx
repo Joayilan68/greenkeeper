@@ -711,7 +711,7 @@ export default function Pilotage() {
             {users?.notifs && (
               <div style={card()}>
                 <div style={cardTitle}><span>🔔 Notifications — 14 j</span><span style={{ fontSize:11, color:"#81c784" }}>{users.notifs.push ? Math.round(users.notifs.ouvertes / users.notifs.push * 100) : 0} % ouvertes</span></div>
-                <div style={{ fontSize:12, color:"#a5d6a7", marginBottom:6 }}>{users.notifs.push} notifications · {users.notifs.ouvertes} ouvertes · {users.notifs.emails} conseils par email</div>
+                <div style={{ fontSize:12, color:"#a5d6a7", marginBottom:6 }}>{users.notifs.push} notifications · {users.notifs.ouvertes} ouvertes · {users.notifs.emails} conseils par email · {users.notifs.emailsDemarrage} emails de démarrage et relances</div>
                 {users.notifs.parType.map(([t, v]) => (
                   <div key={t} style={{ display:"flex", justifyContent:"space-between", fontSize:12, padding:"4px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
                     <span>{t}</span><span>{v.ouvertes}/{v.envoyees} · {v.envoyees ? Math.round(v.ouvertes / v.envoyees * 100) : 0} %</span>
@@ -849,11 +849,13 @@ export default function Pilotage() {
               const k      = periode === "an" ? 12 : 1;
               const nbM    = revenue?.premiumMonthly || 0;
               const nbY    = revenue?.premiumYearly  || 0;
-              const caM    = nbM * 4.99 * k;                  // abonnements mensuels
-              const caY    = nbY * 39.99 * (k / 12);          // abonnements annuels (lissés)
+              const parMois = revenue?.mensuels ?? nbM * 4.99;   // € par mois des abonnements mensuels
+              const parAn   = revenue?.annuels ?? nbY * 39.99;   // € par an des annuels, montant réellement facturé (offre saisonnière comprise)
+              const caM    = parMois * k;                     // abonnements mensuels
+              const caY    = parAn * (k / 12);                // abonnements annuels (lissés)
               const ca     = caM + caY;
-              const stripe = (nbM * (STRIPE_FEES.pct * 4.99 + STRIPE_FEES.fixed)) * k
-                           + (nbY * (STRIPE_FEES.pct * 39.99 + STRIPE_FEES.fixed)) * (k / 12);
+              const stripe = (STRIPE_FEES.pct * parMois + STRIPE_FEES.fixed * nbM) * k
+                           + (STRIPE_FEES.pct * parAn + STRIPE_FEES.fixed * nbY) * (k / 12);
               const urssaf = ca * URSSAF_RATE;
               const fixes  = CHARGES_ACTIVES.reduce((t, c) => t + montant(c, periode), 0);
               const charges = fixes + stripe + urssaf;
@@ -892,7 +894,7 @@ export default function Pilotage() {
 
                     {section("Produits")}
                     {line("Abonnements mensuels", eur(caM), `${nbM} abonné(s) × 4,99 €/mois`, "#a5d6a7")}
-                    {line("Abonnements annuels", eur(caY), `${nbY} abonné(s) × 39,99 €/an, lissé`, "#a5d6a7")}
+                    {line("Abonnements annuels", eur(caY), `${nbY} abonné(s), montant facturé lissé${revenue?.offresAnnuelles ? ` (dont ${revenue.offresAnnuelles} à 19,99 € la 1re année)` : " (39,99 €/an)"}`, "#a5d6a7")}
                     {line("Affiliation Amazon", eur(0), "Commissions non remontées automatiquement", "#a5d6a7")}
                     {line("Données anonymisées · Marque propre", eur(0), "À venir (Phase 4)", "#81c784")}
                     {line("Total produits", eur(ca), null, "#a5d6a7", true)}
