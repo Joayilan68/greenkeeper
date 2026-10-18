@@ -237,3 +237,5 @@ du premier onglet).
   sur la PROD (premier passage réussi). Accord inclus : chaque samedi, Claude pousse les visuels de la semaine sur main
   (public/images/reseaux) et insère le lot dans la PROD ; Jordan valide dans Pilotage → Réseaux. Recette : n° 48 à 51 de
   décembre passés dans « Déjà en prod (exceptions) » (n° 23 à 26).
+- 18/10/2026 — App Meta « Mongazon360 Publications » publiée et test de la connexion Meta en prod par Jordan : OK (page
+  Mongazon360 et Instagram @mongazon360, rien publié ; recette « Déjà en prod » n° 23 validé).
