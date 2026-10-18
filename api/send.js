@@ -276,7 +276,9 @@ module.exports = async function handler(req, res) {
       const parcoursMap = {};
       (parcoursActifsData || []).forEach(p => { parcoursMap[p.user_id] = p; });
 
-      // Diagnostic de suivi à proposer ce matin (actions importantes récentes, diagnostics photo d'avant)
+      // Diagnostic de suivi à proposer ce matin (actions importantes récentes, diagnostics photo d'avant),
+      // seulement aux comptes qui ont le diagnostic aujourd'hui (mêmes accès que api/analyze-lawn.js) :
+      // le suivi tombe 30 jours après l'action, souvent après la fin d'un essai ou d'un Premium offert.
       const suiviMap = {};
       if (slot === "matin") {
         try {
@@ -288,9 +290,24 @@ module.exports = async function handler(req, res) {
           const { suiviAProposer } = require("./suiviDiagnostic.cjs");
           const parUser = (rows) => (rows || []).reduce((m, r) => { (m[r.user_id] ||= []).push(r); return m; }, {});
           const diagsParUser = parUser(diagRows);
+          const candidats = {};
           for (const [uid, history] of Object.entries(parUser(actionsRows))) {
             const suivi = suiviAProposer({ history, diagnostics: (diagsParUser[uid] || []).map(d => ({ date: d.created_at, score: d.score_visuel })) });
-            if (suivi) suiviMap[uid] = suivi;
+            if (suivi) candidats[uid] = suivi;
+          }
+          if (Object.keys(candidats).length) {
+            const { ADMIN_EMAILS } = require("./auth.cjs");
+            const { essaiActif, rowGuestActive } = require("./premium.cjs");
+            const { data: accesRows } = await supabase.from("user_access")
+              .select("user_id, status, guest_until").in("user_id", Object.keys(candidats));
+            const offerts = new Set((accesRows || []).filter(rowGuestActive).map(r => r.user_id));
+            for (const u of await getClerkUsers()) {
+              if (!candidats[u.id]) continue;
+              const pm = u.public_metadata || {};
+              if (ADMIN_EMAILS.includes((primaryEmail(u) || "").toLowerCase()) || pm.role === "admin"
+                  || pm.isSubscribed === true || pm.subscriptionStatus === "active" || pm.subscriptionStatus === "trialing"
+                  || clerkGuestActive(pm) || offerts.has(u.id) || essaiActif(u.created_at)) suiviMap[u.id] = candidats[u.id];
+            }
           }
         } catch (e) { await require("./alerting.cjs").reportServerError("Tâche planifiée — diagnostic de suivi", e); }
       }
