@@ -60,7 +60,7 @@ Un surdosage, un épandage sur herbe mouillée ou des passages qui se chevauchen
 
 ## Larves de hannetons ou de tipules
 
-Elles dévorent les racines : l'herbe jaunit, puis **se soulève à la main comme une moquette**. Les oiseaux et les taupes retournent la pelouse pour les manger.
+Elles dévorent les racines : l'herbe jaunit, puis **se soulève à la main comme une moquette**. Les oiseaux et les taupes retournent la pelouse pour les manger (voir [oiseaux qui picorent la pelouse](/conseils/oiseaux-picorent-pelouse)).
 
 **Le test** : soulevez l'herbe à la limite d'une zone jaune. Si vous voyez de grosses larves blanches en forme de C (vers blancs) ou des larves grises (tipules), le diagnostic est fait.
 
@@ -78,7 +78,7 @@ Tout le détail : [maladies du gazon](/conseils/maladies-gazon). En règle gén�
 
 - **Lame émoussée** : les brins déchirés blanchissent en pointe. Faites affûter la lame.
 - **Tonte trop rase** : le gazon « rôtit » au soleil. Remontez la hauteur (voir [hauteur de tonte](/conseils/hauteur-tonte-gazon)).
-- **Gazon gelé piétiné** : les traces brunes disparaissent avec la pousse du printemps (voir [pelouse gelée](/conseils/gel-pelouse)).
+- **Gazon gelé piétiné** : les traces brunes disparaissent avec la pousse du printemps (voir [pelouse gelée](/conseils/gel-pelouse) et [pelouse jaune en hiver](/conseils/pelouse-jaune-hiver)).
 - **Objet posé** : déplacez-le. L'herbe reverdit en quelques semaines si elle n'est pas morte.
 
 ## Après le diagnostic : réparer

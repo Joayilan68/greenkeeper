@@ -38,7 +38,7 @@ Le bon repère n'est pas la date mais la **température du sol** (10 °C au moin
 | Sud | Fin septembre à début novembre |
 | Corse | Octobre à mi-novembre |
 
-**Trop tard chez vous ?** Ne semez pas sur un sol froid : les graines pourrissent ou sont mangées par les oiseaux. Grattez simplement les zones abîmées et regarnissez au printemps, dès l'ouverture de la fenêtre (voir [quand semer le gazon](/conseils/quand-semer-gazon)).
+**Trop tard chez vous ?** Ne semez pas sur un sol froid : les graines pourrissent ou sont mangées par les oiseaux. Grattez simplement les zones abîmées et regarnissez au printemps, dès l'ouverture de la fenêtre (voir [quand semer le gazon](/conseils/quand-semer-gazon) et [semer du gazon en novembre](/conseils/semer-gazon-novembre)).
 
 ## Le matériel nécessaire
 
