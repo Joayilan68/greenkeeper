@@ -149,3 +149,5 @@
   Vercel Sensitive, Production et Preview, saisie par Jordan ; refus d'une tâche de Vercel signalé dans Pilotage → Bugs) ;
   `POST /api/send?type=publications` réservé à la tâche pg_cron (secret Supabase Vault `tache_publications`, lu par la
   fonction `secret_tache_publications`, service_role uniquement).
+- Dépôt GitHub public : jamais de clé, ni de valeur par défaut d'une clé, dans le code (une ancienne valeur de secours de
+  `CRON_SECRET` est restée dans l'historique : valeur remplacée le 18/10/2026).
