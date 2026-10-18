@@ -1,6 +1,6 @@
 // api/send.js
 // POST /api/send?type=alert|alert-test|notification-test|notif-open|reminder|save-sub|save-reminders
-// GET  /api/send → cron quotidien 8h00 (Vercel cron)
+// GET  /api/send → cron quotidien 8h00 (Vercel cron, en-tête Authorization: Bearer CRON_SECRET obligatoire)
 
 const REMINDER_LABELS = {
   tonte:     { icon:"✂️", label:"Tonte",               desc:"Fréquence de tonte recommandée" },
@@ -152,6 +152,13 @@ function buildTrialEmailHtml(prenom, when) {
 </div></body></html>`;
 }
 
+// Comparaison à temps constant de l'en-tête Authorization avec le secret attendu (secret absent = refus)
+function secretValide(entete, secret) {
+  if (!secret || typeof entete !== "string") return false;
+  const recu = Buffer.from(entete), attendu = Buffer.from(`Bearer ${secret}`);
+  return recu.length === attendu.length && require("crypto").timingSafeEqual(recu, attendu);
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
@@ -164,6 +171,14 @@ module.exports = async function handler(req, res) {
   //   ?slot=soir           → arrosage (N10, bilan hydrique ET₀)
   // Sans abonnement push actif, la même décision part par EMAIL (conseils par email).
   if (req.method === "GET") {
+    // Réservé aux tâches planifiées de Vercel, qui envoient la variable CRON_SECRET (Vercel) dans l'en-tête Authorization
+    if (!secretValide(req.headers.authorization, process.env.CRON_SECRET)) {
+      if (/vercel-cron/i.test(req.headers["user-agent"] || "")) {
+        await require("./alerting.cjs").reportServerError("Tâche planifiée refusée",
+          new Error("En-tête CRON_SECRET absent ou différent : vérifier la variable CRON_SECRET dans Vercel"), { "Créneau": req.query.slot || "matin" });
+      }
+      return res.status(401).json({ error: "Non autorisé" });
+    }
     try {
       const { createClient } = require("@supabase/supabase-js");
       const supabase = createClient(
@@ -1009,12 +1024,15 @@ module.exports = async function handler(req, res) {
   // ════════════════════════════════════════════════════════════════════════
   // PUBLICATIONS — appelé toutes les 15 min par pg_cron (Supabase PROD) : publie les publications Facebook et Instagram
   // validées dont l'heure est passée (sans effet sinon ; une publication n'est jamais publiée deux fois, reseaux.cjs)
-  // POST /api/send?type=publications
+  // POST /api/send?type=publications   en-tête Authorization: Bearer <secret Supabase Vault « tache_publications »>
   // ════════════════════════════════════════════════════════════════════════
   if (type === "publications") {
     try {
       const { createClient } = require("@supabase/supabase-js");
       const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+      const { data: secret, error } = await supabase.rpc("secret_tache_publications");
+      if (error) throw error;
+      if (!secretValide(req.headers.authorization, secret)) return res.status(401).json({ error: "Non autorisé" });
       return res.json({ success: true, publications: await require("./reseaux.cjs").publierDues(supabase) });
     } catch (e) {
       await require("./alerting.cjs").reportServerError("Publications réseaux en échec", e, { "Déclencheur": "pg_cron" });

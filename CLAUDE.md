@@ -139,3 +139,7 @@
 
 ## Contraintes
 - Vercel Hobby : 12 fonctions maximum dans `api/` — pas de nouvel endpoint sans en libérer un.
+- Tâches planifiées : `GET /api/send` réservé aux tâches de Vercel (en-tête `Authorization: Bearer CRON_SECRET`, variable
+  Vercel Sensitive, Production et Preview, saisie par Jordan ; refus d'une tâche de Vercel signalé dans Pilotage → Bugs) ;
+  `POST /api/send?type=publications` réservé à la tâche pg_cron (secret Supabase Vault `tache_publications`, lu par la
+  fonction `secret_tache_publications`, service_role uniquement).
