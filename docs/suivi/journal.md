@@ -252,3 +252,9 @@ du premier onglet).
   « Oiseaux qui picorent la pelouse : pourquoi, et que faire ? » et « Pelouse jaune ou terne en hiver : normal ou
   inquiétant ? » (46 articles). Liens vers ces articles ajoutés dans 6 articles existants. Épingles Pinterest créées ;
   fichier d'import des 4 épingles envoyé à Jordan (tableaux « Pelouse en automne » et « Pelouse en hiver »).
+- 18/10/2026 — Pinterest : les 4 épingles de novembre importées par Jordan sont publiées (tableaux « Pelouse en automne »
+  et « Pelouse en hiver ») ; les 5 épingles d'automne qui manquaient sont aussi en ligne. Demandes d'indexation des 4
+  articles faites par Jordan dans la Search Console.
+- 18/10/2026 — Sécurité de la tâche planifiée : la variable CRON_SECRET existe déjà dans Vercel (Production, et Preview pour
+  la branche Staging). Une ancienne valeur de secours de cette clé figure dans l'historique du dépôt, qui est public : Jordan
+  remplace la valeur de Production (type Secret) avant la mise en prod du contrôle de la clé.
