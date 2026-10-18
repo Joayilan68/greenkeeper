@@ -6,6 +6,7 @@ import { useSubscription } from "../lib/useSubscription";
 import { card, cardTitle, btn, scroll, header, appShell } from "../lib/styles";
 import RoadmapTab from "../components/RoadmapTab";
 import PremiumOffertsCard from "../components/PremiumOffertsCard";
+import PublicationsCard from "../components/PublicationsCard";
 import { CHARGES_ACTIVES, CHARGES_PREVUES, STRIPE_FEES, URSSAF_RATE, montant } from "../lib/charges";
 
 function eur(n) { return (Math.round((n||0)*100)/100).toFixed(2) + "€"; }
@@ -1158,6 +1159,7 @@ export default function Pilotage() {
         {/* ════════════════ TAB RÉSEAUX ════════════════ */}
         {tab === "reseaux" && (
           <>
+            <PublicationsCard getToken={getToken} />
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, marginBottom:4 }}>
               <KPI icon="👥" label="Followers total" value={loadingSocial ? "..." : (social?.totalLatest ?? "—")} sub="Dernier relevé" color="#a5d6a7" />
               <KPI icon="📈" label="Évolution"

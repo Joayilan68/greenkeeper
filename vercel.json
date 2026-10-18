@@ -8,7 +8,10 @@
       "maxDuration": 30
     },
     "api/send.js": {
-      "maxDuration": 30
+      "maxDuration": 60
+    },
+    "api/stats.js": {
+      "maxDuration": 60
     }
   },
   "crons": [

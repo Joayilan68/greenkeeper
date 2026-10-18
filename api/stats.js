@@ -7,6 +7,7 @@
 //   GET /api/stats?type=errors   → erreurs (error_events) regroupées par problème + état des tâches planifiées
 //   GET /api/stats?type=seo      → position moyenne de nos pages dans Google, par mois (Search Console)
 //   GET /api/stats?type=services → vérification en direct des services externes (Pilotage → Services)
+//   GET|POST /api/stats?type=publications → lots de comm Facebook et Instagram (Pilotage → Réseaux)
 
 // Emails admin — exclus de TOUTES les stats (règle "admins exclus de tout")
 const { verifiedUserId, ADMIN_EMAILS } = require("./auth.cjs");
@@ -43,6 +44,7 @@ module.exports = async function handler(req, res) {
   const { type } = req.query;
 
   if (type === "guests") return handleGuests(req, res);
+  if (type === "publications") return handlePublications(req, res);
   // Réseaux sociaux : lecture (GET ?type=social) + écriture (POST)
   if (type === "social" || req.method === "POST") return handleSocial(req, res);
   if (type === "revenue") return handleRevenue(req, res);
@@ -51,7 +53,7 @@ module.exports = async function handler(req, res) {
   if (type === "services") return handleServices(req, res);
   if (type === "seo")      return handleSeo(req, res);
 
-  return res.status(400).json({ error: 'Paramètre ?type=revenue|users|social|errors|services|seo|guests requis' });
+  return res.status(400).json({ error: 'Paramètre ?type=revenue|users|social|errors|services|seo|guests|publications requis' });
 };
 
 // ── Référencement Google : position moyenne de toutes nos pages, par mois (Pilotage → Activité) ──
@@ -373,6 +375,26 @@ async function handleUsers(req, res) {
   } catch (e) {
     console.error("stats-users:", e.message);
     res.status(500).json({ error: e.message });
+  }
+}
+
+// ── Publications Facebook et Instagram — Pilotage → Réseaux (api/reseaux.cjs) ──────────────
+// GET  : publications des 14 derniers jours et à venir
+// POST : { action: "valider"|"refuser"|"remettre"|"reessayer", id } | { action: "valider_lot", lot } | { action: "tester" }
+async function handlePublications(req, res) {
+  const R  = require("./reseaux.cjs");
+  const sb = createClient(SB_URL, SB_KEY);
+  try {
+    if (req.method === "POST") {
+      try {
+        if (req.body?.action === "tester") return res.json({ success: true, compte: await R.testerMeta(), publications: await R.listePublications(sb) });
+        await R.actionPublication(sb, req.body || {});
+      } catch (e) { if (e.code) throw e; return res.status(400).json({ success: false, error: e.message }); }
+    }
+    return res.json({ success: true, publications: await R.listePublications(sb) });
+  } catch (e) {
+    await require("./alerting.cjs").reportServerError("Pilotage — publications en échec", e);
+    return res.status(500).json({ success: false, error: e.message });
   }
 }
 
@@ -927,6 +949,12 @@ async function handleServices(req, res) {
       return missing.length
         ? { status: "ko", detail: `Modèle(s) indisponible(s) chez Groq : ${missing.join(", ")} — l'IA ne fonctionne plus` }
         : { status: "ok", detail: `Photo : ${VISION_MODEL} · Bob : ${BOB_MODEL} · Conseils : ${TEXT_MODEL}` };
+    }),
+    check({ name: "Meta (publications)", role: "Lots de comm publiés sur Facebook et Instagram", cost: "Gratuit" }, async () => {
+      if (!envOk("META_PAGE_TOKEN")) return { status: "info", detail: "Connexion Meta pas encore faite (clé META_PAGE_TOKEN absente)" };
+      const c = await require("./reseaux.cjs").compteMeta();
+      return c.instagramId ? { status: "ok", detail: `Page ${c.page} · Instagram @${c.instagram}` }
+        : { status: "warn", detail: `Page ${c.page} : aucun compte Instagram professionnel relié` };
     }),
     check({ name: "Supabase", role: "Base de données (Irlande, UE)", cost: "Palier gratuit (500 Mo)" }, async () => {
       const sb = createClient(SB_URL, SB_KEY);

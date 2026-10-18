@@ -950,6 +950,11 @@ module.exports = async function handler(req, res) {
         } catch (e) { await require("./alerting.cjs").reportServerError("IA Groq indisponible", e); }
       }
 
+      // ── Publications Facebook et Instagram validées dont l'heure est passée, en secours du déclencheur pg_cron (reseaux.cjs) ──
+      let publications = 0;
+      try { publications = await require("./reseaux.cjs").publierDues(supabase); }
+      catch (e) { await require("./alerting.cjs").reportServerError("Publications réseaux en échec", e, { "Créneau": slot }); }
+
       // ── Veille de marque — créneau SOIR : noms de domaine proches de Mongazon360 (veilleMarque.cjs) ──
       if (slot === "soir") {
         try { await require("./veilleMarque.cjs").veilleDomaines(today); }
@@ -967,8 +972,8 @@ module.exports = async function handler(req, res) {
       }
       await alerting.setStatus(`cron_${slot}`, { date: today, at: new Date().toISOString(), pushSent, emailSent, emailFallbackSent, photosPurgees });
 
-      console.log(`[CRON ${slot}] reminders:`, remindersData?.length || 0, "pushSent:", pushSent, "emailSent:", emailSent, "emailFallbackSent:", emailFallbackSent, "skipped:", skipped, "parcoursSent:", parcoursSent, "parcoursTermines:", parcoursTermines, "trialRelances:", trialRelances, "baselineSent:", baselineSent, "premiumOffertsExpires:", premiumOffertsExpires, "offreEmails:", offreEmails, "relancesPush:", relancesPush, "relancesEmail:", relancesEmail, "relancesBob:", relancesBob, "photosPurgees:", photosPurgees);
-      return res.json({ success: true, date: today, slot, pushSent, emailSent, emailFallbackSent, skipped, parcoursSent, parcoursTermines, trialRelances, baselineSent, premiumOffertsExpires, offreEmails, relancesPush, relancesEmail, relancesBob, photosPurgees, reminders: remindersData?.length || 0 });
+      console.log(`[CRON ${slot}] reminders:`, remindersData?.length || 0, "pushSent:", pushSent, "emailSent:", emailSent, "emailFallbackSent:", emailFallbackSent, "skipped:", skipped, "parcoursSent:", parcoursSent, "parcoursTermines:", parcoursTermines, "trialRelances:", trialRelances, "baselineSent:", baselineSent, "premiumOffertsExpires:", premiumOffertsExpires, "offreEmails:", offreEmails, "relancesPush:", relancesPush, "relancesEmail:", relancesEmail, "relancesBob:", relancesBob, "photosPurgees:", photosPurgees, "publications:", publications);
+      return res.json({ success: true, date: today, slot, pushSent, emailSent, emailFallbackSent, skipped, parcoursSent, parcoursTermines, trialRelances, baselineSent, premiumOffertsExpires, offreEmails, relancesPush, relancesEmail, relancesBob, photosPurgees, publications, reminders: remindersData?.length || 0 });
     } catch (e) {
       await require("./alerting.cjs").reportServerError("Tâche planifiée en échec", e, { "Créneau": req.query.slot || "matin" });
       return res.status(500).json({ error: e.message });
@@ -978,6 +983,22 @@ module.exports = async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
   const { type } = req.query;
+
+  // ════════════════════════════════════════════════════════════════════════
+  // PUBLICATIONS — appelé toutes les 15 min par pg_cron (Supabase PROD) : publie les publications Facebook et Instagram
+  // validées dont l'heure est passée (sans effet sinon ; une publication n'est jamais publiée deux fois, reseaux.cjs)
+  // POST /api/send?type=publications
+  // ════════════════════════════════════════════════════════════════════════
+  if (type === "publications") {
+    try {
+      const { createClient } = require("@supabase/supabase-js");
+      const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+      return res.json({ success: true, publications: await require("./reseaux.cjs").publierDues(supabase) });
+    } catch (e) {
+      await require("./alerting.cjs").reportServerError("Publications réseaux en échec", e, { "Déclencheur": "pg_cron" });
+      return res.status(500).json({ error: e.message });
+    }
+  }
 
   // ════════════════════════════════════════════════════════════════════════
   // GUEST-STATUS — l'utilisateur a-t-il un accès invité ? (lecture SERVEUR)
