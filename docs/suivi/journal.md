@@ -258,3 +258,9 @@ du premier onglet).
 - 18/10/2026 — Sécurité de la tâche planifiée : la variable CRON_SECRET existe déjà dans Vercel (Production, et Preview pour
   la branche Staging). Une ancienne valeur de secours de cette clé figure dans l'historique du dépôt, qui est public : Jordan
   remplace la valeur de Production (type Secret) avant la mise en prod du contrôle de la clé.
+- 18/10/2026 — Go prod de Jordan : sécurité de la tâche planifiée. Valeurs de CRON_SECRET remplacées par Jordan en prod et
+  sur STA ; une première clé tapée au clavier contenait un « à », refusé par Vercel (mises en ligne en échec, le site est
+  resté sur la version précédente) : clé refaite avec un générateur de mots de passe. En prod à 18 h 30 : appels sans clé
+  ou avec une mauvaise clé refusés (vérifié). L'ancienne valeur de secours ne donne plus accès à rien (ancien rapport
+  hebdomadaire retiré le 21/08/2026, anciennes versions du site supprimées par Vercel : vérifié). Recette « Déjà en prod »
+  n° 27 et 28 ; contrôle de la tâche du matin le 19/10.
