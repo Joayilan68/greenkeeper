@@ -28,7 +28,7 @@ Les deux se complètent très bien : on aère, puis on scarifie si besoin.
 
 ## Les signes d'un sol tassé
 
-- l'eau **stagne en flaques** après la pluie, ou ruisselle sans pénétrer ;
+- l'eau **stagne en flaques** après la pluie, ou ruisselle sans pénétrer (voir [pelouse détrempée et flaques](/conseils/pelouse-detrempee-flaques)) ;
 - le sol est **dur**, un tournevis s'y enfonce difficilement ;
 - l'herbe est **clairsemée** sur les zones de passage (allées, jeux, chemin du chien) ;
 - les **pâquerettes, plantains et la mousse** prospèrent, signes classiques de sol compacté ;

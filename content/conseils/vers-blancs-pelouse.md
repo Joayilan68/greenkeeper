@@ -20,7 +20,7 @@ Les vers blancs s'attaquent aux racines du gazon. Les symptômes :
 
 - des **zones jaunies** qui s'agrandissent, souvent en automne ;
 - un gazon qui **se soulève comme une moquette** : sans racines, l'herbe ne tient plus au sol ;
-- des **oiseaux ou d'autres animaux qui retournent la pelouse** pour se nourrir des larves ;
+- des **oiseaux ou d'autres animaux qui retournent la pelouse** pour se nourrir des larves (voir [oiseaux qui picorent la pelouse](/conseils/oiseaux-picorent-pelouse)) ;
 - sous les plaques, de **grosses larves blanches, recourbées en C**, à tête brune.
 
 Paradoxe : les vers blancs s'installent souvent dans un **sol sain**, profond et meuble, celui qui convient aussi le mieux au gazon.

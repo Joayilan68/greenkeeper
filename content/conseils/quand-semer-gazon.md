@@ -80,7 +80,7 @@ Pour la méthode complète, voir [créer une pelouse](/conseils/creer-pelouse), 
 
 ### Peut-on semer du gazon en octobre ?
 
-Oui dans l'Ouest (jusqu'à mi-octobre), le Sud-Ouest (jusqu'à fin octobre), le Sud (jusqu'à début novembre) et en Corse (jusqu'à mi-novembre). Ailleurs, c'est trop tard : le sol refroidit avant que le gazon soit installé. Attendez le printemps.
+Oui dans l'Ouest (jusqu'à mi-octobre), le Sud-Ouest (jusqu'à fin octobre), le Sud (jusqu'à début novembre) et en Corse (jusqu'à mi-novembre). Ailleurs, c'est trop tard : le sol refroidit avant que le gazon soit installé. Attendez le printemps (voir [semer du gazon en novembre](/conseils/semer-gazon-novembre)).
 
 ### Peut-on semer du gazon en été ?
 

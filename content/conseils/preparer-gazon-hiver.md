@@ -56,9 +56,9 @@ Tout est détaillé dans notre article [hiverner sa tondeuse, son robot et son a
 ## 8. Protéger la pelouse pendant l'hiver
 
 - **Ne marchez pas sur un gazon gelé ou couvert de givre** : les brins se brisent et laissent des traces brunes (voir [gel et pelouse](/conseils/gel-pelouse)).
-- **Ne laissez rien traîner** sur la pelouse (jouets, bâches, pots, mobilier) : dessous, l'herbe jaunit en quelques jours.
+- **Ne laissez rien traîner** sur la pelouse (jouets, bâches, pots, mobilier) : dessous, l'herbe jaunit en quelques jours (voir [pelouse jaune ou terne en hiver](/conseils/pelouse-jaune-hiver)).
 - **Évitez le sel de déneigement** près du gazon.
-- **Limitez les passages** sur un sol détrempé, qui se tasse durablement.
+- **Limitez les passages** sur un sol détrempé, qui se tasse durablement (voir [pelouse détrempée](/conseils/pelouse-detrempee-flaques)).
 
 ## L'entretien du gazon en hiver, mois par mois
 
