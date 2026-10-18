@@ -221,3 +221,9 @@ du premier onglet).
   10 h et 18 h 30). Guide de connexion Meta envoyé à Jordan (app Meta, clé META_PAGE_TOKEN saisie par Jordan dans Vercel).
   Pour publier automatiquement dès novembre : go prod de Jordan et accord pour pousser chaque samedi les visuels de la
   semaine sur main (public/images/reseaux). Recette de décembre n° 48 à 51 (vérifications finales renumérotées 52 à 54).
+- 18/10/2026 — Connexion Meta de la publication automatique : la page et l'Instagram de Mongazon360 sont dans le
+  portefeuille business « Ayfer Ozkan Krebs » (compte Facebook d'Ayfer). App Meta « Mongazon360 Publications » créée par
+  Jordan, Ayfer ajoutée comme administratrice ; Jordan a l'accès total au portefeuille, à la page et à l'Instagram. Une clé
+  de page obtenue par l'explorateur de Meta a été invalidée par la déconnexion de la session Facebook : la clé retenue est
+  celle d'un utilisateur système du portefeuille (sans expiration, indépendante des sessions), l'app en déduit le jeton de
+  la page à chaque passage.

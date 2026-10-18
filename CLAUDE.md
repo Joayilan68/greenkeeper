@@ -66,9 +66,12 @@
   `publications` (serveur uniquement, RLS sans politique), visuels JPEG sur `main` dans `public/images/reseaux/<lot>/` (lus
   par Meta sur mongazon360.fr, retirés 3 semaines après) ; Jordan valide dans Pilotage → Réseaux ; la tâche du matin (vers
   7-8 h, pour le dimanche) ou du soir (vers 16-17 h, pour lundi, mercredi et vendredi ; rattrape aussi le matin) publie les
-  validées du jour sur la page et l'Instagram (Graph API v26.0) ; jour passé : plus publiée. Jeton de la page sans expiration
-  dans la variable Vercel `META_PAGE_TOKEN` (Sensitive, Production et Preview), saisi par Jordan : jamais dans la
-  conversation ni dans le dépôt ; contrôle dans Pilotage → Services.
+  validées du jour sur la page et l'Instagram (Graph API v26.0) ; jour passé : plus publiée. Clé dans la variable Vercel
+  `META_PAGE_TOKEN` (Sensitive, Production et Preview) : jeton sans expiration d'un utilisateur système du portefeuille
+  business « Ayfer Ozkan Krebs » (propriétaire de la page et de l'Instagram), qui donne le jeton de la page à chaque passage ;
+  pas de jeton lié à une session Facebook (invalidé à la déconnexion). Saisie par Jordan : jamais dans la conversation ni
+  dans le dépôt ; contrôle dans Pilotage → Services. App Meta « Mongazon360 Publications » (administrateurs : Jordan et
+  Ayfer).
 - Pinterest : une épingle par article (1000 × 1500 : photo de notre pelouse, saison, titre), fichier
   `public/images/pinterest/<slug>.jpg` lu par Pinterest : ne jamais le supprimer ni le renommer. Nouvel article : créer
   son épingle au même format et l'importer dans Pinterest (fichier .csv), lien vers l'article suivi de

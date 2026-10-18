@@ -2,16 +2,16 @@
 // Publication automatique des lots de comm sur la page Facebook et le compte Instagram de Mongazon360 (Graph API de Meta).
 // Table publications (accès serveur uniquement) : lot préparé chaque samedi pour la semaine suivante, validé par Jordan
 // dans Pilotage → Réseaux (api/stats.js ?type=publications), publié par la tâche planifiée (api/send.js) le jour prévu, au
-// créneau du matin ou du soir. Jeton de la page sans expiration dans META_PAGE_TOKEN (Vercel) ; le compte Instagram
-// professionnel est celui relié à la page. Visuels JPEG publics (public/images/reseaux), lus par Meta au moment de publier.
+// créneau du matin ou du soir. Clé META_PAGE_TOKEN (Vercel) : jeton d'un utilisateur système du portefeuille business, sans
+// expiration (ou jeton de la page) ; le compte Instagram professionnel est celui relié à la page. Visuels JPEG publics
+// (public/images/reseaux), lus par Meta au moment de publier.
 
 const META = "https://graph.facebook.com/v26.0";
 const IMAGE_TEST = "https://mongazon360.fr/images/conseils/regarnissage-avant-apres.jpg";
 const pause = (ms) => new Promise(r => setTimeout(r, ms));
 const jourParis = (ms = Date.now()) => new Date(ms).toLocaleDateString("sv-SE", { timeZone: "Europe/Paris" });
 
-async function appelMeta(chemin, params = {}, methode = "GET") {
-  const jeton = process.env.META_PAGE_TOKEN;
+async function appelMeta(chemin, params = {}, methode = "GET", jeton = process.env.META_PAGE_TOKEN) {
   if (!jeton) throw new Error("Connexion Meta pas encore faite (clé META_PAGE_TOKEN absente)");
   const corps = new URLSearchParams({ ...params, access_token: jeton });
   const dansUrl = methode !== "POST";
@@ -23,29 +23,34 @@ async function appelMeta(chemin, params = {}, methode = "GET") {
   return d;
 }
 
-// Page et compte Instagram professionnel reliés au jeton ; une clé de compte Facebook au lieu de celle de la page est
-// signalée avec le nom du compte
+// Page Mongazon360, son jeton et le compte Instagram professionnel relié. Un utilisateur système (indépendant des sessions
+// Facebook) obtient le jeton de la page à chaque passage ; une clé de page est utilisée telle quelle.
 async function compteMeta() {
   const moi = await appelMeta("me", { fields: "id,name" });
-  const d = await appelMeta("me", { fields: "instagram_business_account{id,username}" }).catch((e) => {
-    throw /nonexisting field/.test(e.message)
-      ? new Error(`La clé META_PAGE_TOKEN est celle du compte Facebook « ${moi.name} », pas celle de la page : reprendre la valeur access_token de la page dans la réponse de me/accounts`)
-      : e;
-  });
-  return { pageId: moi.id, page: moi.name, instagramId: d.instagram_business_account?.id || null, instagram: d.instagram_business_account?.username || null };
+  const champs = "instagram_business_account{id,username}";
+  const instagram = (ig) => ({ instagramId: ig?.id || null, instagram: ig?.username || null });
+  const pages = await appelMeta("me/accounts", { fields: `id,name,access_token,${champs}` })
+    .then((d) => d.data || [], (e) => { if (/nonexisting field/.test(e.message)) return null; throw e; });
+  if (!pages) {
+    const d = await appelMeta("me", { fields: champs });
+    return { pageId: moi.id, page: moi.name, jeton: process.env.META_PAGE_TOKEN, ...instagram(d.instagram_business_account) };
+  }
+  const page = pages.find((p) => /mongazon360/i.test(p.name));
+  if (!page) throw new Error(`La page Mongazon360 n'est pas attribuée au compte « ${moi.name} » de la clé META_PAGE_TOKEN`);
+  return { pageId: page.id, page: page.name, jeton: page.access_token, ...instagram(page.instagram_business_account) };
 }
 
 async function publierFacebook(compte, pub) {
-  const d = await appelMeta(`${compte.pageId}/photos`, { url: pub.visuel, caption: pub.texte_facebook }, "POST");
+  const d = await appelMeta(`${compte.pageId}/photos`, { url: pub.visuel, caption: pub.texte_facebook }, "POST", compte.jeton);
   return d.post_id || d.id;
 }
 
 // Conteneur créé à partir du visuel, puis publié quand Instagram l'a traité (quelques secondes pour une image)
 async function conteneurInstagram(compte, image, legende) {
   if (!compte.instagramId) throw new Error("Aucun compte Instagram professionnel relié à la page Facebook");
-  const { id } = await appelMeta(`${compte.instagramId}/media`, { image_url: image, caption: legende }, "POST");
+  const { id } = await appelMeta(`${compte.instagramId}/media`, { image_url: image, caption: legende }, "POST", compte.jeton);
   for (let i = 0; i < 5; i++) {
-    const { status_code } = await appelMeta(id, { fields: "status_code" });
+    const { status_code } = await appelMeta(id, { fields: "status_code" }, "GET", compte.jeton);
     if (status_code === "FINISHED") return id;
     if (status_code === "ERROR" || status_code === "EXPIRED") throw new Error(`Instagram refuse le visuel (${status_code})`);
     await pause(3000);
@@ -55,7 +60,7 @@ async function conteneurInstagram(compte, image, legende) {
 
 async function publierInstagram(compte, pub) {
   const creation = await conteneurInstagram(compte, pub.visuel, pub.texte_instagram);
-  return (await appelMeta(`${compte.instagramId}/media_publish`, { creation_id: creation }, "POST")).id;
+  return (await appelMeta(`${compte.instagramId}/media_publish`, { creation_id: creation }, "POST", compte.jeton)).id;
 }
 
 // Une publication sur les deux réseaux ; chaque réseau publié est noté aussitôt, pour ne jamais le republier lors d'un
@@ -127,13 +132,14 @@ async function actionPublication(supabase, { action, id, lot }) {
   throw new Error("Action inconnue");
 }
 
-// Test de la connexion : photo Facebook non publiée (supprimée aussitôt) et conteneur Instagram jamais publié
+// Test de la connexion : photo Facebook non publiée (supprimée aussitôt) et conteneur Instagram jamais publié ; seuls les
+// noms de la page et du compte Instagram sont renvoyés à Pilotage (jamais le jeton)
 async function testerMeta() {
   const compte = await compteMeta();
-  const photo = await appelMeta(`${compte.pageId}/photos`, { url: IMAGE_TEST, caption: "Test de connexion Mongazon360", published: "false" }, "POST");
-  await appelMeta(photo.id, {}, "DELETE").catch(() => {});
+  const photo = await appelMeta(`${compte.pageId}/photos`, { url: IMAGE_TEST, caption: "Test de connexion Mongazon360", published: "false" }, "POST", compte.jeton);
+  await appelMeta(photo.id, {}, "DELETE", compte.jeton).catch(() => {});
   if (compte.instagramId) await conteneurInstagram(compte, IMAGE_TEST, "Test de connexion Mongazon360");
-  return compte;
+  return { page: compte.page, instagram: compte.instagram };
 }
 
 module.exports = { compteMeta, publierCreneau, listePublications, actionPublication, testerMeta };
