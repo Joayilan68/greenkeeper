@@ -7,11 +7,9 @@ import { useHistory } from "../lib/useHistory";
 import { useSubscription } from "../lib/useSubscription";
 import { MONTHLY_PLAN, MONTHS_FR, getWMO } from "../lib/lawn";
 import { calcLawnScore } from "../lib/lawnScore";
-import { usePushNotifications } from "../lib/usePushNotifications";
 import { isIOS, isStandalone, isAndroidTWA } from "../lib/platform";
 import { OFFRE, offreEnCours } from "../lib/offreSaison";
-import { useConsents } from "../lib/useConsents";
-import { useReminders } from "../lib/useReminders";
+import { useActiverNotifications } from "../components/ProposerNotifications";
 import AlertBanner from "../components/AlertBanner";
 import OnboardingModal from "../components/OnboardingModal";
 import GreenScoreModal from "../components/GreenScoreModal";
@@ -36,9 +34,7 @@ export default function Dashboard() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showScoreInfo, setShowScoreInfo] = useState(false);
 
-  const { subscribe, sendTestNotification, isSupported, error: pushError, loading: pushLoading } = usePushNotifications(user?.id);
-  const { consents, updateConsents, showPushBanner, syncFromReminders } = useConsents();
-  const { enableAll } = useReminders(syncFromReminders);
+  const { activer: activerNotifications, isSupported, showPushBanner, error: pushError, loading: pushLoading } = useActiverNotifications();
 
   // ── Nouveaux hooks ──────────────────────────────────────────────────────────
   const { classementActif } = useSaison();
@@ -101,15 +97,6 @@ export default function Dashboard() {
   const hideIosInstall = () => {
     setShowIosInstall(false);
     try { localStorage.setItem("mg360_ios_install_hidden", "1"); } catch { /* navigation privée */ }
-  };
-
-  const handleActivatePush = async () => {
-    const success = await subscribe();
-    if (success) {
-      await sendTestNotification();
-      await updateConsents({ notifications: true });
-      enableAll(); // ✅ aligné sur Settings (21/07/2026) : sans rappels enabled, le cron n'envoie rien
-    }
   };
 
   const handleOnboardingComplete = (newProfile) => {
@@ -198,7 +185,7 @@ export default function Dashboard() {
             </div>
             <div
               role="button"
-              onClick={() => { if (!pushLoading) handleActivatePush(); }}
+              onClick={() => { if (!pushLoading) activerNotifications(); }}
               style={{ flexShrink:0, padding:"8px 14px", borderRadius:10, background:"linear-gradient(135deg,#43a047,#2e7d32)", color:"#fff", fontWeight:800, fontSize:12, cursor:"pointer", userSelect:"none", WebkitTapHighlightColor:"transparent" }}
             >
               {pushLoading ? "…" : "Activer"}

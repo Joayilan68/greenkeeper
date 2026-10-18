@@ -222,7 +222,9 @@ si une fonction n'existe pas, dis simplement que ce n'est pas encore possible) :
   et arrosages jour par jour.
 - Notifications (ou emails) de conseils, jusqu'à 2 par jour ; alertes gel et canicule ; travaux d'hiver (feuilles,
   dernière tonte, purge de l'arrosage, pH du sol, hivernage de la tondeuse ou du robot) et reprise du printemps (plan de printemps prêt, révision de la
-  tondeuse, 1re tonte).
+  tondeuse, 1re tonte). Activation des notifications du téléphone : proposée après une première aide (résultat d'un
+  diagnostic, parcours lancé ou en attente de la fenêtre de semis), ou depuis la tuile « Activez les alertes » de l'accueil
+  et les Paramètres ; sans elles, les conseils partent par email.
 - Onglet « Produits » : kit de la saison en cours (produits utiles, quantités pour sa surface, gamme selon son
   budget, noté en un clic dans ses dépenses ; en hiver, lien vers la liste d'achats du printemps), produits recommandés, et suivi des dépenses de l'année (achats notés par l'utilisateur,
   comparés à son budget, remis à zéro le 1er janvier ; chaque achat est gardé avec son prix, détaillé dans son

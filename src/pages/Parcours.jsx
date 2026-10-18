@@ -17,6 +17,7 @@ import { calcSemences, solMesure } from "../lib/lawn";
 import { useWeather } from "../lib/WeatherContext";
 import { useGreenPoints } from "../lib/useGreenPoints";
 import { appShell, btn } from "../lib/styles";
+import ProposerNotifications from "../components/ProposerNotifications";
 
 // Température du sol mesurée aujourd'hui par le capteur du jardin : elle passe avant l'estimation saisonnière (base)
 const solDuJour = (weather) => {
@@ -368,6 +369,11 @@ function EnAttenteParcours({ parcours, profile, analyserFenetre, demarrerParcour
         )}
 
         {verdict && !fenetreOuverte && (
+          <ProposerNotifications titre="Sois prévenu dès que la fenêtre s'ouvre"
+            texte="Active les notifications : Bob te prévient le jour où les conditions de semis sont réunies dans ta zone." />
+        )}
+
+        {verdict && !fenetreOuverte && (
           <div style={{ background: "rgba(255,193,7,0.12)", border: "1px solid rgba(255,193,7,0.35)", borderRadius: 20, padding: 20, marginBottom: 16 }}>
             <div style={{ fontSize: 16, fontWeight: 800, color: "#ffe082", marginBottom: 8 }}>⏳ On surveille votre fenêtre</div>
             <div style={{ fontSize: 14, color: "#d7ebd9", lineHeight: 1.5 }}>
@@ -538,6 +544,11 @@ function SuiviParcours({ parcours, analyserPhase, validerJalon, onRetour }) {
             <div style={{ fontSize: 18, fontWeight: 800, color: "#a5d6a7", marginBottom: 6 }}>Parcours terminé !</div>
             <div style={{ fontSize: 14, color: "#d7ebd9", lineHeight: 1.5 }}>{etat.action}</div>
           </div>
+        )}
+
+        {etat && !etat.termine && (
+          <ProposerNotifications titre="Ne rate aucun arrosage de ton semis"
+            texte="Active les notifications : chaque jour, Bob te dit s'il faut arroser selon la météo, jusqu'à la levée." />
         )}
 
         {/* ── Timeline des 6 phases ── */}

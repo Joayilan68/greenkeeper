@@ -287,3 +287,8 @@ du premier onglet).
   comptés à l'heure de Paris ; carte des inscrits sans l'admin ni les comptes de test ; emails de démarrage et de relance
   comptés à part des conseils par email. Recette de décembre n° 57 à 62 (dont la suppression de la vue dau_by_day après la
   mise en prod).
+- 18/10/2026 — Fait sur STA (chantier 4, plan trafic ×10, action 9 en version allégée) : le téléphone ne demande plus
+  l'autorisation des notifications à l'inscription (la case « conseils de Bob » reste, les conseils partent par email) ;
+  l'activation est proposée après la première aide : sous le résultat d'un diagnostic, dans un parcours lancé ou en
+  attente de la fenêtre de semis (« Plus tard » : 14 jours) ; la tuile « Activez les alertes » de l'accueil reste. Bob ;
+  recette de décembre n° 63 à 65.

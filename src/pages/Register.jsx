@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useUser, useAuth } from "@clerk/clerk-react";
+import { useAuth } from "@clerk/clerk-react";
 import { useConsents } from "../lib/useConsents";
-import { usePushNotifications } from "../lib/usePushNotifications";
 import { useReminders } from "../lib/useReminders";
 import { codeRecu, oublierCode, normCode, appelParrainage } from "../lib/codeParrainage";
 import { card, btn } from "../lib/styles";
@@ -23,9 +22,7 @@ export default function Register() {
   const navigate = useNavigate();
   const { consents: existingConsents, updateConsents, syncFromReminders } = useConsents();
   const { enableAll } = useReminders(syncFromReminders);
-  const { user } = useUser();
   const { getToken } = useAuth();
-  const { subscribe: subscribePush } = usePushNotifications(user?.id);
 
   const [consents, setConsents] = useState({
     cgu_cgv:         false,  // case 1 — obligatoire (CGU + CGV combinées)
@@ -85,13 +82,9 @@ export default function Register() {
       }
     }
 
-    // Case « conseils de Bob » cochée → demande d'autorisation PENDANT le clic
-    // (geste utilisateur requis par le navigateur). Sans autorisation, pas d'abonnement :
-    // les conseils et rappels d'entretien partent alors par email.
-    if (consents.notifications) {
-      await subscribePush();
-      enableAll();
-    }
+    // Case « conseils de Bob » cochée → rappels activés : les conseils partent par email ; l'autorisation du
+    // téléphone (notifications) est proposée après la première aide (diagnostic, parcours), pas à l'inscription.
+    if (consents.notifications) enableAll();
 
     // ── Payload Supabase : UNIQUEMENT les colonnes réelles de user_consents ──
     // La table user_consents contient : cgu, confidentialite, notifications,
@@ -233,7 +226,7 @@ export default function Register() {
                 🔔 Recevoir les conseils de Bob pour mon gazon <span style={{ color:"#f9a825", fontSize:11 }}>(recommandé)</span>
               </div>
               <div style={{ fontSize:11, color:"#81c784", marginTop:4, lineHeight:1.5 }}>
-                Le bon moment pour tondre, arroser, nourrir ; alertes gel ou canicule. Jusqu'à 2 par jour, par notification (ton téléphone te demandera l'autorisation : accepte-la) ou, à défaut, par email. <strong style={{ color:"#a5d6a7" }}>Sans cela, l'app ne peut pas te prévenir au bon moment.</strong> Désactivable à tout moment dans Paramètres ou depuis chaque email.
+                Le bon moment pour tondre, arroser, nourrir ; alertes gel ou canicule. Jusqu'à 2 par jour, par email ou par notification (Bob te proposera de les activer après ta première aide). <strong style={{ color:"#a5d6a7" }}>Sans cela, l'app ne peut pas te prévenir au bon moment.</strong> Désactivable à tout moment dans Paramètres ou depuis chaque email.
               </div>
             </div>
           </label>

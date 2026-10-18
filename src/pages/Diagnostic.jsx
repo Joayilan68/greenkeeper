@@ -12,6 +12,7 @@ import { card, cardTitle, btn, scroll, header } from "../lib/styles";
 import ComparatifPremium from "../components/ComparatifPremium";
 import ConfianceDiagnostic, { PhotoAReprendre } from "../components/ConfianceDiagnostic";
 import { PropositionSuivi, ComparaisonSuivi } from "../components/SuiviDiagnostic";
+import ProposerNotifications from "../components/ProposerNotifications";
 import { suiviAProposer, comparaisonSuivi } from "../lib/suiviDiagnostic";
 import { useParcours } from "../lib/useParcours";
 import { moisCalendrier, zoneClimatique } from "../lib/planEntretien";
@@ -556,6 +557,9 @@ export default function Diagnostic() {
               ))}
             </div>
           )}
+
+          <ProposerNotifications titre="Bob te prévient au bon moment"
+            texte="Active les notifications pour recevoir ses conseils même app fermée : tonte, arrosage, gel, et la photo de suivi après tes travaux." />
 
           <div style={{ display:"flex", flexDirection:"column", gap:10, paddingBottom:24 }}>
             <button onClick={() => { setPreview(null); setImageB64(null); fileRef.current.click(); }}
