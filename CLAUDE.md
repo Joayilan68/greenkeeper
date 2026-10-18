@@ -65,9 +65,9 @@
   `publications` de la PROD (serveur uniquement, RLS sans politique ; colonne `heure` = heure de Paris), visuels JPEG poussés
   sur `main` dans `public/images/reseaux/<lot>/` (lus par Meta sur mongazon360.fr, retirés 3 semaines après) ; Jordan valide
   dans Pilotage → Réseaux. Publication à l'heure prévue par `POST /api/send?type=publications`, appelé toutes les 15 min par
-  pg_cron (Supabase PROD, tâche `publications-reseaux`, extension pg_net), tâches planifiées de Vercel en secours ; jour
-  passé : plus publiée ; une publication n'est jamais publiée deux fois (statut `en_cours`). Graph API v26.0. Clé dans la
-  variable Vercel `META_PAGE_TOKEN` (Sensitive, Production et Preview) : jeton sans expiration de l'utilisateur système
+  pg_cron (Supabase PROD, tâche `mongazon360-publications-reseaux`, extension pg_net), tâches planifiées de Vercel en
+  secours ; jour passé : plus publiée ; une publication n'est jamais publiée deux fois (statut `en_cours`). Graph API v26.0.
+  Clé dans la variable Vercel `META_PAGE_TOKEN` (Sensitive, Production et Preview) : jeton sans expiration de l'utilisateur système
   « Publications Mongazon360 » du portefeuille business « Ayfer Ozkan Krebs » (propriétaire de la page et de l'Instagram),
   qui donne le jeton de la page à chaque passage ; pas de jeton lié à une session Facebook (invalidé à la déconnexion).
   Saisie par Jordan : jamais dans la conversation ni dans le dépôt ; contrôle dans Pilotage → Services. App Meta
