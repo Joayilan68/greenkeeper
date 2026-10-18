@@ -292,3 +292,9 @@ du premier onglet).
   l'activation est proposée après la première aide : sous le résultat d'un diagnostic, dans un parcours lancé ou en
   attente de la fenêtre de semis (« Plus tard » : 14 jours) ; la tuile « Activez les alertes » de l'accueil reste. Bob ;
   recette de décembre n° 63 à 65.
+- 18/10/2026 — Chantier 5 : maquettes de la refonte (page de maquettes privée de Jordan, 4 écrans de téléphone) :
+  accueil Visiteur sans compte (météo du jour de sa commune, conseil de Bob, diagnostic d'essai, articles), accueil
+  Gratuit (score, Aujourd'hui, Bob 3 questions par mois, parcours), accueil Premium (diagnostic de suivi, météo complète et
+  station, équipements, plan annuel, Bob 20 questions par jour, paysagistes partenaires) et « Choisis ton niveau » (prix
+  actuels, offre d'hiver). À trancher par Jordan : contenu de chaque niveau, sort des comptes gratuits actuels, prix, plan
+  annuel inclus dans Premium.
