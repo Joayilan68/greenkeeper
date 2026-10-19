@@ -83,7 +83,8 @@ async function retourConnexion(req, res, supabase) {
   if (!req.query.code) {
     if (req.query.error === "access_denied") return fin("refus");
     const raison = [req.query.error, req.query.error_description].filter(Boolean).map(String).join(" : ") || "retour sans code";
-    await require("./alerting.cjs").reportServerError(`Connexion ${fabricant} refusée par le fabricant`, new Error(raison), { "Utilisateur": userId });
+    await require("./alerting.cjs").reportServerError(`Connexion ${fabricant} refusée par le fabricant`, new Error(raison),
+      { "Utilisateur": userId, "Adresse de retour": adresseRetour(req) });
     return fin("erreur");
   }
   try {
@@ -100,7 +101,7 @@ async function retourConnexion(req, res, supabase) {
     if (error) throw error;
     return fin("ok");
   } catch (e) {
-    await require("./alerting.cjs").reportServerError(`Connexion ${fabricant} en échec`, e, { "Utilisateur": userId });
+    await require("./alerting.cjs").reportServerError(`Connexion ${fabricant} en échec`, e, { "Utilisateur": userId, "Adresse de retour": adresseRetour(req) });
     return fin("erreur");
   }
 }
