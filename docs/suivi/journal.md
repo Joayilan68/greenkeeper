@@ -338,3 +338,6 @@ du premier onglet).
   d'usage de sa clé gratuite dans une app payante non vérifiées (une source non officielle la dit réservée à l'usage
   personnel) : lecture des conditions officielles par Claude avant fin octobre, sans confirmation pas de prod en décembre.
   Capteurs de sol mis à jour (sur STA depuis le 17/10). Restent à envoyer par Jordan : Mammotion, Davis, Navimow, Hunter.
+- 19/10/2026 — Demandes d'accès envoyées par Jordan le 19/10 : Mammotion, Davis (support@davisinstruments.com) et Segway
+  Navimow (navimow-marketing@rlm.segway.com, canal partenaires) ; relance le 03/11 sans réponse. Hunter (Hydrawise) :
+  message transmis à Jordan, à envoyer à support@hydrawise.com.
