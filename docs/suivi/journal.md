@@ -315,3 +315,11 @@ du premier onglet).
   marques, B2B fin 2027). Propositions faites à Jordan : roadmap inchangée ; Toro « à surveiller » au prochain Suivi API ;
   besoin B2B à demander aux paysagistes partenaires ; article « Choisir un robot tondeuse » à valider (critères à ajouter
   d'abord à la base). Sa veille hebdomadaire est désactivée après cette édition (à réactiver dans son outil).
+- 19/10/2026 — Demandes d'accès API (Suivi API V4) : Jordan a envoyé le 19/10 la demande Husqvarna Group, en réponse
+  dans le fil d'août (accord écrit pour une app payante, historique des heures de tonte, futur mode automatique, contact
+  de l'équipe GARDENA smart system), et un 3e message à Netatmo (demande initiale et relance du 14/08 restées sans
+  réponse ; réponse demandée avant le 30/11 ; sans accord écrit, la station Netatmo reste sur STA). Réponse d'Husqvarna
+  d'août : plan Premium pour l'API Automower (200 000 requêtes par semaine, 500 par minute), sans accord commercial ;
+  Gardena à demander à son équipe. Application Netatmo créée par Jordan (adresse de retour à corriger : l'adresse de STA
+  + /api/objets pour les tests, puis https://mongazon360.fr/api/objets à la mise en prod, recette n° 35). Restent à
+  envoyer : Navimow, Mammotion, Davis, et Hunter si ce n'est pas fait.
