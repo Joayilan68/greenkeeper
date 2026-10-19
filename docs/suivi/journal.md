@@ -341,3 +341,5 @@ du premier onglet).
 - 19/10/2026 — Demandes d'accès envoyées par Jordan le 19/10 : Mammotion, Davis (support@davisinstruments.com) et Segway
   Navimow (navimow-marketing@rlm.segway.com, canal partenaires) ; relance le 03/11 sans réponse. Hunter (Hydrawise) :
   message transmis à Jordan, à envoyer à support@hydrawise.com.
+- 19/10/2026 — Demande Hunter (Hydrawise) envoyée par Jordan à support@hydrawise.com (accès OAuth / GraphQL pour un
+  usage commercial). Toutes les demandes d'accès API prévues sont parties ; relance le 03/11 sans réponse.
