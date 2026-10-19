@@ -300,8 +300,8 @@ du premier onglet).
   annuel inclus dans Premium.
 - 18/10/2026 — Décision de Jordan (diagnostic de suivi) : fonction validée ; elle apparaît, est alimentée et traitée
   uniquement sur la page Diagnostic (plus de notification, plus de lien avec les actions validées dans « Aujourd'hui ») ;
-  inutile pendant l'essai de 7 jours (la photo de suivi tombe bien après). Délai de 30 jours après une scarification
-  (absent de la base) : point de Jordan sous 30 jours, d'ici le 17/11.
+  inutile pendant l'essai de 7 jours (la photo de suivi tombe bien après). Point scarification : photo de suivi 30 jours
+  après (précisé par Jordan le 19/10).
 - 19/10/2026 — Fait sur STA : diagnostic de suivi recentré sur la page Diagnostic. Après un diagnostic, l'accueil de
   l'onglet Diagnostic demande les travaux faits (regarnissage, scarification, anti-mousse, désherbage) et leur date ;
   « Travaux notés » donne la période de la photo de suivi ; au bout du délai, même carte de suivi et même avant / après.
@@ -370,5 +370,6 @@ du premier onglet).
   Claude pour le vendredi 23/10 au soir.
 - 19/10/2026 — Décision de Jordan : relecture par l'avocate et assurance RC Pro reportées tant que Mongazon360 n'a pas de
   revenus (premier abonnement Premium payant) ; retirées des actions de Jordan.
-- 19/10/2026 — Délai du diagnostic de suivi après une scarification : réponse de Jordan du 18/10, point sous 30 jours
-  (d'ici le 17/11). Ligue d'hiver : propositions remises à Jordan le 19/10 pour juger de son utilité.
+- 19/10/2026 — Précision de Jordan (diagnostic de suivi) : ses « 30 jours » après une scarification sont le moment de la
+  photo de suivi, pas un point à faire d'ici le 17/11 ; délais validés, règle du suivi ajoutée à la base (« Règles
+  complémentaires » n° 18). Ligue d'hiver : propositions remises à Jordan le 19/10 pour juger de son utilité.

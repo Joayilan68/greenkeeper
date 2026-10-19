@@ -1,5 +1,5 @@
 {
-  "_source": "Base de connaissances : onglet « Parcours Semis » (levée de J21 à J45 : repérage des zones clairsemées ; suivi photo en Premium) et délais entre deux traitements (anti-mousse 30 jours, désherbage 21 jours) ; scarification 30 jours, absente de la base, en attente de validation par Jordan. Partagé par l'app (src/lib/suiviDiagnostic.js) et l'enregistrement des travaux (api/diagnostics.js).",
+  "_source": "Base de connaissances, onglet « Règles complémentaires », n° 18 (diagnostic de suivi, validé par Jordan les 18 et 19/10/2026) : 30 jours après un regarnissage (levée de J21 à J45, onglet « Parcours Semis »), une scarification ou un anti-mousse, 21 jours après un désherbage (délais entre deux traitements, onglet « Legende »). Partagé par l'app (src/lib/suiviDiagnostic.js) et l'enregistrement des travaux (api/diagnostics.js).",
   "actions": [
     { "id": "regarnissage", "nom": "Regarnissage", "jours": 30, "libelle": "ton regarnissage" },
     { "id": "scarification", "nom": "Scarification", "jours": 30, "libelle": "ta scarification" },

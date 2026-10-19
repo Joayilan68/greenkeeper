@@ -20,7 +20,7 @@ Onglets les plus utilisés par le code :
 | Règles Notifications | `api/notificationEngine.cjs` |
 | Parcours Semis | `api/parcoursEngine.cjs`, `src/pages/Parcours.jsx` |
 | Température Sol & ET0 | `src/lib/zonesGazon.json` (semis 10 °C, pousse 8 °C), `api/parcoursEngine.cjs`, `src/lib/capteurSol.json` (capteurs de sol du jardin) |
-| Règles complémentaires | 1re tonte, reprise du printemps, notifications d'hiver, kits, relances, anti-fatigue |
+| Règles complémentaires | 1re tonte, reprise du printemps, notifications d'hiver, kits, relances, anti-fatigue, diagnostic de suivi (`src/lib/suiviDiagnostic.json`) |
 | Sujets complémentaires | articles Conseils et Bob : champignons et ronds de sorcière, gazon en plaques, mulching |
 
 L'onglet « Journal » trace chaque évolution de la base.
