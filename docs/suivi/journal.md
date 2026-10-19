@@ -325,5 +325,6 @@ du premier onglet).
   envoyer : Navimow, Mammotion, Davis, et Hunter si ce n'est pas fait.
 - 19/10/2026 — Test Netatmo sur STA par Jordan (application Netatmo et variables Vercel en place) : retour « Connexion
   annulée ». Fait sur STA : l'erreur renvoyée par un fabricant (autre qu'un refus de l'utilisateur) est désormais
-  signalée dans Pilotage → Bugs avec sa raison ; Mes équipements demande d'abord la marque de la station, du robot et de
-  l'arrosage, puis n'affiche que ses explications (remarque de Jordan). Recette de décembre n° 66 et 67.
+  signalée dans Pilotage → Bugs avec sa raison ; Mes équipements : une liste déroulante de marques par carte (station,
+  robot, arrosage), puis seulement les éléments à renseigner de la marque choisie (demande de Jordan). Recette de décembre
+  n° 66 et 67.

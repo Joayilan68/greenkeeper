@@ -55,9 +55,6 @@ const NOMS_ROBOT = { husqvarna:"Husqvarna Automower", gardena:"Gardena SILENO", 
 const lien = { background:"none", border:"none", padding:0, color:"#81c784", fontSize:11, cursor:"pointer", textDecoration:"underline" };
 const explication = { fontSize:11, color:"#81c784", lineHeight:1.6, margin:"0 0 10px" };
 const note = { fontSize:10, color:"#4a7c5c", lineHeight:1.5, marginTop:10 };
-const puce = (actif) => ({ padding:"8px 12px", borderRadius:999, fontSize:12, fontWeight:700, cursor:"pointer",
-  border: actif ? "1px solid #66bb6a" : "1px solid rgba(165,214,167,0.35)",
-  background: actif ? "rgba(67,160,71,0.35)" : "transparent", color: actif ? "#F1F8F2" : "#a5d6a7" });
 const MARQUES_STATION = [["netatmo", "Netatmo"], ["ecowitt", "Ecowitt"], ["davis", "Davis"], ["wunderground", "Autre marque"]];
 const NOTES_STATION = {
   netatmo: "Tu te connectes sur le site de Netatmo : Mongazon360 ne voit jamais ton mot de passe ; accès en lecture seule, retirable dans ton compte Netatmo.",
@@ -65,30 +62,29 @@ const NOTES_STATION = {
   davis: "Clés chiffrées, régénérables sur weatherlink.com.",
   wunderground: "Clé chiffrée, supprimable sur wunderground.com.",
 };
-const MARQUES_ROBOT = [["husqvarna", "Husqvarna Automower"], ["gardena", "Gardena SILENO"], ["mammotion", "Mammotion"]];
+const MARQUES_ROBOT = [["husqvarna", "Husqvarna Automower"], ["gardena", "Gardena SILENO"], ["mammotion", "Mammotion"], ["autre", "Autre marque"]];
 const NOTES_ROBOT = {
   husqvarna: "Tu te connectes sur le site du groupe Husqvarna : Mongazon360 ne voit jamais ton mot de passe.",
   gardena: "Tu te connectes sur le site du groupe Husqvarna : Mongazon360 ne voit jamais ton mot de passe ; si ton arrosage Gardena est sur le même compte, il est connecté en même temps.",
   mammotion: "Identifiants chiffrés ; les réinitialiser sur developer.mammotion.com coupe l'accès.",
 };
-const MARQUES_ARROSAGE = [["gardena", "Gardena"], ["rachio", "Rachio"]];
+const MARQUES_ARROSAGE = [["gardena", "Gardena"], ["rachio", "Rachio"], ["autre", "Autre marque"]];
+const AUTRE_MARQUE = "Ta marque n'est pas encore connectable : indique-la avec ton modèle tout en bas de cette page, dans « Ton équipement n'est pas dans la liste ? ». Nous ajoutons en priorité les marques les plus demandées.";
 const NOTES_ARROSAGE = {
   gardena: "Tu te connectes sur le site du groupe Husqvarna : Mongazon360 ne voit jamais ton mot de passe.",
   rachio: "Clé chiffrée, révocable sur app.rach.io.",
 };
 
-// Marque de l'équipement à connecter : seules les explications de la marque choisie s'affichent
-function ChoixMarque({ question, marques, choix, onChoix, autre }) {
+// Marque de l'équipement à connecter (liste déroulante) : seuls les éléments de la marque choisie s'affichent
+function ChoixMarque({ question, marques, choix, onChoix }) {
   return (
-    <div style={{ marginBottom:12 }}>
-      <div style={{ fontSize:12, fontWeight:700, color:"#e8f5e9", marginBottom:8 }}>{question}</div>
-      <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
-        {marques.map(([id, nom]) => (
-          <button key={id} onClick={() => onChoix(id)} aria-pressed={choix === id} style={puce(choix === id)}>{nom}</button>
-        ))}
-      </div>
-      {autre && <div style={{ ...note, marginTop:8 }}>{autre}</div>}
-    </div>
+    <label style={{ display:"block", fontSize:12, fontWeight:700, color:"#e8f5e9", marginBottom:12 }}>{question}
+      <select value={choix || ""} onChange={e => onChoix(e.target.value || null)}
+        style={{ ...champ, fontSize:13, marginTop:8, background:"#163524", colorScheme:"dark", cursor:"pointer" }}>
+        <option value="">Choisis la marque…</option>
+        {marques.map(([id, nom]) => <option key={id} value={id}>{nom}</option>)}
+      </select>
+    </label>
   );
 }
 
@@ -299,7 +295,7 @@ export default function Equipements() {
               {marqueStation === "wunderground" && (
                 <>
                   <div style={explication}>
-                    Si ta station publie sur Weather Underground (Froggit, Bresser, Ambient Weather…). Sinon, dis-le-nous en bas de page.<br/>
+                    Si ta station publie sur Weather Underground (Froggit, Bresser, Ambient Weather…). Sinon, indique sa marque tout en bas de cette page, dans « Ton équipement n'est pas dans la liste ? ».<br/>
                     1. Sur <a href="https://www.wunderground.com/member/api-keys" target="_blank" rel="noopener noreferrer" style={{ color:"#a5d6a7" }}>wunderground.com</a>, connecté au compte de ta station, ouvre « API Keys » et crée une <strong>clé API</strong> (gratuite pour les stations actives).<br/>
                     2. Colle l'<strong>identifiant de ta station</strong> (par exemple ILYON123, écrit comme sur Weather Underground) et la clé, puis connecte-la.
                   </div>
@@ -349,8 +345,7 @@ export default function Equipements() {
               <div style={{ fontSize:12, color:"#a5d6a7", lineHeight:1.6, margin:"6px 0 10px" }}>
                 Connecte ton robot : l'app te propose de le mettre au repos quand il pleut, gèle ou pendant un semis, et de le relancer quand les conditions sont bonnes.
               </div>
-              <ChoixMarque question="Quelle est la marque de ton robot ?" marques={MARQUES_ROBOT} choix={marqueRobot} onChoix={setMarqueRobot}
-                autre="Autre marque : dis-le-nous en bas de page." />
+              <ChoixMarque question="Quelle est la marque de ton robot ?" marques={MARQUES_ROBOT} choix={marqueRobot} onChoix={setMarqueRobot} />
               {marqueRobot === "husqvarna" && (
                 <>
                   <div style={explication}>Robot Automower relié à l'application Automower Connect : tu te connectes sur le site du groupe Husqvarna, puis tu reviens ici.</div>
@@ -382,7 +377,8 @@ export default function Equipements() {
                   </button>
                 </>
               )}
-              {marqueRobot && <div style={note}>{NOTES_ROBOT[marqueRobot]}</div>}
+              {marqueRobot === "autre" && <div style={explication}>{AUTRE_MARQUE}</div>}
+              {NOTES_ROBOT[marqueRobot] && <div style={note}>{NOTES_ROBOT[marqueRobot]}</div>}
             </>
           )}
         </div>
@@ -410,8 +406,7 @@ export default function Equipements() {
               <div style={{ fontSize:12, color:"#a5d6a7", lineHeight:1.6, margin:"6px 0 10px" }}>
                 Connecte ton programmateur : l'app te propose d'arroser à la bonne dose le matin et de suspendre les programmes quand il pleut.
               </div>
-              <ChoixMarque question="Quelle est la marque de ton programmateur ?" marques={MARQUES_ARROSAGE} choix={marqueArrosage} onChoix={setMarqueArrosage}
-                autre="Autre marque : dis-le-nous en bas de page." />
+              <ChoixMarque question="Quelle est la marque de ton programmateur ?" marques={MARQUES_ARROSAGE} choix={marqueArrosage} onChoix={setMarqueArrosage} />
               {marqueArrosage === "gardena" && (
                 <>
                   <div style={explication}>Gardena smart system (Water Control, Smart Irrigation Control) : tu te connectes sur le site du groupe Husqvarna, puis tu reviens ici.</div>
@@ -431,7 +426,8 @@ export default function Equipements() {
                   ))}
                 </>
               )}
-              {marqueArrosage && <div style={note}>{NOTES_ARROSAGE[marqueArrosage]}</div>}
+              {marqueArrosage === "autre" && <div style={explication}>{AUTRE_MARQUE}</div>}
+              {NOTES_ARROSAGE[marqueArrosage] && <div style={note}>{NOTES_ARROSAGE[marqueArrosage]}</div>}
             </>
           )}
         </div>
