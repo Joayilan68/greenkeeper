@@ -334,3 +334,7 @@ du premier onglet).
   celle du lien Staging, à remplacer par https://mongazon360.fr/api/objets à la mise en prod (recette n° 35).
   Description de l'application Netatmo passée en français par Jordan. Reste : accord écrit de Netatmo, test avec une
   vraie station.
+- 19/10/2026 — Suivi API V5 : ajout de Weather Underground (sur STA depuis le 18/10, absent de la V3) ; conditions
+  d'usage de sa clé gratuite dans une app payante non vérifiées (une source non officielle la dit réservée à l'usage
+  personnel) : lecture des conditions officielles par Claude avant fin octobre, sans confirmation pas de prod en décembre.
+  Capteurs de sol mis à jour (sur STA depuis le 17/10). Restent à envoyer par Jordan : Mammotion, Davis, Navimow, Hunter.
