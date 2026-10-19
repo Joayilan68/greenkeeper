@@ -354,4 +354,5 @@ du premier onglet).
   prod » n° 27 : OK.
 - 19/10/2026 — Décision de Jordan (Weather Underground) : demander un accord écrit à The Weather Company pour l'usage
   de la clé PWS de chaque utilisateur dans Mongazon360 (formulaire « Contact weather data intelligence » de
-  weathercompany.com) ; la connexion reste sur STA en attendant et ne part pas en prod sans accord.
+  weathercompany.com) ; la connexion reste sur STA en attendant et ne part pas en prod sans accord. S'ils n'ont pas
+  d'offre gratuite, on n'insiste pas : la connexion est retirée de STA (code gardé dans l'historique Git).
