@@ -356,3 +356,8 @@ du premier onglet).
   de la clé PWS de chaque utilisateur dans Mongazon360 (formulaire « Contact weather data intelligence » de
   weathercompany.com) ; la connexion reste sur STA en attendant et ne part pas en prod sans accord. S'ils n'ont pas
   d'offre gratuite, on n'insiste pas : la connexion est retirée de STA (code gardé dans l'historique Git).
+- 19/10/2026 — Décision de Jordan : Weather Underground retiré (« tant que c'est payant, pas d'énergie ») ; pas de demande
+  à The Weather Company. Fait sur STA : connexion retirée du code, de Mes équipements (« Autre marque » renvoie au
+  formulaire « Ton équipement n'est pas dans la liste ? »), des consignes de Bob, de la politique de confidentialité
+  (article 6.3, mise à jour du 19 octobre) et de CLAUDE.md ; aucune donnée en base (STA et PROD). Code gardé dans
+  l'historique Git. Recette de décembre n° 43 et 48 mises à jour.

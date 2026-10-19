@@ -7,7 +7,6 @@
 //   POST { action: "netatmo" }                → adresse de connexion au compte Netatmo (station météo)
 //   POST { action: "davis_stations", apiKey, apiSecret }          → stations du compte WeatherLink (Davis)
 //   POST { action: "davis", apiKey, apiSecret, station, nom }     → connexion de la station Davis (clés chiffrées)
-//   POST { action: "wunderground", apiKey, station }              → connexion d'une station publiant sur Weather Underground
 //   POST { action: "husqvarna" }              → adresse de connexion au compte Husqvarna
 //   POST { action: "mammotion", clientId, clientSecret }          → connexion du robot Mammotion (identifiants chiffrés)
 //   POST { action: "robot", commande, niveau } → commande validée par l'utilisateur (repos_journee, repos_long, reprendre ;
@@ -181,21 +180,6 @@ module.exports = async function handler(req, res) {
       if (!["station", "robot", "arrosage", "capteur", "autre"].includes(genre) || !marqueNette) return res.status(400).json({ error: "Type et marque requis" });
       const { error } = await supabase.from("equipements_demandes")
         .insert({ type: genre, marque: marqueNette, modele: String(modele || "").trim().slice(0, 80) || null });
-      if (error) throw error;
-      return res.json({ ok: true });
-    }
-
-    if (action === "wunderground") {
-      const wu = { apiKey: String(apiKey || "").trim(), station: String(station || "").trim() };
-      if (!wu.apiKey || !wu.station) return res.status(400).json({ error: "Identifiant de la station et clé API requis" });
-      let s;
-      try {
-        s = await E.stationWunderground(wu); // vérifie l'accès avant d'enregistrer
-      } catch (e) { return res.status(400).json({ error: e.message }); }
-      const { error } = await supabase.from("equipements").upsert({
-        user_id: userId, type: "station", marque: "wunderground", appareil: s.id, nom: String(s.nom).slice(0, 60),
-        secret: E.chiffrer({ apiKey: wu.apiKey }), statut: "connecte", erreur: null, mesures: s.mesures, mesures_at: new Date().toISOString(),
-      }, { onConflict: "user_id,type" });
       if (error) throw error;
       return res.json({ ok: true });
     }

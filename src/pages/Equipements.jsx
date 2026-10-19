@@ -50,17 +50,16 @@ const A_VENIR = [
   { icone:"📷", titre:"Caméra", texte:"Une photo de ta pelouse chaque semaine, analysée comme un diagnostic." },
 ];
 const TYPES_DEMANDE = [["robot", "Robot tondeuse"], ["arrosage", "Arrosage"], ["station", "Station météo"], ["capteur", "Capteur de sol"], ["autre", "Autre"]];
-const NOMS_STATION = { netatmo:"Netatmo", ecowitt:"Ecowitt", davis:"Davis", wunderground:"Weather Underground" };
+const NOMS_STATION = { netatmo:"Netatmo", ecowitt:"Ecowitt", davis:"Davis" };
 const NOMS_ROBOT = { husqvarna:"Husqvarna Automower", gardena:"Gardena SILENO", mammotion:"Mammotion" };
 const lien = { background:"none", border:"none", padding:0, color:"#81c784", fontSize:11, cursor:"pointer", textDecoration:"underline" };
 const explication = { fontSize:11, color:"#81c784", lineHeight:1.6, margin:"0 0 10px" };
 const note = { fontSize:10, color:"#4a7c5c", lineHeight:1.5, marginTop:10 };
-const MARQUES_STATION = [["netatmo", "Netatmo"], ["ecowitt", "Ecowitt"], ["davis", "Davis"], ["wunderground", "Autre marque"]];
+const MARQUES_STATION = [["netatmo", "Netatmo"], ["ecowitt", "Ecowitt"], ["davis", "Davis"], ["autre", "Autre marque"]];
 const NOTES_STATION = {
   netatmo: "Tu te connectes sur le site de Netatmo : Mongazon360 ne voit jamais ton mot de passe ; accès en lecture seule, retirable dans ton compte Netatmo.",
   ecowitt: "Clés chiffrées, supprimables sur ecowitt.net.",
   davis: "Clés chiffrées, régénérables sur weatherlink.com.",
-  wunderground: "Clé chiffrée, supprimable sur wunderground.com.",
 };
 const MARQUES_ROBOT = [["husqvarna", "Husqvarna Automower"], ["gardena", "Gardena SILENO"], ["mammotion", "Mammotion"], ["autre", "Autre marque"]];
 const NOTES_ROBOT = {
@@ -88,7 +87,7 @@ function ChoixMarque({ question, marques, choix, onChoix }) {
   );
 }
 
-// Mes équipements (depuis Mon Gazon) : station météo Netatmo, Ecowitt, Davis ou publiant sur Weather Underground, robot
+// Mes équipements (depuis Mon Gazon) : station météo Netatmo, Ecowitt ou Davis, robot
 // Husqvarna, Gardena ou Mammotion et arrosage Gardena ou Rachio connectés ; équipement non listé à signaler ; caméras à venir
 export default function Equipements() {
   const navigate = useNavigate();
@@ -99,7 +98,6 @@ export default function Equipements() {
   const [stations, setStations] = useState(null);
   const [clesDavis, setClesDavis] = useState({ apiKey:"", apiSecret:"" });
   const [stationsDavis, setStationsDavis] = useState(null);
-  const [clesWu, setClesWu] = useState({ station:"", apiKey:"" });
   const [demande, setDemande] = useState({ type:"robot", marque:"", modele:"" });
   const [demandeEnvoyee, setDemandeEnvoyee] = useState(false);
   const [idsMammotion, setIdsMammotion] = useState({ clientId:"", clientSecret:"" });
@@ -146,10 +144,6 @@ export default function Equipements() {
   const connecterDavis = async (s) => {
     if (!await action({ action:"davis", ...clesDavis, station: s.id, nom: s.nom })) return;
     setClesDavis({ apiKey:"", apiSecret:"" }); setStationsDavis(null); charger();
-  };
-  const connecterWu = async () => {
-    if (!await action({ action:"wunderground", ...clesWu })) return;
-    setClesWu({ station:"", apiKey:"" }); charger();
   };
   const envoyerDemande = async () => {
     if (await action({ action:"demande_equipement", ...demande })) setDemandeEnvoyee(true);
@@ -292,26 +286,8 @@ export default function Equipements() {
                   )}
                 </>
               )}
-              {marqueStation === "wunderground" && (
-                <>
-                  <div style={explication}>
-                    Si ta station publie sur Weather Underground (Froggit, Bresser, Ambient Weather…). Sinon, indique sa marque tout en bas de cette page, dans « Ton équipement n'est pas dans la liste ? ».<br/>
-                    1. Sur <a href="https://www.wunderground.com/member/api-keys" target="_blank" rel="noopener noreferrer" style={{ color:"#a5d6a7" }}>wunderground.com</a>, connecté au compte de ta station, ouvre « API Keys » et crée une <strong>clé API</strong> (gratuite pour les stations actives).<br/>
-                    2. Colle l'<strong>identifiant de ta station</strong> (par exemple ILYON123, écrit comme sur Weather Underground) et la clé, puis connecte-la.
-                  </div>
-                  <label style={{ fontSize:11, color:"#81c784" }}>Identifiant de la station
-                    <input value={clesWu.station} onChange={e => setClesWu({ ...clesWu, station: e.target.value })} autoComplete="off" style={champ} />
-                  </label>
-                  <div style={{ height:8 }} />
-                  <label style={{ fontSize:11, color:"#81c784" }}>Clé API
-                    <input value={clesWu.apiKey} onChange={e => setClesWu({ ...clesWu, apiKey: e.target.value })} autoComplete="off" style={champ} />
-                  </label>
-                  <button onClick={connecterWu} disabled={envoi || !clesWu.station || !clesWu.apiKey} style={{ ...bouton, marginTop:12, opacity: clesWu.station && clesWu.apiKey ? 1 : 0.5 }}>
-                    {envoi ? "Connexion…" : "Connecter ma station"}
-                  </button>
-                </>
-              )}
-              {marqueStation && <div style={note}>{NOTES_STATION[marqueStation]} Tu peux déconnecter la station ici à tout moment.</div>}
+              {marqueStation === "autre" && <div style={explication}>{AUTRE_MARQUE}</div>}
+              {NOTES_STATION[marqueStation] && <div style={note}>{NOTES_STATION[marqueStation]} Tu peux déconnecter la station ici à tout moment.</div>}
             </>
           )}
         </div>

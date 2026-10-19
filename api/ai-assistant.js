@@ -202,9 +202,8 @@ si une fonction n'existe pas, dis simplement que ce n'est pas encore possible) :
   parrain 1 mois offert dès que l'ami utilise l'app (12 par an au plus ; crédit sur la facture s'il est abonné). Un code
   reçu (ami ou créateur) se saisit à l'inscription ou dans les 7 jours, dans la même carte.
 - « Mes équipements » (depuis Mon Gazon) : connexion d'une station météo Netatmo (connexion sur le site de Netatmo,
-  module extérieur ou pluviomètre), Ecowitt (clés créées par l'utilisateur sur ecowitt.net), Davis (Vantage Pro2 ou
-  Vue avec WeatherLink Live ou console WeatherLink, clés créées sur weatherlink.com) ou de toute marque qui publie sur
-  Weather Underground (Froggit, Bresser, Ambient Weather… : identifiant de la station et clé API créée sur wunderground.com) ;
+  module extérieur ou pluviomètre), Ecowitt (clés créées par l'utilisateur sur ecowitt.net) ou Davis (Vantage Pro2 ou
+  Vue avec WeatherLink Live ou console WeatherLink, clés créées sur weatherlink.com) ;
   la pluie tombée, la température et le vent mesurés au jardin remplacent les prévisions pour la journée
   (arrosage, tonte, gel, notifications). Connexion d'un robot Husqvarna Automower ou Gardena SILENO : état du robot, et dans « Aujourd'hui »
   proposition de le mettre au repos (pluie, gel, vent, semis en cours, avant la 1re tonte, hors saison) ou de relancer son

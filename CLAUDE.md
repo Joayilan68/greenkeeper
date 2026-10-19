@@ -110,9 +110,6 @@
 - Davis (station) : « API Key v2 » et secret créés par l'utilisateur sur weatherlink.com (API WeatherLink v2), chiffrés ;
   relevé des capteurs extérieurs (ISS) d'un WeatherLink Live ou d'une console WeatherLink, toutes les 15 min avec l'offre
   gratuite ; ignoré au-delà de 3 h.
-- Weather Underground (station de toute marque qui y publie : Froggit, Bresser, Ambient Weather…) : identifiant de la
-  station et clé API créée par l'utilisateur sur wunderground.com (gratuite pour les stations actives, 1 500 appels par
-  jour), clé chiffrée ; relevé de moins d'une heure (API PWS de The Weather Company, unités métriques).
 - Husqvarna (robot) : connexion OAuth, adresse de retour `https://<domaine>/api/objets` à déclarer dans l'application
   Husqvarna (PROD et alias Staging) ; variables Vercel `HUSQVARNA_CLIENT_ID` (Application key) et
   `HUSQVARNA_CLIENT_SECRET`. Mode Proposition : aucune commande envoyée au robot sans validation de l'utilisateur.
