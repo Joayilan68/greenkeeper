@@ -191,10 +191,11 @@ si une fonction n'existe pas, dis simplement que ce n'est pas encore possible) :
   une fois faites (elles vont dans l'historique, à la date du jour) ; minuteur d'arrosage.
 - Onglet « Diagnostic » : diagnostic photo de la pelouse par Bob (score, problèmes et solutions), avec son niveau de
   confiance (élevée, moyenne ou faible) et ce qu'il a vu sur la photo ; si la photo ne permet pas de conclure (floue,
-  sombre, trop lointaine), Bob explique comment la reprendre et rien n'est enregistré. Diagnostic de suivi : 30 jours
-  après un regarnissage, une scarification ou un anti-mousse (21 jours après un désherbage) validé dans « Aujourd'hui »,
-  l'app propose de refaire une photo du même endroit (carte sur l'onglet Diagnostic et notification) et la compare au
-  diagnostic fait avant l'action : photos avant / après, écart de score, problèmes réglés, encore là ou nouveaux.
+  sombre, trop lointaine), Bob explique comment la reprendre et rien n'est enregistré. Diagnostic de suivi, uniquement
+  dans l'onglet Diagnostic : après un diagnostic, l'utilisateur y indique les travaux faits (regarnissage, scarification,
+  anti-mousse, désherbage) et leur date ; 30 jours après (21 jours après un désherbage), l'onglet Diagnostic propose
+  pendant 7 jours de refaire une photo du même endroit et la compare à ce diagnostic : photos avant / après, écart de
+  score, problèmes réglés, encore là ou nouveaux (pas de notification, rien pendant l'essai de 7 jours).
 - Onglet « Mon Gazon » : profil du gazon, score détaillé, historique des actions ; « Mon plan gazon » : plan annuel
   personnalisé (12 mois d'entretien selon sa zone, son sol, son gazon et son équipement), achat unique à 0,99 €, en PDF.
   « Parraine tes amis » (Mon Gazon) : code et lien à partager ; l'ami a 1 mois de Premium offert à l'inscription, le

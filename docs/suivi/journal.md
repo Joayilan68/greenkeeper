@@ -298,3 +298,20 @@ du premier onglet).
   station, équipements, plan annuel, Bob 20 questions par jour, paysagistes partenaires) et « Choisis ton niveau » (prix
   actuels, offre d'hiver). À trancher par Jordan : contenu de chaque niveau, sort des comptes gratuits actuels, prix, plan
   annuel inclus dans Premium.
+- 18/10/2026 — Décision de Jordan (diagnostic de suivi) : fonction validée ; elle apparaît, est alimentée et traitée
+  uniquement sur la page Diagnostic (plus de notification, plus de lien avec les actions validées dans « Aujourd'hui ») ;
+  inutile pendant l'essai de 7 jours (la photo de suivi tombe bien après). Délai de 30 jours après une scarification
+  (absent de la base) : point de Jordan sous 30 jours, d'ici le 17/11.
+- 19/10/2026 — Fait sur STA : diagnostic de suivi recentré sur la page Diagnostic. Après un diagnostic, l'accueil de
+  l'onglet Diagnostic demande les travaux faits (regarnissage, scarification, anti-mousse, désherbage) et leur date ;
+  « Travaux notés » donne la période de la photo de suivi ; au bout du délai, même carte de suivi et même avant / après.
+  Notification et calcul dans la tâche du matin retirés ; rien pendant l'essai de 7 jours. Colonne travaux ajoutée à la
+  table diagnostics (STA et PROD). Bob ; recette de décembre n° 54 à 56 réécrites ; maquette Premium sans la carte de
+  suivi sur l'accueil.
+- 19/10/2026 — Veille stratégique hebdomadaire de Jordan (outil indépendant) du 19/10, analysée : Toro HAVEN AM75
+  confirmé (communiqué du 13/10 : LiDAR, environ 3 000 m², zones interdites, capteur de pluie ; vente en 2027 aux
+  États-Unis, rien d'annoncé pour l'Europe ni d'API), mais ce n'est pas l'entrée de Toro sur ce marché (robots Haven
+  guidés par caméra depuis 2022). Priorités de la veille déjà couvertes par la roadmap (suivi de la parcelle, plusieurs
+  marques, B2B fin 2027). Propositions faites à Jordan : roadmap inchangée ; Toro « à surveiller » au prochain Suivi API ;
+  besoin B2B à demander aux paysagistes partenaires ; article « Choisir un robot tondeuse » à valider (critères à ajouter
+  d'abord à la base). Sa veille hebdomadaire est désactivée après cette édition (à réactiver dans son outil).

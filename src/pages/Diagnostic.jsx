@@ -1,5 +1,5 @@
 // src/pages/Diagnostic.jsx
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser, useAuth } from "@clerk/clerk-react";
 import { useProfile } from "../lib/useProfile";
@@ -11,9 +11,9 @@ import { useHistory } from "../lib/useHistory";
 import { card, cardTitle, btn, scroll, header } from "../lib/styles";
 import ComparatifPremium from "../components/ComparatifPremium";
 import ConfianceDiagnostic, { PhotoAReprendre } from "../components/ConfianceDiagnostic";
-import { PropositionSuivi, ComparaisonSuivi } from "../components/SuiviDiagnostic";
+import { PropositionSuivi, ComparaisonSuivi, TravauxSuivi } from "../components/SuiviDiagnostic";
 import ProposerNotifications from "../components/ProposerNotifications";
-import { suiviAProposer, comparaisonSuivi } from "../lib/suiviDiagnostic";
+import { suiviAProposer, comparaisonSuivi, travauxDuDernier } from "../lib/suiviDiagnostic";
 import { useParcours } from "../lib/useParcours";
 import { moisCalendrier, zoneClimatique } from "../lib/planEntretien";
 
@@ -71,7 +71,7 @@ export default function Diagnostic() {
   const { profile }  = useProfile();
   const { aUnParcoursActif } = useParcours();
   const { weather }  = useWeather() || {};
-  const { isPaid, isAdmin, isLoading: subLoading } = useSubscription() || {};
+  const { isPaid, isAdmin, isTrial, isLoading: subLoading } = useSubscription() || {};
   const { history = [] } = useHistory();
   const { diagnostics, save } = useDiagnostic();
 
@@ -86,8 +86,9 @@ export default function Diagnostic() {
   const [histoSupabase, setHistoSupabase] = useState([]);
   const [histoLoading, setHistoLoading]   = useState(false);
 
-  // Charger l'historique Supabase au montage
-  useEffect(() => {
+  // Charger l'historique Supabase au montage, puis après chaque diagnostic (identifiant en base du nouveau diagnostic,
+  // pour y indiquer les travaux faits)
+  const chargerHisto = useCallback(() => {
     if (!user?.id) return;
     setHistoLoading(true);
     getToken()
@@ -97,6 +98,7 @@ export default function Diagnostic() {
       .catch(() => {})
       .finally(() => setHistoLoading(false));
   }, [user?.id]);
+  useEffect(chargerHisto, [chargerHisto]);
 
   const fileRef    = useRef(); // caméra (capture="environment")
   const galleryRef = useRef(); // galerie (sans capture)
@@ -110,8 +112,10 @@ export default function Diagnostic() {
     return [
       ...histoSupabase.map(d => ({
         id: d.id,
+        enBase: true,
         date: d.created_at,
         imageUrl: d.image_url,
+        travaux: d.travaux,
         analysis: {
           etat_general: d.etat_general,
           score_visuel: d.score_visuel,
@@ -127,9 +131,25 @@ export default function Diagnostic() {
       ...diagnostics.filter(d => !urls.has(d.imageUrl)),
     ].sort((a, b) => new Date(b.date) - new Date(a.date));
   }, [histoSupabase, diagnostics]);
-  // Diagnostic de suivi : photo proposée après une action importante, comparée à celle d'avant
-  const diagsSuivi = allDiags.map(d => ({ date: d.date, score: d.analysis.score_visuel, imageUrl: d.imageUrl, problemes: d.analysis.problemes }));
-  const suivi = suiviAProposer({ history, diagnostics: diagsSuivi });
+  // Diagnostic de suivi, sur cette page uniquement : travaux indiqués après un diagnostic, puis photo proposée au bout du
+  // délai de la base et comparée à ce diagnostic. Rien pendant l'essai de 7 jours : le suivi tomberait après.
+  const diagsSuivi = allDiags.map(d => ({ id: d.id, enBase: d.enBase, date: d.date, score: d.analysis.score_visuel,
+    imageUrl: d.imageUrl, problemes: d.analysis.problemes, travaux: d.travaux }));
+  const suivi = !isTrial && suiviAProposer({ diagnostics: diagsSuivi });
+  const dernierTravaux = !isTrial && !suivi && travauxDuDernier({ diagnostics: diagsSuivi });
+  const travauxDernier = dernierTravaux?.diagnostic.enBase ? dernierTravaux : null;
+
+  const enregistrerTravaux = async (actions, date) => {
+    const token = await getToken();
+    const r = await fetch("/api/diagnostics", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ id: travauxDernier.diagnostic.id, actions, date }),
+    });
+    const row = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(row.error || "Enregistrement impossible, réessaie dans un instant.");
+    setHistoSupabase(h => h.map(d => d.id === row.id ? row : d));
+  };
 
   const handleFile = async (file) => {
     if (!file) return;
@@ -199,8 +219,9 @@ export default function Diagnostic() {
         return;
       }
       const diag = { id: Date.now().toString(), date: data.date, imageUrl: data.imageUrl, analysis: data.analysis, scoreAvant: score,
-        suivi: comparaisonSuivi({ history, diagnostics: diagsSuivi, apres: { score: data.analysis.score_visuel, problemes: data.analysis.problemes } }) };
+        suivi: comparaisonSuivi({ diagnostics: diagsSuivi, apres: { score: data.analysis.score_visuel, problemes: data.analysis.problemes } }) };
       save(diag);
+      chargerHisto();
       setResult(diag);
       setView("result");
     } catch (e) {
@@ -354,6 +375,9 @@ export default function Diagnostic() {
               </div>
               {photoButtons()}
             </div>
+
+            {travauxDernier && <TravauxSuivi key={travauxDernier.diagnostic.id} diagnostic={travauxDernier.diagnostic}
+              travaux={travauxDernier.travaux} onEnregistrer={enregistrerTravaux} />}
 
             {conseilsPhoto}
 
@@ -559,7 +583,7 @@ export default function Diagnostic() {
           )}
 
           <ProposerNotifications titre="Bob te prévient au bon moment"
-            texte="Active les notifications pour recevoir ses conseils même app fermée : tonte, arrosage, gel, et la photo de suivi après tes travaux." />
+            texte="Active les notifications pour recevoir ses conseils même app fermée : tonte, arrosage, gel." />
 
           <div style={{ display:"flex", flexDirection:"column", gap:10, paddingBottom:24 }}>
             <button onClick={() => { setPreview(null); setImageB64(null); fileRef.current.click(); }}

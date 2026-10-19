@@ -1,10 +1,10 @@
 {
-  "_source": "Base de connaissances : onglet « Parcours Semis » (levée de J21 à J45 : repérage des zones clairsemées ; suivi photo en Premium) et délais entre deux traitements (anti-mousse 30 jours, désherbage 21 jours). Partagé par l'app (src/lib/suiviDiagnostic.js) et la notification du matin (api/suiviDiagnostic.cjs).",
+  "_source": "Base de connaissances : onglet « Parcours Semis » (levée de J21 à J45 : repérage des zones clairsemées ; suivi photo en Premium) et délais entre deux traitements (anti-mousse 30 jours, désherbage 21 jours) ; scarification 30 jours, absente de la base, en attente de validation par Jordan. Partagé par l'app (src/lib/suiviDiagnostic.js) et l'enregistrement des travaux (api/diagnostics.js).",
   "actions": [
-    { "mots": ["regarnissage"], "jours": 30, "libelle": "ton regarnissage" },
-    { "mots": ["scarification", "verticut"], "jours": 30, "libelle": "ta scarification" },
-    { "mots": ["anti-mousse"], "jours": 30, "libelle": "ton traitement anti-mousse" },
-    { "mots": ["desherbage"], "jours": 21, "libelle": "ton désherbage" }
+    { "id": "regarnissage", "nom": "Regarnissage", "jours": 30, "libelle": "ton regarnissage" },
+    { "id": "scarification", "nom": "Scarification", "jours": 30, "libelle": "ta scarification" },
+    { "id": "anti-mousse", "nom": "Anti-mousse", "jours": 30, "libelle": "ton traitement anti-mousse" },
+    { "id": "desherbage", "nom": "Désherbage", "jours": 21, "libelle": "ton désherbage" }
   ],
   "fenetreJours": 7,
   "avantJours": 45,
