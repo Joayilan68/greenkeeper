@@ -328,3 +328,9 @@ du premier onglet).
   signalée dans Pilotage → Bugs avec sa raison ; Mes équipements : une liste déroulante de marques par carte (station,
   robot, arrosage), puis seulement les éléments à renseigner de la marque choisie (demande de Jordan). Recette de décembre
   n° 66 et 67.
+- 19/10/2026 — Connexion Netatmo validée sur STA par Jordan, sans station : page d'accord de Netatmo, puis « Aucune
+  station météo trouvée sur ce compte Netatmo » (chaîne complète : application reconnue, adresse de retour, secret,
+  lecture des stations). Échec précédent : « redirect_uri_mismatch » (adresse déclarée chez Netatmo). Adresse déclarée :
+  celle du lien Staging, à remplacer par https://mongazon360.fr/api/objets à la mise en prod (recette n° 35).
+  Description de l'application Netatmo passée en français par Jordan. Reste : accord écrit de Netatmo, test avec une
+  vraie station.
