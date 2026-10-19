@@ -53,6 +53,44 @@ const TYPES_DEMANDE = [["robot", "Robot tondeuse"], ["arrosage", "Arrosage"], ["
 const NOMS_STATION = { netatmo:"Netatmo", ecowitt:"Ecowitt", davis:"Davis", wunderground:"Weather Underground" };
 const NOMS_ROBOT = { husqvarna:"Husqvarna Automower", gardena:"Gardena SILENO", mammotion:"Mammotion" };
 const lien = { background:"none", border:"none", padding:0, color:"#81c784", fontSize:11, cursor:"pointer", textDecoration:"underline" };
+const explication = { fontSize:11, color:"#81c784", lineHeight:1.6, margin:"0 0 10px" };
+const note = { fontSize:10, color:"#4a7c5c", lineHeight:1.5, marginTop:10 };
+const puce = (actif) => ({ padding:"8px 12px", borderRadius:999, fontSize:12, fontWeight:700, cursor:"pointer",
+  border: actif ? "1px solid #66bb6a" : "1px solid rgba(165,214,167,0.35)",
+  background: actif ? "rgba(67,160,71,0.35)" : "transparent", color: actif ? "#F1F8F2" : "#a5d6a7" });
+const MARQUES_STATION = [["netatmo", "Netatmo"], ["ecowitt", "Ecowitt"], ["davis", "Davis"], ["wunderground", "Autre marque"]];
+const NOTES_STATION = {
+  netatmo: "Tu te connectes sur le site de Netatmo : Mongazon360 ne voit jamais ton mot de passe ; accès en lecture seule, retirable dans ton compte Netatmo.",
+  ecowitt: "Clés chiffrées, supprimables sur ecowitt.net.",
+  davis: "Clés chiffrées, régénérables sur weatherlink.com.",
+  wunderground: "Clé chiffrée, supprimable sur wunderground.com.",
+};
+const MARQUES_ROBOT = [["husqvarna", "Husqvarna Automower"], ["gardena", "Gardena SILENO"], ["mammotion", "Mammotion"]];
+const NOTES_ROBOT = {
+  husqvarna: "Tu te connectes sur le site du groupe Husqvarna : Mongazon360 ne voit jamais ton mot de passe.",
+  gardena: "Tu te connectes sur le site du groupe Husqvarna : Mongazon360 ne voit jamais ton mot de passe ; si ton arrosage Gardena est sur le même compte, il est connecté en même temps.",
+  mammotion: "Identifiants chiffrés ; les réinitialiser sur developer.mammotion.com coupe l'accès.",
+};
+const MARQUES_ARROSAGE = [["gardena", "Gardena"], ["rachio", "Rachio"]];
+const NOTES_ARROSAGE = {
+  gardena: "Tu te connectes sur le site du groupe Husqvarna : Mongazon360 ne voit jamais ton mot de passe.",
+  rachio: "Clé chiffrée, révocable sur app.rach.io.",
+};
+
+// Marque de l'équipement à connecter : seules les explications de la marque choisie s'affichent
+function ChoixMarque({ question, marques, choix, onChoix, autre }) {
+  return (
+    <div style={{ marginBottom:12 }}>
+      <div style={{ fontSize:12, fontWeight:700, color:"#e8f5e9", marginBottom:8 }}>{question}</div>
+      <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
+        {marques.map(([id, nom]) => (
+          <button key={id} onClick={() => onChoix(id)} aria-pressed={choix === id} style={puce(choix === id)}>{nom}</button>
+        ))}
+      </div>
+      {autre && <div style={{ ...note, marginTop:8 }}>{autre}</div>}
+    </div>
+  );
+}
 
 // Mes équipements (depuis Mon Gazon) : station météo Netatmo, Ecowitt, Davis ou publiant sur Weather Underground, robot
 // Husqvarna, Gardena ou Mammotion et arrosage Gardena ou Rachio connectés ; équipement non listé à signaler ; caméras à venir
@@ -72,6 +110,9 @@ export default function Equipements() {
   const retourHq = RETOURS_HUSQVARNA[params.get("husqvarna")] || RETOURS_GARDENA[params.get("gardena")]
     || RETOURS_GARDENA_ROBOT[params.get("gardena_robot")] || RETOURS_NETATMO[params.get("netatmo")];
   const [cleRachio, setCleRachio] = useState("");
+  const [marqueStation, setMarqueStation] = useState(params.get("netatmo") ? "netatmo" : null);
+  const [marqueRobot, setMarqueRobot] = useState(params.get("husqvarna") ? "husqvarna" : params.get("gardena_robot") ? "gardena" : null);
+  const [marqueArrosage, setMarqueArrosage] = useState(params.get("gardena") ? "gardena" : null);
   const [programmateurs, setProgrammateurs] = useState(null);
 
   const chercher = async () => {
@@ -188,78 +229,93 @@ export default function Equipements() {
               <div style={{ fontSize:12, color:"#a5d6a7", lineHeight:1.6, margin:"6px 0 10px" }}>
                 Connecte ta station : la pluie réellement tombée et la température de ton jardin remplacent les prévisions pour décider d'arroser, de tondre ou de protéger ton gazon du gel.
               </div>
-              <div style={{ fontSize:11, fontWeight:700, color:"#e8f5e9", marginBottom:6 }}>Netatmo (Station Météo, avec module extérieur ou pluviomètre)</div>
-              <button onClick={() => connexion("netatmo")} disabled={envoi} style={bouton}>{envoi ? "Ouverture…" : "Connecter ma station Netatmo"}</button>
-              <div style={{ fontSize:11, fontWeight:700, color:"#e8f5e9", margin:"14px 0 0" }}>Ecowitt (station reliée à ecowitt.net)</div>
-              <div style={{ fontSize:11, color:"#81c784", lineHeight:1.6, margin:"6px 0 10px" }}>
-                1. Sur <a href="https://www.ecowitt.net/home/user" target="_blank" rel="noopener noreferrer" style={{ color:"#a5d6a7" }}>ecowitt.net</a>, ouvre « Private Center » et crée une <strong>Application Key</strong> et une <strong>API Key</strong>.<br/>
-                2. Colle-les ci-dessous, puis choisis ta station.
-              </div>
-              <label style={{ fontSize:11, color:"#81c784" }}>Application Key
-                <input value={cles.applicationKey} onChange={e => setCles({ ...cles, applicationKey: e.target.value })} autoComplete="off" style={champ} />
-              </label>
-              <div style={{ height:8 }} />
-              <label style={{ fontSize:11, color:"#81c784" }}>API Key
-                <input value={cles.apiKey} onChange={e => setCles({ ...cles, apiKey: e.target.value })} autoComplete="off" style={champ} />
-              </label>
-              {!stations?.length ? (
-                <button onClick={chercher} disabled={envoi || !cles.applicationKey || !cles.apiKey} style={{ ...bouton, marginTop:12, opacity: cles.applicationKey && cles.apiKey ? 1 : 0.5 }}>
-                  {envoi ? "Recherche…" : "Trouver ma station"}
-                </button>
-              ) : (
-                <div style={{ marginTop:12 }}>
-                  <div style={{ fontSize:11, color:"#81c784", marginBottom:6 }}>Station à connecter :</div>
-                  {stations.map(s => (
-                    <button key={s.mac} onClick={() => connecter(s)} disabled={envoi} style={{ ...bouton, display:"block", width:"100%", marginBottom:6 }}>
-                      {envoi ? "Connexion…" : `📡 ${s.nom}`}
-                    </button>
-                  ))}
-                </div>
+              <ChoixMarque question="Quelle est la marque de ta station ?" marques={MARQUES_STATION} choix={marqueStation} onChoix={setMarqueStation} />
+              {marqueStation === "netatmo" && (
+                <>
+                  <div style={explication}>Station Météo Netatmo avec module extérieur ou pluviomètre : tu te connectes sur le site de Netatmo, puis tu reviens ici.</div>
+                  <button onClick={() => connexion("netatmo")} disabled={envoi} style={bouton}>{envoi ? "Ouverture…" : "Connecter ma station Netatmo"}</button>
+                </>
               )}
-              <div style={{ fontSize:11, fontWeight:700, color:"#e8f5e9", margin:"14px 0 0" }}>Davis (Vantage Pro2 ou Vantage Vue, avec WeatherLink Live ou console WeatherLink)</div>
-              <div style={{ fontSize:11, color:"#81c784", lineHeight:1.6, margin:"6px 0 10px" }}>
-                1. Sur <a href="https://www.weatherlink.com/account" target="_blank" rel="noopener noreferrer" style={{ color:"#a5d6a7" }}>weatherlink.com</a>, ouvre ton compte et touche « Generate v2 Key » : une <strong>API Key v2</strong> et un <strong>API Secret</strong> s'affichent.<br/>
-                2. Colle-les ci-dessous, puis choisis ta station.
-              </div>
-              <label style={{ fontSize:11, color:"#81c784" }}>API Key v2
-                <input value={clesDavis.apiKey} onChange={e => setClesDavis({ ...clesDavis, apiKey: e.target.value })} autoComplete="off" style={champ} />
-              </label>
-              <div style={{ height:8 }} />
-              <label style={{ fontSize:11, color:"#81c784" }}>API Secret
-                <input value={clesDavis.apiSecret} onChange={e => setClesDavis({ ...clesDavis, apiSecret: e.target.value })} autoComplete="off" style={champ} />
-              </label>
-              {!stationsDavis?.length ? (
-                <button onClick={chercherDavis} disabled={envoi || !clesDavis.apiKey || !clesDavis.apiSecret} style={{ ...bouton, marginTop:12, opacity: clesDavis.apiKey && clesDavis.apiSecret ? 1 : 0.5 }}>
-                  {envoi ? "Recherche…" : "Trouver ma station Davis"}
-                </button>
-              ) : (
-                <div style={{ marginTop:12 }}>
-                  <div style={{ fontSize:11, color:"#81c784", marginBottom:6 }}>Station à connecter :</div>
-                  {stationsDavis.map(s => (
-                    <button key={s.id} onClick={() => connecterDavis(s)} disabled={envoi} style={{ ...bouton, display:"block", width:"100%", marginBottom:6 }}>
-                      {envoi ? "Connexion…" : `📡 ${s.nom}`}
+              {marqueStation === "ecowitt" && (
+                <>
+                  <div style={explication}>
+                    Station reliée à ecowitt.net.<br/>
+                    1. Sur <a href="https://www.ecowitt.net/home/user" target="_blank" rel="noopener noreferrer" style={{ color:"#a5d6a7" }}>ecowitt.net</a>, ouvre « Private Center » et crée une <strong>Application Key</strong> et une <strong>API Key</strong>.<br/>
+                    2. Colle-les ci-dessous, puis choisis ta station.
+                  </div>
+                  <label style={{ fontSize:11, color:"#81c784" }}>Application Key
+                    <input value={cles.applicationKey} onChange={e => setCles({ ...cles, applicationKey: e.target.value })} autoComplete="off" style={champ} />
+                  </label>
+                  <div style={{ height:8 }} />
+                  <label style={{ fontSize:11, color:"#81c784" }}>API Key
+                    <input value={cles.apiKey} onChange={e => setCles({ ...cles, apiKey: e.target.value })} autoComplete="off" style={champ} />
+                  </label>
+                  {!stations?.length ? (
+                    <button onClick={chercher} disabled={envoi || !cles.applicationKey || !cles.apiKey} style={{ ...bouton, marginTop:12, opacity: cles.applicationKey && cles.apiKey ? 1 : 0.5 }}>
+                      {envoi ? "Recherche…" : "Trouver ma station"}
                     </button>
-                  ))}
-                </div>
+                  ) : (
+                    <div style={{ marginTop:12 }}>
+                      <div style={{ fontSize:11, color:"#81c784", marginBottom:6 }}>Station à connecter :</div>
+                      {stations.map(s => (
+                        <button key={s.mac} onClick={() => connecter(s)} disabled={envoi} style={{ ...bouton, display:"block", width:"100%", marginBottom:6 }}>
+                          {envoi ? "Connexion…" : `📡 ${s.nom}`}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
-              <div style={{ fontSize:11, fontWeight:700, color:"#e8f5e9", margin:"14px 0 0" }}>Autre marque, si ta station publie sur Weather Underground (Froggit, Bresser, Ambient Weather…)</div>
-              <div style={{ fontSize:11, color:"#81c784", lineHeight:1.6, margin:"6px 0 10px" }}>
-                1. Sur <a href="https://www.wunderground.com/member/api-keys" target="_blank" rel="noopener noreferrer" style={{ color:"#a5d6a7" }}>wunderground.com</a>, connecté au compte de ta station, ouvre « API Keys » et crée une <strong>clé API</strong> (gratuite pour les stations actives).<br/>
-                2. Colle l'<strong>identifiant de ta station</strong> (par exemple ILYON123, écrit comme sur Weather Underground) et la clé, puis connecte-la.
-              </div>
-              <label style={{ fontSize:11, color:"#81c784" }}>Identifiant de la station
-                <input value={clesWu.station} onChange={e => setClesWu({ ...clesWu, station: e.target.value })} autoComplete="off" style={champ} />
-              </label>
-              <div style={{ height:8 }} />
-              <label style={{ fontSize:11, color:"#81c784" }}>Clé API
-                <input value={clesWu.apiKey} onChange={e => setClesWu({ ...clesWu, apiKey: e.target.value })} autoComplete="off" style={champ} />
-              </label>
-              <button onClick={connecterWu} disabled={envoi || !clesWu.station || !clesWu.apiKey} style={{ ...bouton, marginTop:12, opacity: clesWu.station && clesWu.apiKey ? 1 : 0.5 }}>
-                {envoi ? "Connexion…" : "Connecter ma station"}
-              </button>
-              <div style={{ fontSize:10, color:"#4a7c5c", lineHeight:1.5, marginTop:10 }}>
-                Netatmo : connexion sur le site de Netatmo, Mongazon360 ne voit jamais ton mot de passe ; accès en lecture seule, retirable dans ton compte Netatmo. Ecowitt, Davis et Weather Underground : clés chiffrées, supprimables sur ecowitt.net ou wunderground.com, ou régénérables sur weatherlink.com. Dans tous les cas, tu peux déconnecter la station ici à tout moment.
-              </div>
+              {marqueStation === "davis" && (
+                <>
+                  <div style={explication}>
+                    Vantage Pro2 ou Vantage Vue, avec WeatherLink Live ou console WeatherLink.<br/>
+                    1. Sur <a href="https://www.weatherlink.com/account" target="_blank" rel="noopener noreferrer" style={{ color:"#a5d6a7" }}>weatherlink.com</a>, ouvre ton compte et touche « Generate v2 Key » : une <strong>API Key v2</strong> et un <strong>API Secret</strong> s'affichent.<br/>
+                    2. Colle-les ci-dessous, puis choisis ta station.
+                  </div>
+                  <label style={{ fontSize:11, color:"#81c784" }}>API Key v2
+                    <input value={clesDavis.apiKey} onChange={e => setClesDavis({ ...clesDavis, apiKey: e.target.value })} autoComplete="off" style={champ} />
+                  </label>
+                  <div style={{ height:8 }} />
+                  <label style={{ fontSize:11, color:"#81c784" }}>API Secret
+                    <input value={clesDavis.apiSecret} onChange={e => setClesDavis({ ...clesDavis, apiSecret: e.target.value })} autoComplete="off" style={champ} />
+                  </label>
+                  {!stationsDavis?.length ? (
+                    <button onClick={chercherDavis} disabled={envoi || !clesDavis.apiKey || !clesDavis.apiSecret} style={{ ...bouton, marginTop:12, opacity: clesDavis.apiKey && clesDavis.apiSecret ? 1 : 0.5 }}>
+                      {envoi ? "Recherche…" : "Trouver ma station Davis"}
+                    </button>
+                  ) : (
+                    <div style={{ marginTop:12 }}>
+                      <div style={{ fontSize:11, color:"#81c784", marginBottom:6 }}>Station à connecter :</div>
+                      {stationsDavis.map(s => (
+                        <button key={s.id} onClick={() => connecterDavis(s)} disabled={envoi} style={{ ...bouton, display:"block", width:"100%", marginBottom:6 }}>
+                          {envoi ? "Connexion…" : `📡 ${s.nom}`}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+              {marqueStation === "wunderground" && (
+                <>
+                  <div style={explication}>
+                    Si ta station publie sur Weather Underground (Froggit, Bresser, Ambient Weather…). Sinon, dis-le-nous en bas de page.<br/>
+                    1. Sur <a href="https://www.wunderground.com/member/api-keys" target="_blank" rel="noopener noreferrer" style={{ color:"#a5d6a7" }}>wunderground.com</a>, connecté au compte de ta station, ouvre « API Keys » et crée une <strong>clé API</strong> (gratuite pour les stations actives).<br/>
+                    2. Colle l'<strong>identifiant de ta station</strong> (par exemple ILYON123, écrit comme sur Weather Underground) et la clé, puis connecte-la.
+                  </div>
+                  <label style={{ fontSize:11, color:"#81c784" }}>Identifiant de la station
+                    <input value={clesWu.station} onChange={e => setClesWu({ ...clesWu, station: e.target.value })} autoComplete="off" style={champ} />
+                  </label>
+                  <div style={{ height:8 }} />
+                  <label style={{ fontSize:11, color:"#81c784" }}>Clé API
+                    <input value={clesWu.apiKey} onChange={e => setClesWu({ ...clesWu, apiKey: e.target.value })} autoComplete="off" style={champ} />
+                  </label>
+                  <button onClick={connecterWu} disabled={envoi || !clesWu.station || !clesWu.apiKey} style={{ ...bouton, marginTop:12, opacity: clesWu.station && clesWu.apiKey ? 1 : 0.5 }}>
+                    {envoi ? "Connexion…" : "Connecter ma station"}
+                  </button>
+                </>
+              )}
+              {marqueStation && <div style={note}>{NOTES_STATION[marqueStation]} Tu peux déconnecter la station ici à tout moment.</div>}
             </>
           )}
         </div>
@@ -293,28 +349,40 @@ export default function Equipements() {
               <div style={{ fontSize:12, color:"#a5d6a7", lineHeight:1.6, margin:"6px 0 10px" }}>
                 Connecte ton robot : l'app te propose de le mettre au repos quand il pleut, gèle ou pendant un semis, et de le relancer quand les conditions sont bonnes.
               </div>
-              <div style={{ fontSize:11, fontWeight:700, color:"#e8f5e9", marginBottom:6 }}>Husqvarna Automower (application Automower Connect)</div>
-              <button onClick={() => connexion("husqvarna")} disabled={envoi} style={bouton}>{envoi ? "Ouverture…" : "Connecter mon Automower"}</button>
-              <div style={{ fontSize:11, fontWeight:700, color:"#e8f5e9", margin:"14px 0 6px" }}>Gardena SILENO (application GARDENA smart system)</div>
-              <button onClick={() => connexion("gardena_robot")} disabled={envoi} style={bouton}>{envoi ? "Ouverture…" : "Connecter mon robot Gardena"}</button>
-              <div style={{ fontSize:11, fontWeight:700, color:"#e8f5e9", margin:"14px 0 0" }}>Mammotion (modèles sortis à partir de 2025)</div>
-              <div style={{ fontSize:11, color:"#81c784", lineHeight:1.6, margin:"6px 0 10px" }}>
-                1. Sur <a href="https://developer.mammotion.com" target="_blank" rel="noopener noreferrer" style={{ color:"#a5d6a7" }}>developer.mammotion.com</a>, connecte-toi avec ton compte Mammotion et touche « Create Credentials » : note le <strong>client_id</strong> et le <strong>client_secret</strong>, affichés une seule fois.<br/>
-                2. Colle-les ci-dessous.
-              </div>
-              <label style={{ fontSize:11, color:"#81c784" }}>client_id
-                <input value={idsMammotion.clientId} onChange={e => setIdsMammotion({ ...idsMammotion, clientId: e.target.value })} autoComplete="off" style={champ} />
-              </label>
-              <div style={{ height:8 }} />
-              <label style={{ fontSize:11, color:"#81c784" }}>client_secret
-                <input value={idsMammotion.clientSecret} onChange={e => setIdsMammotion({ ...idsMammotion, clientSecret: e.target.value })} autoComplete="off" style={champ} />
-              </label>
-              <button onClick={connecterMammotion} disabled={envoi || !idsMammotion.clientId || !idsMammotion.clientSecret} style={{ ...bouton, marginTop:12, opacity: idsMammotion.clientId && idsMammotion.clientSecret ? 1 : 0.5 }}>
-                {envoi ? "Connexion…" : "Connecter mon robot Mammotion"}
-              </button>
-              <div style={{ fontSize:10, color:"#4a7c5c", lineHeight:1.5, marginTop:10 }}>
-                Husqvarna et Gardena : tu te connectes sur le site du groupe Husqvarna, Mongazon360 ne voit jamais ton mot de passe ; si ton arrosage Gardena est sur le même compte, il est connecté en même temps. Mammotion : identifiants chiffrés ; les réinitialiser sur developer.mammotion.com coupe l'accès. Autre marque de robot : dis-le-nous en bas de page.
-              </div>
+              <ChoixMarque question="Quelle est la marque de ton robot ?" marques={MARQUES_ROBOT} choix={marqueRobot} onChoix={setMarqueRobot}
+                autre="Autre marque : dis-le-nous en bas de page." />
+              {marqueRobot === "husqvarna" && (
+                <>
+                  <div style={explication}>Robot Automower relié à l'application Automower Connect : tu te connectes sur le site du groupe Husqvarna, puis tu reviens ici.</div>
+                  <button onClick={() => connexion("husqvarna")} disabled={envoi} style={bouton}>{envoi ? "Ouverture…" : "Connecter mon Automower"}</button>
+                </>
+              )}
+              {marqueRobot === "gardena" && (
+                <>
+                  <div style={explication}>Robot SILENO relié à l'application GARDENA smart system : tu te connectes sur le site du groupe Husqvarna, puis tu reviens ici.</div>
+                  <button onClick={() => connexion("gardena_robot")} disabled={envoi} style={bouton}>{envoi ? "Ouverture…" : "Connecter mon robot Gardena"}</button>
+                </>
+              )}
+              {marqueRobot === "mammotion" && (
+                <>
+                  <div style={explication}>
+                    Modèles sortis à partir de 2025.<br/>
+                    1. Sur <a href="https://developer.mammotion.com" target="_blank" rel="noopener noreferrer" style={{ color:"#a5d6a7" }}>developer.mammotion.com</a>, connecte-toi avec ton compte Mammotion et touche « Create Credentials » : note le <strong>client_id</strong> et le <strong>client_secret</strong>, affichés une seule fois.<br/>
+                    2. Colle-les ci-dessous.
+                  </div>
+                  <label style={{ fontSize:11, color:"#81c784" }}>client_id
+                    <input value={idsMammotion.clientId} onChange={e => setIdsMammotion({ ...idsMammotion, clientId: e.target.value })} autoComplete="off" style={champ} />
+                  </label>
+                  <div style={{ height:8 }} />
+                  <label style={{ fontSize:11, color:"#81c784" }}>client_secret
+                    <input value={idsMammotion.clientSecret} onChange={e => setIdsMammotion({ ...idsMammotion, clientSecret: e.target.value })} autoComplete="off" style={champ} />
+                  </label>
+                  <button onClick={connecterMammotion} disabled={envoi || !idsMammotion.clientId || !idsMammotion.clientSecret} style={{ ...bouton, marginTop:12, opacity: idsMammotion.clientId && idsMammotion.clientSecret ? 1 : 0.5 }}>
+                    {envoi ? "Connexion…" : "Connecter mon robot Mammotion"}
+                  </button>
+                </>
+              )}
+              {marqueRobot && <div style={note}>{NOTES_ROBOT[marqueRobot]}</div>}
             </>
           )}
         </div>
@@ -342,21 +410,28 @@ export default function Equipements() {
               <div style={{ fontSize:12, color:"#a5d6a7", lineHeight:1.6, margin:"6px 0 10px" }}>
                 Connecte ton programmateur : l'app te propose d'arroser à la bonne dose le matin et de suspendre les programmes quand il pleut.
               </div>
-              <div style={{ fontSize:11, fontWeight:700, color:"#e8f5e9", marginBottom:6 }}>Gardena smart system (Water Control, Smart Irrigation Control)</div>
-              <button onClick={() => connexion("gardena")} disabled={envoi} style={bouton}>{envoi ? "Ouverture…" : "Connecter mon arrosage Gardena"}</button>
-              <div style={{ fontSize:11, fontWeight:700, color:"#e8f5e9", margin:"14px 0 4px" }}>Rachio</div>
-              <div style={{ fontSize:11, color:"#81c784", lineHeight:1.6 }}>
-                Sur <a href="https://app.rach.io" target="_blank" rel="noopener noreferrer" style={{ color:"#a5d6a7" }}>app.rach.io</a>, ouvre les réglages de ton compte et copie ta clé API (« Get API Key »).
-              </div>
-              <input value={cleRachio} onChange={e => setCleRachio(e.target.value)} autoComplete="off" placeholder="Clé API Rachio" style={champ} />
-              {!programmateurs?.length ? (
-                <button onClick={chercherRachio} disabled={envoi || !cleRachio} style={{ ...bouton, marginTop:10, opacity: cleRachio ? 1 : 0.5 }}>Trouver mon programmateur</button>
-              ) : programmateurs.map(p => (
-                <button key={p.id} onClick={() => connecterRachio(p)} disabled={envoi} style={{ ...bouton, display:"block", width:"100%", marginTop:8 }}>💧 {p.nom}</button>
-              ))}
-              <div style={{ fontSize:10, color:"#4a7c5c", lineHeight:1.5, marginTop:10 }}>
-                Gardena : connexion sur le site du groupe Husqvarna, Mongazon360 ne voit jamais ton mot de passe. Rachio : clé chiffrée, révocable sur app.rach.io. Autre marque : dis-le-nous en bas de page.
-              </div>
+              <ChoixMarque question="Quelle est la marque de ton programmateur ?" marques={MARQUES_ARROSAGE} choix={marqueArrosage} onChoix={setMarqueArrosage}
+                autre="Autre marque : dis-le-nous en bas de page." />
+              {marqueArrosage === "gardena" && (
+                <>
+                  <div style={explication}>Gardena smart system (Water Control, Smart Irrigation Control) : tu te connectes sur le site du groupe Husqvarna, puis tu reviens ici.</div>
+                  <button onClick={() => connexion("gardena")} disabled={envoi} style={bouton}>{envoi ? "Ouverture…" : "Connecter mon arrosage Gardena"}</button>
+                </>
+              )}
+              {marqueArrosage === "rachio" && (
+                <>
+                  <div style={{ ...explication, margin:0 }}>
+                    Sur <a href="https://app.rach.io" target="_blank" rel="noopener noreferrer" style={{ color:"#a5d6a7" }}>app.rach.io</a>, ouvre les réglages de ton compte et copie ta clé API (« Get API Key »).
+                  </div>
+                  <input value={cleRachio} onChange={e => setCleRachio(e.target.value)} autoComplete="off" placeholder="Clé API Rachio" style={champ} />
+                  {!programmateurs?.length ? (
+                    <button onClick={chercherRachio} disabled={envoi || !cleRachio} style={{ ...bouton, marginTop:10, opacity: cleRachio ? 1 : 0.5 }}>Trouver mon programmateur</button>
+                  ) : programmateurs.map(p => (
+                    <button key={p.id} onClick={() => connecterRachio(p)} disabled={envoi} style={{ ...bouton, display:"block", width:"100%", marginTop:8 }}>💧 {p.nom}</button>
+                  ))}
+                </>
+              )}
+              {marqueArrosage && <div style={note}>{NOTES_ARROSAGE[marqueArrosage]}</div>}
             </>
           )}
         </div>

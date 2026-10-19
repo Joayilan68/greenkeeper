@@ -70,15 +70,22 @@ async function connexionNetatmo(supabase, userId, code, redirectUri) {
 }
 
 // Retour d'une connexion chez le fabricant (Husqvarna Group : robot ou Gardena ; Netatmo : station), puis retour à
-// « Mes équipements » ; connexion refusée par l'utilisateur (?error=…) : « refus »
+// « Mes équipements » ; connexion refusée par l'utilisateur (?error=access_denied) : « refus » ; toute autre erreur
+// renvoyée par le fabricant est signalée (Pilotage → Bugs) : « erreur »
 async function retourConnexion(req, res, supabase) {
   const etat = E.verifierEtat(req.query.state);
   const objet = etat?.objet;
   const gardena = objet === "gardena" || objet === "gardena_robot";
+  const fabricant = objet === "netatmo" ? "Netatmo" : gardena ? "Gardena" : "Husqvarna";
   const fin = (resultat) => res.redirect(302, `/equipements?${gardena || objet === "netatmo" ? objet : "husqvarna"}=${resultat}`);
   if (!etat) return fin("expire");
-  if (!req.query.code) return fin("refus");
   const { userId } = etat;
+  if (!req.query.code) {
+    if (req.query.error === "access_denied") return fin("refus");
+    const raison = [req.query.error, req.query.error_description].filter(Boolean).map(String).join(" : ") || "retour sans code";
+    await require("./alerting.cjs").reportServerError(`Connexion ${fabricant} refusée par le fabricant`, new Error(raison), { "Utilisateur": userId });
+    return fin("erreur");
+  }
   try {
     if (objet === "netatmo") return fin(await connexionNetatmo(supabase, userId, String(req.query.code), adresseRetour(req)));
     const jetons = await E.jetonsHusqvarna({ grant_type: "authorization_code", code: String(req.query.code), redirect_uri: adresseRetour(req) });
@@ -93,7 +100,7 @@ async function retourConnexion(req, res, supabase) {
     if (error) throw error;
     return fin("ok");
   } catch (e) {
-    await require("./alerting.cjs").reportServerError(`Connexion ${objet === "netatmo" ? "Netatmo" : gardena ? "Gardena" : "Husqvarna"} en échec`, e, { "Utilisateur": userId });
+    await require("./alerting.cjs").reportServerError(`Connexion ${fabricant} en échec`, e, { "Utilisateur": userId });
     return fin("erreur");
   }
 }

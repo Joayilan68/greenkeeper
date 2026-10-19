@@ -323,3 +323,7 @@ du premier onglet).
   Gardena à demander à son équipe. Application Netatmo créée par Jordan (adresse de retour à corriger : l'adresse de STA
   + /api/objets pour les tests, puis https://mongazon360.fr/api/objets à la mise en prod, recette n° 35). Restent à
   envoyer : Navimow, Mammotion, Davis, et Hunter si ce n'est pas fait.
+- 19/10/2026 — Test Netatmo sur STA par Jordan (application Netatmo et variables Vercel en place) : retour « Connexion
+  annulée ». Fait sur STA : l'erreur renvoyée par un fabricant (autre qu'un refus de l'utilisateur) est désormais
+  signalée dans Pilotage → Bugs avec sa raison ; Mes équipements demande d'abord la marque de la station, du robot et de
+  l'arrosage, puis n'affiche que ses explications (remarque de Jordan). Recette de décembre n° 66 et 67.
