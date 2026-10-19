@@ -349,3 +349,6 @@ du premier onglet).
   de Jordan attendue (retrait de STA ou demande d'accord). Navimow : SDK officiel public de Segway, sans
   l'authentification ; identifiants d'application à obtenir de Segway (demande du 19/10). Tout ce qui était prévu en
   novembre et décembre côté équipements est déjà sur STA ; le reste attend les réponses des fabricants ou du matériel.
+- 19/10/2026 — CRON_SECRET (go prod du 18/10) : tâches du matin et du soir passées en prod avec la nouvelle clé (10 et 5
+  conseils), aucune « Tâche planifiée refusée » ni erreur serveur, publications pg_cron toutes en 200. Recette « Déjà en
+  prod » n° 27 : OK.
