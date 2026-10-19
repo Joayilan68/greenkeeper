@@ -352,3 +352,6 @@ du premier onglet).
 - 19/10/2026 — CRON_SECRET (go prod du 18/10) : tâches du matin et du soir passées en prod avec la nouvelle clé (10 et 5
   conseils), aucune « Tâche planifiée refusée » ni erreur serveur, publications pg_cron toutes en 200. Recette « Déjà en
   prod » n° 27 : OK.
+- 19/10/2026 — Décision de Jordan (Weather Underground) : demander un accord écrit à The Weather Company pour l'usage
+  de la clé PWS de chaque utilisateur dans Mongazon360 (formulaire « Contact weather data intelligence » de
+  weathercompany.com) ; la connexion reste sur STA en attendant et ne part pas en prod sans accord.
