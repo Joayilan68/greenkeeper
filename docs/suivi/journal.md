@@ -361,3 +361,14 @@ du premier onglet).
   formulaire « Ton équipement n'est pas dans la liste ? »), des consignes de Bob, de la politique de confidentialité
   (article 6.3, mise à jour du 19 octobre) et de CLAUDE.md ; aucune donnée en base (STA et PROD). Code gardé dans
   l'historique Git. Recette de décembre n° 43 et 48 mises à jour.
+- 19/10/2026 — Décision de Jordan (Vercel) : rester en Hobby, risque de suspension assumé ; si Vercel suspend (site et
+  app Android en erreur 503, rien n'est supprimé), passage en Pro pour relancer (Settings → Billing, puis l'email de
+  Vercel ou son support).
+- 19/10/2026 — Décision de Jordan (refonte) : la proposition du 18/10 sert de base, mais travail de fond ensemble le
+  week-end du 23 au 25/10 (vendredi soir → dimanche soir), après analyse de l'usage de toutes les pages et de toutes les
+  tuiles : garder ce qui sert, comprendre ce qui ne sert pas, optimiser le contenu de chaque page. Analyse préparée par
+  Claude pour le vendredi 23/10 au soir.
+- 19/10/2026 — Décision de Jordan : relecture par l'avocate et assurance RC Pro reportées tant que Mongazon360 n'a pas de
+  revenus (premier abonnement Premium payant) ; retirées des actions de Jordan.
+- 19/10/2026 — Délai du diagnostic de suivi après une scarification : réponse de Jordan du 18/10, point sous 30 jours
+  (d'ici le 17/11). Ligue d'hiver : propositions remises à Jordan le 19/10 pour juger de son utilité.
