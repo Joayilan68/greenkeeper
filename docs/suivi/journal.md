@@ -343,3 +343,9 @@ du premier onglet).
   message transmis à Jordan, à envoyer à support@hydrawise.com.
 - 19/10/2026 — Demande Hunter (Hydrawise) envoyée par Jordan à support@hydrawise.com (accès OAuth / GraphQL pour un
   usage commercial). Toutes les demandes d'accès API prévues sont parties ; relance le 03/11 sans réponse.
+- 19/10/2026 — Weather Underground : conditions de The Weather Company lues (section 18, mise à jour du 16/04/2026) :
+  données de la clé PWS réservées à un usage personnel et non commercial ; usage dans un produit commercial = accord écrit
+  séparé ; attribution obligatoire. La connexion (sur STA depuis le 18/10) ne peut pas partir en prod en l'état : décision
+  de Jordan attendue (retrait de STA ou demande d'accord). Navimow : SDK officiel public de Segway, sans
+  l'authentification ; identifiants d'application à obtenir de Segway (demande du 19/10). Tout ce qui était prévu en
+  novembre et décembre côté équipements est déjà sur STA ; le reste attend les réponses des fabricants ou du matériel.
