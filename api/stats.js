@@ -6,6 +6,7 @@
 //   GET /api/stats?type=users    → stats Clerk + sources UTM des inscrits
 //   GET /api/stats?type=errors   → erreurs (error_events) regroupées par problème + état des tâches planifiées
 //   GET /api/stats?type=seo      → position moyenne de nos pages dans Google, par mois (Search Console)
+//   GET /api/stats?type=ligue    → ligue d'hiver : participation par semaine et participants les plus assidus
 //   GET /api/stats?type=services → vérification en direct des services externes (Pilotage → Services)
 //   GET|POST /api/stats?type=social → followers des réseaux sociaux (saisie mensuelle, Pilotage → Réseaux)
 //   GET|POST /api/stats?type=guests → Premium offerts (Pilotage → Finances)
@@ -13,24 +14,13 @@
 //   GET|POST /api/stats?type=publications → lots de comm Facebook et Instagram (Pilotage → Réseaux)
 //   GET /api/stats?type=demandes_equipements → équipements que les utilisateurs aimeraient connecter (Pilotage → Activité)
 
-const { verifiedUserId, ADMIN_EMAILS } = require("./auth.cjs");
+const { verifiedUserId, compteExclu, ADMIN_EMAILS } = require("./auth.cjs");
 
 const { createClerkClient } = require("@clerk/backend");
 const { createClient }      = require("@supabase/supabase-js");
 const { statsRelances }     = require("./relances.cjs");
 const { cleDisponible, positionsParMois } = require("./searchConsole.cjs");
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
-
-// Comptes exclus de toutes les statistiques : admins, leurs adresses « + » (comptes de test, ex. jordankrebs1+essai@gmail.com)
-// et comptes marqués {"compteTest": true} dans les métadonnées publiques de Clerk
-const ADMIN_BASES = ADMIN_EMAILS.map(e => e.split("@"));
-function compteExclu(u) {
-  const email = (u.email_addresses?.find(e => e.id === u.primary_email_address_id)?.email_address
-    || u.email_addresses?.[0]?.email_address || "").toLowerCase();
-  const [local = "", domaine] = email.split("@");
-  return ADMIN_EMAILS.includes(email) || u.public_metadata?.compteTest === true
-    || ADMIN_BASES.some(([l, d]) => d === domaine && local.split("+")[0] === l);
-}
 
 // Jour (AAAA-MM-JJ) à l'heure de Paris : une inscription ou une visite à 0 h 30 compte pour le jour même
 const jourParis = (ms) => new Date(ms).toLocaleDateString("fr-CA", { timeZone: "Europe/Paris" });
@@ -69,6 +59,7 @@ module.exports = async function handler(req, res) {
   if (type === "social" || req.method === "POST") return handleSocial(req, res);
   if (type === "revenue") return handleRevenue(req, res);
   if (type === "users")   return handleUsers(req, res);
+  if (type === "ligue")   return handleLigue(req, res);
   if (type === "errors")   return handleErrors(req, res);
   if (type === "services") return handleServices(req, res);
   if (type === "seo")      return handleSeo(req, res);
@@ -1044,4 +1035,14 @@ async function handleServices(req, res) {
       { name: "OVH", role: "Domaines + email contact@", cost: "≈ 17 €/an", detail: "Renouvellement des domaines à surveiller" },
     ],
   });
+}
+
+// ── Ligue d'hiver : participation par semaine, badges en vue et participants les plus assidus (Pilotage → Activité) ──
+async function handleLigue(req, res) {
+  try {
+    return res.json({ success: true, ...(await require("./ligueHiver.cjs").statsPilotage(createClient(SB_URL, SB_KEY))) });
+  } catch (e) {
+    await require("./alerting.cjs").reportServerError("Pilotage — ligue d'hiver", e);
+    return res.status(500).json({ success: false, error: e.message });
+  }
 }

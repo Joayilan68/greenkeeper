@@ -43,4 +43,15 @@ async function isAdminRequest(req) {
   return !!u && (ADMIN_EMAILS.includes(u.email) || u.publicMetadata.role === "admin");
 }
 
-module.exports = { verifiedUserId, getAuthUser, isAdminRequest, ADMIN_EMAILS };
+// Compte Clerk (format de l'API) exclu des statistiques et de la dotation de la ligue d'hiver : admins, leurs adresses
+// « + » (comptes de test, ex. jordankrebs1+essai@gmail.com) et comptes marqués {"compteTest": true} dans les métadonnées publiques
+const ADMIN_BASES = ADMIN_EMAILS.map(e => e.split("@"));
+function compteExclu(u) {
+  const email = (u.email_addresses?.find(e => e.id === u.primary_email_address_id)?.email_address
+    || u.email_addresses?.[0]?.email_address || "").toLowerCase();
+  const [local = "", domaine] = email.split("@");
+  return ADMIN_EMAILS.includes(email) || u.public_metadata?.compteTest === true
+    || ADMIN_BASES.some(([l, d]) => d === domaine && local.split("+")[0] === l);
+}
+
+module.exports = { verifiedUserId, getAuthUser, isAdminRequest, compteExclu, ADMIN_EMAILS };

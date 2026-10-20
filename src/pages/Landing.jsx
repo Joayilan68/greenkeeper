@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { trackFunnel, trackFunnelOncePerSession } from "../lib/funnel";
 import { codeRecu } from "../lib/codeParrainage";
+import { periodeLigue, dateLongue } from "../lib/ligueHiver";
 import { RESEAUX } from "../lib/reseaux";
 
 const G = {
@@ -79,6 +80,8 @@ export default function Landing() {
     trackFunnel("cta_click", { source, dest: "demo" });
     navigate("/demo");
   };
+  // Ligue d'hiver : annoncée 7 jours avant le départ, puis jusqu'à fin janvier
+  const ligue = periodeLigue();
 
   return (
     <div style={{ background:G.bg, minHeight:"100vh", color:G.text, fontFamily:"'Nunito','Segoe UI',sans-serif" }}>
@@ -144,6 +147,21 @@ export default function Landing() {
               Puis l'app reste <b>gratuite</b> — tu ne perds rien, ni ton profil ni ton suivi.
             </div>
           </button>
+
+          {ligue && ligue.statut !== "terminee" && (
+            <button onClick={() => goSignup("ligue_hiver")} style={{
+              display:"block", width:"100%", textAlign:"left", cursor:"pointer", fontFamily:"inherit", color:G.text,
+              background:"linear-gradient(135deg,rgba(100,181,246,0.18),rgba(13,43,26,0.6))", border:"1px solid rgba(144,202,249,0.4)",
+              borderRadius:16, padding:"12px 16px", margin:"0 0 12px",
+            }}>
+              <div style={{ fontSize:15.5, fontWeight:900, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                <span>❄️ Ligue d'hiver : 1 an de Premium à gagner</span><span style={{ fontSize:20 }}>→</span>
+              </div>
+              <div style={{ fontSize:12.5, fontWeight:700, marginTop:3, color:G.muted }}>
+                {ligue.statut === "annonce" ? `Départ le dimanche ${dateLongue(ligue.debut)} : ` : ""}un défi et un quiz gazon par semaine, gratuits, jusqu'à fin janvier.
+              </div>
+            </button>
+          )}
 
           <CtaPrimary onClick={() => goEssai("hero")}>📸 Diagnostiquer mon gazon — gratuit</CtaPrimary>
           <button onClick={() => goDemo("hero")} style={{ marginTop:10, width:"100%", background:"rgba(255,255,255,0.07)", border:"1px solid rgba(165,214,167,0.28)", color:"#e8f5e9", borderRadius:14, padding:"13px 20px", fontSize:14.5, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}>👀 Voir l'app en démo</button>

@@ -1,0 +1,133 @@
+{
+  "_source": "Ligue d'hiver 2026-2027 (décision de Jordan du 19/10/2026) : un défi et un quiz de 3 questions par semaine, sans classement. Gestes et réponses tirés de la base de connaissances (onglets Règles complémentaires, Tonte Précise, Zones x Mois, Maladies & Nuisibles, Température Sol & ET0, Objectifs Profil, Fenêtres Semis par Zone, Legende, Sujets complémentaires) et des articles Conseils liés. Partagé par l'app (src/lib/ligueHiver.js) et le serveur (api/ligueHiver.cjs).",
+  "saison": "2026-2027",
+  "debut": "2026-11-01",
+  "debutTest": "2026-10-18",
+  "semaines": 13,
+  "points": { "defi": 50, "quiz": 30 },
+  "badge": { "id": "gardien_hiver_2026", "semainesMin": 10 },
+  "dotation": "1 an d'abonnement Premium",
+  "partage": {
+    "texte": "❄️ Le quiz gazon de la semaine : 3 questions pour tester tes connaissances, sur Mongazon360 (gratuit).",
+    "url": "https://mongazon360.fr/?utm_source=partage&utm_medium=quiz&utm_campaign=ligue-hiver"
+  },
+  "programme": [
+    {
+      "theme": "Dernière tonte",
+      "defi": { "titre": "Fais ta dernière tonte de l'année", "texte": "Un jour sec avec au moins 10 °C : tonds à 5-6 cm (gazon universel) et ramasse l'herbe coupée. Robot : règle sa hauteur sur 5-6 cm avant son arrêt.", "article": "derniere-tonte-pelouse" },
+      "quiz": [
+        { "q": "À quelle hauteur faire la dernière tonte d'un gazon universel ?", "choix": ["3 cm", "5 à 6 cm", "9 cm"], "bonne": 1, "explication": "La dernière tonte se fait en novembre, un jour sec avec au moins 10 °C, à 5-6 cm pour un gazon universel.", "article": "derniere-tonte-pelouse" },
+        { "q": "Que faire de l'herbe coupée lors de la dernière tonte ?", "choix": ["La ramasser", "La laisser sur place (mulching)", "La laisser en tas sur la pelouse"], "bonne": 0, "explication": "Pas de mulching pour la dernière tonte d'automne : on ramasse l'herbe coupée. Le mulching reprend avec les tontes régulières.", "article": "mulching-pelouse" },
+        { "q": "Ton gazon mesure 9 cm et tu vises 6 cm. Que fais-tu ?", "choix": ["Je tonds directement à 6 cm", "Je ne tonds plus jusqu'au printemps", "Je tonds à 7 cm, puis à 6 cm trois jours plus tard"], "bonne": 2, "explication": "Règle du tiers : jamais plus d'un tiers de la hauteur en une tonte. De 9 à 6 cm, on tond en deux fois, à 3 jours d'écart.", "article": "hauteur-tonte-gazon" }
+      ]
+    },
+    {
+      "theme": "Feuilles mortes",
+      "defi": { "titre": "Ramasse les feuilles mortes", "texte": "Un jour sec, débarrasse ta pelouse des feuilles : râteau, souffleur ou tondeuse avec bac réglée haut. Pas d'arbre ? Retire branches et débris.", "article": "feuilles-mortes-pelouse" },
+      "quiz": [
+        { "q": "Ramasser les feuilles mortes aide à prévenir…", "choix": ["la fusariose", "la rouille", "les fourmis"], "bonne": 0, "explication": "Contre la fusariose : feuilles ramassées, pas d'engrais azoté en fin d'automne, sol aéré et tonte pas trop rase.", "article": "maladies-gazon" },
+        { "q": "Quel jour choisir pour ramasser les feuilles ?", "choix": ["Juste après une averse", "Un jour sec", "Un matin de gel"], "bonne": 1, "explication": "Le bon jour pour ramasser les feuilles : un jour sec, avec moins de 1 mm de pluie et un vent sous 30 km/h.", "article": "feuilles-mortes-pelouse" },
+        { "q": "Peut-on laisser des feuilles broyées sur la pelouse ?", "choix": ["Oui, même en couche épaisse", "Non, jamais", "Oui, finement broyées et en couche fine"], "bonne": 2, "explication": "Pendant la chute des feuilles, pas de mulching, sauf des feuilles finement broyées : l'herbe doit rester bien visible.", "article": "feuilles-mortes-pelouse" }
+      ]
+    },
+    {
+      "theme": "Arrosage et gel",
+      "defi": { "titre": "Mets l'arrosage à l'abri du gel", "texte": "Purge l'arrosage automatique, ou vide et range tuyau et arroseur avant les gelées.", "article": "hiverner-tondeuse-robot-arrosage" },
+      "quiz": [
+        { "q": "Quand faut-il purger l'arrosage automatique ?", "choix": ["Avant les premières gelées", "Au printemps", "En plein été"], "bonne": 0, "explication": "D'octobre à décembre, dès que les minimales tombent entre 3 et 5 °C : purge l'arrosage automatique, ou range tuyau et arroseur.", "article": "hiverner-tondeuse-robot-arrosage" },
+        { "q": "À partir de quelle température l'app t'envoie-t-elle l'alerte « Gel cette nuit » ?", "choix": ["5 °C", "2 °C ou moins", "-5 °C"], "bonne": 1, "explication": "Alerte « Gel cette nuit » dès 2 °C ou moins annoncés : ne pas tondre, protéger les jeunes semis, ne pas marcher sur le gazon gelé.", "article": "gel-pelouse" },
+        { "q": "Ta pelouse pâlit en décembre. Tu l'arroses ?", "choix": ["Oui, une fois par semaine", "Oui, le soir", "Non, elle est au repos"], "bonne": 2, "explication": "En hiver, le gazon est au repos et l'arrosage n'est pas proposé : il reprend avec la saison de pousse.", "article": "pelouse-jaune-hiver" }
+      ]
+    },
+    {
+      "theme": "Fusariose",
+      "defi": { "titre": "Découvre ton bilan de saison", "texte": "Ouvre ton bilan 2026 dans l'app : tontes, arrosages, badges. Partage-le avec tes proches si tu veux.", "lien": "/bilan" },
+      "quiz": [
+        { "q": "Des plaques rondes beige-rosé de 2 à 20 cm, par temps froid et humide ?", "choix": ["La rouille", "Des vers blancs", "La fusariose"], "bonne": 2, "explication": "La fusariose (moisissure des neiges) forme des plaques rondes beige-rosé de 2 à 20 cm, d'octobre à avril, par temps froid et humide.", "article": "maladies-gazon" },
+        { "q": "Pour éviter la fusariose, on évite…", "choix": ["l'engrais azoté en fin d'automne", "de ramasser les feuilles", "d'aérer le sol"], "bonne": 0, "explication": "Pas d'engrais azoté en fin d'automne ni en hiver : avec le froid humide, il favorise la fusariose.", "article": "maladies-gazon" },
+        { "q": "Un fongicide chimique contre la fusariose ?", "choix": ["Oui, dès la première plaque", "Non : prévention et biocontrôle, sinon un professionnel agréé", "Oui, mais seulement en hiver"], "bonne": 1, "explication": "Loi Labbé : jamais de fongicide chimique au jardin. Prévention, gestes mécaniques et biocontrôle ; au-delà, un professionnel agréé.", "article": "pelouse-naturelle-sans-chimie" }
+      ]
+    },
+    {
+      "theme": "Matériel",
+      "defi": { "titre": "Hiverne ta tondeuse ou ton robot", "texte": "Nettoie-le et range-le au sec, à l'abri du gel. Le pas à pas, selon ton matériel, est dans l'article.", "article": "hiverner-tondeuse-robot-arrosage" },
+      "quiz": [
+        { "q": "Quand faire réviser sa tondeuse ou son robot ?", "choix": ["Le jour de la 1re tonte", "Environ 3 semaines avant la 1re tonte", "En plein été"], "bonne": 1, "explication": "Révision de la tondeuse ou du robot environ 3 semaines avant la 1re tonte de ta zone : l'app te le rappelle.", "article": "premiere-tonte-printemps" },
+        { "q": "De décembre à février, on tond…", "choix": ["une fois par mois", "seulement par temps sec", "jamais"], "bonne": 2, "explication": "Pas de tonte de décembre à février : le gazon est au repos. La tonte reprend au printemps, à la date de ta zone.", "article": "calendrier-entretien-pelouse" },
+        { "q": "Hauteur minimale d'un gazon universel ?", "choix": ["2 cm", "4 cm", "7 cm"], "bonne": 1, "explication": "Un gazon universel ne se tond jamais sous 4 cm : 5-6 cm au printemps et en automne, 6-7 cm en été.", "article": "hauteur-tonte-gazon" }
+      ]
+    },
+    {
+      "theme": "Pelouse en hiver",
+      "defi": { "titre": "Fais le tour de ta pelouse", "texte": "Repère mousse, plaques rondes beige-rosé, taupinières, eau qui stagne ou feuilles oubliées, et note-les. En Premium, fais-en un diagnostic photo d'hiver.", "article": "pelouse-jaune-hiver" },
+      "quiz": [
+        { "q": "Ta pelouse pâlit et ne pousse plus en décembre. C'est…", "choix": ["une carence : vite, de l'engrais", "le repos de l'hiver, c'est normal", "le signe qu'il faut arroser"], "bonne": 1, "explication": "En hiver, le gazon se repose et pâlit : c'est normal. Le diagnostic photo d'hiver ne le pénalise pas.", "article": "pelouse-jaune-hiver" },
+        { "q": "Sous quelle température du sol le gazon arrête-t-il de pousser ?", "choix": ["15 °C", "5 °C", "0 °C"], "bonne": 1, "explication": "Sous 5 °C dans le sol, le gazon est en dormance. La pousse reprend vers 8 °C.", "article": "pelouse-jaune-hiver" },
+        { "q": "Un gazon bermuda tout brun de novembre à mars ?", "choix": ["Normal : c'est sa dormance", "Il faut le regarnir", "Il manque d'engrais"], "bonne": 0, "explication": "Le bermuda, gazon de climat chaud, entre en dormance de novembre à mars : il brunit, puis reverdit au printemps.", "article": "quel-gazon-choisir" }
+      ]
+    },
+    {
+      "theme": "Eau qui stagne",
+      "defi": { "titre": "Repère les zones où l'eau stagne", "texte": "Après une pluie, note (ou prends en photo) les endroits où l'eau reste : ce sont eux qu'il faudra aérer au printemps.", "article": "pelouse-detrempee-flaques" },
+      "quiz": [
+        { "q": "L'eau stagne sur ta pelouse en décembre. Que faire ?", "choix": ["Aérer tout de suite", "Noter les zones et les aérer au printemps", "Mettre de l'engrais"], "bonne": 1, "explication": "Flaques en hiver : note les zones, à aérer au printemps. Pas d'aération ni d'engrais sur un sol détrempé.", "article": "pelouse-detrempee-flaques" },
+        { "q": "Quand aérer (carottage) un sol tassé ?", "choix": ["En mars ou en septembre", "En décembre", "En plein été"], "bonne": 0, "explication": "Aération en mars et en septembre, et aussi en avril et en octobre sur un sol argileux ou tassé. Au moins 90 jours entre deux.", "article": "aerer-pelouse-carottage" },
+        { "q": "Aération et scarification le même jour ?", "choix": ["Oui, c'est plus efficace", "Seulement en hiver", "Non, jamais le même jour"], "bonne": 2, "explication": "Aération et scarification ne se font jamais le même jour : c'est l'une ou l'autre.", "article": "scarifier-pelouse" }
+      ]
+    },
+    {
+      "theme": "Neige et gel",
+      "defi": { "titre": "Partage le quiz à un proche", "texte": "Envoie le quiz de la semaine à un proche qui a une pelouse : le bouton Partager valide le défi.", "partage": true },
+      "quiz": [
+        { "q": "Il a neigé sur ta pelouse. Que fais-tu ?", "choix": ["Je la laisse fondre, sans la tasser", "Je la déblaie à la pelle", "Je mets du sel"], "bonne": 0, "explication": "Neige sur la pelouse : laisse-la fondre et évite de la tasser.", "article": "gel-pelouse" },
+        { "q": "Un gros tas de neige tassée sur la pelouse favorise…", "choix": ["la rouille", "la fusariose (moisissure des neiges)", "les fourmis"], "bonne": 1, "explication": "Une neige tassée met longtemps à fondre : froid et humidité prolongés, le terrain de la fusariose, ou moisissure des neiges.", "article": "gel-pelouse" },
+        { "q": "Peut-on marcher sur une pelouse gelée ou givrée ?", "choix": ["Oui, sans problème", "Oui, avec des bottes", "Mieux vaut l'éviter"], "bonne": 2, "explication": "En hiver, évite de marcher sur un gazon gelé : les brins cassent et laissent des traces brunes.", "article": "gel-pelouse" }
+      ]
+    },
+    {
+      "theme": "Objectif 2027",
+      "defi": { "titre": "Choisis ton objectif 2027", "texte": "Dans ton profil, vérifie ton objectif (gazon parfait, pelouse fonctionnelle ou gazon naturel) et complète ce qui manque : tes conseils s'y adaptent.", "lien": "/setup" },
+      "quiz": [
+        { "q": "Combien d'engrais par an, au plus ?", "choix": ["2", "4", "12"], "bonne": 1, "explication": "Un engrais par saison, 4 par an au plus, avec au moins 90 jours entre deux. Exception : l'engrais d'hiver, 45 jours après celui d'automne.", "article": "engrais-gazon" },
+        { "q": "Avec l'objectif « Naturel », tes engrais sont…", "choix": ["organiques, sans NPK de synthèse", "des NPK de synthèse", "interdits"], "bonne": 0, "explication": "Objectif Naturel : ni engrais NPK de synthèse ni désherbant chimique ; engrais organiques et désherbage manuel.", "article": "pelouse-naturelle-sans-chimie" },
+        { "q": "Peut-on semer du gazon en décembre ?", "choix": ["Oui, partout", "Non, toutes les fenêtres sont fermées", "Oui, dans le Nord"], "bonne": 1, "explication": "Les fenêtres de semis d'automne ferment le 10 novembre dans le Sud et mi-novembre en Corse : rendez-vous au printemps.", "article": "semer-gazon-novembre" }
+      ]
+    },
+    {
+      "theme": "Reprise du printemps",
+      "defi": { "titre": "Prépare ton plan de printemps", "texte": "Ouvre ton plan de printemps : date de ta 1re tonte et liste de ce qu'il te faudra. Coche ce que tu as déjà.", "lien": "/printemps" },
+      "quiz": [
+        { "q": "1re tonte de l'année : dans le Sud, puis dans le Nord-Est ?", "choix": ["1er février, puis 1er mars", "1er mars, puis 1er avril", "15 avril, puis 15 mai"], "bonne": 1, "explication": "1re tonte : 1er mars dans le Sud et en Corse, jusqu'au 1er avril dans le Nord-Est. Plus tôt si le sol atteint 8 °C.", "article": "premiere-tonte-printemps" },
+        { "q": "À quelle hauteur faire la 1re tonte d'un gazon universel ?", "choix": ["6 cm", "3 cm", "10 cm"], "bonne": 0, "explication": "1re tonte : en haut de la fourchette de printemps, soit 6 cm pour un gazon universel.", "article": "premiere-tonte-printemps" },
+        { "q": "Au printemps, dans quel ordre ?", "choix": ["Scarification, puis 1re tonte", "Regarnissage, puis scarification", "1re tonte, puis scarification 2 semaines après"], "bonne": 2, "explication": "Révision 3 semaines avant la 1re tonte, scarification 2 semaines après, puis regarnissage et engrais de démarrage.", "article": "preparer-pelouse-printemps" }
+      ]
+    },
+    {
+      "theme": "Taupes",
+      "defi": { "titre": "Étale les taupinières", "texte": "Un jour sec, étale la terre des taupinières au râteau. Pas de taupinière ? Retire feuilles et branches tombées.", "article": "taupes-pelouse" },
+      "quiz": [
+        { "q": "Des taupes dans la pelouse, c'est le signe…", "choix": ["d'un sol mort", "d'un sol vivant, riche en vers", "d'un excès d'engrais"], "bonne": 1, "explication": "Les taupes cherchent un sol sain, riche en vers de terre : leur présence est le signe d'un sol vivant.", "article": "taupes-pelouse" },
+        { "q": "Quand les taupes sont-elles les plus actives ?", "choix": ["En octobre-novembre et en février-mars", "En juillet-août", "Toute l'année pareil"], "bonne": 0, "explication": "Les taupes sont surtout actives en octobre-novembre et en février-mars : étale les taupinières dès qu'elles apparaissent.", "article": "taupes-pelouse" },
+        { "q": "La méthode la plus efficace pour s'en débarrasser ?", "choix": ["Un produit chimique", "Inonder les galeries", "Le piégeage par un professionnel"], "bonne": 2, "explication": "Le piégeage par un professionnel est la méthode la plus sûre ; sinon, des répulsifs (huile de ricin, ultrasons).", "article": "taupes-pelouse" }
+      ]
+    },
+    {
+      "theme": "Mousse",
+      "defi": { "titre": "Repère la mousse et sa cause", "texte": "Où pousse la mousse ? À l'ombre, sur un sol tassé, dans un coin humide ? Note-le : on la traitera en mars-avril, en corrigeant la cause.", "article": "mousse-pelouse" },
+      "quiz": [
+        { "q": "Quand traiter la mousse avec un anti-mousse ?", "choix": ["En décembre", "En mars-avril ou en septembre", "En juillet"], "bonne": 1, "explication": "Anti-mousse en mars, en avril ou en septembre, jamais en plein hiver.", "article": "mousse-pelouse" },
+        { "q": "À quoi sert la chaux sur une pelouse moussue ?", "choix": ["À tuer la mousse en une nuit", "À corriger un sol acide (pH sous 6)", "À nourrir l'herbe en azote"], "bonne": 1, "explication": "Un sol acide (pH sous 6) favorise la mousse : la chaux corrige le pH. Jamais de chaux sur un sol calcaire.", "article": "chaulage-ph-pelouse" },
+        { "q": "Combien de temps au moins entre deux traitements anti-mousse ?", "choix": ["30 jours", "7 jours", "1 an"], "bonne": 0, "explication": "Au moins 30 jours entre deux anti-mousses, et 2 traitements par an au plus.", "article": "sulfate-de-fer-pelouse" }
+      ]
+    },
+    {
+      "theme": "Starting-blocks",
+      "defi": { "titre": "Prévois la révision de ta tondeuse", "texte": "Prends rendez-vous ou fais-la toi-même, environ 3 semaines avant la 1re tonte de ta zone (date dans ton plan de printemps).", "article": "premiere-tonte-printemps" },
+      "quiz": [
+        { "q": "Le gazon recommence à pousser quand le sol atteint…", "choix": ["8 °C", "15 °C", "20 °C"], "bonne": 0, "explication": "La pousse reprend quand le sol atteint 8 °C : la 1re tonte peut alors se faire avant la date de ta zone.", "article": "premiere-tonte-printemps" },
+        { "q": "Pour semer au printemps, le sol doit atteindre au moins…", "choix": ["5 °C", "10 °C", "18 °C"], "bonne": 1, "explication": "Semis et regarnissage : un sol à au moins 10 °C, dans la fenêtre de semis de ta zone.", "article": "semer-gazon-printemps" },
+        { "q": "Engrais de démarrage dans le Nord et le Nord-Est : quand ?", "choix": ["En janvier", "En février", "En mars seulement"], "bonne": 2, "explication": "Engrais de démarrage : en mars seulement dans le Nord et le Nord-Est, dès février dans le Sud et le Sud-Ouest.", "article": "engrais-gazon-printemps" }
+      ]
+    }
+  ]
+}

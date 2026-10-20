@@ -298,6 +298,12 @@ module.exports = async function handler(req, res) {
         }
       } catch (e) { console.warn("[cron] activité Clerk indisponible :", e.message); }
 
+      // Ligue d'hiver : défi et quiz de la semaine déjà faits ou non, et astuces tirées des quiz passés (ligueHiver.cjs)
+      const ligueHiver = require("./ligueHiver.cjs");
+      let ligueCtx = null;
+      try { ligueCtx = await ligueHiver.contexteNotifications(supabase, ligueHiver.jourParis()); }
+      catch (e) { await require("./alerting.cjs").reportServerError("Tâche planifiée — ligue d'hiver", e); }
+
       // Cache météo par zone arrondie (1 fetch/zone/exécution → protège le quota)
       const weatherCache = {}; // séries Open-Meteo par coordonnées (partagées entre utilisateurs)
       // Utilisateurs ayant une station météo ou un arrosage Gardena (capteur de sol) : mesures du jardin appliquées au jour 0
@@ -497,6 +503,7 @@ module.exports = async function handler(req, res) {
           gami: profile.gamification || null,
           parcours: parcoursState,
           joursInactif: joursInactifMap[user_id] ?? 0,
+          ligue: ligueCtx?.pour(user_id) || null,
         });
 
         if (!decision) continue;
@@ -938,7 +945,7 @@ module.exports = async function handler(req, res) {
       // n'ont pas déjà reçu de push (moteur intelligent ou relance essai).
       let baselineSent = 0;
       if (slot === "matin") {
-        const tip = conseilDuJour(today, month);
+        const tip = conseilDuJour(today, month, ligueCtx?.astuces);
         for (const s of (subsData || [])) {
           const uid = s.user_id;
           if (pushedToday.has(uid) || (joursInactifMap[uid] ?? 0) >= 7) continue;
@@ -964,6 +971,12 @@ module.exports = async function handler(req, res) {
       if (emailFallbackCapped) {
         await require("./alerting.cjs").reportServerError("Conseils par email — plafond atteint",
           new Error(`${emailFallbackCapped} conseil(s) non envoyé(s) : plafond de ${EMAIL_CONSEILS_PAR_CRENEAU} emails par créneau (quota Resend gratuit 100/jour)`));
+      }
+
+      // ── Ligue d'hiver : participations supprimées le 1er août qui suit la saison (règlement, CGU 6 g) — créneau MATIN ──
+      if (slot === "matin") {
+        try { await ligueHiver.purgerSaisonsTerminees(supabase, ligueHiver.jourParis()); }
+        catch (e) { await require("./alerting.cjs").reportServerError("Tâche planifiée — ligue d'hiver", e); }
       }
 
       // ── RÉTENTION RGPD — photos de diagnostic > 90 jours — créneau MATIN ──
@@ -1238,6 +1251,12 @@ module.exports = async function handler(req, res) {
       return res.status(500).json({ error: "Envoi impossible" });
     }
   }
+
+  // ════════════════════════════════════════════════════════════════════════
+  // LIGUE D'HIVER — défi et quiz de la semaine (api/ligueHiver.cjs)
+  // POST /api/send?type=ligue { action: "etat" | "defi" | "quiz", semaine, reponses } — Bearer Clerk obligatoire
+  // ════════════════════════════════════════════════════════════════════════
+  if (type === "ligue") return require("./ligueHiver.cjs").handler(req, res);
 
   // ════════════════════════════════════════════════════════════════════════
   // CUSTOMER-PORTAL — Lien Stripe Customer Portal (mention 10 avocat)

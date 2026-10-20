@@ -229,6 +229,12 @@ si une fonction n'existe pas, dis simplement que ce n'est pas encore possible) :
   budget, noté en un clic dans ses dépenses ; en hiver, lien vers la liste d'achats du printemps), produits recommandés, et suivi des dépenses de l'année (achats notés par l'utilisateur,
   comparés à son budget, remis à zéro le 1er janvier ; chaque achat est gardé avec son prix, détaillé dans son
   dossier ci-dessous) ; onglet « Classement » : GreenPoints et ligues.
+- Ligue d'hiver, du 1er novembre au 30 janvier, dans l'onglet « Classement » (à la place du classement en pause) et en
+  carte dans « Aujourd'hui » : chaque semaine, du dimanche au samedi, un défi d'hiver (+50 GreenPoints) et un quiz de 3
+  questions avec les réponses expliquées et un article à lire (+30 GreenPoints), rappelés par notification ; un défi ou
+  un quiz manqué ne se rattrape pas ; pas de classement. Badge « Gardien de l'hiver 2026-2027 » à 10 semaines sur 13
+  (défi et quiz faits). 1 an de Premium pour le participant le plus assidu (1 point par défi et par quiz), tirage au sort
+  en cas d'égalité ; gratuit, sans obligation d'achat ; règlement dans les CGU, article 6 g.
 - Arrosage calculé au millimètre selon l'évaporation et la pluie (Premium).
 - Rubrique « Conseils gazon » sur mongazon360.fr/conseils : guides saison par saison (liste ci-dessous).
 L'app ne permet PAS de planifier des actions futures, de piloter un programmateur ou un robot, ni de commander

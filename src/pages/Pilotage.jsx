@@ -10,6 +10,8 @@ import CodesCreateursCard from "../components/CodesCreateursCard";
 import PublicationsCard from "../components/PublicationsCard";
 import DemandesEquipementsCard from "../components/DemandesEquipementsCard";
 import { CHARGES_ACTIVES, CHARGES_PREVUES, STRIPE_FEES, URSSAF_RATE, montant } from "../lib/charges";
+import LigueHiverCard from "../components/LigueHiverCard";
+import { periodeLigue } from "../lib/ligueHiver";
 
 function eur(n) { return (Math.round((n||0)*100)/100).toFixed(2) + "€"; }
 
@@ -499,6 +501,7 @@ export default function Pilotage() {
         {/* ════════════════ TAB ACTIVITÉ ════════════════ */}
         {tab === "activite" && (
           <>
+            {periodeLigue() && <LigueHiverCard getToken={getToken} />}
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:4 }}>
               <KPI icon="👥" label="Comptes créés" value={loadingUsers ? "..." : (users?.total ?? "—")} sub="Hors admins · ≠ installs" color="#a5d6a7" />
               <KPI icon="🟢" label="Actifs aujourd'hui" value={loadingUsers ? "..." : dauToday} sub="Connectés ce jour" color="#66BB6A" />

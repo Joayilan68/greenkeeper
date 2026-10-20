@@ -8,8 +8,10 @@ import { useProfile } from "../lib/useProfile";
 import { useDiagnostics } from "../lib/useDiagnostics";
 import { useSubscription } from "../lib/useSubscription";
 import { useSaison } from "../lib/useSaison";
-import { card, cardTitle, scroll } from "../lib/styles";
+import { card, cardTitle, scroll, header } from "../lib/styles";
 import LiguesModal from "../components/LiguesModal";
+import LigueHiver, { AnnonceLigue } from "../components/LigueHiver";
+import { periodeLigue } from "../lib/ligueHiver";
 
 export default function Classement() {
   const navigate = useNavigate();
@@ -35,6 +37,10 @@ export default function Classement() {
 
   const zoneBg  = enZonePromotion ? "rgba(76,175,80,0.2)" : enZoneRetrogradation ? "rgba(230,81,0,0.2)" : "rgba(255,255,255,0.05)";
   const zoneTxt = enZonePromotion ? "#a5d6a7" : enZoneRetrogradation ? "#ef9a9a" : "#81c784";
+
+  // ── Ligue d'hiver (de novembre à janvier, classement en pause) ──────────────
+  const ligue = periodeLigue();
+  if (ligue?.statut === "en_cours" || (ligue?.statut === "terminee" && !classementActif)) return <LigueHiver />;
 
   // ── Mode hivernal ───────────────────────────────────────────────────────────
   if (!classementActif) {
@@ -103,6 +109,8 @@ export default function Classement() {
       </div>
 
       <div style={scroll}>
+
+        {ligue?.statut === "annonce" && <AnnonceLigue debut={ligue.debut} />}
 
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* MENTION 8 AVOCAT — Bannière joueurs simulés                     */}

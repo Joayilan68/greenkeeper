@@ -60,7 +60,8 @@
   4 publications (dimanche 8 h, lundi, mercredi et vendredi 16 h 30, heure de Paris), texte Facebook avec un lien suivi
   (`utm_source=facebook`), légende Instagram (lien en bio, hashtags), visuel 1080 × 1350 (photo de notre pelouse ou Bob, sans
   métadonnées). Conseils tirés des articles et de la base, fonctions de l'app en prod uniquement. Bob dans les groupes
-  Facebook reste géré par Jordan.
+  Facebook reste géré par Jordan. Pendant la ligue d'hiver, la publication du dimanche reprend la 1re question du quiz de la
+  semaine (`src/lib/ligueHiver.json`), avec le lien vers l'app.
 - Publication automatique des lots (`api/reseaux.cjs`, go prod de Jordan du 18/10/2026) : lot inséré dans la table
   `publications` de la PROD (serveur uniquement, RLS sans politique ; colonne `heure` = heure de Paris), visuels JPEG poussés
   sur `main` dans `public/images/reseaux/<lot>/` (lus par Meta sur mongazon360.fr, retirés 3 semaines après) ; Jordan valide
@@ -86,6 +87,24 @@
   moyenne par mois dans `api/searchConsole.cjs`, aussi utilisé par Pilotage → Activité (`/api/stats?type=seo`). Sa clé est
   dans la variable `GSC_SERVICE_ACCOUNT_JSON` (Vercel Production et Preview, secret GitHub, environnement cloud de Claude),
   jamais dans le dépôt ni affichée. Sert au point des stats tous les 15 jours et au choix des articles à améliorer.
+
+## Ligue d'hiver
+- Décision de Jordan du 19/10/2026 : du dimanche 1er novembre 2026 au samedi 30 janvier 2027, 13 semaines du dimanche au
+  samedi (heure de Paris), un défi et un quiz de 3 questions par semaine, sans classement ; mise en prod en avance, seule,
+  par exception à la règle de décembre. Contenu unique `src/lib/ligueHiver.json` (gestes, questions, réponses et explications
+  tirés de la base de connaissances, articles liés), partagé par l'app (`src/lib/ligueHiver.js` ; écran de l'onglet
+  Classement, carte de « Aujourd'hui » et annonce : `src/components/LigueHiver.jsx`) et le serveur (`api/ligueHiver.cjs`,
+  `POST /api/send?type=ligue`). Hors production (STA, préversions), la ligue démarre à `debutTest` pour être testée.
+- Table `ligue_hiver` (serveur uniquement, RLS sans politique) : une ligne par utilisateur, saison et semaine ; supprimée le
+  1er août qui suit la saison par la tâche du matin. Un défi ou un quiz manqué ne se rattrape pas.
+- Défi 50 GreenPoints, quiz 30 (aussi pendant la pause d'hiver) ; badge « Gardien de l'hiver 2026-2027 » à 10 semaines
+  complètes (défi et quiz). Notifications au même rythme (une le matin au plus) : quiz (dimanche, sinon les jours suivants)
+  et défi (à partir du mercredi), chacun une fois par semaine s'il n'est pas fait ; astuces « Le savais-tu ? » tirées des
+  quiz passés.
+- Dotation (règlement : CGU, article 6 g) : 1 an de Premium au plus de points d'assiduité (1 par défi, 1 par quiz) le
+  30/01/2027 à 23 h 59 ; égalité : tirage au sort au plus tard le 7/02 ; gagnant prévenu par email au plus tard le 10/02 ;
+  comptes de test et admins exclus (`compteExclu`, `api/auth.cjs`). Suivi et plus assidus : Pilotage → Activité. Remise :
+  Premium offert 12 mois (Pilotage → Finances), ou, s'il est déjà abonné, coupon Stripe à 100 % sur ses 12 prochains mois.
 
 ## Offres et Premium offerts
 - Premium offert (famille, bêta…) : règle unique `api/premium.cjs` (date de fin incluse, vide = à vie), gestion

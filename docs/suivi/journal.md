@@ -373,3 +373,16 @@ du premier onglet).
 - 19/10/2026 — Précision de Jordan (diagnostic de suivi) : ses « 30 jours » après une scarification sont le moment de la
   photo de suivi, pas un point à faire d'ici le 17/11 ; délais validés, règle du suivi ajoutée à la base (« Règles
   complémentaires » n° 18). Ligue d'hiver : propositions remises à Jordan le 19/10 pour juger de son utilité.
+- 19/10/2026 — Décision de Jordan (ligue d'hiver) : d'accord pour la version sans classement, prête au 1er novembre
+  (donc mise en prod en avance, seule, par exception à la règle de décembre) ; les quiz alimentent de nouvelles
+  notifications sans changer le rythme d'envoi ; objectifs : acquisition (communication autour des quiz pour faire gagner
+  en connaissances), fidélisation et rétention ; proposition de Jordan : 1 an d'abonnement offert au plus assidu.
+- 20/10/2026 — Fait sur STA (ligue d'hiver) : 13 semaines du 1er novembre au 30 janvier, un défi (50 GreenPoints) et un
+  quiz de 3 questions (30 GreenPoints) par semaine, dans l'onglet Classement et en carte dans « Aujourd'hui » ; annonce les
+  7 jours avant et bandeau sur la page d'accueil des visiteurs ; badge « Gardien de l'hiver 2026-2027 » à 10 semaines
+  complètes ; notifications au même rythme (quiz du dimanche, défi à partir du mercredi, astuces tirées des quiz passés) ;
+  dotation : 1 an de Premium au plus assidu, tirage au sort en cas d'égalité (règlement dans les CGU, article 6 g,
+  politique de confidentialité mise à jour) ; suivi et plus assidus dans Pilotage → Activité. Table ligue_hiver créée
+  (STA et PROD). Sur STA, départ le 18/10 pour le test. Contenus, règlement, badge et règles de notification remis à
+  Jordan pour validation (page « Ligue d'hiver 2026-2027 ») ; badge et notifications à ajouter à la base après sa
+  validation ; mise en prod visée au plus tard le 30/10.
