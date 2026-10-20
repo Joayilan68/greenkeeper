@@ -395,3 +395,7 @@ du premier onglet).
 - 20/10/2026 — Mammotion : accusé de réception du support (ticket) à la demande du 19/10 (usage commercial de l'API dans
   une app payante, client OAuth, anciens modèles) : transmise à l'équipe concernée, réponse annoncée sous 24 à 48 h.
   Relance dans le même ticket le 23/10 sans réponse ; Suivi API V6.
+- 20/10/2026 — Offre Microsoft Advertising reçue par email (crédit publicitaire contre 200 à 600 € de dépenses) : pas de
+  suite pour l'instant (accord de Jordan) ; aucune dépense avant les premiers revenus, basse saison, refonte en cours. À
+  revoir en février-mars 2027 pour le lancement du printemps : test court sur quelques recherches, lien suivi propre à Bing,
+  objectif de coût par inscription.
