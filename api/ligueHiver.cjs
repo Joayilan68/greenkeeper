@@ -8,6 +8,7 @@
 
 const { createClient } = require("@supabase/supabase-js");
 const { verifiedUserId, compteExclu } = require("./auth.cjs");
+const { clerkGuestActive, essaiActif } = require("./premium.cjs");
 const L = require("../src/lib/ligueHiver.json");
 
 const JOUR = 86400000;
@@ -104,8 +105,15 @@ async function purgerSaisonsTerminees(supabase, jour) {
   if (error) throw new Error(error.message);
 }
 
-// Pilotage → Activité : participation par semaine et participants les plus assidus (1 point par défi et par quiz),
-// sans les comptes exclus du règlement (admins, comptes de test)
+// Accès Premium constaté (abonnement, essai de 7 jours ou Premium offert) : départage du règlement en cas d'égalité
+const accesPremium = (u) => {
+  const pm = u.public_metadata || {};
+  return pm.isSubscribed === true || ["active", "trialing"].includes(pm.subscriptionStatus) || clerkGuestActive(pm) || essaiActif(u.created_at);
+};
+
+// Pilotage → Activité : participation par semaine et participants les plus assidus (1 point par défi et par quiz), dans
+// l'ordre du règlement (CGU 6 g) : points, puis accès Premium avant compte gratuit, puis compte le plus ancien ; sans les
+// comptes exclus (admins, comptes de test)
 async function statsPilotage(supabase) {
   const { data, error } = await supabase.from("ligue_hiver")
     .select("user_id, semaine, defi_le, quiz_le, quiz_bonnes").eq("saison", L.saison);
@@ -131,14 +139,17 @@ async function statsPilotage(supabase) {
     p.completes += r.defi_le && r.quiz_le ? 1 : 0;
     p.bonnes += r.quiz_bonnes || 0;
   }
-  const classes = Object.entries(parUser).sort((a, b) => b[1].points - a[1].points);
-  const max = classes[0]?.[1].points || 0;
+  const classes = Object.entries(parUser)
+    .map(([id, p]) => ({ ...p, compte: comptes[id], premium: accesPremium(comptes[id]) }))
+    .sort((a, b) => b.points - a.points || b.premium - a.premium || a.compte.created_at - b.compte.created_at);
+  const max = classes[0]?.points || 0;
   const email = (u) => u.email_addresses?.find(e => e.id === u.primary_email_address_id)?.email_address || u.email_addresses?.[0]?.email_address || "";
   return {
     saison: L.saison, debut: debut(), semaine: semaineDe(jourParis()), semaines,
-    participants: classes.length, badge: classes.filter(([, p]) => p.completes >= L.badge.semainesMin).length,
-    max, exAequo: classes.filter(([, p]) => p.points === max && max > 0).length,
-    premiers: classes.slice(0, 10).map(([id, p]) => ({ prenom: comptes[id].first_name || "", email: email(comptes[id]), ...p })),
+    participants: classes.length, badge: classes.filter(p => p.completes >= L.badge.semainesMin).length,
+    max, exAequo: classes.filter(p => p.points === max && max > 0).length,
+    premiers: classes.slice(0, 10).map(({ compte, ...p }) => ({ prenom: compte.first_name || "", email: email(compte),
+      inscrit: new Date(compte.created_at).toISOString().slice(0, 10), ...p })),
   };
 }
 

@@ -1,7 +1,7 @@
 // src/components/LigueHiverCard.jsx
 // Pilotage → Activité : ligue d'hiver (api/stats.js?type=ligue) — participation par semaine (défis, quiz, bonnes réponses
-// en moyenne), badges en vue et participants les plus assidus, pour désigner le gagnant de la dotation (règlement,
-// CGU 6 g ; comptes de test et admins exclus).
+// en moyenne), badges en vue et participants les plus assidus dans l'ordre du règlement (CGU 6 g : points, puis accès
+// Premium, puis compte le plus ancien ; comptes de test et admins exclus), pour désigner le gagnant de la dotation.
 import { useState, useEffect } from "react";
 import { card, cardTitle } from "../lib/styles";
 import { LIGUE, dateLongue } from "../lib/ligueHiver";
@@ -46,12 +46,12 @@ export default function LigueHiverCard({ getToken }) {
           {data.premiers.length > 0 && (
             <>
               <div style={{ fontSize:11, fontWeight:700, color:"#81c784", textTransform:"uppercase", letterSpacing:1, margin:"12px 0 4px" }}>
-                Les plus assidus · {data.exAequo > 1 ? `${data.exAequo} ex aequo à ${data.max} pts : tirage au sort` : `${data.max} pts au maximum`}
+                Les plus assidus · {data.max} pts au maximum{data.exAequo > 1 ? ` (${data.exAequo} à égalité : Premium d'abord, puis le plus ancien)` : ""}
               </div>
               {data.premiers.map((p, i) => (
                 <div key={p.email || i} style={ligne}>
-                  <span>{p.prenom || "—"} · {p.email}</span>
-                  <span>{p.points} pts · {p.completes} sem. · {p.bonnes} bonnes rép.</span>
+                  <span>{i === 0 ? "🏆 " : ""}{p.prenom || "—"} · {p.email}</span>
+                  <span style={{ flexShrink:0 }}>{p.points} pts · {p.completes} sem. · {p.premium ? "Premium" : "gratuit"} · inscrit le {p.inscrit.split("-").reverse().join("/")}</span>
                 </div>
               ))}
             </>

@@ -169,8 +169,9 @@ function Dotation() {
     <div style={{ ...card(), background:"linear-gradient(135deg,rgba(249,168,37,0.14),rgba(13,43,26,0.5))", border:"1px solid rgba(249,168,37,0.35)" }}>
       <div style={{ fontSize:15, fontWeight:800, color:"#ffe082", marginBottom:6 }}>🏆 À gagner : {LIGUE.dotation}</div>
       <div style={{ fontSize:12.5, color:vert, lineHeight:1.55, marginBottom:8 }}>
-        Pour le participant le plus assidu de l'hiver : 1 point par défi et 1 point par quiz faits pendant leur semaine. En cas
-        d'égalité, tirage au sort. Gratuit, sans obligation d'achat.
+        Pour le participant le plus assidu de l'hiver : 1 point par défi et 1 point par quiz faits pendant leur semaine.
+        Participation gratuite pour tous les comptes. En cas d'égalité, un compte Premium passe devant un compte gratuit,
+        puis le compte le plus ancien.
       </div>
       <button onClick={() => navigate("/cgu")} style={{ background:"none", border:"none", padding:0, color:"#90caf9", fontSize:12, textDecoration:"underline", cursor:"pointer" }}>
         Lire le règlement (CGU, article 6 g)

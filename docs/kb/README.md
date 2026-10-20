@@ -17,7 +17,8 @@ Onglets les plus utilisés par le code :
 | Gazons Spécifiques, Objectifs Profil, Règles Objectifs | plan d'entretien, recommandations, diagnostic photo |
 | Maladies & Nuisibles | `api/notificationEngine.cjs` (risques de maladie), diagnostic photo |
 | pH & Amendements | notifications (pH), kits (chaulage), articles |
-| Règles Notifications | `api/notificationEngine.cjs` |
+| Règles Notifications | `api/notificationEngine.cjs` (dont la ligue d'hiver) |
+| Badges & Objectifs | `src/lib/useBadges.js`, badge de la ligue d'hiver (`src/lib/ligueHiver.json`) |
 | Parcours Semis | `api/parcoursEngine.cjs`, `src/pages/Parcours.jsx` |
 | Température Sol & ET0 | `src/lib/zonesGazon.json` (semis 10 °C, pousse 8 °C), `api/parcoursEngine.cjs` |
 | Règles complémentaires | 1re tonte, reprise du printemps, notifications d'hiver, kits, relances, anti-fatigue |

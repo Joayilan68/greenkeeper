@@ -101,8 +101,9 @@
   et défi (à partir du mercredi), chacun une fois par semaine s'il n'est pas fait ; astuces « Le savais-tu ? » tirées des
   quiz passés.
 - Dotation (règlement : CGU, article 6 g) : 1 an de Premium au plus de points d'assiduité (1 par défi, 1 par quiz) le
-  30/01/2027 à 23 h 59 ; égalité : tirage au sort au plus tard le 7/02 ; gagnant prévenu par email au plus tard le 10/02 ;
-  comptes de test et admins exclus (`compteExclu`, `api/auth.cjs`). Suivi et plus assidus : Pilotage → Activité. Remise :
+  30/01/2027 à 23 h 59 ; égalité (décision de Jordan du 20/10) : accès Premium (abonnement, essai ou Premium offert)
+  devant compte gratuit, puis compte le plus ancien ; gagnant désigné au plus tard le 7/02 et prévenu par email au plus
+  tard le 10/02 ; comptes de test et admins exclus (`compteExclu`, `api/auth.cjs`). Suivi et plus assidus : Pilotage → Activité. Remise :
   Premium offert 12 mois (Pilotage → Finances), ou, s'il est déjà abonné, coupon Stripe à 100 % sur ses 12 prochains mois.
 
 ## Offres et Premium offerts
