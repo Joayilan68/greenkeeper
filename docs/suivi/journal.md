@@ -386,3 +386,9 @@ du premier onglet).
   (STA et PROD). Sur STA, départ le 18/10 pour le test. Contenus, règlement, badge et règles de notification remis à
   Jordan pour validation (page « Ligue d'hiver 2026-2027 ») ; badge et notifications à ajouter à la base après sa
   validation ; mise en prod visée au plus tard le 30/10.
+- 20/10/2026 — Décision de Jordan (ligue d'hiver, après lecture de la page de validation) : en cas d'égalité, un compte
+  avec l'accès Premium passe devant un compte gratuit, puis le compte le plus ancien l'emporte (plus de tirage au sort) ;
+  participants comme proposé (comptes gratuits et Premium, personnes majeures résidant en France ; exclus : comptes de
+  test et d'administration, l'organisateur, les personnes qui participent à l'organisation et leur foyer). Contenus,
+  badge et notifications acceptés : badge « Gardien de l'hiver » et règle de notification ajoutés à la base. Règlement
+  (CGU 6 g), Pilotage et Bob mis à jour (STA).
