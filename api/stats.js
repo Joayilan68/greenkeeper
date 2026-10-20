@@ -6,6 +6,7 @@
 //   GET /api/stats?type=users    → stats Clerk + sources UTM des inscrits
 //   GET /api/stats?type=errors   → erreurs (error_events) regroupées par problème + état des tâches planifiées
 //   GET /api/stats?type=seo      → position moyenne de nos pages dans Google, par mois (Search Console)
+//   GET /api/stats?type=ligue    → ligue d'hiver : participation par semaine et participants les plus assidus
 //   GET /api/stats?type=services → vérification en direct des services externes (Pilotage → Services)
 //   GET|POST /api/stats?type=publications → lots de comm Facebook et Instagram (Pilotage → Réseaux)
 
@@ -49,6 +50,7 @@ module.exports = async function handler(req, res) {
   if (type === "social" || req.method === "POST") return handleSocial(req, res);
   if (type === "revenue") return handleRevenue(req, res);
   if (type === "users")   return handleUsers(req, res);
+  if (type === "ligue")   return handleLigue(req, res);
   if (type === "errors")   return handleErrors(req, res);
   if (type === "services") return handleServices(req, res);
   if (type === "seo")      return handleSeo(req, res);
@@ -1027,4 +1029,14 @@ async function handleServices(req, res) {
       { name: "OVH", role: "Domaines + email contact@", cost: "≈ 17 €/an", detail: "Renouvellement des domaines à surveiller" },
     ],
   });
+}
+
+// ── Ligue d'hiver : participation par semaine, badges en vue et participants les plus assidus (Pilotage → Activité) ──
+async function handleLigue(req, res) {
+  try {
+    return res.json({ success: true, ...(await require("./ligueHiver.cjs").statsPilotage(createClient(SB_URL, SB_KEY))) });
+  } catch (e) {
+    await require("./alerting.cjs").reportServerError("Pilotage — ligue d'hiver", e);
+    return res.status(500).json({ success: false, error: e.message });
+  }
 }

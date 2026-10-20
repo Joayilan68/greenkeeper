@@ -148,7 +148,7 @@ export function MentionsLegales() {
 export function Confidentialite() {
   return (
     <div>
-      <PageHeader emoji="🔒" title="Politique de confidentialité" subtitle="Mise à jour : 3 octobre 2026" />
+      <PageHeader emoji="🔒" title="Politique de confidentialité" subtitle="Mise à jour : 20 octobre 2026" />
       <div style={scroll}>
 
         <Section title="1. Préambule">
@@ -186,6 +186,7 @@ export function Confidentialite() {
             • <strong>Création et gestion du compte utilisateur</strong> — Base légale : exécution du contrat (CGU/CGV)<br/>
             • <strong>Souscription et gestion de l'abonnement Premium</strong> — Base légale : exécution du contrat<br/>
             • <strong>Fourniture des fonctionnalités d'entretien du gazon</strong> (journal, GreenScore, recommandations) — Base légale : exécution du contrat<br/>
+            • <strong>Ligue d'hiver</strong> (défis, quiz et désignation du gagnant de la dotation, CGU article 6 g) — Base légale : exécution du contrat<br/>
             • <strong>Envoi d'emails liés au service</strong> (bienvenue, confirmation, conseils et rappels d'entretien, alertes météo ; désactivables dans Paramètres ou depuis chaque email) — Base légale : exécution du contrat<br/>
             • <strong>Envoi d'emails de prospection commerciale</strong> — Base légale : consentement (case optionnelle à l'inscription)<br/>
             • <strong>Notifications push</strong> — Base légale : consentement<br/>
@@ -201,7 +202,7 @@ export function Confidentialite() {
           <SubSection title="5.2 Données personnelles collectées">
             <strong>Données d'identification :</strong> nom, prénom, adresse email, mot de passe chiffré (via Clerk).<br/><br/>
             <strong>Données de profil gazon :</strong> type de gazon, surface, type de sol, exposition, ville, objectifs d'entretien, budget.<br/><br/>
-            <strong>Données d'activité :</strong> historique des interventions, GreenPoints, streak, classement, photos de diagnostic.<br/><br/>
+            <strong>Données d'activité :</strong> historique des interventions, GreenPoints, streak, classement, défis faits et réponses au quiz de la Ligue d'hiver, photos de diagnostic.<br/><br/>
             <strong>Données techniques :</strong> identifiants techniques, journaux de connexion, adresse IP, type de navigateur et d'appareil (iPhone, Android ou ordinateur), langue.<br/><br/>
             <strong>Données de paiement :</strong> en cas d'abonnement Premium, les données de paiement sont traitées directement par Stripe — Mongazon360 n'a pas accès aux numéros de carte bancaire.<br/><br/>
             <strong>Données de géolocalisation :</strong> coordonnées GPS approximatives (avec votre consentement uniquement).<br/><br/>
@@ -214,6 +215,7 @@ export function Confidentialite() {
             • <strong>Données de facturation :</strong> 10 ans (obligation comptable)<br/>
             • <strong>Données de prospection commerciale :</strong> 3 ans à compter du dernier contact<br/>
             • <strong>Logs techniques :</strong> 1 an<br/>
+            • <strong>Ligue d'hiver :</strong> défis faits et réponses au quiz jusqu'au 31 juillet qui suit la fin de la saison, puis suppression automatique<br/>
             • <strong>Photos de diagnostic :</strong> 90 jours, puis suppression automatique (le résultat de l'analyse reste attaché au compte)<br/>
             • <strong>Équipements connectés :</strong> jusqu'à leur déconnexion ou la suppression du compte ; seule la dernière mesure est conservée (chaque relevé remplace le précédent)<br/>
             • <strong>Statistiques de mesure d'audience (anonymes) :</strong> 25 mois<br/>
@@ -321,7 +323,7 @@ export function CGU() {
   const navigate = useNavigate();
   return (
     <div>
-      <PageHeader emoji="📜" title="Conditions Générales d'Utilisation" subtitle="Mise à jour : 23 septembre 2026" />
+      <PageHeader emoji="📜" title="Conditions Générales d'Utilisation" subtitle="Mise à jour : 20 octobre 2026" />
       <div style={scroll}>
 
         <div style={{ ...card(), background:"rgba(33,150,243,0.06)", border:"1px solid rgba(33,150,243,0.2)" }}>
@@ -367,6 +369,7 @@ export function CGU() {
             • création et gestion d'un profil gazon (questionnaire d'onboarding, type de gazon, sol, exposition) ;<br/>
             • journalisation des interventions d'entretien ;<br/>
             • calcul du GreenScore et participation au classement mensuel par ligues ;<br/>
+            • participation à la Ligue d'hiver (défi et quiz de la semaine, de novembre à janvier, article 6 g) ;<br/>
             • recommandations de produits d'entretien avec liens d'affiliation ;<br/>
             • partage social de l'état de son jardin ;<br/>
             • notifications push et emails d'alerte et de conseil (alertes météo, conseils d'entretien, notifications de gamification).<br/><br/>
@@ -399,7 +402,8 @@ export function CGU() {
             • actions d'entretien enregistrées dans l'Application (tonte, arrosage, engrais, désherbage, aération, scarification, traitement anti-mousse/fongicide, regarnissage/semis), chaque action étant assortie d'un nombre de points et d'un délai minimum entre deux enregistrements (cooldown) ;<br/>
             • complétion du profil gazon (200 points, attribués une seule fois) ;<br/>
             • diagnostic photo par IA (100 points, cooldown de 7 jours — fonctionnalité réservée aux titulaires d'un Compte Premium) ;<br/>
-            • partage social de l'état de son jardin (75 points, cooldown de 7 jours).<br/><br/>
+            • partage social de l'état de son jardin (75 points, cooldown de 7 jours) ;<br/>
+            • Ligue d'hiver : défi de la semaine (50 points) et quiz de la semaine (30 points), une fois par semaine chacun (article 6 g).<br/><br/>
             Les GreenPoints totaux s'accumulent indéfiniment et ne sont pas remis à zéro.<br/><br/>
             L'Utilisateur est informé que certaines sources de points sont réservées aux titulaires d'un Compte Premium (diagnostic photo). En conséquence, un Utilisateur disposant d'un Compte Free ne pourra pas accéder à l'ensemble des sources de points, indépendamment de la qualité de son entretien.<br/><br/>
             Le GreenScore ne constitue pas une évaluation de la personne de l'Utilisateur. Il vise exclusivement à animer l'engagement dans l'entretien du gazon et ne produit aucun effet juridique ni aucune décision à l'égard de l'Utilisateur.
@@ -418,6 +422,14 @@ export function CGU() {
             La participation au classement implique que le prénom et le GreenScore de l'Utilisateur soient visibles par les autres Utilisateurs de la même ligue. L'Utilisateur en accepte le principe en acceptant les présentes CGU/CGV.<br/><br/>
             Un nouvel Utilisateur inscrit en cours de mois intègre la ligue Semis avec un score de 0 et ne peut pas être relégué lors de son premier mois. En cas de passage d'un Compte Free à un Compte Premium en cours de mois, le coefficient de complétion du profil est recalculé immédiatement et le type de compte Premium s'applique au départage dès le lendemain.<br/><br/>
             <strong style={{ color:"#90caf9" }}>Profils simulés (bots) :</strong> tant qu'une ligue compte moins de 10 utilisateurs réels actifs sur le mois, des profils simulés (bots) complètent automatiquement le classement. Les profils simulés sont nommés « Jardinier #001 », « Jardinier #002 », etc., et identifiés par un pictogramme distinctif <strong>🤖</strong>. Leurs scores sont générés aléatoirement dans une plage réaliste correspondant à la ligue. Les profils simulés ne génèrent jamais de promotion ou de relégation réelle. Ils sont supprimés automatiquement lorsque la ligue atteint 100 utilisateurs réels actifs sur le mois.
+          </SubSection>
+
+          <SubSection title="g. Ligue d'hiver 2026-2027 et dotation">
+            Du dimanche 1er novembre 2026 au samedi 30 janvier 2027, pendant la pause du classement, l'Application propose la <strong>Ligue d'hiver</strong>, organisée par l'Éditeur (article 2). Chaque semaine, du dimanche au samedi (heure de Paris), l'Utilisateur peut relever un défi (un geste d'entretien ou une fonctionnalité de l'Application, qu'il déclare avoir fait) et répondre à un quiz de trois questions. Un défi ou un quiz qui n'a pas été fait pendant sa semaine ne peut plus l'être ensuite. La Ligue d'hiver ne comporte pas de classement.<br/><br/>
+            <strong style={{ color:"#a5d6a7" }}>Participation :</strong> gratuite et sans obligation d'achat, ouverte à toute personne physique majeure résidant en France titulaire d'un Compte Free ou d'un Compte Premium. Sont exclus de la dotation les comptes de test et d'administration, l'Éditeur, les personnes qui participent à l'organisation de la Ligue d'hiver et les membres de leur foyer. Une seule participation est admise par personne : l'utilisation de plusieurs comptes ou de tout procédé automatisé entraîne l'exclusion.<br/><br/>
+            <strong style={{ color:"#a5d6a7" }}>GreenPoints et badge :</strong> chaque défi rapporte 50 GreenPoints et chaque quiz 30 GreenPoints ; ils s'ajoutent aux GreenPoints totaux et ne comptent pas pour le classement mensuel. Le badge « Gardien de l'hiver 2026-2027 » récompense au moins 10 semaines sur 13 dont le défi et le quiz ont été faits ; il ne peut plus être obtenu après la saison.<br/><br/>
+            <strong style={{ color:"#a5d6a7" }}>Dotation :</strong> le participant qui totalise le plus de points d'assiduité le samedi 30 janvier 2027 à 23 h 59 (heure de Paris) gagne un an d'abonnement Premium (valeur : 39,99 €). Un point est attribué pour chaque défi et pour chaque quiz faits pendant leur semaine, soit 26 points au maximum ; le nombre de bonnes réponses n'est pas pris en compte. En cas d'égalité, le gagnant est tiré au sort parmi les ex aequo au plus tard le 7 février 2027. Il est prévenu par email, à l'adresse de son compte, au plus tard le 10 février 2027 ; sans réponse de sa part dans les 30 jours, la dotation est attribuée au participant suivant, désigné selon les mêmes règles. Si le gagnant est déjà abonné, les douze prochains mois de son abonnement lui sont offerts. La dotation est personnelle : elle ne peut être ni échangée contre sa valeur en argent, ni cédée.<br/><br/>
+            <strong style={{ color:"#a5d6a7" }}>Données :</strong> les défis faits et les réponses au quiz sont conservés jusqu'au 31 juillet 2027, puis supprimés. Le prénom du gagnant n'est publié qu'avec son accord. L'Éditeur peut modifier ou interrompre la Ligue d'hiver en cas de force majeure ou de fraude ; les Utilisateurs en sont alors informés dans l'Application.
           </SubSection>
         </Section>
 

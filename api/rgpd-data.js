@@ -165,6 +165,7 @@ module.exports = async function handler(req, res) {
         accessRes,
         pushSubRes,
         parcoursRes,
+        ligueRes,
         classementRes,
         dauRes,
         equipementsRes,
@@ -179,6 +180,7 @@ module.exports = async function handler(req, res) {
         supabase.from("user_access").select("*").eq("user_id", userId).maybeSingle(),
         supabase.from("push_subscriptions").select("*").eq("user_id", userId).maybeSingle(),
         supabase.from("parcours").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
+        supabase.from("ligue_hiver").select("saison, semaine, defi_le, quiz_le, quiz_reponses, quiz_bonnes").eq("user_id", userId).order("semaine"),
         supabase.from("classement").select("*").eq("user_id", userId).maybeSingle(),
         supabase.from("daily_active_users").select("*").eq("user_id", userId).order("day", { ascending: false }),
         supabase.from("equipements").select("type, marque, nom, statut, mesures, mesures_at, created_at").eq("user_id", userId),
@@ -221,6 +223,7 @@ module.exports = async function handler(req, res) {
         consentements_rgpd:  getData(consentsRes) || null,
         statut_acces:        getData(accessRes) || null,
         parcours:            getData(parcoursRes) || [],
+        ligue_hiver:         getData(ligueRes) || [],
         classement:          getData(classementRes) || null,
         jours_actifs:        getData(dauRes) || [],
         equipements_connectes: getData(equipementsRes) || [], // clés d'accès chiffrées non exportées
@@ -262,6 +265,7 @@ module.exports = async function handler(req, res) {
         "user_access",
         "push_subscriptions",
         "parcours",            // ajout 21/08 — programme gazon (donnée perso)
+        "ligue_hiver",         // ajout 20/10 — défis et quiz de la ligue d'hiver
         "classement",          // ajout 21/08 — ligue / classement
         "daily_active_users",  // ajout 21/08 — journal d'activité
         "equipements",         // ajout 28/09 — équipements connectés et leurs clés d'accès chiffrées

@@ -32,7 +32,13 @@ export const GP_REGLES = {
   profil_complet:        { points: 200, label: "Profil complété",                      icone: "👤", plafond: { type: "total",   max: 1 }, cooldown_jours: 0   },
   streak_7j:             { points: 200, label: "Streak 7 jours",                       icone: "🔥", plafond: { type: "semaine", max: 1 }, cooldown_jours: 7   },
   streak_30j:            { points: 1000,label: "Streak 30 jours",                      icone: "🔥", plafond: { type: "mois",    max: 1 }, cooldown_jours: 30  },
+  // ── Ligue d'hiver (src/lib/ligueHiver.json) : semaine du dimanche au samedi, aussi en hiver ──
+  defi_hiver:            { points: 50,  label: "Défi de la semaine (ligue d'hiver)",   icone: "🎯", plafond: { type: "semaine", max: 1 }, cooldown_jours: 0   },
+  quiz_hiver:            { points: 30,  label: "Quiz du dimanche (ligue d'hiver)",     icone: "🧠", plafond: { type: "semaine", max: 1 }, cooldown_jours: 0   },
 };
+
+// Actions qui rapportent des points pendant la pause d'hiver (novembre à janvier)
+const ACTIONS_HIVER = ["connexion_quotidienne", "defi_hiver", "quiz_hiver"];
 
 export const GP_PALIERS = [
   { id: "semis",    label: "Semis",    icone: "🌱", min: 0,     couleur: "#81c784" },
@@ -154,7 +160,7 @@ export function useGreenPoints() {
   }, [isSignedIn, userId]); // eslint-disable-line
 
   const gagnerPoints = useCallback((action) => {
-    if ((isHivernal || isTransition) && action !== "connexion_quotidienne") {
+    if ((isHivernal || isTransition) && !ACTIONS_HIVER.includes(action)) {
       return { succes: false, raison: "hiver", points: 0 };
     }
     const regle = GP_REGLES[action];

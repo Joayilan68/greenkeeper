@@ -11,6 +11,8 @@
 // de maladie, astuces de saison, anti-fatigue selon les jours sans visite.
 // Travaux d'hiver : feuilles, dernière tonte, purge de l'arrosage, pH (automne, onglet pH de la base), révision et 1re tonte
 // aux dates de la zone climatique (src/lib/zonesGazon.json, comme le compte à rebours du printemps).
+// Ligue d'hiver (api/ligueHiver.cjs) : quiz du dimanche et défi de la semaine au niveau 5, astuces « Le savais-tu ? » tirées
+// des quiz passés au niveau 6 — même rythme (une notification le matin au plus).
 // ─────────────────────────────────────────────────────────────────────────────
 
 const { zoneFromLatLon, ZONES } = require("./parcoursEngine.cjs");
@@ -303,6 +305,29 @@ function checkGamification(gami) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// NIVEAU 5 bis — Ligue d'hiver : quiz du dimanche tant qu'il n'est pas fait (dimanche, sinon les jours suivants), défi
+// de la semaine à partir du mercredi s'il n'est pas fait ; chacun une fois par semaine au plus. Matin.
+// ─────────────────────────────────────────────────────────────────────────────
+function checkLigueHiver(ligue, today, notifLog) {
+  if (!ligue?.semaine) return null;
+  const h = (notifLog && Array.isArray(notifLog.history)) ? notifLog.history : [];
+  const envoyee = (type) => h.some(x => x.type === type && x.date >= ligue.debutSemaine);
+  const { programme: p, points } = ligue;
+  if (!ligue.quiz && !envoyee("ligue_quiz")) {
+    return { priority: 5, type: "ligue_quiz", url: "/classement",
+      title: `🧠 Quiz du dimanche : ${p.theme.toLowerCase()}`,
+      body: `${p.quiz[0].q} Réponds dans l'app : ${points.quiz} GreenPoints.` };
+  }
+  const jour = new Date(Date.parse(today || new Date().toISOString().slice(0, 10))).getUTCDay();
+  if (jour >= 3 && !ligue.defi && !envoyee("ligue_defi")) {
+    return { priority: 5, type: "ligue_defi", url: "/classement",
+      title: `🎯 Défi de la semaine : ${p.defi.titre.charAt(0).toLowerCase()}${p.defi.titre.slice(1)}`,
+      body: `${p.defi.texte} ${points.defi} GreenPoints.` };
+  }
+  return null;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // NIVEAU 3 bis — Risque de maladie selon la météo (au plus 1 fois par semaine et par maladie).
 // Mesures préventives uniquement : les fongicides de synthèse sont interdits aux particuliers.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -436,15 +461,15 @@ const CONSEILS_QUOTIDIENS = [
   { title:"💧 Flaques qui restent",    body:"L'eau stagne sur ta pelouse ? Sol tassé : note l'endroit, une aération au printemps le fera respirer.", mois:[11, ...HIVER] },
 ];
 
-// Astuce du jour pour le mois donné (rotation déterministe par jour)
-function conseilDuJour(today, month) {
-  const liste = CONSEILS_QUOTIDIENS.filter(c => !c.mois || c.mois.includes(month));
+// Astuce du jour pour le mois donné (rotation déterministe par jour), avec les astuces de la ligue d'hiver
+function conseilDuJour(today, month, astucesLigue = []) {
+  const liste = [...CONSEILS_QUOTIDIENS.filter(c => !c.mois || c.mois.includes(month)), ...astucesLigue];
   const jour = Math.floor(Date.parse(today || new Date().toISOString().slice(0, 10)) / 86400000);
   return liste[jour % liste.length];
 }
 
-function checkEducatif(today, month) {
-  const c = conseilDuJour(today, month);
+function checkEducatif(today, month, astucesLigue) {
+  const c = conseilDuJour(today, month, astucesLigue);
   return { priority: 6, type: "educatif", title: c.title, body: c.body };
 }
 
@@ -456,7 +481,7 @@ function decideNotification(ctx) {
   const {
     profile = {}, weather = null, reminderPrefs = {}, history = [],
     notifLog = null, month = null, slot = "matin", today = null,
-    gami = null, parcours: parcoursState = null, joursInactif = 0,
+    gami = null, parcours: parcoursState = null, joursInactif = 0, ligue = null,
   } = ctx || {};
 
   const sent = sentTodayInfo(notifLog, today);
@@ -518,8 +543,9 @@ function decideNotification(ctx) {
     checkTravauxHiver(profile, weather, month, notifLog, today), // 4 (travaux d'hiver)
     checkConseilMeteo(weather, profile, month),       // 4
     ...(fatigue ? [] : [
+      checkLigueHiver(ligue, today, notifLog),        // 5 (ligue d'hiver, avant la série)
       checkGamification(gami),                        // 5
-      checkEducatif(today, month),                    // 6 (toujours dispo = filet ultime)
+      checkEducatif(today, month, ligue?.astuces),    // 6 (toujours dispo = filet ultime)
     ]),
   ].filter(Boolean);
 

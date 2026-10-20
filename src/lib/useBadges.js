@@ -1,5 +1,5 @@
 // src/lib/useBadges.js
-// ★★★ VERSION 2 — 10 badges ACTIFS (germination #7 + saisonniers #9/#10) — prend `history` ★★★
+// ★★★ VERSION 2 — 11 badges ACTIFS (germination #7 + saisonniers #9/#10/#11) — prend `history` ★★★
 // Repere fiable : cette v2 contient "function germinationParfaite" et "saisonGagnee".
 // ─────────────────────────────────────────────────────────────────────────────
 // Badges collectionnables (RARES & MÉRITÉS) — repris de la KB "Badges & Objectifs".
@@ -8,11 +8,13 @@
 // Détection 100 % CLIENT, stockage dans profiles.data.badges (upsert via useProfile).
 // AUCUNE modification serveur : parcours & saisons lus/écrits via le blob profile.
 //
-// Les 10 badges sont désormais tous détectés :
+// Les 10 premiers badges sont détectés ici :
 //   #7  germination_parfaite → 21 j d'arrosage sur la fenêtre de germination (scan history)
 //   #9  champion_printemps   → saison mars→juin sans interruption (suivi profiles.data.saisons)
 //   #10 maitre_automne       → saison août→nov  sans interruption (idem)
 // Note millésime : #9/#10 sont forward-looking (une saison passée non tracée reste inaccessible).
+// Badge de saison de la ligue d'hiver (gardien_hiver_2026) : enregistré par l'écran de la ligue (components/LigueHiver.jsx),
+// d'après les participations gardées par le serveur.
 // ─────────────────────────────────────────────────────────────────────────────
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
@@ -29,6 +31,7 @@ export const BADGES = [
   { id:"oeil_expert",          emoji:"📸", nom:"Œil expert",            categorie:"Maîtrise",        acces:"Premium", rarete:"Rare",            condition:"Réaliser 10 diagnostics photo IA",                               felicitation:"10 diagnostics : vous suivez votre gazon comme un pro 📸" },
   { id:"champion_printemps",   emoji:"🌸", nom:"Champion du Printemps", categorie:"Saisonnier",      acces:"Gratuit", rarete:"Édition limitée", condition:"Suivre une saison de printemps complète (mars→juin) sans interruption", felicitation:"Champion du Printemps ! Badge non reconductible 🌸" },
   { id:"maitre_automne",       emoji:"🍂", nom:"Maître de l'Automne",   categorie:"Saisonnier",      acces:"Gratuit", rarete:"Édition limitée", condition:"Suivre une saison d'automne complète (août→nov) sans interruption",     felicitation:"Maître de l'Automne ! Collectionnez les saisons 🍂" },
+  { id:"gardien_hiver_2026",   emoji:"❄️", nom:"Gardien de l'hiver 2026-2027", categorie:"Saisonnier", acces:"Gratuit", rarete:"Édition limitée", condition:"Relever 10 semaines sur 13 de la Ligue d'hiver 2026-2027 (défi et quiz de la semaine)", felicitation:"Gardien de l'hiver 2026-2027 ! Badge non reconductible ❄️" },
 ];
 
 // ── Helpers date ──────────────────────────────────────────────────────────────

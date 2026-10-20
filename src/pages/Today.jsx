@@ -16,6 +16,7 @@ import CarteArrosage from "../components/CarteArrosage";
 import { propositionsArrosage } from "../lib/arrosageConnecte";
 import { calcLawnScore } from "../lib/lawnScore";
 import AlertBanner from "../components/AlertBanner";
+import { CarteLigueHiver } from "../components/LigueHiver";
 import ProductCard from "../components/ProductCard";
 import { card, cardTitle, btn, scroll } from "../lib/styles";
 import { useGreenPoints } from "../lib/useGreenPoints";
@@ -516,6 +517,7 @@ export default function Today() {
       </div>
 
       <div style={scroll}>
+        <CarteLigueHiver />
 
 
 
