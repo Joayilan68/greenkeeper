@@ -15,7 +15,10 @@
   partent en prod dès qu'ils sont prêts, sans toucher à l'app, pour le référencement de saison ; `main` est ensuite
   fusionné dans `Staging`. Accord permanent de Jordan (10/10/2026) : pas de nouvelle confirmation pour ces publications,
   mais Jordan est informé à chaque fois du contenu des articles publiés.
-- Toute modification de schéma Supabase s'applique aux **deux** projets.
+- Toute modification de schéma Supabase s'applique aux **deux** projets. Depuis le 30/10/2026, une nouvelle table du schéma
+  `public` n'est plus ouverte automatiquement à l'API : la migration qui la crée donne ses droits explicitement
+  (`grant select, insert, update, delete on public.<table> to service_role;` pour une table serveur uniquement ; `anon` et
+  `authenticated` seulement si l'app y accède directement, avec des politiques RLS). Les tables existantes gardent leurs droits.
 - **Google Play** : l'app Android est une TWA (`fr.mongazon360.app`) qui charge mongazon360.fr en direct
   (service worker sans cache, `index.html` en no-store) → tout déploiement de `main` met à jour l'app
   Play Store au prochain lancement. Un nouvel `.aab` n'est nécessaire que si le paquet Android change

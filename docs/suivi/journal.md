@@ -399,3 +399,7 @@ du premier onglet).
   suite pour l'instant (accord de Jordan) ; aucune dépense avant les premiers revenus, basse saison, refonte en cours. À
   revoir en février-mars 2027 pour le lancement du printemps : test court sur quelques recherches, lien suivi propre à Bing,
   objectif de coût par inscription.
+- 20/10/2026 — Email de Supabase : à partir du 30/10, une nouvelle table du schéma public n'aura plus d'accès automatique à
+  l'API (droits à donner dans la migration qui la crée). Vérifié sur STA et PROD : 27 tables chacune, toutes accessibles
+  par le serveur, dont ligue_hiver (créée le 20/10) ; aucun impact sur l'existant. Règle ajoutée à CLAUDE.md pour les
+  prochaines tables.
