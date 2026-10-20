@@ -392,3 +392,6 @@ du premier onglet).
   test et d'administration, l'organisateur, les personnes qui participent à l'organisation et leur foyer). Contenus,
   badge et notifications acceptés : badge « Gardien de l'hiver » et règle de notification ajoutés à la base. Règlement
   (CGU 6 g), Pilotage et Bob mis à jour (STA).
+- 20/10/2026 — Mammotion : accusé de réception du support (ticket) à la demande du 19/10 (usage commercial de l'API dans
+  une app payante, client OAuth, anciens modèles) : transmise à l'équipe concernée, réponse annoncée sous 24 à 48 h.
+  Relance dans le même ticket le 23/10 sans réponse ; Suivi API V6.
