@@ -406,3 +406,5 @@ du premier onglet).
 - 20/10/2026 — Davis : réponse du support à la demande du 19/10 (API WeatherLink v2 dans une app payante) : à poser à
   l'équipe support de l'API v2, joignable seulement sur le Discord WeatherLink Developers (weatherlink.github.io/discord) ;
   message prêt pour Jordan (Suivi API V6), avec demande de confirmation écrite.
+- 21/10/2026 — Davis : message posté par Jordan sur le Discord WeatherLink Developers (salon de l'API v2) ; réponse
+  attendue, avec une confirmation écrite de l'usage dans une app payante.
