@@ -408,3 +408,8 @@ du premier onglet).
   message prêt pour Jordan (Suivi API V6), avec demande de confirmation écrite.
 - 21/10/2026 — Davis : message posté par Jordan sur le Discord WeatherLink Developers (salon de l'API v2) ; réponse
   attendue, avec une confirmation écrite de l'usage dans une app payante.
+- 21/10/2026 — Mammotion : le support a bien reçu les 4 questions (usage dans une app payante, identifiant client pour la
+  connexion OAuth, limites d'appels, anciens modèles) et demande le modèle et le numéro de série d'un robot de test avant
+  de les transmettre à sa R&D. Nous n'avons pas de robot Mammotion : réponse prête pour Jordan (intégration valable pour
+  tous les modèles de l'API, LUBA 3 AWD d'abord ; compte de test ou robot de démonstration demandé, sinon un testeur équipé
+  avec son accord). Suivi API V6.
