@@ -413,3 +413,5 @@ du premier onglet).
   de les transmettre à sa R&D. Nous n'avons pas de robot Mammotion : réponse prête pour Jordan (intégration valable pour
   tous les modèles de l'API, LUBA 3 AWD d'abord ; compte de test ou robot de démonstration demandé, sinon un testeur équipé
   avec son accord). Suivi API V6.
+- 21/10/2026 — Mammotion : réponse envoyée par Jordan (pas de robot de test pour l'instant ; compte de test ou robot de
+  démonstration demandé, sinon un testeur équipé avec son accord).
