@@ -68,7 +68,7 @@ Quelques exemples :
 - **Sud, 25 juillet** : sol trop chaud et canicule en cours. **À proscrire** : prochaine fenêtre fin septembre.
 - **Nord-Est, 15 janvier** : sol à 3 °C. **Aucune germination** : rendez-vous mi-avril.
 
-## Combien de temps pour que le gazon pousse ?
+## Après le semis : les grandes étapes
 
 - **Germination** : jusqu'à 3 semaines environ, pendant lesquelles la surface doit rester humide en permanence, avec un arrosage léger chaque jour.
 - **Levée** : de la 3e à la 6e semaine environ ; on espace les arrosages et on fait la première tonte quand l'herbe atteint 8 à 10 cm.
@@ -81,6 +81,10 @@ Pour la méthode complète, voir [créer une pelouse](/conseils/creer-pelouse), 
 ### Peut-on semer du gazon en octobre ?
 
 Oui dans l'Ouest (jusqu'à mi-octobre), le Sud-Ouest (jusqu'à fin octobre), le Sud (jusqu'à début novembre) et en Corse (jusqu'à mi-novembre). Ailleurs, c'est trop tard : le sol refroidit avant que le gazon soit installé. Attendez le printemps (voir [semer du gazon en novembre](/conseils/semer-gazon-novembre)).
+
+### Peut-on semer du gazon en mai ou en juin ?
+
+En mai, oui dans le Centre, le Nord et le Nord-Est, et jusqu'à mi-mai dans l'Ouest. En juin, seulement dans le Nord et au tout début du mois : ailleurs, c'est risqué avant l'été, et l'automne sera plus sûr.
 
 ### Peut-on semer du gazon en été ?
 
