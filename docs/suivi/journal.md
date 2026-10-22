@@ -415,3 +415,5 @@ du premier onglet).
   avec son accord). Suivi API V6.
 - 21/10/2026 — Mammotion : réponse envoyée par Jordan (pas de robot de test pour l'instant ; compte de test ou robot de
   démonstration demandé, sinon un testeur équipé avec son accord).
+- 22/10/2026 — Mammotion : les 4 questions, les modèles visés (LUBA 3 AWD d'abord, LUBA 2 AWD et Yuka si possible) et la
+  demande de compte de test ou de robot de démonstration sont transmis à leur R&D ; réponse à venir.
