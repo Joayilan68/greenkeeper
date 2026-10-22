@@ -58,7 +58,7 @@ Jamais les deux le même jour. Un gazon d'ombre ne se scarifie pas.
 
 Juste après la scarification, le sol est à nu : c'est le moment de regarnir les trous et les zones clairsemées, **mais seulement si la fenêtre de semis est ouverte**, avec un sol à au moins 10 °C. Selon les régions, elle s'ouvre entre fin février (Sud, Corse) et fin avril (Nord). Sinon, patientez quelques semaines (voir [quand semer le gazon](/conseils/quand-semer-gazon)).
 
-Comptez environ 25 g de graines par m², en deux passages croisés, et gardez la surface humide jusqu'à la levée.
+Comptez environ 25 g de graines par m², en deux passages croisés, et gardez la surface humide jusqu'à la levée. Pour semer une pelouse entière ou une grande surface nue, suivez plutôt [la méthode du semis de printemps](/conseils/semer-gazon-printemps).
 
 ## Étape 7 : l'engrais de démarrage
 
