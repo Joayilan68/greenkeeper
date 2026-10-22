@@ -417,3 +417,15 @@ du premier onglet).
   démonstration demandé, sinon un testeur équipé avec son accord).
 - 22/10/2026 — Mammotion : les 4 questions, les modèles visés (LUBA 3 AWD d'abord, LUBA 2 AWD et Yuka si possible) et la
   demande de compte de test ou de robot de démonstration sont transmis à leur R&D ; réponse à venir.
+- 22/10/2026 — Google : analyse de la baisse de la position moyenne (9e en septembre, 16e en octobre), données de la
+  Search Console. Jusqu'au 16/10, baisse surtout mécanique : Google teste le site sur beaucoup de recherches générales où
+  il est loin, tandis que les recherches rares et précises (plus de 90 % des clics) restent vers la 6e place. Depuis le
+  16-17/10, vraie baisse sur la plupart des articles (affichages divisés par 3,5, clics par 6), sans cause technique (46
+  articles indexés, adresses retenues par Google) ; elle suit la refonte des 10-11/10 (24 nouveaux articles, 18 retravaillés)
+  et une forte agitation des classements signalée du 14 au 16/10 (aucune mise à jour annoncée par Google). Plan proposé à
+  Jordan : vérifier les actions manuelles dans la Search Console, ne rien précipiter (pas de réécriture générale, date
+  « maj » changée seulement en cas de vrai changement, un article par semaine au plus), une question = un article,
+  expérience vécue (photos), liens, suivi par les clics et des recherches cibles.
+- 22/10/2026 — Go de Jordan pour l'étape 3 (une question = un article) : seule la famille « semer » avait un vrai doublon ;
+  retouches validées par Jordan puis publiées en prod (exception Conseils). Chaux et mousse (Google montre l'article
+  chaulage pour « chauler » depuis le 02/10), engrais et tonte : rien à changer.
