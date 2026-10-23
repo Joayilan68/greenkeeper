@@ -159,6 +159,10 @@ function secretValide(entete, secret) {
   return recu.length === attendu.length && require("crypto").timingSafeEqual(recu, attendu);
 }
 
+// Mesure des clics des emails : jeton signé (compte, date, type de l'envoi) ajouté au lien (m=…) ; l'app le renvoie à
+// l'arrivée à /api/send?type=notif-open (src/main.jsx), qui marque l'envoi « clic » dans reminders.notif_log
+const avecMesure = (chemin, jeton) => `${chemin}${chemin.includes("?") ? "&" : "?"}m=${encodeURIComponent(jeton)}`;
+
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
@@ -430,7 +434,8 @@ module.exports = async function handler(req, res) {
                   body: JSON.stringify({
                     from: "Bob de Mongazon360 <bonjour@mongazon360.fr>", to: [email], subject: msg.title,
                     html: buildOffreEmailHtml(u.first_name || "jardinier", msg.title, [esc(msg.body)],
-                      msg.bouton || (profilComplet ? "Ouvrir Mongazon360" : "Créer mon plan"), `https://mongazon360.fr${msg.url}`),
+                      msg.bouton || (profilComplet ? "Ouvrir Mongazon360" : "Créer mon plan"),
+                      `https://mongazon360.fr${avecMesure(msg.url, jetonOuverture(u.id, today, typeMsg))}`),
                     headers: { "List-Unsubscribe": "<https://mongazon360.fr/parametres>" },
                   }),
                 });
@@ -523,7 +528,8 @@ module.exports = async function handler(req, res) {
         // ── CONSEIL PAR EMAIL : même décision que le push, pour les comptes sans abonnement ──
         if (userConsents.notifications && !sub && contact) {
           try {
-            if (await sendConseilEmail(contact.email, contact.prenom, decision.title, decision.body, decision.url)) {
+            if (await sendConseilEmail(contact.email, contact.prenom, decision.title, decision.body,
+              avecMesure(decision.url || "/today", jetonOuverture(user_id, today, decision.type)))) {
               logUpdated = appendNotifLog(logUpdated, {
                 date: today, priority: decision.priority, type: decision.type, slot, channel: "email",
               });
@@ -1162,7 +1168,9 @@ module.exports = async function handler(req, res) {
       // Comptes de moins de 7 jours seulement, et jamais deux fois
       if (!email || u.privateMetadata?.bienvenueAt || Date.now() - u.createdAt > 7 * 86400000) return res.status(204).end();
       await clerk.users.updateUserMetadata(userId, { privateMetadata: { bienvenueAt: new Date().toISOString() } });
-      const lien = (chemin, texte) => `<a href="https://mongazon360.fr${chemin}" style="color:#2e7d32;font-weight:700;">${texte}</a>`;
+      const today = new Date().toISOString().slice(0, 10);
+      const jeton = require("./notifOpen.cjs").jetonOuverture(userId, today, "bienvenue");
+      const lien = (chemin, texte) => `<a href="https://mongazon360.fr${avecMesure(chemin, jeton)}" style="color:#2e7d32;font-weight:700;">${texte}</a>`;
       const r = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
@@ -1177,11 +1185,20 @@ module.exports = async function handler(req, res) {
             "🤖 Une question ? Appuie sur le petit robot en bas à droite de l'écran, je te réponds.",
             `🔔 Pour être prévenu au bon moment (tonte, arrosage, gel), autorise les notifications : bouton « Activer » sur l'${lien("/", "accueil")}.`,
             "À très vite au jardin,<br/>Bob",
-          ], "Voir ce que je fais aujourd'hui", "https://mongazon360.fr/today"),
+          ], "Voir ce que je fais aujourd'hui", `https://mongazon360.fr${avecMesure("/today", jeton)}`),
         }),
       });
       const d = await r.json().catch(() => ({}));
       if (!r.ok || d.error) throw new Error("Resend : " + (d.error?.message || r.status));
+      try { // trace de l'envoi pour la mesure des clics (ligne de rappels créée à la première connexion)
+        const { createClient } = require("@supabase/supabase-js");
+        const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+        const { data: rem } = await supabase.from("reminders").select("notif_log").eq("user_id", userId).maybeSingle();
+        if (rem) await supabase.from("reminders").update({
+          notif_log: require("./notificationEngine.cjs").appendNotifLog(rem.notif_log, { date: today, priority: 5, type: "bienvenue", channel: "email" }),
+          updated_at: new Date().toISOString(),
+        }).eq("user_id", userId);
+      } catch (e) { console.warn("bienvenue : trace de l'envoi impossible", e.message); }
       return res.status(204).end();
     } catch (e) {
       await require("./alerting.cjs").reportServerError("Email de bienvenue en échec", e);
@@ -1332,15 +1349,17 @@ module.exports = async function handler(req, res) {
     try {
       const jeton = require("./notifOpen.cjs").lireJeton(req.body?.t);
       if (!jeton) return res.status(400).json({ error: "Jeton invalide" });
+      const email = req.body?.canal === "email"; // lien d'un email : « clic » ; sinon notification push : « ouverte »
       const { createClient } = require("@supabase/supabase-js");
       const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
       const { data } = await supabase.from("reminders").select("notif_log").eq("user_id", jeton.userId).maybeSingle();
       const log = data?.notif_log;
       let modifie = false;
       const history = (log?.history || []).map(h => {
-        if (h.date !== jeton.date || h.type !== jeton.type || h.channel || h.opened) return h;
+        if (h.date !== jeton.date || h.type !== jeton.type) return h;
+        if (email ? h.channel !== "email" || h.clic : h.channel || h.opened) return h;
         modifie = true;
-        return { ...h, opened: true };
+        return email ? { ...h, clic: true } : { ...h, opened: true };
       });
       if (modifie) await supabase.from("reminders").update({ notif_log: { ...log, history } }).eq("user_id", jeton.userId);
       return res.status(204).end();
