@@ -429,3 +429,10 @@ du premier onglet).
 - 22/10/2026 — Go de Jordan pour l'étape 3 (une question = un article) : seule la famille « semer » avait un vrai doublon ;
   retouches validées par Jordan puis publiées en prod (exception Conseils). Chaux et mousse (Google montre l'article
   chaulage pour « chauler » depuis le 02/10), engrais et tonte : rien à changer.
+- 23/10/2026 — Demande de Jordan : suivre pendant 30 jours le nouvel inscrit du 23/10 (activité dans l'app, fréquence des
+  notifications et emails, effets), pour comprendre ce qui marche et corriger le reste. Points d'étape programmés jusqu'au
+  22/11 ; données pseudonymisées, hors du dépôt.
+- 23/10/2026 — Go prod de Jordan pour deux correctifs urgents, en prod le 23/10 : (1) à l'inscription, la case « conseils
+  de Bob » cochée pouvait être enregistrée « non » (inscrit du 07/10), bug reproduit en test puis corrigé ; (2) clics des
+  emails (bienvenue, démarrage, relances, conseils) mesurés dans reminders.notif_log. Politique de confidentialité à jour
+  (mesure de l'efficacité des messages). Recette n° 30 et 31 (onglet « Déjà en prod »).
