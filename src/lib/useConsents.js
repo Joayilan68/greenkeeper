@@ -60,9 +60,10 @@ export function useConsents() {
           .from("user_consents")
           .select("*")
           .eq("user_id", userId)
-          .single();
+          .maybeSingle();
 
-        if (!error && data) {
+        if (error) return; // lecture impossible : ne rien écrire (une écriture de secours écraserait les vrais choix)
+        if (data) {
           const remote = {
             cgu:             data.cgu             ?? false,
             confidentialite: data.confidentialite ?? false,
@@ -77,15 +78,16 @@ export function useConsents() {
           setConsents(remote);
           saveLocal(remote); // mettre à jour le cache légal
         } else {
-          // Pas encore de ligne → migrer depuis localStorage si possible
-          const local = loadLocal();
-          if (local) {
-            // Uniquement les colonnes connues (le cache peut contenir d'anciens noms de clés)
-            const migrated = { ...DEFAULT_CONSENTS };
-            Object.keys(DEFAULT_CONSENTS).forEach(k => { if (typeof local[k] === "boolean") migrated[k] = local[k]; });
-            setConsents(migrated);
+          // Pas encore de ligne → reprendre CGU et confidentialité acceptées sur cet appareil (seul contenu du cache
+          // local), jamais les autres consentements : à l'inscription, cette lecture peut précéder l'enregistrement des
+          // choix de Register, et les remettre à faux (case « conseils de Bob » cochée mais enregistrée « non »).
+          const local = loadLocal() || {};
+          const legal = {};
+          LEGAL_KEYS.forEach(k => { if (local[k] === true) legal[k] = true; });
+          if (Object.keys(legal).length) {
+            setConsents(c => ({ ...c, ...legal }));
             await supabase.from("user_consents").upsert(
-              { user_id: userId, ...migrated, updated_at: new Date().toISOString() },
+              { user_id: userId, ...legal, updated_at: new Date().toISOString() },
               { onConflict: "user_id" }
             );
           }
@@ -96,10 +98,11 @@ export function useConsents() {
   }, [isSignedIn, userId]); // eslint-disable-line
 
   // ── Sauvegarder un consentement ──────────────────────────────────────────
+  // État et cache local mis à jour à partir de la valeur courante, pas d'une copie figée au rendu : deux
+  // enregistrements rapprochés (Register puis rappels) ne doivent pas se défaire l'un l'autre
   const updateConsent = useCallback(async (key, value) => {
-    const updated = { ...consents, [key]: value };
-    setConsents(updated);
-    saveLocal(updated);
+    setConsents(c => ({ ...c, [key]: value }));
+    saveLocal({ [key]: value });
 
     if (!isSignedIn || !userId) return;
     try {
@@ -109,13 +112,12 @@ export function useConsents() {
       );
       if (error) console.warn(`[MG360] Consentement « ${key} » non enregistré :`, error.message);
     } catch {}
-  }, [consents, isSignedIn, userId]);
+  }, [isSignedIn, userId]);
 
   // ── Sauvegarder plusieurs consentements en une fois ──────────────────────
   const updateConsents = useCallback(async (patch) => {
-    const updated = { ...consents, ...patch };
-    setConsents(updated);
-    saveLocal(updated);
+    setConsents(c => ({ ...c, ...patch }));
+    saveLocal(patch);
 
     if (!isSignedIn || !userId) return;
     try {
@@ -125,7 +127,7 @@ export function useConsents() {
       );
       if (error) console.warn("[MG360] Consentements non enregistrés :", error.message);
     } catch {}
-  }, [consents, isSignedIn, userId]);
+  }, [isSignedIn, userId]);
 
   // ── Sync push_active / email_active depuis les rappels ───────────────────
   // Appelé par useReminders après chaque changement de rappel.

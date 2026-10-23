@@ -148,7 +148,7 @@ export function MentionsLegales() {
 export function Confidentialite() {
   return (
     <div>
-      <PageHeader emoji="🔒" title="Politique de confidentialité" subtitle="Mise à jour : 20 octobre 2026" />
+      <PageHeader emoji="🔒" title="Politique de confidentialité" subtitle="Mise à jour : 23 octobre 2026" />
       <div style={scroll}>
 
         <Section title="1. Préambule">
@@ -194,6 +194,7 @@ export function Confidentialite() {
             • <strong>Connexion d'équipements</strong> (station météo, à la demande de l'utilisateur dans « Mes équipements ») — Base légale : exécution du contrat<br/>
             • <strong>Partage de données anonymisées avec partenaires jardinage</strong> — Base légale : consentement<br/>
             • <strong>Mesure d'audience anonyme</strong> (Vercel Web Analytics et compteurs internes, sans cookie) — Base légale : intérêt légitime<br/>
+            • <strong>Mesure de l'efficacité de nos messages</strong> (ouverture des notifications et clics sur les liens de nos emails, rattachés au compte, pour améliorer leur contenu et leur fréquence) — Base légale : intérêt légitime<br/>
             • <strong>Mesure de l'efficacité de nos publicités</strong> (Meta Pixel, cf. Politique de cookies) — Base légale : consentement<br/>
             • <strong>Gestion des demandes RGPD</strong> (accès, rectification, suppression) — Base légale : obligation légale<br/>
             • <strong>Lutte contre la fraude et sécurité</strong> — Base légale : intérêt légitime
@@ -202,7 +203,7 @@ export function Confidentialite() {
           <SubSection title="5.2 Données personnelles collectées">
             <strong>Données d'identification :</strong> nom, prénom, adresse email, mot de passe chiffré (via Clerk).<br/><br/>
             <strong>Données de profil gazon :</strong> type de gazon, surface, type de sol, exposition, ville, objectifs d'entretien, budget.<br/><br/>
-            <strong>Données d'activité :</strong> historique des interventions, GreenPoints, streak, classement, défis faits et réponses au quiz de la Ligue d'hiver, photos de diagnostic.<br/><br/>
+            <strong>Données d'activité :</strong> historique des interventions, GreenPoints, streak, classement, défis faits et réponses au quiz de la Ligue d'hiver, photos de diagnostic, messages envoyés (notifications et emails) avec leur ouverture ou le clic sur leur lien.<br/><br/>
             <strong>Données techniques :</strong> identifiants techniques, journaux de connexion, adresse IP, type de navigateur et d'appareil (iPhone, Android ou ordinateur), langue.<br/><br/>
             <strong>Données de paiement :</strong> en cas d'abonnement Premium, les données de paiement sont traitées directement par Stripe — Mongazon360 n'a pas accès aux numéros de carte bancaire.<br/><br/>
             <strong>Données de géolocalisation :</strong> coordonnées GPS approximatives (avec votre consentement uniquement).<br/><br/>
@@ -217,6 +218,7 @@ export function Confidentialite() {
             • <strong>Données de prospection commerciale :</strong> 3 ans à compter du dernier contact<br/>
             • <strong>Logs techniques :</strong> 1 an<br/>
             • <strong>Ligue d'hiver :</strong> défis faits et réponses au quiz jusqu'au 31 juillet qui suit la fin de la saison, puis suppression automatique<br/>
+            • <strong>Historique des messages envoyés</strong> (et de leur ouverture ou clic) : les 14 derniers jours, effacé au fil des nouveaux envois, et au plus tard avec le compte<br/>
             • <strong>Photos de diagnostic :</strong> 90 jours, puis suppression automatique (le résultat de l'analyse reste attaché au compte)<br/>
             • <strong>Parrainage :</strong> tant que le compte est actif (supprimé avec le compte)<br/>
             • <strong>Équipements connectés :</strong> jusqu'à leur déconnexion ou la suppression du compte ; seule la dernière mesure est conservée (chaque relevé remplace le précédent)<br/>

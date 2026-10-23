@@ -18,6 +18,21 @@ if (typeof window !== "undefined" && !("Notification" in window)) {
   };
 }
 
+// ── Clic dans un email (lien avec m=<jeton>, api/notifOpen.cjs) ─────────────────
+// Signalé une fois pour la mesure des clics (reminders.notif_log), puis retiré de l'adresse affichée.
+try {
+  const adresse = new URL(window.location.href);
+  const jeton = adresse.searchParams.get("m");
+  if (jeton) {
+    fetch("/api/send?type=notif-open", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ t: jeton, canal: "email" }), keepalive: true,
+    }).catch(() => {});
+    adresse.searchParams.delete("m");
+    window.history.replaceState(window.history.state, "", adresse.pathname + adresse.search + adresse.hash);
+  }
+} catch { /* navigateur ancien : clic non mesuré */ }
+
 // ── Détection in-app browser ──────────────────────────────────────────────────
 // Messenger, Facebook, Instagram, TikTok, WhatsApp, LinkedIn
 // ouvrent les liens dans leur propre WebView avec des limitations sévères.
