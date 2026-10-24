@@ -436,3 +436,8 @@ du premier onglet).
   de Bob » cochée pouvait être enregistrée « non » (inscrit du 07/10), bug reproduit en test puis corrigé ; (2) clics des
   emails (bienvenue, démarrage, relances, conseils) mesurés dans reminders.notif_log. Politique de confidentialité à jour
   (mesure de l'efficacité des messages). Recette n° 30 et 31 (onglet « Déjà en prod »).
+- 24/10/2026 — Go prod de Jordan pour un correctif urgent, en prod le 24/10 : en novembre, l'app proposait de la chaux
+  (150-200 g/m², 2 à 4 fois la dose de la base) à la place de l'engrais d'hiver. Désormais engrais d'hiver riche en
+  potassium (base, « Zones x Mois »), chaulage seulement si pH sous 6 aux doses de la base (« pH & Amendements ») ; plus
+  de chaux dans le kit de saison. Aucun engrais d'hiver dans le catalogue Amazon : produit à choisir. Recette n° 32
+  (onglet « Déjà en prod »).
