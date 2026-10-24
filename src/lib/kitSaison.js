@@ -10,7 +10,7 @@ import { selectProduit, quantiteKit } from "./selectionProduits";
 // Produit du catalogue → action du plan d'entretien, dans l'ordre d'affichage
 const PRODUIT_ACTION = [
   ["engraisStarter", "engrais_starter"], ["engraisEte", "engrais_ete"], ["engraisAutomne", "engrais_automne"],
-  ["engraisHiver", "engrais_hiver"], ["regarnissage", "regarnissage"], ["antiMousse", "antimousse"],
+  ["regarnissage", "regarnissage"], ["antiMousse", "antimousse"],
   ["verticut", "scarification"], ["aeration", "aeration"], ["desherbage", "desherbage"], ["biostimulant", "biostimulant"],
 ];
 const MAX_PRODUITS = 4;
@@ -26,7 +26,6 @@ const MOIS = ["", "janvier", "février", "mars", "avril", "mai", "juin", "juille
 function produitsDuMois(profile, zone, mois) {
   return PRODUIT_ACTION.filter(([cle, id]) => {
     if (profile?.objectif === "naturel" && ENGRAIS_SYNTHESE.includes(cle)) return false; // base : NPK de synthèse bloqué
-    if (cle === "engraisHiver" && profile?.sol === "calcaire") return false; // base : pas de chaux en sol calcaire
     const action = ACTIONS_PLAN.find(a => a.id === id);
     return action?.getMois(zone, profile?.sol, false, profile).includes(mois);
   }).map(([cle]) => cle)
