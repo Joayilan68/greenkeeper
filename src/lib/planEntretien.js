@@ -273,8 +273,9 @@ export const ACTIONS_PLAN = [
     getMois: (zone, sol, isSynth, profile) => moisCalendrier("engrais_hiver", zone, profile, sol),
     getInterval: () => 45, // exception de la base : 45 j après l'engrais d'automne
     getBlocked: () => ({ blocked: false }),
-    keywords:     ["engrais hiver", "engrais ❄️", "chaux", "engrais"],
-    detail:       (plan) => MONTHLY_PLAN[11]?.engrais || "Chaux magnésienne si pH<6 · 150-200 g/m²",
+    keywords:     ["engrais hiver", "engrais ❄️", "engrais"],
+    detail:       (plan, arros, profile) => isObjectifNaturel(profile)
+      ? "Engrais organique riche en potassium (résistance au gel)" : MONTHLY_PLAN[11].engrais,
     needsProduct: true,
     exclusive:    [],
     maxParAn:     1,

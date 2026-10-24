@@ -4,7 +4,7 @@ description: Mousse, gazon pâle ? Mesurez le pH : sous 6, chaulez à l'automne.
 saison: automne
 date: 2026-09-25
 maj: 2026-10-10
-produits: engraisHiver
+produits: chaulage
 ---
 
 Si la mousse revient chaque année malgré les traitements, si le gazon reste pâle et peu dense malgré l'engrais, le problème vient peut-être du sol lui-même : **il est trop acide**. Le chaulage corrige cette acidité. Encore faut-il savoir si votre pelouse en a besoin, car chauler un sol qui ne l'est pas ne sert à rien, voire nuit.

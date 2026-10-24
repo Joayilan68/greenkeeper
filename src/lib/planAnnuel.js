@@ -48,7 +48,10 @@ export function planAnnuel(profile, annee) {
       `${naturel ? "Algues marines, acides humiques" : MONTHLY_PLAN[5].engrais.replace(" · ", ", ")}, jamais sur sol détrempé. Une application sur la période.`);
     if (mois("engrais_automne").includes(m)) ajoute("🍂", naturel ? "Engrais organique d'automne" : "Engrais d'automne",
       `${naturel ? "Engrais organique riche en potassium" : MONTHLY_PLAN[9].engrais.replace(" · ", ", ")}, pour préparer l'hiver. Une application sur la période.`);
-    if (mois("engrais_hiver").includes(m) && profile?.sol !== "calcaire") ajoute("🧪", "Chaulage si sol acide", `${MONTHLY_PLAN[11].engrais.replace(" · ", ", ")}.`);
+    if (mois("engrais_hiver").includes(m)) ajoute("❄️", naturel ? "Engrais organique d'hiver" : "Engrais d'hiver",
+      `${naturel ? "Engrais organique riche en potassium" : MONTHLY_PLAN[11].engrais}, au moins 45 jours après l'engrais d'automne. Une application sur la période.`);
+    if (m === 11 && profile?.sol !== "calcaire") ajoute("🧪", "Chaulage si sol acide",
+      "Seulement si le test d'octobre donne un pH sous 6 : chaux dolomitique 40-60 g/m² entre 5 et 6, carbonate de calcium 80-100 g/m² sous 5.");
     const sc = scarif.includes(m), ae = aeration.includes(m);
     if (sc && ae) ajoute("🧹", "Scarification ou aération", "L'une OU l'autre, jamais les deux en même temps : scarification si feutre ou mousse, sinon aération.");
     else if (sc) ajoute("🧹", "Scarification", "Si feutre ou mousse.");

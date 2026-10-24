@@ -28,7 +28,6 @@ const ACTION_TO_AMAZON = {
   engrais_starter: "engraisStarter",
   engrais_ete:     "engraisEte",
   engrais_automne: "engraisAutomne",
-  engrais_hiver:   "engraisHiver",
   anti_mousse:     "antiMousse",
   desherbage:      "desherbage",
   aeration:        "aeration",

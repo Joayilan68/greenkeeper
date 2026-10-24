@@ -429,7 +429,7 @@ const CONSEILS_QUOTIDIENS = [
   { title:"💚 Astuce couleur",         body:"Un gazon qui vire au bleu-gris a soif : c'est le tout premier signe, avant le jaune.", mois:[...PRINTEMPS, ...ETE, 9] },
   { title:"🌍 Le mot de Bob",          body:"Un gazon en bonne santé, c'est aussi de la fraîcheur, de l'oxygène et de la biodiversité chez toi." },
   { title:"❄️ Conseil d'hiver",        body:"Gazon gelé ou givré ? N'y marche pas : les brins cassent et laissent des traces brunes.", mois:[11, ...HIVER, 3] },
-  { title:"🧪 Bob te conseille",       body:"L'hiver est le bon moment pour mesurer le pH et chauler si ton sol est acide (pH sous 6).", mois:[11, ...HIVER] },
+  { title:"🧪 Bob te conseille",       body:"L'automne est le bon moment pour mesurer le pH et chauler si ton sol est acide (pH sous 6).", mois:[10, 11] },
   { title:"🔧 Astuce matériel",        body:"Profite de la pause d'hiver pour faire affûter la lame et réviser ta tondeuse.", mois:[11, ...HIVER] },
   { title:"🐾 Taupinières",            body:"Étale la terre des taupinières au râteau dès qu'elles apparaissent : sinon l'herbe dessous meurt.", mois:[11, ...HIVER, 3] },
   { title:"🌨️ Neige sur le gazon",     body:"La neige protège le gazon du froid : laisse-la fondre, mais évite de la tasser en marchant dessus.", mois:HIVER },
