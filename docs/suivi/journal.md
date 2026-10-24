@@ -441,3 +441,7 @@ du premier onglet).
   potassium (base, « Zones x Mois »), chaulage seulement si pH sous 6 aux doses de la base (« pH & Amendements ») ; plus
   de chaux dans le kit de saison. Aucun engrais d'hiver dans le catalogue Amazon : produit à choisir. Recette n° 32
   (onglet « Déjà en prod »).
+- 24/10/2026 — Mammotion : réponse d'attente du support à la demande transmise à la R&D le 22/10 (vérification et
+  évaluation internes, délai supplémentaire, réponse définitive annoncée sans date). Rien à faire d'ici là ; relance dans
+  le même ticket au point du 03/11 si rien n'est arrivé. Le connecteur Mammotion reste sur STA (accord écrit requis avant
+  la prod de décembre).
