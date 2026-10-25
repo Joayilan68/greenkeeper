@@ -450,5 +450,5 @@ du premier onglet).
   0 à 3 clics par jour) : ce n'est pas une erreur de mesure. 46 articles sur 46 indexés ; Facebook 22 visites en 15 jours,
   Pinterest 0 ; 1 inscription en 15 jours, aucun retour mesurable. Priorités jusqu'au 10/11 : ligue d'hiver en prod le
   30/10, Google sans rien précipiter (plan du 22/10, indexation des 3 articles retouchés le 22/10 à demander), objectifs
-  de la refonte. Section « Point du 25/10 » ajoutée au document « Bilan des stats » ; 3e liste de questions de saison
+  de la refonte. Section « Point du 25/10 » ajoutée au document « Bilan des stats » ; 2e liste de questions de saison
   pour la communauté.
