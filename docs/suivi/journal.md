@@ -445,3 +445,10 @@ du premier onglet).
   évaluation internes, délai supplémentaire, réponse définitive annoncée sans date). Rien à faire d'ici là ; relance dans
   le même ticket au point du 03/11 si rien n'est arrivé. Le connecteur Mammotion reste sur STA (accord écrit requis avant
   la prod de décembre).
+- 25/10/2026 — Point des stats : semaine du 12/10 record (110 visiteurs, dont 60 venus de Google), puis 28 la semaine du
+  19/10. La chute de Google depuis le 17/10 est confirmée par la Search Console (position moyenne passée de 9-13 à 45-48,
+  0 à 3 clics par jour) : ce n'est pas une erreur de mesure. 46 articles sur 46 indexés ; Facebook 22 visites en 15 jours,
+  Pinterest 0 ; 1 inscription en 15 jours, aucun retour mesurable. Priorités jusqu'au 10/11 : ligue d'hiver en prod le
+  30/10, Google sans rien précipiter (plan du 22/10, indexation des 3 articles retouchés le 22/10 à demander), objectifs
+  de la refonte. Section « Point du 25/10 » ajoutée au document « Bilan des stats » ; 3e liste de questions de saison
+  pour la communauté.
