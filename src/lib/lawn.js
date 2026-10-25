@@ -13,7 +13,7 @@ export const MONTHLY_PLAN = {
   8:  { engrais:"NPK 8-0-20 · 20 g/m²",             arrosage_base:20, arrosage_freq:3, label:"Stress hydrique" },
   9:  { engrais:"NPK 5-10-25 automne · 40 g/m²",    arrosage_base:16, arrosage_freq:2, label:"Rénovation automnale" },
   10: { engrais:null,                                  arrosage_base:10, arrosage_freq:1, label:"Préparation hiver" },
-  11: { engrais:"Riche en potassium (résistance au gel), pauvre en azote", arrosage_base:0, arrosage_freq:0, label:"Fin de saison" },
+  11: { engrais:"Riche en potassium (résistance au gel), sans azote", arrosage_base:0, arrosage_freq:0, label:"Fin de saison" },
   12: { engrais:null,                                   arrosage_base:0,  arrosage_freq:0, label:"Repos complet" },
 };
 
