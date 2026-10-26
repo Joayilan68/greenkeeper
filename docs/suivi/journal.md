@@ -476,3 +476,8 @@ du premier onglet).
   refusée) et, par personne, par le règlement. Bancs : 11 contrôles du serveur et parcours de l'écran (avant, pendant,
   fin du temps) OK. Limite connue : la 1re question est publique (post du dimanche, notification), le chrono protège
   surtout les questions 2 et 3. Reste : nouveau test de Jordan sur STA, puis go prod avant le 30/10.
+- 26/10/2026 — Go prod de Jordan pour la Ligue d'hiver après son test sur STA (« impeccable »), seule, par exception : en
+  prod le 26/10 (branche de la ligue, main fusionnée dedans, puis les retouches du jour : onglet « Quiz », quiz en 1 minute,
+  correction plus claire). Annonce visible dès maintenant (accueil, Aujourd'hui, Classement), départ le dimanche 1/11.
+  Vérifié en ligne : nouvelle version, route de la ligue (401 sans connexion), bandeau de l'accueil. Recette « Déjà en
+  prod » n° 35 à 42. Le quiz du dimanche du lot de comm du 1er au 7/11 peut être validé dans Pilotage → Réseaux.
