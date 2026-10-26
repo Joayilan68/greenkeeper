@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useUser, UserButton } from "@clerk/clerk-react";
 import { useWeather } from "../lib/useWeather";
 import { useProfile } from "../lib/useProfile";
-import { useParcours } from "../lib/useParcours";
+import { useParcours, phaseParcours } from "../lib/useParcours";
 import { useHistory } from "../lib/useHistory";
 import { useSubscription } from "../lib/useSubscription";
 import { MONTHLY_PLAN, MONTHS_FR, getWMO } from "../lib/lawn";
@@ -16,13 +16,12 @@ import AlertBanner from "../components/AlertBanner";
 import OnboardingModal from "../components/OnboardingModal";
 import GreenScoreModal from "../components/GreenScoreModal";
 import CompteARebours from "../components/CompteARebours";
-import { anneeDuBilan, bilanDisponible, compterActions, actionsDeLAnnee, TYPES_ACTIONS } from "../lib/bilanSaison";
+import { anneeDuBilan, bilanDisponible } from "../lib/bilanSaison";
+import { actionsDuJour } from "../lib/actionsDuJour";
 import { card, cardTitle, btn, scroll } from "../lib/styles";
 import { useState, useEffect } from "react";
 import { useGreenPoints } from "../lib/useGreenPoints";
 import { useStreak } from "../lib/useStreak";
-import { useClassement } from "../lib/useClassement";
-import { useSaison } from "../lib/useSaison";
 import { useDiagnostics } from "../lib/useDiagnostics";
 
 export default function Dashboard() {
@@ -40,14 +39,14 @@ export default function Dashboard() {
   const { consents, updateConsents, showPushBanner, syncFromReminders } = useConsents();
   const { enableAll } = useReminders(syncFromReminders);
 
-  // ── Nouveaux hooks ──────────────────────────────────────────────────────────
-  const { classementActif } = useSaison();
-  const { total: gpTotal, palier, prochainPalier, progressPalier, historique: gpHistorique } = useGreenPoints();
-  const { actuel: streak, enDanger, modeHiver } = useStreak();
-  const {
-    ligueActuelle, position, totalJoueurs, pointsSemaine,
-    enZonePromotion, enZoneRetrogradation, joursRestants, messageClassement
-  } = useClassement(gpHistorique, profile, isPaid);
+  // ── Série et GreenPoints (résumé ; détail et classement dans Mon gazon → Mes progrès) ──────────────
+  const { total: gpTotal, palier, gagnerPoints } = useGreenPoints();
+  const { actuel: streak, enDanger, modeHiver, enregistrerConnexion } = useStreak();
+  // Connexion du jour (série et GreenPoints) : comptée dès l'accueil, une fois par jour au plus, comme dans Aujourd'hui
+  useEffect(() => {
+    enregistrerConnexion();
+    gagnerPoints("connexion_quotidienne");
+  }, []); // eslint-disable-line
 
   // ── Diagnostics photo (source de vérité : Supabase) ────────────────────────
   // Garantit que le score santé est identique entre PC et mobile.
@@ -91,6 +90,11 @@ export default function Dashboard() {
   const { score, potential, label, color, issues, strengths, diagScore, diagEmoji, diagAge, diagInfluence, hasDiag }
     = calcLawnScore({ weather, profile, history, month, diagnostics });
 
+  // Résumé d'Aujourd'hui : mêmes actions que l'onglet Aujourd'hui (src/lib/actionsDuJour.js)
+  const { parcours } = useParcours();
+  const { recommended, prevoyez } = actionsDuJour({ profile, weather, history, diagnostics, parcours, phaseP: phaseParcours(parcours), month });
+  const prochaine = prevoyez.find(a => a.status === "too_soon");
+
   const offre = offreEnCours();
 
   // iPhone dans Safari : sans installation, pas de notifications possibles → guide d'installation
@@ -117,39 +121,6 @@ export default function Dashboard() {
     setShowOnboarding(false);
   };
 
-  const [actionsAnnee, setActionsAnnee] = useState(null);
-  useEffect(() => {
-    if (!user?.id) return;
-    actionsDeLAnnee(user.id, new Date().getFullYear()).then(setActionsAnnee).catch(() => {});
-  }, [user?.id, history.length]);
-
-  // Évolution du score depuis le 1er janvier (ou la 1re action de l'année) : score recalculé chaque semaine
-  // avec les actions et diagnostics connus à cette date (la météo reste celle du jour)
-  const scoreHistory = (() => {
-    const jour = (s) => { const [dd, mm, yy] = (s || "").split("/"); return new Date(yy, mm - 1, dd); };
-    const actions = (actionsAnnee || history).map(a => ({ ...a, t: jour(a.date) })).filter(a => !isNaN(a.t));
-    const aujourdHui = new Date(); aujourdHui.setHours(23, 59, 59, 0);
-    const premiere = actions.reduce((m, a) => a.t < m ? a.t : m, aujourdHui);
-    const debut = new Date(Math.max(new Date(aujourdHui.getFullYear(), 0, 1), premiere)); debut.setHours(23, 59, 59, 0);
-    const pts = [];
-    for (let d = new Date(debut); ; d.setDate(d.getDate() + 7)) {
-      const t = d > aujourdHui ? aujourdHui : new Date(d);
-      pts.push({ t, score: calcLawnScore({
-        weather, profile, month: t.getMonth() + 1, ref: t.getTime(),
-        history: actions.filter(a => a.t <= t),
-        diagnostics: diagnostics.filter(x => new Date(x.date) <= t),
-      }).score });
-      if (t >= aujourdHui) break;
-    }
-    return pts;
-  })();
-  // Compteurs d'actions depuis le 1er janvier : mêmes chiffres que le bilan de saison (toutes les actions de
-  // l'année en base ; en attendant, celles de l'historique local de l'année)
-  const anneeEnCours = new Date().getFullYear();
-  const compteurs = compterActions(actionsAnnee || history.filter(e => (e.date || "").endsWith(`/${anneeEnCours}`)));
-  const minScore  = Math.min(...scoreHistory.map(p => p.score));
-  const maxScore  = Math.max(...scoreHistory.map(p => p.score));
-  const scoreRange = maxScore - minScore || 1;
 
   return (
     <div>
@@ -245,7 +216,7 @@ export default function Dashboard() {
         )}
 
         {/* ── PARCOURS (Semis / Regarnissage en cours) ──────────────────── */}
-        <CarteParcours />
+        <CarteParcours parcours={parcours} />
 
         {/* ── COMPTE À REBOURS DU PRINTEMPS (1er novembre → 1re tonte) ──────── */}
         <CompteARebours profile={profile} soilTemp={weather?.soil_temp} isPaid={isPaid} />
@@ -362,129 +333,80 @@ export default function Dashboard() {
         {/* ── ALERTES MÉTÉO ─────────────────────────────────────────────────── */}
         {isPaid && alerts.map((a, i) => <AlertBanner key={i} alert={a} />)}
 
-        {/* ── STREAK ────────────────────────────────────────────────────────── */}
-        {streak > 0 && (
-          <div data-tuile="accueil-serie" style={{ background: enDanger ? "rgba(230,81,0,0.15)" : modeHiver ? "rgba(21,101,192,0.12)" : "rgba(76,175,80,0.12)", border:`1px solid ${enDanger ? "rgba(239,108,0,0.4)" : modeHiver ? "rgba(66,165,245,0.3)" : "rgba(102,187,106,0.35)"}`, borderRadius:12, padding:"10px 14px", display:"flex", alignItems:"center", gap:10, marginBottom:4 }}>
-            <span style={{ fontSize:22 }}>{modeHiver ? "🛡️" : enDanger ? "⚠️" : "🔥"}</span>
-            <div style={{ flex:1 }}>
-              <div style={{ fontWeight:700, fontSize:14, color: enDanger ? "#ef9a9a" : modeHiver ? "#90caf9" : "#a5d6a7" }}>
-                {modeHiver ? `Streak protégé — ${streak} jours` : `${streak} jour${streak > 1 ? "s" : ""} de streak`}
-              </div>
-              <div style={{ fontSize:11, color: enDanger ? "#f57c00" : modeHiver ? "#64b5f6" : "#66BB6A", marginTop:2 }}>
-                {modeHiver ? "1 connexion/semaine suffit cet hiver" : enDanger ? "Connecte-toi aujourd'hui pour garder ton streak !" : "Continue comme ça !"}
-              </div>
+        {/* ── AUJOURD'HUI (résumé ; détail, validation et produits dans l'onglet Aujourd'hui) ───── */}
+        <div data-tuile="accueil-aujourdhui" role="button" onClick={() => navigate("/today")} style={{ ...card(), padding:14, cursor:"pointer" }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+            <span style={{ fontWeight:700, color:"#66BB6A", fontSize:14 }}>📅 Aujourd'hui</span>
+            <span style={{ fontSize:11, color:"#81c784" }}>
+              {recommended.length ? `${recommended.length} action${recommended.length > 1 ? "s" : ""} à faire` : "Tout est à jour"}
+            </span>
+          </div>
+          {recommended.slice(0, 3).map(({ action, isManuel, parcoursLabel }) => (
+            <div key={action.id} style={{ padding:"9px 12px", marginBottom:6, background:"rgba(102,187,106,0.08)", border:"1px solid rgba(102,187,106,0.2)", borderRadius:10, fontSize:13, fontWeight:700, color:"#e8f5e9" }}>
+              {parcoursLabel || (isManuel ? "Désherbage Manuel 🌿" : action.label)}
             </div>
+          ))}
+          {recommended.length === 0 && (
+            <div style={{ fontSize:13, color:"#a5d6a7", lineHeight:1.5, marginBottom:6 }}>
+              ✅ Rien à faire aujourd'hui{prochaine ? ` · prochaine action : ${prochaine.action.label}, dans ${prochaine.daysLeft} j` : ""}.
+            </div>
+          )}
+          <div style={{ fontSize:12, fontWeight:700, color:"#a5d6a7", textAlign:"right" }}>
+            {recommended.length > 3 ? `Voir les ${recommended.length} actions →` : recommended.length ? "Faire et valider →" : "Voir ma journée →"}
+          </div>
+        </div>
+
+        {/* ── SÉRIE ET GREENPOINTS (résumé ; classement et badges dans Mon gazon) ──────────────── */}
+        <div data-tuile="accueil-progres" role="button" onClick={() => navigate("/my-lawn#progres")} style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:12, cursor:"pointer" }}>
+          <div style={{ ...card(), marginBottom:0, padding:"10px 12px", display:"flex", alignItems:"center", gap:10 }}>
+            <span style={{ fontSize:22 }}>{modeHiver ? "🛡️" : enDanger ? "⚠️" : "🔥"}</span>
+            <div>
+              <div style={{ fontSize:15, fontWeight:800, color: enDanger ? "#ef9a9a" : "#a5d6a7" }}>{streak} jour{streak > 1 ? "s" : ""}</div>
+              <div style={{ fontSize:10, color:"#81c784" }}>{modeHiver ? "Série protégée" : enDanger ? "Série en danger" : "Série"}</div>
+            </div>
+          </div>
+          <div style={{ ...card(), marginBottom:0, padding:"10px 12px", display:"flex", alignItems:"center", gap:10 }}>
+            <span style={{ fontSize:22 }}>{palier?.icone || "🌿"}</span>
+            <div>
+              <div style={{ fontSize:15, fontWeight:800, color:"#a5d6a7" }}>{gpTotal.toLocaleString("fr-FR")} pts</div>
+              <div style={{ fontSize:10, color:"#81c784" }}>GreenPoints{palier?.label ? ` · ${palier.label}` : ""}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── BILAN DE SAISON (du 15 novembre à fin février ; toute l'année dans Mon gazon) ──────── */}
+        {bilanDisponible() && (
+          <div data-tuile="accueil-bilan" role="button" onClick={() => navigate("/bilan")} style={{ ...card(), padding:"12px 14px", display:"flex", alignItems:"center", justifyContent:"space-between", gap:8, cursor:"pointer", background:"linear-gradient(135deg,rgba(249,168,37,0.22),rgba(13,43,26,0.4))", border:"1px solid rgba(249,168,37,0.45)" }}>
+            <span style={{ fontSize:13, fontWeight:700, color:"#f9a825" }}>🏆 Ton bilan de saison {anneeDuBilan()} est prêt</span>
+            <span style={{ color:"#f9a825" }}>›</span>
           </div>
         )}
 
-        {/* ── GREENPOINTS ───────────────────────────────────────────────────── */}
-        <div data-tuile="accueil-greenpoints" style={{ ...card(), padding:14 }}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
-            <span style={{ fontWeight:700, color:"#66BB6A", fontSize:14 }}>🌿 GreenPoints</span>
-            <span style={{ background: palier?.couleur || "#2e7d32", color:"white", borderRadius:20, padding:"2px 10px", fontSize:11, fontWeight:600 }}>
-              {palier?.icone} {palier?.label}
-            </span>
-          </div>
-          <div style={{ display:"flex", alignItems:"baseline", gap:6, marginBottom:8 }}>
-            <span style={{ fontSize:30, fontWeight:800, color:"#a5d6a7" }}>{gpTotal.toLocaleString("fr-FR")}</span>
-            <span style={{ color:"#81c784", fontSize:12 }}>pts</span>
-          </div>
-          {prochainPalier && (
-            <div>
-              <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:"#81c784", marginBottom:3 }}>
-                <span>{palier?.label}</span>
-                <span>{prochainPalier.icone} {prochainPalier.label} — {prochainPalier.min.toLocaleString("fr-FR")} pts</span>
-              </div>
-              <div style={{ background:"rgba(255,255,255,0.1)", borderRadius:8, height:6, overflow:"hidden" }}>
-                <div style={{ width:`${progressPalier}%`, height:"100%", background:"linear-gradient(90deg,#43a047,#a5d6a7)", borderRadius:8, transition:"width 0.8s" }}/>
-              </div>
+        {/* ── PREMIUM : équipements (comptes Premium) ou ce que Premium ajoute (comptes gratuits, hors app Android) ── */}
+        {isPaid ? (
+          <div data-tuile="accueil-equipements" role="button" onClick={() => navigate("/equipements")} style={{ ...card(), display:"flex", alignItems:"center", gap:12, cursor:"pointer" }}>
+            <span style={{ fontSize:24 }}>🔌</span>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:13, fontWeight:800, color:"#F1F8F2" }}>Mes équipements</div>
+              <div style={{ fontSize:12, color:"#81c784", lineHeight:1.5 }}>Station météo, robot, arrosage et capteurs connectés</div>
             </div>
-          )}
-        </div>
-
-        {/* ── CLASSEMENT ────────────────────────────────────────────────────── */}
-        <div data-tuile="accueil-classement" style={{ ...card(), padding:14 }}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
-            <span style={{ fontWeight:700, color:"#66BB6A", fontSize:14 }}>🏆 Classement</span>
-            {classementActif ? (
-              <span style={{ background: ligueActuelle?.couleurBg || "rgba(76,175,80,0.2)", color: ligueActuelle?.couleur || "#43a047", borderRadius:20, padding:"2px 10px", fontSize:11, fontWeight:600, border:`1px solid ${ligueActuelle?.couleur || "#43a047"}44` }}>
-                {ligueActuelle?.icone} Ligue {ligueActuelle?.label}
-              </span>
-            ) : <span style={{ fontSize:11, color:"#81c784" }}>😴 En pause</span>}
+            <span style={{ color:"#81c784", fontSize:18 }}>›</span>
           </div>
-          {classementActif ? (
-            <>
-              <div style={{ display:"flex", alignItems:"baseline", gap:6, marginBottom:8 }}>
-                <span style={{ fontSize:30, fontWeight:800, color:"#a5d6a7" }}>{position}<span style={{ fontSize:14, color:"#81c784" }}>e</span></span>
-                <span style={{ fontSize:12, color:"#81c784" }}>/ {totalJoueurs} joueurs · {pointsSemaine} pts cette semaine</span>
-              </div>
-              <div style={{ padding:"8px 10px", background: enZonePromotion ? "rgba(76,175,80,0.15)" : enZoneRetrogradation ? "rgba(230,81,0,0.15)" : "rgba(255,255,255,0.05)", borderRadius:10, color: enZonePromotion ? "#a5d6a7" : enZoneRetrogradation ? "#ef9a9a" : "#81c784", fontSize:12, fontWeight:500, marginBottom:10 }}>
-                {messageClassement}{joursRestants <= 2 && <span style={{ fontWeight:700, color:"#f9a825" }}> — ⏰ Urgence !</span>}
-              </div>
-              <button onClick={() => navigate("/classement")} style={{ width:"100%", background:"rgba(76,175,80,0.2)", color:"#a5d6a7", border:"1px solid rgba(76,175,80,0.3)", borderRadius:10, padding:"9px", fontSize:12, fontWeight:600, cursor:"pointer" }}>
-                Voir le classement complet →
-              </button>
-            </>
-          ) : (
-            <div style={{ textAlign:"center", padding:"8px 0" }}>
-              <div style={{ fontSize:13, color:"#81c784", marginBottom:4 }}>😴 Classement en pause jusqu'en février</div>
-              <div style={{ fontSize:11, color:"#4a7c5c" }}>Profite de l'hiver pour préparer ta saison !</div>
-            </div>
-          )}
-        </div>
-
-        {/* ── ÉVOLUTION DU SCORE ────────────────────────────────────────────── */}
-        <div data-tuile="accueil-evolution-score" style={{ ...card(), padding:14 }}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
-            <span style={{ fontWeight:700, color:"#66BB6A", fontSize:14 }}>📈 Évolution du score</span>
-            <span style={{ fontSize:11, color:"#81c784" }}>{anneeEnCours}, semaine par semaine</span>
+        ) : !subLoading && !isAndroidTWA() && (
+          <div data-tuile="accueil-avec-premium" style={{ ...card(), background:"linear-gradient(135deg,rgba(245,158,11,0.18),rgba(13,43,26,0.85))", border:"1px solid rgba(245,158,11,0.45)" }}>
+            <div style={{ fontSize:14, fontWeight:900, color:"#ffe082", marginBottom:8 }}>⭐ Avec Premium</div>
+            {[
+              "Diagnostic photo, 3 par jour, avec suivi avant / après",
+              "Ton plan annuel complet, en PDF",
+              "Météo complète et station de ton jardin",
+              "Robot, arrosage et capteurs connectés",
+              "Bob : 20 questions par jour",
+            ].map(f => <div key={f} style={{ fontSize:12, color:"#e8f5e9", padding:"3px 0" }}>✔ {f}</div>)}
+            <button onClick={() => navigate("/subscribe")} style={{ width:"100%", marginTop:10, background:"linear-gradient(135deg,#F59E0B,#D97706)", color:"#1a1a1a", fontWeight:900, border:"none", borderRadius:10, cursor:"pointer", padding:"11px", fontSize:13 }}>
+              Découvrir Premium
+            </button>
           </div>
-
-          <div style={{ position:"relative", height:60, marginBottom:8 }}>
-            <svg width="100%" height="60" style={{ overflow:"visible" }}>
-              {scoreHistory.length > 1 && (() => {
-                const w = 100 / (scoreHistory.length - 1);
-                const points = scoreHistory.map((p,i) => `${i*w}%,${60 - ((p.score - minScore) / scoreRange) * 50}`).join(" ");
-                return (
-                  <>
-                    <polyline points={points} fill="none" stroke="#43a047" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke"/>
-                    {scoreHistory.map((p,i) => (scoreHistory.length <= 12 || i === scoreHistory.length - 1) && (
-                      <circle key={i} cx={`${i*w}%`} cy={60 - ((p.score - minScore) / scoreRange) * 50} r="3" fill="#66BB6A"/>
-                    ))}
-                    <text x="100%" y={60 - ((scoreHistory[scoreHistory.length-1].score - minScore) / scoreRange) * 50 - 6} textAnchor="end" fill="#a5d6a7" fontSize="11" fontWeight="bold">{scoreHistory[scoreHistory.length-1].score}</text>
-                  </>
-                );
-              })()}
-            </svg>
-          </div>
-
-          <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:"#4a7c5c", marginBottom:12 }}>
-            <span>{scoreHistory[0].t.toLocaleDateString("fr-FR", { day:"numeric", month:"short" })}</span>
-            <span>Aujourd'hui</span>
-          </div>
-
-          <div style={{ fontSize:10, color:"#81c784", marginBottom:6 }}>Actions depuis le 1er janvier {anneeEnCours}</div>
-          <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:4 }}>
-            {TYPES_ACTIONS.map(({ cle, icone, court }) => (
-              <div key={cle} style={{ flexShrink:0, minWidth:56, background:"rgba(255,255,255,0.05)", borderRadius:10, padding:"8px 6px", textAlign:"center" }}>
-                <div style={{ fontSize:16 }}>{icone}</div>
-                <div style={{ fontSize:16, fontWeight:800, color:"#a5d6a7" }}>{compteurs[cle]}</div>
-                <div style={{ fontSize:9, color:"#81c784" }}>{court}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Bilan de saison : toute l'année, mis en avant du 15 novembre à fin février */}
-          <div data-tuile="accueil-bilan" role="button" onClick={() => navigate("/bilan")} style={{ marginTop:10, display:"flex", alignItems:"center", justifyContent:"space-between", gap:8, cursor:"pointer",
-            borderRadius:10, padding:"9px 12px", ...(bilanDisponible()
-              ? { background:"linear-gradient(135deg,rgba(249,168,37,0.22),rgba(13,43,26,0.4))", border:"1px solid rgba(249,168,37,0.45)" }
-              : { background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)" }) }}>
-            <span style={{ fontSize:12, fontWeight:700, color: bilanDisponible() ? "#f9a825" : "#a5d6a7" }}>
-              🏆 {bilanDisponible() ? `Ton bilan de saison ${anneeDuBilan()} est prêt` : `Mon bilan de saison ${anneeDuBilan()} (toute l'année)`}
-            </span>
-            <span style={{ color: bilanDisponible() ? "#f9a825" : "#81c784" }}>›</span>
-          </div>
-        </div>
+        )}
 
         {/* ── CONSEILS GAZON (rubrique statique /conseils, hors de l'app) ───── */}
         <a data-tuile="accueil-conseils" href="/conseils" style={{ ...card(), display:"flex", alignItems:"center", gap:12, textDecoration:"none", color:"inherit" }}>
@@ -527,10 +449,9 @@ export default function Dashboard() {
 }
 
 
-// ── Carte Parcours : affiche l'état du parcours en cours sur le Dashboard ──────
-function CarteParcours() {
+// ── Carte Parcours : affiche l'état du parcours en cours sur l'accueil ──────────
+function CarteParcours({ parcours }) {
   const navigate = useNavigate();
-  const { parcours } = useParcours();
   if (!parcours) return null;
 
   const typeLabel = parcours.type === "regarnissage" ? "regarnissage" : "semis";

@@ -9,7 +9,6 @@ import Classement from "./pages/Classement";
 import MyLawn from "./pages/MyLawn";
 import Today from "./pages/Today";
 import Products from "./pages/Products";
-import History from "./pages/History";
 import Setup from "./pages/Setup";
 import Login from "./pages/Login";
 import Landing from "./pages/Landing";
@@ -241,7 +240,6 @@ function AppRoutes() {
       <Route path="/parcours"          element={<PrivateRoute><Layout><Parcours /></Layout></PrivateRoute>} />
       <Route path="/today"             element={<PrivateRoute><Layout><Today /></Layout></PrivateRoute>} />
       <Route path="/products"          element={<PrivateRoute><Layout><Products /></Layout></PrivateRoute>} />
-      <Route path="/history"           element={<PrivateRoute><Layout><History /></Layout></PrivateRoute>} />
       <Route path="/setup"             element={<PrivateRoute><Layout><Setup /></Layout></PrivateRoute>} />
       <Route path="/classement"        element={<PrivateRoute><Layout><Classement /></Layout></PrivateRoute>} />
       <Route path="/bilan"             element={<PrivateRoute><Layout><Bilan /></Layout></PrivateRoute>} />
