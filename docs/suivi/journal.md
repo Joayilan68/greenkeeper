@@ -452,3 +452,9 @@ du premier onglet).
   30/10, Google sans rien précipiter (plan du 22/10, indexation des 3 articles retouchés le 22/10 à demander), objectifs
   de la refonte. Section « Point du 25/10 » ajoutée au document « Bilan des stats » ; 2e liste de questions de saison
   pour la communauté.
+- 26/10/2026 — Davis : sur le Discord WeatherLink Developers, réponse d'un autre membre (pas un employé) : aucune licence
+  publiée sur le site développeur de l'API v2 (vérifié : ni conditions d'utilisation ni mention d'un usage commercial ;
+  seules des règles d'accès aux données selon la station et l'abonnement). Le site indique que le Discord est suivi par
+  les ingénieurs Davis/WeatherLink de l'API : message de relance prêt pour Jordan, demandant une confirmation écrite
+  d'un ingénieur (app payante, chaque utilisateur avec sa propre clé, données non revendues), et recherche des réponses
+  passées dans le Discord.
