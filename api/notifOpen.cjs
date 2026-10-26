@@ -1,8 +1,9 @@
 // api/notifOpen.cjs
-// Mesure des ouvertures de notifications : chaque notification du moteur porte un jeton signé
-// (compte, date, type). Au clic, le service worker le renvoie à /api/send?type=notif-open, qui
-// marque l'envoi « ouvert » dans reminders.notif_log. Le jeton ne contient aucune donnée
-// sensible et ne peut pas être fabriqué sans la clé serveur.
+// Mesure des ouvertures de notifications et des clics des emails : chaque envoi porte un jeton signé
+// (compte, date, type). Au clic, le service worker (notification) ou l'app (lien d'email, paramètre m)
+// le renvoie à /api/send?type=notif-open, qui marque l'envoi « ouvert » ou « clic » dans
+// reminders.notif_log. Le jeton ne contient aucune donnée sensible et ne peut pas être fabriqué sans
+// la clé serveur.
 
 const crypto = require("crypto");
 

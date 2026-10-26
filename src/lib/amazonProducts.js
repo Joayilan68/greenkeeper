@@ -168,12 +168,12 @@ const AMAZON_PRODUCTS = {
   },
 
   // ══════════════════════════════════════════════════════════════
-  // ENGRAIS HIVER / CHAULAGE — Nov
-  // conditionnement : 10kg (175g/m² = beaucoup)
+  // CHAULAGE — à l'automne, seulement si le pH est sous 6 (base : pH & Amendements)
+  // chaux dolomitique 40-60 g/m² entre pH 5 et 6 · conditionnement : 10kg
   // ══════════════════════════════════════════════════════════════
-  engraisHiver: {
-    label: 'Chaulage Hiver',
-    ratioGM2: 175,
+  chaulage: {
+    label: 'Chaulage (sol acide)',
+    ratioGM2: 50,
     conditionnement: 10000,
     tiers: {
       eco: {
@@ -192,15 +192,7 @@ const AMAZON_PRODUCTS = {
         commission: 0.04,
         url: url('B07QLJMTFS', 'chaux magnésienne gazon hiver'),
       },
-      qualite: {
-        asin: 'B0DVLPX45M',
-        label: 'Engrais hiver organique résistance gel',
-        marque: 'SoluControl',
-        prix: 27.9,
-        commission: 0.04,
-        url: url('B0DVLPX45M', 'engrais hiver organique gazon'),
-      },
-      // Pas de gamme premium identifiée pour l'hiver → fallback qualite
+      // Pas de gamme qualité ni premium identifiée → standard
     },
   },
 

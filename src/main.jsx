@@ -18,6 +18,44 @@ if (typeof window !== "undefined" && !("Notification" in window)) {
   };
 }
 
+// ── Guard global — traduction automatique et extensions du navigateur ──────────
+// La traduction de Chrome (ou une extension) remplace des textes de la page par ses propres éléments : quand React
+// retirait ou insérait ensuite un de ces textes, l'écran plantait (« removeChild », /demo, 26/10/2026). Le nœud
+// déjà déplacé est laissé tel quel au lieu de faire planter l'écran.
+if (typeof Node === "function" && Node.prototype) {
+  const retirer = Node.prototype.removeChild;
+  Node.prototype.removeChild = function (enfant) {
+    if (enfant.parentNode !== this) {
+      console.warn("[MG360] Nœud déjà déplacé par une traduction ou une extension : ignoré");
+      return enfant;
+    }
+    return retirer.apply(this, arguments);
+  };
+  const inserer = Node.prototype.insertBefore;
+  Node.prototype.insertBefore = function (nouveau, repere) {
+    if (repere && repere.parentNode !== this) {
+      console.warn("[MG360] Repère déplacé par une traduction ou une extension : insertion ignorée");
+      return nouveau;
+    }
+    return inserer.apply(this, arguments);
+  };
+}
+
+// ── Clic dans un email (lien avec m=<jeton>, api/notifOpen.cjs) ─────────────────
+// Signalé une fois pour la mesure des clics (reminders.notif_log), puis retiré de l'adresse affichée.
+try {
+  const adresse = new URL(window.location.href);
+  const jeton = adresse.searchParams.get("m");
+  if (jeton) {
+    fetch("/api/send?type=notif-open", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ t: jeton, canal: "email" }), keepalive: true,
+    }).catch(() => {});
+    adresse.searchParams.delete("m");
+    window.history.replaceState(window.history.state, "", adresse.pathname + adresse.search + adresse.hash);
+  }
+} catch { /* navigateur ancien : clic non mesuré */ }
+
 // ── Détection in-app browser ──────────────────────────────────────────────────
 // Messenger, Facebook, Instagram, TikTok, WhatsApp, LinkedIn
 // ouvrent les liens dans leur propre WebView avec des limitations sévères.

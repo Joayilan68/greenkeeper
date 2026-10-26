@@ -4,7 +4,7 @@ description: Mousse dans le gazon ? Traitez au sulfate de fer en mars-avril ou e
 saison: automne
 date: 2026-09-25
 maj: 2026-10-10
-produits: antiMousse, engraisHiver
+produits: antiMousse, chaulage
 ---
 
 La mousse est l'un des problèmes les plus fréquents dans les pelouses françaises, surtout en automne et en hiver. On la traite souvent… puis elle revient l'année suivante. La raison est simple : **la mousse n'est pas la cause du problème, c'est un symptôme**. Elle s'installe là où le gazon est affaibli. Pour s'en débarrasser durablement, il faut agir en trois temps : l'éliminer, l'enlever, puis corriger ce qui l'a fait venir.

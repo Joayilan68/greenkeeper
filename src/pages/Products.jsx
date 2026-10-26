@@ -19,7 +19,7 @@ import KitSaison from "../components/KitSaison";
 // ════════════════════════════════════════════════════════════════════════════
 
 const CATEGORIES = [
-  { id:"entretien",  label:"Entretien courant", icon:"🌱", keys:["engraisStarter","engraisEte","engraisAutomne","engraisHiver"] },
+  { id:"entretien",  label:"Entretien courant", icon:"🌱", keys:["engraisStarter","engraisEte","engraisAutomne","chaulage"] },
   { id:"traitement", label:"Traitements",       icon:"💊", keys:["antiMousse","biostimulant"], isPhyto: true },
   { id:"renovation", label:"Rénovation",        icon:"🌾", keys:["regarnissage","aeration","verticut"] },
   { id:"materiel",   label:"Matériel",          icon:"🛠️", keys:["desherbage","tonte"] },

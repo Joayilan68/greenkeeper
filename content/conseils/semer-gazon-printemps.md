@@ -1,13 +1,15 @@
 ---
-title: Semer du gazon au printemps : quand et comment réussir
-description: Semer au printemps : la bonne période selon votre région et la température du sol, la préparation, la dose de graines et l'arrosage jusqu'à la tonte.
+title: Semer du gazon au printemps : la méthode pas à pas
+description: Réussir un semis de gazon au printemps : préparer le sol, choisir les graines, semer à la bonne dose, arroser jusqu'à la levée, puis la première tonte.
 saison: printemps
 date: 2026-09-25
-maj: 2026-10-11
+maj: 2026-10-22
 produits: regarnissage, engraisStarter
 ---
 
 L'automne est la saison idéale pour semer un gazon, mais **le printemps est la seconde meilleure période**, et parfois la seule possible : maison neuve, travaux terminés en hiver, pelouse abîmée par l'hiver. Un semis de printemps réussit très bien à condition de respecter deux choses : **attendre que le sol soit assez chaud**, et **semer assez tôt pour que le gazon soit installé avant les chaleurs**.
+
+Voici la méthode, de la préparation du sol à la première tonte. Les dates région par région sont dans [quand semer le gazon](/conseils/quand-semer-gazon) ; et si votre pelouse est déjà en place et qu'il s'agit seulement de la remettre en forme après l'hiver, suivez plutôt [les étapes pour préparer sa pelouse au printemps](/conseils/preparer-pelouse-printemps).
 
 > **En bref**
 > - **Quand ?** Quand le sol dépasse 10 °C : de fin février dans le Sud à début juin dans le Nord.
@@ -15,23 +17,12 @@ L'automne est la saison idéale pour semer un gazon, mais **le printemps est la 
 > - **Comment ?** Sol bien préparé, environ 35 g/m² en création et 25 g/m² en regarnissage, graines à peine recouvertes, puis roulage.
 > - **L'arrosage** : surface toujours humide pendant environ 3 semaines, sans détremper.
 
-## Quand semer le gazon au printemps ?
+## Le bon moment : quand le sol dépasse 10 °C
 
-Les graines de gazon germent quand **la température du sol dépasse 10 °C** de façon durable. En France, la fenêtre de printemps tombe en général :
-
-| Région | Fenêtre de printemps |
-|---|---|
-| Sud, Corse | Fin février à début avril |
-| Sud-Ouest | Début mars à mi-avril |
-| Ouest | Début avril à mi-mai |
-| Centre, Île-de-France | Mi-avril à fin mai |
-| Nord-Est | Mi-avril à fin mai |
-| Nord | Fin avril à début juin |
+Les graines de gazon germent quand **la température du sol dépasse 10 °C** de façon durable. Selon les régions, la fenêtre de printemps s'ouvre entre fin février (Sud, Corse) et fin avril (Nord) : voir [les dates de semis par région](/conseils/quand-semer-gazon).
 
 - **Semer trop tôt**, dans un sol froid, ralentit la germination et laisse le temps aux oiseaux et aux mauvaises herbes.
 - **Semer trop tard**, après la fin de la fenêtre de votre région, expose les jeunes pousses à la chaleur et à la sécheresse avant qu'elles n'aient des racines profondes. Il faut environ **60 jours** sans canicule pour que le gazon s'installe.
-
-Toutes les dates, printemps et automne : [quand semer le gazon](/conseils/quand-semer-gazon).
 
 ## Les particularités du semis de printemps
 
@@ -39,7 +30,7 @@ Toutes les dates, printemps et automne : [quand semer le gazon](/conseils/quand-
 - **Le vent et le soleil** de printemps dessèchent la surface plus vite qu'on ne le croit : l'arrosage doit suivre.
 - **L'été arrive vite** : un gazon semé au printemps doit être arrosé copieusement et régulièrement pendant son premier été.
 
-## Préparer le terrain
+## Préparer le sol avant de semer
 
 **Pour une création**, la préparation fait la pelouse : nettoyer, décompacter sur 15 à 20 cm, niveler, laisser le sol se stabiliser avec un faux-semis (les graines de mauvaises herbes lèvent, et on les élimine d'un coup de râteau juste avant de semer), affiner les 2 à 4 premiers centimètres, puis raffermir au rouleau. Tout le détail : [créer une pelouse](/conseils/creer-pelouse).
 
@@ -83,21 +74,17 @@ Un gazon semé au printemps n'a que deux mois environ pour s'installer avant les
 
 ## Questions fréquentes
 
-### Quelle est la meilleure période pour semer du gazon au printemps ?
+### Combien de graines de gazon par m² ?
 
-Le début de la fenêtre de votre région, dès que le sol dépasse 10 °C : de fin février dans le Sud à fin avril dans le Nord. Plus tôt vous semez dans la fenêtre, plus le gazon aura le temps de s'installer avant l'été.
-
-### Peut-on semer du gazon en mai ou en juin ?
-
-En mai, oui dans le Centre, le Nord et le Nord-Est, et jusqu'à mi-mai dans l'Ouest. En juin, seulement dans le Nord et au tout début du mois : ailleurs, c'est risqué avant l'été, et l'automne sera plus sûr.
+Environ 35 g/m² pour une création et 25 g/m² pour un regarnissage, en deux passages croisés avec la moitié de la dose à chaque passage.
 
 ### Faut-il recouvrir les graines de gazon ?
 
 À peine : environ 0,5 cm de terre, 1 cm au plus, d'un coup de râteau retourné, puis un roulage léger.
 
-### Quelle température pour semer le gazon ?
+### Combien de temps faut-il arroser un semis de printemps ?
 
-Un sol à au moins 10 °C, à quelques centimètres de profondeur.
+Jusqu'à la levée complète, environ 3 semaines, la surface ne doit jamais sécher. Ensuite, espacez progressivement les arrosages en les rendant plus copieux, et continuez à arroser régulièrement pendant le premier été.
 
 ## Mongazon360 vous guide du semis à la première tonte
 

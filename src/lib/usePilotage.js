@@ -40,17 +40,21 @@ function isNoise(message) {
   return false;
 }
 
+// Dernier envoi par type : en mémoire (un même plantage est signalé plusieurs fois dans la même seconde, par
+// chaque Error Boundary) et dans localStorage (d'une page à l'autre)
+const derniersEnvois = {};
+
 // Vérifie si une alerte du même type a déjà été envoyée récemment
 function shouldSendAlert(type) {
-  const alerts = safeGet(ALERT_KEY, {});
-  const last   = alerts[type];
+  const last = derniersEnvois[type] || safeGet(ALERT_KEY, {})[type];
   if (!last) return true;
   return Date.now() - last > COOLDOWN_MS;
 }
 
 function markAlertSent(type) {
+  derniersEnvois[type] = Date.now();
   const alerts   = safeGet(ALERT_KEY, {});
-  alerts[type]   = Date.now();
+  alerts[type]   = derniersEnvois[type];
   safeSet(ALERT_KEY, alerts);
 }
 
@@ -99,6 +103,7 @@ async function sendBugAlert(type, message, details = {}, severity = "error") {
   // Filtre bruit : bots (crawler Google Play) + "Script error." cross-origin → ignoré
   if (isNoise(message)) return;
   if (!shouldSendAlert(type)) return; // cooldown actif sur cet appareil
+  markAlertSent(type); // avant l'envoi : les signalements suivants du même plantage sont ignorés
 
   try {
     await fetch("/api/send?type=alert", {
@@ -114,7 +119,6 @@ async function sendBugAlert(type, message, details = {}, severity = "error") {
         details:   { "Utilisateur": currentUserEmail || "non connecté", ...details },
       }),
     });
-    markAlertSent(type);
   } catch (e) {
     console.warn("[MG360] Alerte non envoyée :", e.message);
   }

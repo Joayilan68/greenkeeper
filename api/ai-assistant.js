@@ -26,7 +26,7 @@ const QUESTION_SEMIS = /semence|graine|regarn|sem(er|is|é)|sème|clairsem|lev[�
 const QUESTION_PRODUIT = /achet|produit|mat[ée]riel|marque|prix|combien co[uû]te|budget|recommand|conseill.*(quel|lequel)|quel(le)?s? .*(choisir|prendre|utiliser)/i;
 // Catégories du catalogue jointes selon la question (moins de jetons) ; question d'achat générale → catalogue complet
 const CATEGORIES_PRODUIT = [
-  [/engrais|nourri|jaun|carenc|p[aâ]le/i, ["engraisStarter", "engraisEte", "engraisAutomne", "engraisHiver"]],
+  [/engrais|nourri|jaun|carenc|p[aâ]le/i, ["engraisStarter", "engraisEte", "engraisAutomne"]],
   [/semence|graine|regarn|sem(er|is)|trou|clairsem|pel[ée]e/i, ["regarnissage"]],
   [/mousse/i, ["antiMousse"]],
   [/d[ée]sherb|mauvaise.? herbe|pissenlit|plantain|tr[eè]fle/i, ["desherbage"]],

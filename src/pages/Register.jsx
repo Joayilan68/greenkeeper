@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
 import { useConsents } from "../lib/useConsents";
@@ -35,10 +35,13 @@ export default function Register() {
   const [error,   setError]   = useState("");
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true); // Vérification consentements existants au mount
+  const soumission = useRef(false); // validation en cours : handleSubmit navigue lui-même, une fois les choix enregistrés
 
   // ── Skip si l'utilisateur a déjà accepté CGU/CGV + Confidentialité ────────
-  // Source de vérité : useConsents() (Supabase + cache localStorage)
+  // Source de vérité : useConsents() (Supabase + cache localStorage). Pas pendant la validation : l'état local passe à
+  // « accepté » avant la fin de l'enregistrement, et l'accueil relirait des consentements incomplets.
   useEffect(() => {
+    if (soumission.current) return;
     if (existingConsents && (existingConsents.cgu_cgv || existingConsents.cgu) && existingConsents.confidentialite) {
       navigate("/", { replace: true });
       return;
@@ -69,6 +72,7 @@ export default function Register() {
 
     setError("");
     setLoading(true);
+    soumission.current = true;
 
     // Case « conseils de Bob » cochée → demande d'autorisation PENDANT le clic
     // (geste utilisateur requis par le navigateur). Sans autorisation, pas d'abonnement :
@@ -118,6 +122,7 @@ export default function Register() {
       console.error("[Register] localStorage write failed:", e?.message);
       // Si même le localStorage échoue et que Supabase a aussi échoué, on bloque
       if (!supabaseSuccess) {
+        soumission.current = false;
         setLoading(false);
         setError("Impossible de sauvegarder vos consentements. Vérifiez votre navigateur ou réessayez.");
         return;
