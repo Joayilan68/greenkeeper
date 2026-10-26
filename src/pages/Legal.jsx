@@ -148,7 +148,7 @@ export function MentionsLegales() {
 export function Confidentialite() {
   return (
     <div>
-      <PageHeader emoji="🔒" title="Politique de confidentialité" subtitle="Mise à jour : 23 octobre 2026" />
+      <PageHeader emoji="🔒" title="Politique de confidentialité" subtitle="Mise à jour : 26 octobre 2026" />
       <div style={scroll}>
 
         <Section title="1. Préambule">
@@ -193,7 +193,7 @@ export function Confidentialite() {
             • <strong>Géolocalisation</strong> (météo locale) — Base légale : consentement<br/>
             • <strong>Connexion d'équipements</strong> (station météo, à la demande de l'utilisateur dans « Mes équipements ») — Base légale : exécution du contrat<br/>
             • <strong>Partage de données anonymisées avec partenaires jardinage</strong> — Base légale : consentement<br/>
-            • <strong>Mesure d'audience anonyme</strong> (Vercel Web Analytics et compteurs internes, sans cookie) — Base légale : intérêt légitime<br/>
+            • <strong>Mesure d'audience anonyme</strong> (Vercel Web Analytics et compteurs internes, sans cookie ; identifiant de visite effacé à la fermeture de l'onglet) — Base légale : intérêt légitime<br/>
             • <strong>Mesure de l'efficacité de nos messages</strong> (ouverture des notifications et clics sur les liens de nos emails, rattachés au compte, pour améliorer leur contenu et leur fréquence) — Base légale : intérêt légitime<br/>
             • <strong>Mesure de l'efficacité de nos publicités</strong> (Meta Pixel, cf. Politique de cookies) — Base légale : consentement<br/>
             • <strong>Gestion des demandes RGPD</strong> (accès, rectification, suppression) — Base légale : obligation légale<br/>
@@ -690,7 +690,7 @@ export function CGV() {
 export function Cookies() {
   return (
     <div>
-      <PageHeader emoji="🍪" title="Politique de cookies" subtitle="Mise à jour : 24 septembre 2026" />
+      <PageHeader emoji="🍪" title="Politique de cookies" subtitle="Mise à jour : 26 octobre 2026" />
       <div style={scroll}>
 
         <Section title="Qu'est-ce qu'un cookie ?">
@@ -710,7 +710,7 @@ export function Cookies() {
           <SubSection title="📈 Mesure d'audience anonyme (sans consentement)">
             Pour connaître la fréquentation de l'application et améliorer son fonctionnement, Mongazon360<sup style={{ fontSize:7 }}>®</sup> utilise des outils de mesure d'audience qui <strong>ne déposent aucun cookie</strong> et ne permettent pas de vous identifier :<br/><br/>
             • <strong>Vercel Web Analytics</strong> (Vercel Inc.) : statistiques agrégées de fréquentation (pages vues, page de provenance, pays, type d'appareil et de navigateur). Aucun identifiant persistant n'est stocké sur votre terminal ; les visites sont regroupées à l'aide d'une empreinte technique renouvelée chaque jour ;<br/>
-            • <strong>Compteurs internes</strong> : comptage anonyme du nombre de visites par jour, du type d'appareil (iPhone, Android ou ordinateur), de la source d'arrivée (lien suivi ou site d'origine) et des étapes du parcours d'inscription, sans lien avec votre identité.<br/><br/>
+            • <strong>Compteurs internes</strong> : comptage anonyme du nombre de visites par jour, du type d'appareil (iPhone, Android ou ordinateur), de la source d'arrivée (lien suivi ou site d'origine) et des étapes du parcours d'inscription, sans lien avec votre identité. Pour compter des visiteurs distincts, un identifiant de visite tiré au hasard est gardé dans le stockage de session de votre navigateur : il relie les étapes d'une même visite, n'est rattaché à aucun compte et disparaît à la fermeture de l'onglet.<br/><br/>
             Ces mesures sont strictement limitées à la production de statistiques anonymes pour notre propre compte et ne sont ni recoupées avec d'autres traitements, ni transmises à des tiers à d'autres fins.
           </SubSection>
 

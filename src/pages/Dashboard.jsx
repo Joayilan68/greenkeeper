@@ -17,6 +17,7 @@ import OnboardingModal from "../components/OnboardingModal";
 import GreenScoreModal from "../components/GreenScoreModal";
 import CompteARebours from "../components/CompteARebours";
 import AvecPremium from "../components/AvecPremium";
+import CarteNouveautes from "../components/CarteNouveautes";
 import { anneeDuBilan, bilanDisponible } from "../lib/bilanSaison";
 import { actionsDuJour } from "../lib/actionsDuJour";
 import { card, cardTitle, btn, scroll } from "../lib/styles";
@@ -156,6 +157,9 @@ export default function Dashboard() {
       </div>
 
       <div style={scroll}>
+
+        {/* ── NOUVEAUTÉS DE LA REFONTE (comptes créés avant la nouvelle version) ── */}
+        <CarteNouveautes isPaid={isPaid} />
 
         {/* ── NOTIF PUSH ────────────────────────────────────────────────────── */}
         {isSupported && showPushBanner && (

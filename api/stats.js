@@ -629,7 +629,7 @@ async function fetchFunnel() {
   const empty = {
     landing_view: 0, cta_click: 0, auth_screen_view: 0, signup_completed: 0,
     anon_diag_started: 0, anon_diag_result: 0, signup_from_teaser: 0,
-    rateGlobal: null, rateEssaiClic: null,
+    rateGlobal: null, rateEssaiClic: null, visites: {},
   };
   try {
     if (!SB_URL || !SB_KEY) return empty;
@@ -646,8 +646,13 @@ async function fetchFunnel() {
     };
     (rows || []).forEach(x => { if (c[x.step] !== undefined) c[x.step] += parseInt(x.count) || 0; });
     const pct = (a, b) => (b > 0 ? Math.round((a / b) * 1000) / 10 : null);
+    // Visiteurs distincts par étape sur 30 jours (identifiant de visite tiré au hasard, sans compte : src/lib/funnel.js)
+    const rv = await fetch(`${SB_URL}/rest/v1/funnel_visites_30j?select=step,visites`,
+      { headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` } });
+    const visites = rv.ok ? Object.fromEntries((await rv.json()).map(x => [x.step, x.visites])) : {};
     return {
       ...c,
+      visites,
       rateGlobal:    pct(c.signup_completed, c.landing_view), // visite → inscrit (global)
       // diagnostic d'essai → clic inscription
       rateEssaiClic: pct(c.signup_from_teaser, c.anon_diag_started),

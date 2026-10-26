@@ -758,6 +758,15 @@ export default function Pilotage() {
                     </div>
                   ));
                 })()}
+                {users.funnel.visites && Object.keys(users.funnel.visites).length > 0 && (() => {
+                  const v = users.funnel.visites;
+                  return (
+                    <div style={{ fontSize:11.5, color:"#cfe8d4", marginTop:8, lineHeight:1.6 }}>
+                      👥 Visiteurs distincts (30 j) : accueil {v.landing_view || 0} · diagnostic d'essai {v.anon_diag_started || 0} · écran de compte {v.auth_screen_view || 0} · inscription {v.signup_completed || 0}
+                      {v.landing_view ? <> · <b>{Math.round(((v.signup_completed || 0) / v.landing_view) * 1000) / 10} % des visiteurs de l'accueil s'inscrivent</b></> : null}
+                    </div>
+                  );
+                })()}
                 <div style={{ display:"flex", gap:8, marginTop:12 }}>
                   <div style={{ flex:1, background:"rgba(76,175,80,0.1)", border:"1px solid rgba(102,187,106,0.25)", borderRadius:10, padding:"8px 10px", textAlign:"center" }}>
                     <div style={{ fontSize:10.5, color:"#81c784" }}>Visite → inscription</div>
@@ -769,7 +778,7 @@ export default function Pilotage() {
                   </div>
                 </div>
                 <div style={{ fontSize:10, color:"#4a7c5c", marginTop:8, lineHeight:1.5 }}>
-                  « Diagnostic lancé » et « Visite app » sont deux façons parallèles d'essayer (compare les volumes, pas une cascade). « Essai → clic inscription » = part des essais (diagnostic + démo) suivis d'un clic sur « Créer mon compte ». « Premium payant » = abonnés actifs actuels (Stripe).
+                  « Essai → clic inscription » = part des diagnostics d'essai suivis d'un clic sur « Créer mon compte ». « Premium payant » = abonnés actifs actuels (Stripe). Visiteurs distincts : une visite = un onglet ouvert, comptée une fois quel que soit le nombre de pages vues.
                 </div>
               </div>
             )}
