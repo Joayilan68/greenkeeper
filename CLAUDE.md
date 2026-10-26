@@ -91,8 +91,9 @@
 - Décision de Jordan du 19/10/2026 : du dimanche 1er novembre 2026 au samedi 30 janvier 2027, 13 semaines du dimanche au
   samedi (heure de Paris), un défi et un quiz de 3 questions par semaine, sans classement ; mise en prod en avance, seule,
   par exception à la règle de décembre. Contenu unique `src/lib/ligueHiver.json` (gestes, questions, réponses et explications
-  tirés de la base de connaissances, articles liés), partagé par l'app (`src/lib/ligueHiver.js` ; écran de l'onglet
-  Classement, renommé « Quiz » pendant la ligue (décision de Jordan du 26/10), carte de « Aujourd'hui » et annonce :
+  tirés de la base de connaissances, articles liés), partagé par l'app (`src/lib/ligueHiver.js` ; écran de la page
+  Classement, ouverte pendant la ligue par un 5e onglet « Quiz » de la barre du bas (décisions de Jordan du 26/10), carte de
+  « Aujourd'hui » et annonce :
   `src/components/LigueHiver.jsx`) et le serveur (`api/ligueHiver.cjs`, `POST /api/send?type=ligue`). Hors production (STA,
   préversions), la ligue démarre à `debutTest` pour être testée.
 - Table `ligue_hiver` (serveur uniquement, RLS sans politique) : une ligne par utilisateur, saison et semaine ; supprimée le

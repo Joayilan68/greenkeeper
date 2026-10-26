@@ -5,7 +5,7 @@ import { compteARebours } from "../lib/printemps";
 import { ajouterAchat, achatsAnnee, euros } from "../lib/depenses";
 import { trackAmazonClick } from "../lib/useAmazonProducts";
 
-// Onglet Produits : kit de la saison en cours, calculé pour la surface et le budget de l'utilisateur ;
+// Page Produits (depuis Mon gazon) : kit de la saison en cours, calculé pour la surface et le budget de l'utilisateur ;
 // en hiver, quand rien n'est de saison, la liste d'achats du plan de printemps prend sa place
 export default function KitSaison({ profile, saveProfile, tier }) {
   const navigate = useNavigate();

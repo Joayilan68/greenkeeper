@@ -1,5 +1,5 @@
 // src/lib/depenses.js
-// Suivi des dépenses gazon (onglet Produits) : achats déclarés par l'utilisateur (Amazon ne dit
+// Suivi des dépenses gazon (page Produits) : achats déclarés par l'utilisateur (Amazon ne dit
 // jamais qui a acheté quoi), stockés dans le profil (profile.achats), comparés au budget annuel.
 // Seule l'année en cours compte : le compteur repart de zéro au 1er janvier et les achats des
 // années passées sont retirés au prochain enregistrement.

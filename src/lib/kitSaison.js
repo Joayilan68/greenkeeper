@@ -1,5 +1,5 @@
 // src/lib/kitSaison.js
-// Kit de saison (onglet Produits) : les produits dont l'action est de saison ce mois-ci dans la zone de
+// Kit de saison (page Produits) : les produits dont l'action est de saison ce mois-ci dans la zone de
 // l'utilisateur (mois du plan d'entretien, alignés sur la matrice « Zones x Mois » de la base de
 // connaissances), dans la gamme du budget et en quantité pour la surface. Si rien n'est de saison
 // (cœur de l'hiver), le kit prépare le premier mois qui en a.
