@@ -455,6 +455,6 @@ du premier onglet).
 - 26/10/2026 — Davis : sur le Discord WeatherLink Developers, réponse d'un autre membre (pas un employé) : aucune licence
   publiée sur le site développeur de l'API v2 (vérifié : ni conditions d'utilisation ni mention d'un usage commercial ;
   seules des règles d'accès aux données selon la station et l'abonnement). Le site indique que le Discord est suivi par
-  les ingénieurs Davis/WeatherLink de l'API : message de relance prêt pour Jordan, demandant une confirmation écrite
-  d'un ingénieur (app payante, chaque utilisateur avec sa propre clé, données non revendues), et recherche des réponses
-  passées dans le Discord.
+  les ingénieurs Davis/WeatherLink de l'API : relance envoyée par Jordan le jour même dans le même fil, demandant une
+  confirmation écrite d'un ingénieur (app payante, chaque utilisateur avec sa propre clé, données non revendues) ;
+  recherche des réponses passées dans le Discord à faire.
