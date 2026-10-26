@@ -480,4 +480,4 @@ du premier onglet).
   prod le 26/10 (branche de la ligue, main fusionnée dedans, puis les retouches du jour : onglet « Quiz », quiz en 1 minute,
   correction plus claire). Annonce visible dès maintenant (accueil, Aujourd'hui, Classement), départ le dimanche 1/11.
   Vérifié en ligne : nouvelle version, route de la ligue (401 sans connexion), bandeau de l'accueil. Recette « Déjà en
-  prod » n° 35 à 42. Le quiz du dimanche du lot de comm du 1er au 7/11 peut être validé dans Pilotage → Réseaux.
+  prod » n° 35 à 42. Lot de comm du 1er au 7/11 déjà validé par Jordan dans Pilotage → Réseaux, quiz du dimanche compris.
