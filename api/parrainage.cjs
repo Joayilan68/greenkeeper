@@ -9,7 +9,7 @@
 
 const MOIS_OFFERT_JOURS = 30;
 const RECOMPENSES_PAR_AN = 12;
-const CREDIT_ABONNE_CENTIMES = 499;
+const CREDIT_ABONNE_CENTIMES = Math.round(require("../src/lib/offreSaison.json").prixMensuel * 100); // un mois au prix mensuel
 const JOURS_FILLEUL_ACTIF = 2; // filleul actif : app utilisée au moins 2 jours différents (CGV)
 
 const normCode = (c) => String(c || "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 16);
@@ -141,7 +141,7 @@ async function recompenserParrains(sb) {
           });
           if (!r.ok) throw new Error(`Stripe : crédit de parrainage refusé (HTTP ${r.status})`);
           recompense = "crédit Stripe 1 mois";
-          message = "un crédit de 4,99 € est déduit de ta prochaine facture Premium.";
+          message = `un crédit de ${(CREDIT_ABONNE_CENTIMES / 100).toFixed(2).replace(".", ",")} € est déduit de ta prochaine facture Premium.`;
         } else {
           const until = await offrirJours(sb, parrain, MOIS_OFFERT_JOURS, `Parrainage ${p.code}`);
           recompense = until ? `Premium offert jusqu'au ${until}` : "Premium déjà offert à vie";
