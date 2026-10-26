@@ -496,3 +496,11 @@ du premier onglet).
   Google Play dans l'app Android (Stripe reste le paiement du site) ; navigation à 4 onglets, plus l'onglet « Quiz »
   jusqu'au 30/01 ; série et GreenPoints sur l'accueil, classement et badges dans Mon gazon ; onglet Produits retiré ;
   visiteurs distincts mesurés sur STA (identifiant tiré au hasard, effacé à la fermeture de l'onglet).
+- 26/10/2026 — Go de Jordan pour les nouveaux prix puis la refonte. Prix : branche à part depuis la prod (prix-2026),
+  fusionnée dans Staging pour le test ; garde-fou : abonnement bloqué et alerte si le prix Stripe diffère du prix
+  affiché. Étape restante côté Jordan : créer les 2 prix dans Stripe (test et réel) et mettre leurs identifiants dans
+  Vercel (Preview d'abord, Production le jour du passage en prod). Refonte sur STA le même jour : barre à 4 onglets
+  (+ Quiz), accueil centré sur la journée, Mon gazon (progrès, historique), « Choisir son niveau », plan annuel inclus
+  dans Premium, accueil visiteur (démo retirée), carte « Nouveautés », visiteurs distincts. Base : colonne
+  funnel_events.visite et vue funnel_visites_30j (service_role uniquement) créées en STA et en PROD. Recette de
+  décembre n° 68 à 80. Reste : paiement Google Play (Play Console de Jordan).
