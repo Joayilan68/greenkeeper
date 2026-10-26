@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useProfile } from "../lib/useProfile";
 import { useHistory } from "../lib/useHistory";
 import { useWeather } from "../lib/useWeather";
@@ -16,6 +16,9 @@ import { useBadges } from "../lib/useBadges";
 import { anneePlan, PRIX_PLAN_ANNUEL } from "../lib/planAnnuel";
 import BadgesGallery from "../components/BadgesGallery";
 import CarteParrainage from "../components/CarteParrainage";
+import MesProgres from "../components/MesProgres";
+import EvolutionScore from "../components/EvolutionScore";
+import HistoriqueActions from "../components/HistoriqueActions";
 import { OFFRE, enEuros } from "../lib/offreSaison";
 
 // Mapping action.id → clé amazonProducts.js
@@ -151,8 +154,15 @@ function ShareScore({ score, label, profile }) {
 
 export default function MyLawn() {
   const navigate                  = useNavigate();
+  const { hash }                  = useLocation();
+  // Lien « Mes progrès » de l'accueil (/my-lawn#progres) : la section s'affiche directement
+  useEffect(() => {
+    if (hash !== "#progres") return;
+    const id = setTimeout(() => document.getElementById("progres")?.scrollIntoView({ behavior: "smooth" }), 300);
+    return () => clearTimeout(id);
+  }, [hash]);
   const { profile, saveProfile }  = useProfile();
-  const { history = [] }          = useHistory();
+  const { history = [], removeEntry } = useHistory();
   const { weather }               = useWeather() || {};
   const { isPaid = false }        = useSubscription() || {};
   const { diagnostics } = useDiagnostics(); // ✅ Déclaré en premier — utilisé dans calcCompletion et calcLawnScore
@@ -457,6 +467,13 @@ export default function MyLawn() {
           </div>
           <ShareScore score={score} label={label} profile={profile} />
         </div>
+
+        {/* ── ÉVOLUTION DU SCORE ET ACTIONS DE L'ANNÉE (venues de l'accueil), HISTORIQUE (ancienne page /history) ── */}
+        <EvolutionScore weather={weather} profile={profile} history={history} diagnostics={diagnostics} />
+        <HistoriqueActions history={history} removeEntry={removeEntry} />
+
+        {/* ── MES PROGRÈS : série, GreenPoints, classement ; badges juste après ── */}
+        <MesProgres />
 
         {/* ── BADGES COLLECTIONNABLES ── */}
         <BadgesGallery
