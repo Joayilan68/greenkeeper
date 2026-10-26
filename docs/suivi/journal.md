@@ -481,3 +481,9 @@ du premier onglet).
   correction plus claire). Annonce visible dès maintenant (accueil, Aujourd'hui, Classement), départ le dimanche 1/11.
   Vérifié en ligne : nouvelle version, route de la ligue (401 sans connexion), bandeau de l'accueil. Recette « Déjà en
   prod » n° 35 à 42. Lot de comm du 1er au 7/11 déjà validé par Jordan dans Pilotage → Réseaux, quiz du dimanche compris.
+- 26/10/2026 — Objectifs de la refonte fixés par Jordan (document de refonte, section « Ce que la refonte doit
+  apporter ») : 3 comptes créés pour 100 visites de visiteurs (aujourd'hui 1 : 3 comptes pour 282 visites sur 30 jours),
+  40 % des nouveaux inscrits qui rouvrent l'app dans les 7 jours suivant leur inscription (0 sur 8 depuis septembre),
+  10 abonnés Premium payants (0 aujourd'hui), vues de « Choisir son niveau » suivies. Bilan le 15/02/2027, choix de
+  Jordan : le temps de récolter chiffres et tendances, et de corriger ou réorienter avant la reprise de mars. Mesure :
+  30 jours avant la mise en prod de décembre comparés à la période de la mise en prod au 14/02 (base PROD, admins exclus).
