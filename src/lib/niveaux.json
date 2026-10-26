@@ -1,0 +1,36 @@
+{
+  "visiteur": {
+    "nom": "Visiteur",
+    "sousTitre": "Sans compte",
+    "avantages": [
+      "Météo du jour de ta commune",
+      "Le conseil de Bob du jour",
+      "1 diagnostic photo d'essai",
+      "Tous les articles Conseils"
+    ]
+  },
+  "gratuit": {
+    "nom": "Gratuit",
+    "sousTitre": "Compte gratuit",
+    "intro": "Tout le niveau Visiteur, plus :",
+    "avantages": [
+      "Ton plan d'entretien jour par jour",
+      "Conseils et alertes, 2 par jour au plus",
+      "Bob : 3 questions par mois",
+      "Parcours semis et regarnissage",
+      "Historique de tes actions et GreenPoints"
+    ]
+  },
+  "premium": {
+    "nom": "Premium",
+    "intro": "Tout le niveau Gratuit, plus :",
+    "avantages": [
+      "Diagnostic photo, 3 par jour, avec niveau de confiance et suivi avant / après",
+      "Ton plan annuel complet, en PDF",
+      "Météo complète et station de ton jardin",
+      "Robot, arrosage et capteurs connectés",
+      "Bob : 20 questions par jour",
+      "Parcours piloté par la température réelle du sol"
+    ]
+  }
+}

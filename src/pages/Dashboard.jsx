@@ -16,6 +16,7 @@ import AlertBanner from "../components/AlertBanner";
 import OnboardingModal from "../components/OnboardingModal";
 import GreenScoreModal from "../components/GreenScoreModal";
 import CompteARebours from "../components/CompteARebours";
+import AvecPremium from "../components/AvecPremium";
 import { anneeDuBilan, bilanDisponible } from "../lib/bilanSaison";
 import { actionsDuJour } from "../lib/actionsDuJour";
 import { card, cardTitle, btn, scroll } from "../lib/styles";
@@ -382,31 +383,21 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* ── PREMIUM : équipements (comptes Premium) ou ce que Premium ajoute (comptes gratuits, hors app Android) ── */}
+        {/* ── PREMIUM : équipements et plan annuel (comptes Premium) ou ce que Premium ajoute (gratuits, hors app Android) ── */}
         {isPaid ? (
-          <div data-tuile="accueil-equipements" role="button" onClick={() => navigate("/equipements")} style={{ ...card(), display:"flex", alignItems:"center", gap:12, cursor:"pointer" }}>
-            <span style={{ fontSize:24 }}>🔌</span>
-            <div style={{ flex:1 }}>
-              <div style={{ fontSize:13, fontWeight:800, color:"#F1F8F2" }}>Mes équipements</div>
-              <div style={{ fontSize:12, color:"#81c784", lineHeight:1.5 }}>Station météo, robot, arrosage et capteurs connectés</div>
-            </div>
-            <span style={{ color:"#81c784", fontSize:18 }}>›</span>
-          </div>
-        ) : !subLoading && !isAndroidTWA() && (
-          <div data-tuile="accueil-avec-premium" style={{ ...card(), background:"linear-gradient(135deg,rgba(245,158,11,0.18),rgba(13,43,26,0.85))", border:"1px solid rgba(245,158,11,0.45)" }}>
-            <div style={{ fontSize:14, fontWeight:900, color:"#ffe082", marginBottom:8 }}>⭐ Avec Premium</div>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:12 }}>
             {[
-              "Diagnostic photo, 3 par jour, avec suivi avant / après",
-              "Ton plan annuel complet, en PDF",
-              "Météo complète et station de ton jardin",
-              "Robot, arrosage et capteurs connectés",
-              "Bob : 20 questions par jour",
-            ].map(f => <div key={f} style={{ fontSize:12, color:"#e8f5e9", padding:"3px 0" }}>✔ {f}</div>)}
-            <button onClick={() => navigate("/subscribe")} style={{ width:"100%", marginTop:10, background:"linear-gradient(135deg,#F59E0B,#D97706)", color:"#1a1a1a", fontWeight:900, border:"none", borderRadius:10, cursor:"pointer", padding:"11px", fontSize:13 }}>
-              Découvrir Premium
-            </button>
+              { tuile:"accueil-equipements", route:"/equipements", icone:"🔌", titre:"Mes équipements", detail:"Station, robot, arrosage" },
+              { tuile:"accueil-plan-annuel", route:"/plan-annuel", icone:"📅", titre:"Mon plan annuel", detail:"Les 12 mois, en PDF" },
+            ].map(r => (
+              <div key={r.tuile} data-tuile={r.tuile} role="button" onClick={() => navigate(r.route)} style={{ ...card(), marginBottom:0, padding:12, cursor:"pointer" }}>
+                <div style={{ fontSize:22 }}>{r.icone}</div>
+                <div style={{ fontSize:13, fontWeight:800, color:"#F1F8F2", marginTop:4 }}>{r.titre}</div>
+                <div style={{ fontSize:11, color:"#81c784", lineHeight:1.4 }}>{r.detail}</div>
+              </div>
+            ))}
           </div>
-        )}
+        ) : !subLoading && !isAndroidTWA() && <AvecPremium tuile="accueil-avec-premium" />}
 
         {/* ── CONSEILS GAZON (rubrique statique /conseils, hors de l'app) ───── */}
         <a data-tuile="accueil-conseils" href="/conseils" style={{ ...card(), display:"flex", alignItems:"center", gap:12, textDecoration:"none", color:"inherit" }}>

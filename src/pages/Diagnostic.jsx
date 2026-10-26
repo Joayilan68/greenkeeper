@@ -9,7 +9,7 @@ import { useDiagnostic } from "../lib/useDiagnostic";
 import { calcLawnScore } from "../lib/lawnScore";
 import { useHistory } from "../lib/useHistory";
 import { card, cardTitle, btn, scroll, header } from "../lib/styles";
-import ComparatifPremium from "../components/ComparatifPremium";
+import AvecPremium from "../components/AvecPremium";
 import { useParcours } from "../lib/useParcours";
 import { moisCalendrier, zoneClimatique } from "../lib/planEntretien";
 
@@ -280,10 +280,7 @@ export default function Diagnostic() {
                 <div key={f} style={{ fontSize:12, color:"#81c784", textAlign:"left" }}>✓ {f}</div>
               ))}
             </div>
-            <ComparatifPremium />
-            <button onClick={() => navigate("/subscribe")} style={{background:"linear-gradient(135deg,#F59E0B,#D97706)",color:"#1a1a1a",fontWeight:800,border:"none",borderRadius:10,cursor:"pointer",width:"auto",padding:"12px 28px"}}>
-              ⭐ Passer Premium
-            </button>
+            <AvecPremium tuile="diagnostic-avec-premium" bouton="⭐ Passer Premium" />
           </div>
         ) : (
           <>

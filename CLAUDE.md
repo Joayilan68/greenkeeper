@@ -119,6 +119,9 @@
   la 1re année, 1/12→25/02 et 1/07→15/08). Source unique `src/lib/offreSaison.json`, partagée par l'app et le serveur ; prix
   Stripe dans les variables Vercel `STRIPE_PRICE_MONTHLY` et `STRIPE_PRICE_YEARLY` (prix de test en Preview, réels en
   Production), vérifiés à chaque abonnement (montant différent → abonnement bloqué et alerte).
+- Niveaux (refonte, décisions de Jordan du 26/10/2026) : Visiteur, Gratuit, Premium ; contenu unique `src/lib/niveaux.json`
+  (page « Choisir son niveau » `/subscribe`, carte « Avec Premium », consignes de Bob), une ligne par fonction réelle. Plan annuel
+  inclus dans Premium, plus vendu à l'unité (plans déjà achetés gardés : `publicMetadata.plansAnnuels`).
 
 ## Équipements connectés
 - Table `equipements` (serveur uniquement, RLS sans politique) via `api/objets.js` ; logique et connecteurs dans

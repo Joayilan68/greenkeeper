@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { useAuth, useUser } from "@clerk/clerk-react";
 import { appShell, btn, card } from "../lib/styles";
 import { isAndroidTWA } from "../lib/platform";
-import ComparatifPremium from "../components/ComparatifPremium";
+import { useSubscription } from "../lib/useSubscription";
+import NIVEAUX from "../lib/niveaux.json";
 import { OFFRE, offreEnCours, enEuros } from "../lib/offreSaison";
 
 // ════════════════════════════════════════════════════════════════════════════
-// SUBSCRIBE — Page de souscription Premium (avant Stripe Checkout)
+// CHOISIR SON NIVEAU — les 3 niveaux (refonte, décision de Jordan du 26/10/2026), puis la souscription Premium
+// (avant Stripe Checkout)
 // ════════════════════════════════════════════════════════════════════════════
 // Conforme aux exigences avocat (Cabinet Victoris) :
 //   Mention 2 — Checkbox renonciation droit de rétractation 14j (décochée par défaut)
@@ -25,27 +27,29 @@ const PLANS = [
     desc: `Économisez ${Math.round((1 - OFFRE.prixAnnuel / (OFFRE.prixMensuel * 12)) * 100)} %`, highlight: true },
 ];
 
-const FEATURES_FREE = [
-  "📅 Plan mensuel d'entretien",
-  "💧 Calcul d'arrosage de base",
-  "✅ Historique limité (5 entrées)",
-  "📍 Météo du jour",
-];
-
-const FEATURES_PREMIUM = [
-  "🤖 Recommandations IA personnalisées",
-  "📍 Météo temps réel + alertes",
-  "💧 Calcul d'arrosage intelligent",
-  "📅 Planning 7 jours adapté météo",
-  "✅ Historique illimité",
-  "⚠️ Alertes gel, canicule, orages",
-  "📱 Installable sur téléphone",
-];
+// Carte d'un niveau : nom, précision (sans compte, prix…), ce qu'il apporte (src/lib/niveaux.json, partagé avec Bob)
+function Niveau({ niveau, precision, badge, style, couleur = "#F1F8F2", children }) {
+  return (
+    <div style={{ borderRadius:18, padding:16, marginBottom:12, display:"flex", flexDirection:"column", gap:6, ...style }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", gap:8 }}>
+        <div style={{ fontSize:18, fontWeight:900, color:couleur }}>{niveau.nom}</div>
+        <div style={{ fontSize:12, fontWeight:800, color: couleur === "#F1F8F2" ? "#a5d6a7" : couleur, textAlign:"right" }}>{precision}</div>
+      </div>
+      {badge && <div style={{ alignSelf:"flex-start", fontSize:11, fontWeight:800, color:"#0d2b1a", background:"#a5d6a7", borderRadius:20, padding:"2px 10px" }}>{badge}</div>}
+      {niveau.intro && <div style={{ fontSize:12, color:"#a5d6a7" }}>{niveau.intro}</div>}
+      <div style={{ fontSize:13, lineHeight:1.7, color:"#e8f5e9" }}>
+        {niveau.avantages.map(a => <div key={a}>✔ {a}</div>)}
+      </div>
+      {children}
+    </div>
+  );
+}
 
 export default function Subscribe() {
   const navigate = useNavigate();
   const { getToken } = useAuth();
   const { user } = useUser();
+  const { tier, isTrial, trialDaysLeft } = useSubscription();
   const offre = offreEnCours(); // offre saisonnière : annuel à prix réduit la 1re année
   const [selected, setSelected] = useState(offre ? "yearly" : "monthly");
   const [loading, setLoading] = useState(false);
@@ -111,7 +115,7 @@ export default function Subscribe() {
           </div>
         </div>
 
-        <div style={{ ...card, textAlign:"center", padding:"20px 18px" }}>
+        <div style={{ ...card(), textAlign:"center", padding:"20px 18px" }}>
           <div style={{ fontSize:15, fontWeight:800, color:"#e8f5e9", marginBottom:12 }}>
             🌿 Continuez à profiter de Mongazon360
           </div>
@@ -137,21 +141,40 @@ export default function Subscribe() {
 
   return (
     <div style={{ ...appShell, fontFamily:"'Nunito','Segoe UI',sans-serif", padding:"48px 20px 40px", overflowY:"auto" }}>
-      <div style={{ textAlign:"center", marginBottom:24 }}>
-        <img src="/mg360-mascot-transparent.png" alt="Mongazon360" style={{ width:72, height:72, objectFit:"contain", marginBottom:4 }} />
-        <div style={{ fontSize:22, fontWeight:800, color:"#a5d6a7", marginTop:8 }}>
-          Choisissez votre accès
-        </div>
-        <div style={{ fontSize:11, color:"#81c784", marginTop:4 }}>
-          Mongazon360<sup style={{ fontSize:7 }}>®</sup>
+      <div style={{ marginBottom:18 }}>
+        <div style={{ fontSize:24, fontWeight:900, color:"#F1F8F2" }}>Choisis ton niveau</div>
+        <div style={{ fontSize:14, color:"#a5d6a7", lineHeight:1.5, marginTop:6 }}>
+          Commence sans compte, crée ton compte gratuit quand tu veux, passe Premium pour tout débloquer.
         </div>
       </div>
 
-      {/* ── Comparaison Free / Premium (tableau détaillé) ───────────────────── */}
-      <ComparatifPremium title={null} />
-      <button onClick={() => navigate("/")} style={{ background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.15)", borderRadius:10, padding:"10px", color:"#e8f5e9", cursor:"pointer", fontSize:12, fontWeight:700, width:"100%", margin:"0 0 20px" }}>
-        Continuer gratuit
-      </button>
+      <Niveau niveau={NIVEAUX.visiteur} precision={NIVEAUX.visiteur.sousTitre}
+        style={{ background:"rgba(255,255,255,0.06)", border:"1px solid rgba(165,214,167,0.18)" }} />
+      <Niveau niveau={NIVEAUX.gratuit} precision={NIVEAUX.gratuit.sousTitre} badge={tier === "free" ? "Ton niveau" : null}
+        style={{ background:"rgba(255,255,255,0.06)", border:"1px solid rgba(102,187,106,0.45)" }}>
+        {tier === "free" && (
+          <button onClick={() => navigate("/")} style={{ marginTop:6, height:44, borderRadius:12, border:"1px solid rgba(165,214,167,0.4)", background:"transparent", color:"#e8f5e9", fontFamily:"inherit", fontSize:14, fontWeight:800, cursor:"pointer" }}>
+            Rester en gratuit
+          </button>
+        )}
+      </Niveau>
+      <Niveau niveau={NIVEAUX.premium} couleur="#ffe082"
+        precision={`${enEuros(OFFRE.prixMensuel)}/mois · ${enEuros(OFFRE.prixAnnuel)}/an`}
+        badge={isTrial ? `Ton essai : encore ${trialDaysLeft} jour${trialDaysLeft > 1 ? "s" : ""}` : tier === "paid" ? "Ton niveau" : null}
+        style={{ background:"linear-gradient(160deg,rgba(245,158,11,0.24),rgba(13,43,26,0.94))", border:"2px solid #F59E0B" }}>
+        {offre && (
+          <div style={{ fontSize:13, color:"#ffe082", background:"rgba(245,158,11,0.16)", borderRadius:10, padding:"8px 10px", lineHeight:1.45, marginTop:4 }}>
+            {offre.nom === "hiver" ? "❄️ Offre d'hiver" : "☀️ Offre d'été"} : {enEuros(OFFRE.prixOffre)} la 1re année au lieu de {enEuros(OFFRE.prixAnnuel)}, jusqu'au {offre.finLabel}
+          </div>
+        )}
+      </Niveau>
+
+      {tier === "paid" && !isTrial ? (
+        <div style={{ ...card(), textAlign:"center", fontSize:13, color:"#c8e6c9", lineHeight:1.6 }}>
+          ✅ Tu es déjà Premium. Ton abonnement se gère depuis les Paramètres.
+        </div>
+      ) : (<>
+      <div style={{ fontSize:16, fontWeight:900, color:"#ffe082", margin:"8px 0 14px" }}>⭐ Passer Premium</div>
 
       {/* ── Sélecteur de plan ──────────────────────────────────────────────── */}
       {offre && (
@@ -264,6 +287,7 @@ export default function Subscribe() {
       <div style={{ textAlign:"center", fontSize:10, color:"#4a7c5c", marginTop:8 }}>
         <span style={{ color:"#ef9a9a" }}>*</span> Champs obligatoires
       </div>
+      </>)}
 
       {/* ── Mention marque déposée EUIPO ───────────────────────────────────── */}
       <div style={{ fontSize:9, color:"#3a5c44", textAlign:"center", marginTop:20, lineHeight:1.6 }}>
