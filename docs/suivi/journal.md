@@ -461,3 +461,9 @@ du premier onglet).
   Conditions générales de Davis (site et « applications/services ») : usage personnel et non commercial, sans dire si
   WeatherLink et son API sont concernés. Davis reste sur STA jusqu'à une confirmation écrite ; sans réponse début
   décembre, décision de Jordan (lancer en gardant la trace des démarches, ou attendre).
+- 26/10/2026 — Alerte « Plantage d'écran » reçue 3 fois par Jordan : un seul plantage (même seconde, un visiteur sur
+  /demo, Chrome sur Mac), « removeChild … not a child of this node ». Cause : un texte de la page remplacé par la
+  traduction automatique de Chrome ou une extension, que React retire ensuite (reproduit sur un banc). Les 3 emails :
+  le même plantage était signalé par chaque Error Boundary avant que l'anti-doublon ne joue. Go prod de Jordan pour le
+  correctif, en prod le 26/10 : la page ne plante plus quand la traduction ou une extension l'a modifiée, une seule
+  alerte par plantage. Recette « Déjà en prod » n° 33 et 34.
