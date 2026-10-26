@@ -14,9 +14,24 @@
 // Les vues (landing_view, auth_screen_view) sont limitées à 1 par SESSION de
 // navigateur pour que l'entonnoir soit comparable étape par étape. Les clics
 // ne sont pas dédupliqués (ce sont des actions volontaires).
+//
+// Chaque ligne porte un identifiant de visite (colonne « visite ») tiré au hasard et gardé dans l'onglet le temps
+// de la visite (sessionStorage, effacé à sa fermeture) : il relie les étapes d'une même visite pour compter des
+// visiteurs distincts (vue funnel_visites_30j), sans cookie ni lien avec un compte (décision du 26/10/2026).
 // ────────────────────────────────────────────────────────────────────────────
 
 import { isRobot } from "./platform";
+
+function idVisite() {
+  try {
+    let id = sessionStorage.getItem("mg360_visite");
+    if (!id) {
+      id = globalThis.crypto?.randomUUID?.() || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+      sessionStorage.setItem("mg360_visite", id);
+    }
+    return id;
+  } catch { return null; } // stockage de session indisponible : ligne comptée sans visite
+}
 
 export function trackFunnel(step, meta) {
   if (isRobot()) return; // robots d'indexation : pas des prospects
@@ -27,6 +42,7 @@ export function trackFunnel(step, meta) {
           step,
           meta: meta || null,
           path: typeof location !== "undefined" ? location.pathname : null,
+          visite: idVisite(),
         })
         .then(() => {}, () => {});
     }).catch(() => {});
