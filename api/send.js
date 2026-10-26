@@ -126,6 +126,7 @@ function buildOffreEmailHtml(prenom, titre, paragraphes, cta, url = "https://mon
 // Email de relance fin d'essai Premium (transactionnel — service en cours)
 function buildTrialEmailHtml(prenom, when) {
   const year = new Date().getFullYear();
+  const { OFFRE } = require("./offreSaison.cjs");
   return `<!DOCTYPE html><html><head><meta charset="utf-8"/></head>
 <body style="font-family:Arial,sans-serif;background:#f5f5f5;margin:0;padding:20px;">
 <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 20px rgba(0,0,0,0.1);">
@@ -139,7 +140,7 @@ function buildTrialEmailHtml(prenom, when) {
       Ces 7 jours t'ont donné accès au <b>diagnostic photo de Bob</b>, à l'<b>arrosage précis</b> et à tous les conseils personnalisés pour ton gazon.
     </div>
     <div style="font-size:14px;color:#555;line-height:1.7;margin-bottom:20px;">
-      Pour garder ton gazon sur la bonne voie sans interruption, passe Premium — <b>4,99 €/mois</b>, sans engagement, résiliable à tout moment.
+      Pour garder ton gazon sur la bonne voie sans interruption, passe Premium — <b>${String(OFFRE.prixMensuel).replace(".", ",")} €/mois</b>, sans engagement, résiliable à tout moment.
     </div>
     <div style="text-align:center;margin:24px 0;">
       <a href="https://mongazon360.fr/subscribe" style="background:#43a047;color:#fff;text-decoration:none;padding:15px 34px;border-radius:12px;font-size:15px;font-weight:800;display:inline-block;">Garder mon Premium →</a>
@@ -884,7 +885,7 @@ module.exports = async function handler(req, res) {
                   "Avec <b>Premium</b>, Bob répond à <b>20 questions par jour</b>, analyse tes photos de pelouse (diagnostic photo) et calcule l'arrosage au millimètre selon la météo de ta commune.",
                   offre
                     ? `Jusqu'au <b>${offre.finLabel}</b> : <b>Premium 1 an à ${euros(OFFRE.prixOffre)}</b> au lieu de ${euros(OFFRE.prixAnnuel)}, sur le site.`
-                    : `Premium : ${euros(4.99)} par mois sans engagement, ou ${euros(OFFRE.prixAnnuel)} par an.`,
+                    : `Premium : ${euros(OFFRE.prixMensuel)} par mois sans engagement, ou ${euros(OFFRE.prixAnnuel)} par an.`,
                   "🎁 Autre possibilité : <b>parraine un ami</b> depuis Mon Gazon → « Parraine tes amis ». Il a 1 mois de Premium offert, et toi aussi dès qu'il utilise l'app.",
                 ], offre ? `Premium 1 an à ${euros(OFFRE.prixOffre)}` : "Passer Premium"),
               }),

@@ -1,6 +1,6 @@
 const Stripe = require("stripe");
 const { verifiedUserId } = require("./auth.cjs");
-const { offreEnCours, couponSaison } = require("./offreSaison.cjs");
+const { OFFRE, offreEnCours, couponSaison } = require("./offreSaison.cjs");
 
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -44,7 +44,17 @@ module.exports = async function handler(req, res) {
     const priceId = PRICES[plan] || PRICES.monthly;
     if (!priceId) throw new Error("Price ID manquant");
 
-    // Offre saisonnière : annuel à 19,99 € la 1re année pendant les périodes creuses
+    // Le montant facturé doit être celui affiché dans l'app (src/lib/offreSaison.json) : un identifiant de prix resté
+    // sur un ancien tarif dans Vercel bloque l'abonnement au lieu de facturer un autre montant
+    const attendu = Math.round((plan === "yearly" ? OFFRE.prixAnnuel : OFFRE.prixMensuel) * 100);
+    const { unit_amount } = await stripe.prices.retrieve(priceId);
+    if (unit_amount !== attendu) {
+      await require("./alerting.cjs").reportServerError("Paiement — prix Stripe différent du prix affiché",
+        new Error(`${unit_amount} centimes au lieu de ${attendu}`), { "Formule": plan });
+      return res.status(503).json({ error: "L'abonnement est momentanément indisponible. Merci de réessayer dans quelques minutes." });
+    }
+
+    // Offre saisonnière : annuel à prix réduit la 1re année pendant les périodes creuses
     const offre = plan === "yearly" && offreEnCours();
     const discounts = offre ? [{ coupon: await couponSaison(stripe) }] : undefined;
 
