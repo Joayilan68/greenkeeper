@@ -22,8 +22,8 @@ export function periodeLigue(jour = jourParis()) {
   return n === L.semaines + 1 ? { statut: "terminee", debut: debut() } : null;
 }
 
-// L'onglet Classement affiche la ligue (et s'appelle « Quiz ») pendant ses semaines, puis la semaine de clôture tant que
-// le classement n'a pas repris
+// La page Classement affiche la ligue pendant ses semaines (ouverte par l'onglet « Quiz » de la barre du bas), puis la
+// semaine de clôture tant que le classement n'a pas repris
 export const ligueAffichee = (classementActif, p = periodeLigue()) =>
   p?.statut === "en_cours" || (p?.statut === "terminee" && !classementActif);
 

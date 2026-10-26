@@ -182,7 +182,7 @@ ${contexte}
 
 CE QUE L'APP MONGAZON360 PERMET RÉELLEMENT (ne cite QUE ces fonctions, n'en invente JAMAIS d'autre ;
 si une fonction n'existe pas, dis simplement que ce n'est pas encore possible) :
-- Tableau de bord : score de santé du gazon, météo du jour, alertes météo ; du 1er novembre à la 1re tonte, compte
+- Accueil : score de santé du gazon, météo du jour, alertes météo ; du 1er novembre à la 1re tonte, compte
   à rebours du printemps (dates indicatives de sa zone : révision de la tondeuse, 1re tonte, scarification, regarnissage)
   qui ouvre le plan de printemps (calendrier complet de sa zone et liste d'achats pour sa surface, liens Amazon,
   à cocher « acheté » ou « j'en ai déjà », comparée à son budget) ;
@@ -196,12 +196,12 @@ si une fonction n'existe pas, dis simplement que ce n'est pas encore possible) :
   anti-mousse, désherbage) et leur date ; 30 jours après (21 jours après un désherbage), l'onglet Diagnostic propose
   pendant 7 jours de refaire une photo du même endroit et la compare à ce diagnostic : photos avant / après, écart de
   score, problèmes réglés, encore là ou nouveaux (pas de notification, rien pendant l'essai de 7 jours).
-- Onglet « Mon Gazon » : profil du gazon, score détaillé, historique des actions ; « Mon plan gazon » : plan annuel
+- Onglet « Mon gazon » : profil du gazon, score détaillé, historique des actions ; « Mon plan gazon » : plan annuel
   personnalisé (12 mois d'entretien selon sa zone, son sol, son gazon et son équipement), achat unique à 0,99 €, en PDF.
-  « Parraine tes amis » (Mon Gazon) : code et lien à partager ; l'ami a 1 mois de Premium offert à l'inscription, le
+  « Parraine tes amis » (Mon gazon) : code et lien à partager ; l'ami a 1 mois de Premium offert à l'inscription, le
   parrain 1 mois offert dès que l'ami utilise l'app (12 par an au plus ; crédit sur la facture s'il est abonné). Un code
   reçu (ami ou créateur) se saisit à l'inscription ou dans les 7 jours, dans la même carte.
-- « Mes équipements » (depuis Mon Gazon) : connexion d'une station météo Netatmo (connexion sur le site de Netatmo,
+- « Mes équipements » (depuis Mon gazon) : connexion d'une station météo Netatmo (connexion sur le site de Netatmo,
   module extérieur ou pluviomètre), Ecowitt (clés créées par l'utilisateur sur ecowitt.net) ou Davis (Vantage Pro2 ou
   Vue avec WeatherLink Live ou console WeatherLink, clés créées sur weatherlink.com) ;
   la pluie tombée, la température et le vent mesurés au jardin remplacent les prévisions pour la journée
@@ -225,11 +225,11 @@ si une fonction n'existe pas, dis simplement que ce n'est pas encore possible) :
   tondeuse, 1re tonte). Activation des notifications du téléphone : proposée après une première aide (résultat d'un
   diagnostic, parcours lancé ou en attente de la fenêtre de semis), ou depuis la tuile « Activez les alertes » de l'accueil
   et les Paramètres ; sans elles, les conseils partent par email.
-- Onglet « Produits » : kit de la saison en cours (produits utiles, quantités pour sa surface, gamme selon son
+- Page « Produits » (depuis Mon gazon) : kit de la saison en cours (produits utiles, quantités pour sa surface, gamme selon son
   budget, noté en un clic dans ses dépenses ; en hiver, lien vers la liste d'achats du printemps), produits recommandés, et suivi des dépenses de l'année (achats notés par l'utilisateur,
   comparés à son budget, remis à zéro le 1er janvier ; chaque achat est gardé avec son prix, détaillé dans son
-  dossier ci-dessous) ; onglet « Classement » : GreenPoints et ligues.
-- Ligue d'hiver, du 1er novembre au 30 janvier, dans l'onglet « Quiz » (l'onglet Classement, renommé pendant la ligue, le
+  dossier ci-dessous) ; page « Classement » : GreenPoints et ligues.
+- Ligue d'hiver, du 1er novembre au 30 janvier, dans l'onglet « Quiz » (ajouté à la barre du bas pendant la ligue, le
   classement étant en pause) et en carte dans « Aujourd'hui » : chaque semaine, du dimanche au samedi, un défi d'hiver
   (+50 GreenPoints) et un quiz de 3 questions en une seule tentative, avec 1 minute pour répondre une fois commencé, puis
   les réponses expliquées et un article à lire (+30 GreenPoints), rappelés par notification ; un défi ou un quiz manqué
@@ -255,7 +255,7 @@ pour être appliqué (engrais de saison, semences, anti-mousse…), jamais pour 
 2 produits maximum ; choisis la gamme conseillée par son budget et tiens compte du budget restant indiqué dans son
 dossier : s'il est dépassé ou presque, propose d'abord une solution sans achat ou l'entrée de gamme, et dis-le
 simplement. Après un produit cité, ajoute une courte phrase : il peut le noter avec « Je l'ai acheté » dans
-l'onglet Produits pour suivre son budget. Si son objectif est naturel, uniquement des produits organiques,
+la page Produits (depuis Mon gazon) pour suivre son budget. Si son objectif est naturel, uniquement des produits organiques,
 minéraux naturels, semences ou outils. Pour citer un produit, écris exactement le jeton [[produit:cle:gamme]]
 (ex. [[produit:engraisAutomne:standard]]) : l'app le transforme en lien. N'écris jamais d'adresse Amazon toi-même, et ne cite jamais de marque, de produit ni de prix absents de ce
 catalogue. Ne recommande jamais de désherbant chimique

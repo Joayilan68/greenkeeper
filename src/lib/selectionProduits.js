@@ -1,6 +1,6 @@
 // src/lib/selectionProduits.js
 // Choix du produit du catalogue Amazon adapté au profil (gamme selon le budget, variante selon le gazon)
-// et quantité selon la surface. Partagé par l'onglet Produits et le kit de saison.
+// et quantité selon la surface. Partagé par la page Produits et le kit de saison.
 import AMAZON_PRODUCTS from "./amazonProducts";
 
 export const getBudgetTier = (budget) => {

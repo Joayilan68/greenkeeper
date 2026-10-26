@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { card } from "../lib/styles";
 import { achatsAnnee, totalAnnee, plafondBudget, euros, ajouterAchat, retirerAchat } from "../lib/depenses";
 
-// Onglet Produits : dépenses gazon de l'année déclarées par l'utilisateur, comparées à son budget
+// Page Produits (depuis Mon gazon) : dépenses gazon de l'année déclarées par l'utilisateur, comparées à son budget
 export default function BudgetDepenses({ profile, saveProfile }) {
   const navigate = useNavigate();
   const [detail, setDetail] = useState(false);

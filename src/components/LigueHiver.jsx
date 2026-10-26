@@ -1,6 +1,7 @@
 // src/components/LigueHiver.jsx
-// Ligue d'hiver (src/lib/ligueHiver.js) : écran de l'onglet Classement, renommé « Quiz » de novembre à janvier (défi et quiz
-// de la semaine, progression, dotation, semaines passées), carte de « Aujourd'hui » et annonce du départ les 7 jours avant.
+// Ligue d'hiver (src/lib/ligueHiver.js) : écran de la page Classement, ouverte par l'onglet « Quiz » de novembre à janvier
+// (défi et quiz de la semaine, progression, dotation, semaines passées), carte de « Aujourd'hui » et annonce du départ les
+// 7 jours avant.
 // GreenPoints à la première validation ; badge « Gardien de l'hiver » enregistré dans le profil à 10 semaines complètes.
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";

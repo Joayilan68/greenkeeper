@@ -1,23 +1,20 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { ligueAffichee } from "../lib/ligueHiver";
-import { SAISONS } from "../lib/useSaison";
+import { periodeLigue } from "../lib/ligueHiver";
 
-// Version test — hooks retirés temporairement pour isoler le bug
+// Barre du bas d'un compte connecté : 4 onglets (refonte, décision de Jordan du 26/10/2026). Pendant la ligue d'hiver,
+// un 5e onglet « Quiz » ouvre la ligue (page Classement) ; le reste de l'année, classement et badges sont dans Mon gazon.
 const tabs = [
-  { path: "/",           icon: "📊", label: "Dashboard" },
-  { path: "/diagnostic", icon: "🔬", label: "Diagnostic" },
-  { path: "/my-lawn",    icon: "🌿", label: "Mon Gazon" },
+  { path: "/",           icon: "🏠", label: "Accueil" },
   { path: "/today",      icon: "📅", label: "Aujourd'hui" },
-  { path: "/products",   icon: "🛒", label: "Produits" },
-  { path: "/classement", icon: "🏆", label: "Classement" },
+  { path: "/diagnostic", icon: "🔬", label: "Diagnostic" },
+  { path: "/my-lawn",    icon: "🌿", label: "Mon gazon" },
 ];
-// Pendant la ligue d'hiver, l'onglet Classement affiche la ligue : il s'appelle « Quiz »
 const ongletQuiz = { path: "/classement", icon: "🧠", label: "Quiz" };
 
 export default function BottomNav() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const quiz = ligueAffichee(SAISONS[new Date().getMonth() + 1].classement);
+  const onglets = periodeLigue()?.statut === "en_cours" ? [...tabs, ongletQuiz] : tabs;
 
   return (
     <nav style={{
@@ -28,14 +25,14 @@ export default function BottomNav() {
       display: "flex", justifyContent: "space-around",
       padding: "8px 0 20px", zIndex: 100,
     }}>
-      {tabs.map(t => (quiz && t.path === ongletQuiz.path ? ongletQuiz : t)).map(t => {
+      {onglets.map(t => {
         const active = pathname === t.path;
         return (
           <button key={t.path} onClick={() => navigate(t.path)} style={{
             display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
             background: "none", border: "none", cursor: "pointer",
             color: active ? "#a5d6a7" : "#4a7c5c",
-            fontSize: 9, fontWeight: active ? 700 : 500, padding: "4px 8px",
+            fontSize: 10, fontWeight: active ? 700 : 500, padding: "4px 8px",
             transition: "color 0.2s",
           }}>
             <span style={{ fontSize: 20 }}>{t.icon}</span>
