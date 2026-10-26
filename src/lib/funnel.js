@@ -5,7 +5,7 @@
 // 12 fonctions Vercel. Non bloquant : si l'insert échoue, ça ne casse rien.
 //
 // Étapes suivies :
-//   • landing_view      → un prospect (non connecté) voit la page de présentation
+//   • landing_view      → un prospect (non connecté) voit l'accueil visiteur
 //   • cta_click         → il clique sur un bouton d'action (avec la source)
 //   • auth_screen_view  → il arrive sur l'écran compte (inscription / connexion)
 //   • signup_completed  → il a créé son compte (nouvel utilisateur)

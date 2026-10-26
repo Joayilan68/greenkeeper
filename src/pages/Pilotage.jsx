@@ -665,9 +665,8 @@ export default function Pilotage() {
                   const f = users.funnel;
                   const premium = revenue?.totalPremium ?? null;
                   const steps = [
-                    { label:"Visite landing",        icon:"👀", color:"#4FC3F7", val: f.landing_view || 0,       note:null },
+                    { label:"Visite de l'accueil",   icon:"👀", color:"#4FC3F7", val: f.landing_view || 0,       note:null },
                     { label:"Diagnostic lancé",      icon:"🔬", color:"#66BB6A", val: f.anon_diag_started || 0,  note:"essai" },
-                    { label:"Visite app (démo)",     icon:"🧭", color:"#26A69A", val: f.demo_view || 0,          note:"essai" },
                     { label:"Clic inscription",      icon:"✍️", color:"#43A047", val: f.signup_from_teaser || 0, note:null },
                     { label:"Inscription validée",   icon:"✅", color:"#2E7D32", val: f.signup_completed || 0,   note:null },
                     { label:"Premium payant activé", icon:"💳", color:"#F9A825", val: premium ?? 0, missing: premium == null, note:"total" },

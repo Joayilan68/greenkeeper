@@ -11,9 +11,8 @@ import Today from "./pages/Today";
 import Products from "./pages/Products";
 import Setup from "./pages/Setup";
 import Login from "./pages/Login";
-import Landing from "./pages/Landing";
+import AccueilVisiteur from "./pages/AccueilVisiteur";
 import EssaiDiagnostic from "./pages/EssaiDiagnostic";
-import DemoApp from "./pages/DemoApp";
 import Subscribe from "./pages/Subscribe";
 import SubscribeSuccess from "./pages/SubscribeSuccess";
 import Register from "./pages/Register";
@@ -221,7 +220,6 @@ function AppRoutes() {
       <Route path="/login"             element={<Login mode="signin" />} />
       <Route path="/signup"            element={<Login mode="signup" />} />
       <Route path="/essai"             element={<EssaiDiagnostic />} />
-      <Route path="/demo"              element={<DemoApp />} />
       <Route path="/register"          element={<PrivateRoute><Register /></PrivateRoute>} />
 
       <Route path="/subscribe"         element={<PrivateRoute><Subscribe /></PrivateRoute>} />
@@ -236,7 +234,7 @@ function AppRoutes() {
       <Route path="/parametres"        element={<PrivateRoute><Layout><Settings /></Layout></PrivateRoute>} />
       <Route path="/pilotage"          element={<AdminRoute><Layout><Pilotage /></Layout></AdminRoute>} />
 
-      <Route path="/"                  element={<><SignedIn><Layout><Dashboard /></Layout></SignedIn><SignedOut><Landing /></SignedOut></>} />
+      <Route path="/"                  element={<><SignedIn><Layout><Dashboard /></Layout></SignedIn><SignedOut><AccueilVisiteur /></SignedOut></>} />
       <Route path="/diagnostic"        element={<PrivateRoute><Layout><Diagnostic /></Layout></PrivateRoute>} />
       <Route path="/my-lawn"           element={<PrivateRoute><Layout><MyLawn /></Layout></PrivateRoute>} />
       <Route path="/parcours"          element={<PrivateRoute><Layout><Parcours /></Layout></PrivateRoute>} />

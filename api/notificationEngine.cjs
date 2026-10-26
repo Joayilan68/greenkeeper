@@ -449,33 +449,8 @@ function checkBilanSaison(month, today, notifLog) {
 // NIVEAU 6 — Éducatif (dernier filet) et socle quotidien de send.js : astuces de Bob,
 // filtrées par saison (mois), rotation déterministe par jour.
 // ─────────────────────────────────────────────────────────────────────────────
-const PRINTEMPS = [3, 4, 5], ETE = [6, 7, 8], AUTOMNE = [9, 10, 11], HIVER = [12, 1, 2];
-const CONSEILS_QUOTIDIENS = [
-  { title:"✂️ Le conseil de Bob",     body:"Ne tonds jamais plus d'un tiers de la hauteur d'un coup : ton gazon reste dense et résiste mieux." },
-  { title:"💧 Astuce arrosage",       body:"Arrose tôt le matin plutôt que le soir : moins d'évaporation, moins de maladies.", mois:[...PRINTEMPS, ...ETE, 9] },
-  { title:"🌱 Bob te souffle",         body:"Une lame de tonte bien affûtée coupe net ; une lame émoussée déchire et jaunit les pointes." },
-  { title:"☀️ Le saviez-vous",         body:"En période chaude, remonte la hauteur de tonte : une herbe plus haute garde le sol frais.", mois:[5, ...ETE] },
-  { title:"🍂 Conseil du jour",        body:"Ramasse les feuilles mortes : sous un tapis de feuilles, le gazon s'asphyxie et la mousse s'installe.", mois:[10, 11, 12] },
-  { title:"🌿 Bob rappelle",           body:"Laisse parfois les tontes fines sur place (mulching) : elles nourrissent ton sol gratuitement.", mois:[...PRINTEMPS, ...ETE, 9, 10] },
-  { title:"💪 Astuce racines",         body:"Arrose moins souvent mais plus abondamment : les racines plongent et ton gazon devient plus résistant.", mois:[...PRINTEMPS, ...ETE, 9] },
-  { title:"🔍 L'œil de Bob",           body:"Des taches jaunes qui s'étendent ? Prends-les en photo dans l'app, je te dis ce que c'est." },
-  { title:"🌾 Conseil semis",          body:"Un sol bien griffé avant de semer, c'est deux fois plus de graines qui lèvent.", mois:[3, 4, 5, 9, 10] },
-  { title:"🪱 Bob t'explique",         body:"Des vers de terre, c'est bon signe : ils aèrent ton sol mieux qu'aucun outil." },
-  { title:"🌡️ Astuce saison",         body:"Le gazon pousse surtout quand le sol est entre 10 et 25 °C : c'est là qu'il faut le chouchouter." },
-  { title:"🚫 Erreur fréquente",       body:"Trop d'engrais brûle le gazon. Mieux vaut peu, mais au bon moment.", mois:[...PRINTEMPS, ...AUTOMNE] },
-  { title:"🌧️ Bob observe le ciel",   body:"Pluie annoncée ? Reporte l'arrosage : inutile de doubler ce que fait la nature.", mois:[...PRINTEMPS, ...ETE, 9] },
-  { title:"🏆 Motivation du jour",     body:"Un beau gazon, c'est de la régularité, pas de l'effort intense. Un petit geste vaut mieux qu'un grand coup." },
-  { title:"🌱 Conseil densité",        body:"Un gazon dense étouffe les mauvaises herbes tout seul : vise l'épaisseur avant tout." },
-  { title:"✂️ Bob insiste",           body:"Varie le sens de tonte à chaque passage : l'herbe se redresse mieux et pousse plus droite.", mois:[...PRINTEMPS, ...ETE, ...AUTOMNE] },
-  { title:"💚 Astuce couleur",         body:"Un gazon qui vire au bleu-gris a soif : c'est le tout premier signe, avant le jaune.", mois:[...PRINTEMPS, ...ETE, 9] },
-  { title:"🌍 Le mot de Bob",          body:"Un gazon en bonne santé, c'est aussi de la fraîcheur, de l'oxygène et de la biodiversité chez toi." },
-  { title:"❄️ Conseil d'hiver",        body:"Gazon gelé ou givré ? N'y marche pas : les brins cassent et laissent des traces brunes.", mois:[11, ...HIVER, 3] },
-  { title:"🧪 Bob te conseille",       body:"L'automne est le bon moment pour mesurer le pH et chauler si ton sol est acide (pH sous 6).", mois:[10, 11] },
-  { title:"🔧 Astuce matériel",        body:"Profite de la pause d'hiver pour faire affûter la lame et réviser ta tondeuse.", mois:[11, ...HIVER] },
-  { title:"🐾 Taupinières",            body:"Étale la terre des taupinières au râteau dès qu'elles apparaissent : sinon l'herbe dessous meurt.", mois:[11, ...HIVER, 3] },
-  { title:"🌨️ Neige sur le gazon",     body:"La neige protège le gazon du froid : laisse-la fondre, mais évite de la tasser en marchant dessus.", mois:HIVER },
-  { title:"💧 Flaques qui restent",    body:"L'eau stagne sur ta pelouse ? Sol tassé : note l'endroit, une aération au printemps le fera respirer.", mois:[11, ...HIVER] },
-];
+// Liste partagée avec l'accueil des visiteurs (conseil de Bob du jour) : src/lib/conseilsBob.json
+const CONSEILS_QUOTIDIENS = require("../src/lib/conseilsBob.json");
 
 // Astuce du jour pour le mois donné (rotation déterministe par jour), avec les astuces de la ligue d'hiver
 function conseilDuJour(today, month, astucesLigue = []) {

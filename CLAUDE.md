@@ -126,6 +126,9 @@
 - Niveaux (refonte, décisions de Jordan du 26/10/2026) : Visiteur, Gratuit, Premium ; contenu unique `src/lib/niveaux.json`
   (page « Choisir son niveau » `/subscribe`, carte « Avec Premium », consignes de Bob), une ligne par fonction réelle. Plan annuel
   inclus dans Premium, plus vendu à l'unité (plans déjà achetés gardés : `publicMetadata.plansAnnuels`).
+  Accueil visiteur (`src/pages/AccueilVisiteur.jsx`, remplace la présentation et la démo, `/demo` redirigée vers `/`) :
+  météo du jour de sa commune, conseil de Bob du jour (`src/lib/conseilsBob.json`, partagé avec les notifications),
+  diagnostic d'essai, articles de saison ; barre visiteur Accueil, Conseils, Diagnostic, Compte.
 - Parrainage et codes créateurs : `api/parrainage.cjs` (tables `codes` et `parrainages`, serveur uniquement), conditions
   dans les CGV (article 7 ter) ; filleul 1 mois offert, parrain 1 mois par filleul actif (tâche du matin) ; codes
   créateurs et commissions dans Pilotage → Finances. Lien : `https://mongazon360.fr/?p=CODE`.

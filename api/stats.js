@@ -629,12 +629,12 @@ function pointsGeo(rows, exclus) {
 }
 
 // ── Helper : entonnoir de conversion (vue funnel_events_by_day, 30 jours) ─────
-// Compteurs par étape (landing, essai, démo, clic inscription, inscription) et deux taux :
-// visite → inscription, et essai (diagnostic + démo) → clic inscription.
+// Compteurs par étape (accueil visiteur, essai, clic inscription, inscription) et deux taux :
+// visite → inscription, et diagnostic d'essai → clic inscription.
 async function fetchFunnel() {
   const empty = {
     landing_view: 0, cta_click: 0, auth_screen_view: 0, signup_completed: 0,
-    anon_diag_started: 0, anon_diag_result: 0, demo_view: 0, signup_from_teaser: 0,
+    anon_diag_started: 0, anon_diag_result: 0, signup_from_teaser: 0,
     rateGlobal: null, rateEssaiClic: null,
   };
   try {
@@ -648,15 +648,15 @@ async function fetchFunnel() {
     const rows = await r.json();
     const c = {
       landing_view: 0, cta_click: 0, auth_screen_view: 0, signup_completed: 0,
-      anon_diag_started: 0, anon_diag_result: 0, demo_view: 0, signup_from_teaser: 0,
+      anon_diag_started: 0, anon_diag_result: 0, signup_from_teaser: 0,
     };
     (rows || []).forEach(x => { if (c[x.step] !== undefined) c[x.step] += parseInt(x.count) || 0; });
     const pct = (a, b) => (b > 0 ? Math.round((a / b) * 1000) / 10 : null);
     return {
       ...c,
       rateGlobal:    pct(c.signup_completed, c.landing_view), // visite → inscrit (global)
-      // essai → clic inscription : les clics viennent du diagnostic d'essai ET de la démo, rapportés aux deux essais
-      rateEssaiClic: pct(c.signup_from_teaser, c.anon_diag_started + c.demo_view),
+      // diagnostic d'essai → clic inscription
+      rateEssaiClic: pct(c.signup_from_teaser, c.anon_diag_started),
     };
   } catch (e) {
     console.warn("stats-users funnel:", e.message);

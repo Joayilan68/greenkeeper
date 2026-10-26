@@ -116,13 +116,20 @@
       ]
     }
   ],
+  "redirects": [
+    {
+      "source": "/demo",
+      "destination": "/",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/sw.js",
       "destination": "/sw.js"
     },
     {
-      "source": "/:page(essai|demo|mentions-legales|confidentialite|cgu|cgv|cookies|login|signup|a-propos)",
+      "source": "/:page(essai|mentions-legales|confidentialite|cgu|cgv|cookies|login|signup|a-propos)",
       "destination": "/:page/index.html"
     },
     {
