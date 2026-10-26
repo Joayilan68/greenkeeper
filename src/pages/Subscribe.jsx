@@ -166,7 +166,7 @@ export default function Subscribe() {
             border:`2px solid ${selected===p.id ? "#43a047" : "rgba(255,255,255,0.1)"}`,
             borderRadius:16, padding:"14px 8px", cursor:"pointer", color:"#e8f5e9", textAlign:"center", position:"relative",
           }}>
-            {p.highlight && <div style={{ position:"absolute", top:-10, left:"50%", transform:"translateX(-50%)", background: offre ? "#f9a825" : "#43a047", borderRadius:20, padding:"2px 10px", fontSize:10, fontWeight:700, whiteSpace:"nowrap" }}>{offre ? "🎁 -50 %" : "⭐ Populaire"}</div>}
+            {p.highlight && <div style={{ position:"absolute", top:-10, left:"50%", transform:"translateX(-50%)", background: offre ? "#f9a825" : "#43a047", borderRadius:20, padding:"2px 10px", fontSize:10, fontWeight:700, whiteSpace:"nowrap" }}>{offre ? `🎁 -${Math.round((1 - OFFRE.prixOffre / OFFRE.prixAnnuel) * 100)} %` : "⭐ Populaire"}</div>}
             <div style={{ fontWeight:800, fontSize:14, marginBottom:4 }}>{p.label}</div>
             <div style={{ fontSize:20, fontWeight:800, color:"#a5d6a7" }}>{p.price}</div>
             <div style={{ fontSize:11, color:"#81c784" }}>{p.period}</div>
