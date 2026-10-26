@@ -457,4 +457,7 @@ du premier onglet).
   seules des règles d'accès aux données selon la station et l'abonnement). Le site indique que le Discord est suivi par
   les ingénieurs Davis/WeatherLink de l'API : relance envoyée par Jordan le jour même dans le même fil, demandant une
   confirmation écrite d'un ingénieur (app payante, chaque utilisateur avec sa propre clé, données non revendues) ;
-  recherche des réponses passées dans le Discord à faire.
+  recherche des réponses passées dans le Discord faite par Jordan (« commercial », « license », « paid ») : rien.
+  Conditions générales de Davis (site et « applications/services ») : usage personnel et non commercial, sans dire si
+  WeatherLink et son API sont concernés. Davis reste sur STA jusqu'à une confirmation écrite ; sans réponse début
+  décembre, décision de Jordan (lancer en gardant la trace des démarches, ou attendre).
