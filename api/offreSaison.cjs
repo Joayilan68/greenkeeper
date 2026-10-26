@@ -1,6 +1,6 @@
 // api/offreSaison.cjs
 // Offre saisonnière côté serveur — mêmes règles que src/lib/offreSaison.js (config partagée
-// src/lib/offreSaison.json) : annuel à 19,99 € la 1re année pendant les périodes creuses.
+// src/lib/offreSaison.json) : prix de Premium, et annuel à prix réduit la 1re année pendant les périodes creuses.
 const config = require("../src/lib/offreSaison.json");
 
 function offreEnCours(date = new Date()) {

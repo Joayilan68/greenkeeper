@@ -11,6 +11,7 @@ import { CHARGES_ACTIVES, CHARGES_PREVUES, STRIPE_FEES, URSSAF_RATE, montant } f
 import LigueHiverCard from "../components/LigueHiverCard";
 import Agrandir from "../components/Agrandir";
 import { periodeLigue } from "../lib/ligueHiver";
+import { OFFRE, enEuros } from "../lib/offreSaison";
 
 function eur(n) { return (Math.round((n||0)*100)/100).toFixed(2) + "€"; }
 
@@ -886,8 +887,8 @@ export default function Pilotage() {
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:4 }}>
               <KPI icon="💰" label="MRR" value={loadingRevenue ? "..." : eur(revenue?.mrr)} sub="Revenus mensuels récurrents" color="#f9a825" />
               <KPI icon="📆" label="ARR" value={loadingRevenue ? "..." : eur(revenue?.arr)} sub="Revenus annuels projetés" color="#ffcc80" />
-              <KPI icon="📅" label="Premium mensuel" value={loadingRevenue ? "..." : (revenue?.premiumMonthly ?? "—")} sub="Abonnés @ 4,99€/mois" color="#a5d6a7" />
-              <KPI icon="🗓️" label="Premium annuel" value={loadingRevenue ? "..." : (revenue?.premiumYearly ?? "—")} sub="Abonnés @ 39,99€/an" color="#90caf9" />
+              <KPI icon="📅" label="Premium mensuel" value={loadingRevenue ? "..." : (revenue?.premiumMonthly ?? "—")} sub={`Abonnés à ${enEuros(OFFRE.prixMensuel)}/mois`} color="#a5d6a7" />
+              <KPI icon="🗓️" label="Premium annuel" value={loadingRevenue ? "..." : (revenue?.premiumYearly ?? "—")} sub={`Abonnés à ${enEuros(OFFRE.prixAnnuel)}/an`} color="#90caf9" />
             </div>
             {revenue?.balance && (
               <div style={{ ...card(), background:"rgba(249,168,37,0.08)", border:"1px solid rgba(249,168,37,0.25)" }}>
@@ -925,11 +926,11 @@ export default function Pilotage() {
               const k      = periode === "an" ? 12 : 1;
               const nbM    = revenue?.premiumMonthly || 0;
               const nbY    = revenue?.premiumYearly  || 0;
-              const caM    = nbM * 4.99 * k;                  // abonnements mensuels
-              const caY    = nbY * 39.99 * (k / 12);          // abonnements annuels (lissés)
+              const caM    = nbM * OFFRE.prixMensuel * k;          // abonnements mensuels
+              const caY    = nbY * OFFRE.prixAnnuel * (k / 12);    // abonnements annuels (lissés)
               const ca     = caM + caY;
-              const stripe = (nbM * (STRIPE_FEES.pct * 4.99 + STRIPE_FEES.fixed)) * k
-                           + (nbY * (STRIPE_FEES.pct * 39.99 + STRIPE_FEES.fixed)) * (k / 12);
+              const stripe = (nbM * (STRIPE_FEES.pct * OFFRE.prixMensuel + STRIPE_FEES.fixed)) * k
+                           + (nbY * (STRIPE_FEES.pct * OFFRE.prixAnnuel + STRIPE_FEES.fixed)) * (k / 12);
               const urssaf = ca * URSSAF_RATE;
               const fixes  = CHARGES_ACTIVES.reduce((t, c) => t + montant(c, periode), 0);
               const charges = fixes + stripe + urssaf;
@@ -967,8 +968,8 @@ export default function Pilotage() {
                     </div>
 
                     {section("Produits")}
-                    {line("Abonnements mensuels", eur(caM), `${nbM} abonné(s) × 4,99 €/mois`, "#a5d6a7")}
-                    {line("Abonnements annuels", eur(caY), `${nbY} abonné(s) × 39,99 €/an, lissé`, "#a5d6a7")}
+                    {line("Abonnements mensuels", eur(caM), `${nbM} abonné(s) × ${enEuros(OFFRE.prixMensuel)}/mois`, "#a5d6a7")}
+                    {line("Abonnements annuels", eur(caY), `${nbY} abonné(s) × ${enEuros(OFFRE.prixAnnuel)}/an, lissé`, "#a5d6a7")}
                     {line("Affiliation Amazon", eur(0), "Commissions non remontées automatiquement", "#a5d6a7")}
                     {line("Données anonymisées · Marque propre", eur(0), "À venir (Phase 4)", "#81c784")}
                     {line("Total produits", eur(ca), null, "#a5d6a7", true)}
@@ -1000,9 +1001,9 @@ export default function Pilotage() {
                     const prevuesMois = CHARGES_PREVUES.reduce((t, c) => t + montant(c, "mois"), 0);
                     const net = (prix, parMois) => (prix * (1 - URSSAF_RATE) - (STRIPE_FEES.pct * prix + STRIPE_FEES.fixed)) / parMois;
                     const formules = [
-                      ["Mensuel 4,99 €", net(4.99, 1)],
-                      ["Annuel 39,99 €", net(39.99, 12)],
-                      ["Offre 1 an 19,99 €", net(19.99, 12)],
+                      [`Mensuel ${enEuros(OFFRE.prixMensuel)}`, net(OFFRE.prixMensuel, 1)],
+                      [`Annuel ${enEuros(OFFRE.prixAnnuel)}`, net(OFFRE.prixAnnuel, 12)],
+                      [`Offre 1 an ${enEuros(OFFRE.prixOffre)}`, net(OFFRE.prixOffre, 12)],
                     ];
                     const abonnes = (revenue?.premiumMonthly || 0) + (revenue?.premiumYearly || 0);
                     return (

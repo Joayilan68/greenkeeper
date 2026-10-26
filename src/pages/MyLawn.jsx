@@ -15,6 +15,7 @@ import { useStreak } from "../lib/useStreak";
 import { useBadges } from "../lib/useBadges";
 import { anneePlan, PRIX_PLAN_ANNUEL } from "../lib/planAnnuel";
 import BadgesGallery from "../components/BadgesGallery";
+import { OFFRE, enEuros } from "../lib/offreSaison";
 
 // Mapping action.id → clé amazonProducts.js
 const ACTION_TO_AMAZON = {
@@ -841,7 +842,7 @@ export default function MyLawn() {
                 ))}
               </div>
               <button onClick={() => navigate("/subscribe")} style={{ background:"linear-gradient(135deg,#F59E0B,#D97706)", color:"#1a1a1a", fontWeight:800, border:"none", borderRadius:10, cursor:"pointer", fontSize:13, padding:"12px", width:"100%" }}>
-                ⭐ Passer Premium — 4,99€/mois
+                ⭐ Passer Premium — {enEuros(OFFRE.prixMensuel)}/mois
               </button>
             </div>
           )}
@@ -909,7 +910,7 @@ export default function MyLawn() {
               <div key={f} style={{ fontSize:12, color:"#e8f5e9", padding:"3px 0" }}>✔ {f}</div>
             ))}
             <button onClick={() => navigate("/subscribe")} style={{ background:"linear-gradient(135deg,#F59E0B,#D97706)", color:"#1a1a1a", fontWeight:800, border:"none", borderRadius:10, cursor:"pointer", marginTop:14, padding:"12px 28px", fontSize:14 }}>
-              ⭐ Améliorer mon gazon — 4,99€/mois
+              ⭐ Améliorer mon gazon — {enEuros(OFFRE.prixMensuel)}/mois
             </button>
           </div>
         )}

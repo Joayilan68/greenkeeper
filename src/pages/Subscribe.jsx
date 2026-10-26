@@ -4,7 +4,7 @@ import { useAuth, useUser } from "@clerk/clerk-react";
 import { appShell, btn, card } from "../lib/styles";
 import { isAndroidTWA } from "../lib/platform";
 import ComparatifPremium from "../components/ComparatifPremium";
-import { OFFRE, offreEnCours } from "../lib/offreSaison";
+import { OFFRE, offreEnCours, enEuros } from "../lib/offreSaison";
 
 // ════════════════════════════════════════════════════════════════════════════
 // SUBSCRIBE — Page de souscription Premium (avant Stripe Checkout)
@@ -18,9 +18,11 @@ import { OFFRE, offreEnCours } from "../lib/offreSaison";
 //   Sans cette renonciation, il peut annuler et demander remboursement sous 14 jours.
 // ════════════════════════════════════════════════════════════════════════════
 
+// Prix : src/lib/offreSaison.json (économie de l'annuel calculée sur 12 mois au prix mensuel)
 const PLANS = [
-  { id: "monthly", label: "Mensuel", price: "4,99€",  priceNum: 4.99,  period: "/mois", desc: "Sans engagement", highlight: false },
-  { id: "yearly",  label: "Annuel",  price: "39,99€", priceNum: 39.99, period: "/an",   desc: "Économisez 20%",   highlight: true  },
+  { id: "monthly", label: "Mensuel", price: enEuros(OFFRE.prixMensuel), period: "/mois", desc: "Sans engagement", highlight: false },
+  { id: "yearly",  label: "Annuel",  price: enEuros(OFFRE.prixAnnuel),  period: "/an",
+    desc: `Économisez ${Math.round((1 - OFFRE.prixAnnuel / (OFFRE.prixMensuel * 12)) * 100)} %`, highlight: true },
 ];
 
 const FEATURES_FREE = [
@@ -44,7 +46,7 @@ export default function Subscribe() {
   const navigate = useNavigate();
   const { getToken } = useAuth();
   const { user } = useUser();
-  const offre = offreEnCours(); // offre saisonnière : annuel à 19,99 € la 1re année
+  const offre = offreEnCours(); // offre saisonnière : annuel à prix réduit la 1re année
   const [selected, setSelected] = useState(offre ? "yearly" : "monthly");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -54,9 +56,8 @@ export default function Subscribe() {
   const [acceptedCgv,         setAcceptedCgv]         = useState(false);
   const [acceptedRetractation, setAcceptedRetractation] = useState(false);
 
-  const euros = (n) => `${String(n).replace(".", ",")}€`;
   const plans = PLANS.map(p => p.id === "yearly" && offre
-    ? { ...p, price: euros(OFFRE.prixOffre), period: " la 1re année", desc: `au lieu de ${euros(OFFRE.prixAnnuel)} · jusqu'au ${offre.finLabel}` }
+    ? { ...p, price: enEuros(OFFRE.prixOffre), period: " la 1re année", desc: `au lieu de ${enEuros(OFFRE.prixAnnuel)} · jusqu'au ${offre.finLabel}` }
     : p);
   const selectedPlan = plans.find(p => p.id === selected);
   const canSubscribe = acceptedCgv && acceptedRetractation;
@@ -155,7 +156,7 @@ export default function Subscribe() {
       {/* ── Sélecteur de plan ──────────────────────────────────────────────── */}
       {offre && (
         <div style={{ background:"rgba(249,168,37,0.12)", border:"1px solid rgba(249,168,37,0.4)", borderRadius:12, padding:"10px 12px", marginBottom:16, fontSize:12, color:"#ffe082", lineHeight:1.5, textAlign:"center" }}>
-          {offre.nom === "hiver" ? "❄️ Offre d'hiver" : "☀️ Offre d'été"} : <strong>Premium 1 an à {euros(OFFRE.prixOffre)}</strong> au lieu de {euros(OFFRE.prixAnnuel)}, jusqu'au {offre.finLabel}.
+          {offre.nom === "hiver" ? "❄️ Offre d'hiver" : "☀️ Offre d'été"} : <strong>Premium 1 an à {enEuros(OFFRE.prixOffre)}</strong> au lieu de {enEuros(OFFRE.prixAnnuel)}, jusqu'au {offre.finLabel}.
         </div>
       )}
       <div style={{ display:"flex", gap:10, marginBottom:16 }}>
@@ -184,7 +185,7 @@ export default function Subscribe() {
 
         {/* Récap de la commande */}
         <div style={{ background:"rgba(0,0,0,0.2)", borderRadius:10, padding:"10px 12px", marginBottom:14, fontSize:12, color:"#e8f5e9" }}>
-          Vous allez souscrire à <strong style={{ color:"#a5d6a7" }}>Mongazon360<sup style={{ fontSize:7 }}>®</sup> Premium {selectedPlan.label}</strong> au prix de <strong style={{ color:"#a5d6a7" }}>{selectedPlan.price}{selectedPlan.period}</strong>{selected === "yearly" && offre && <>, puis {euros(OFFRE.prixAnnuel)}/an</>}.
+          Vous allez souscrire à <strong style={{ color:"#a5d6a7" }}>Mongazon360<sup style={{ fontSize:7 }}>®</sup> Premium {selectedPlan.label}</strong> au prix de <strong style={{ color:"#a5d6a7" }}>{selectedPlan.price}{selectedPlan.period}</strong>{selected === "yearly" && offre && <>, puis {enEuros(OFFRE.prixAnnuel)}/an</>}.
           {selected === "monthly" ? " Renouvellement automatique chaque mois." : " Renouvellement automatique chaque année."} Résiliable à tout moment.
         </div>
 

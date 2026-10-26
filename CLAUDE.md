@@ -114,8 +114,10 @@
 ## Offres et Premium offerts
 - Premium offert (famille, bêta…) : règle unique `api/premium.cjs` (date de fin incluse, vide = à vie), gestion
   dans Pilotage → Finances ; retrait automatique par la tâche du matin.
-- Offre saisonnière (annuel à 19,99 € la 1re année, 1/12→25/02 et 1/07→15/08) : `src/lib/offreSaison.json`,
-  partagé par l'app et le serveur.
+- Prix de Premium (décision de Jordan du 26/10/2026) : 2,99 € par mois, 24,99 € par an ; offre saisonnière (annuel à 12,99 €
+  la 1re année, 1/12→25/02 et 1/07→15/08). Source unique `src/lib/offreSaison.json`, partagée par l'app et le serveur ; prix
+  Stripe dans les variables Vercel `STRIPE_PRICE_MONTHLY` et `STRIPE_PRICE_YEARLY` (prix de test en Preview, réels en
+  Production), vérifiés à chaque abonnement (montant différent → abonnement bloqué et alerte).
 
 ## Équipements connectés
 - Table `equipements` (serveur uniquement, RLS sans politique) via `api/objets.js` ; logique et connecteurs dans
