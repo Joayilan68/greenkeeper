@@ -42,20 +42,27 @@ export function AnnonceLigue({ debut }) {
   );
 }
 
+// Correction : la réponse donnée (juste ou fausse) est pleine et marquée « ta réponse » ; la bonne réponse non donnée est
+// seulement entourée, marquée « bonne réponse » ; une question sans réponse le dit
 function Question({ q, i, choisi, corrige, onChoix }) {
+  const sansReponse = corrige && !Number.isInteger(choisi);
   return (
     <div style={{ marginBottom:14 }}>
       <div style={{ fontSize:13.5, fontWeight:800, color:clair, marginBottom:8, lineHeight:1.4 }}>{i + 1}. {q.q}</div>
+      {sansReponse && <div style={{ fontSize:12, fontWeight:700, color:"#ffb74d", marginBottom:6 }}>⏱️ Pas de réponse : question comptée fausse</div>}
       <div style={{ display:"grid", gap:6 }}>
         {q.choix.map((c, k) => {
-          const bonne = corrige && k === q.bonne, fausse = corrige && k === choisi && k !== q.bonne, actif = !corrige && choisi === k;
+          const bonne = corrige && k === q.bonne, aMoi = corrige && k === choisi;
+          const juste = bonne && aMoi, fausse = aMoi && !bonne, rappel = bonne && !aMoi, actif = !corrige && choisi === k;
           return (
             <button key={k} onClick={() => !corrige && onChoix(k)} aria-pressed={choisi === k} disabled={corrige}
-              style={{ textAlign:"left", borderRadius:10, padding:"9px 12px", fontSize:13, cursor: corrige ? "default" : "pointer",
-                border: `1px solid ${bonne ? "rgba(102,187,106,0.7)" : fausse ? "rgba(239,83,80,0.6)" : actif ? "#66bb6a" : "rgba(165,214,167,0.25)"}`,
-                background: bonne ? "rgba(67,160,71,0.25)" : fausse ? "rgba(239,83,80,0.15)" : actif ? "rgba(67,160,71,0.3)" : "rgba(255,255,255,0.04)",
-                color: bonne || actif ? clair : fausse ? "#ef9a9a" : vert, fontWeight: bonne || actif ? 700 : 500 }}>
-              {bonne ? "✅ " : fausse ? "❌ " : ""}{c}
+              style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:8, textAlign:"left", borderRadius:10,
+                padding:"9px 12px", fontSize:13, cursor: corrige ? "default" : "pointer",
+                border: `1px ${rappel ? "dashed" : "solid"} ${juste || rappel ? "rgba(102,187,106,0.7)" : fausse ? "rgba(239,83,80,0.6)" : actif ? "#66bb6a" : "rgba(165,214,167,0.25)"}`,
+                background: juste ? "rgba(67,160,71,0.25)" : fausse ? "rgba(239,83,80,0.15)" : actif ? "rgba(67,160,71,0.3)" : "rgba(255,255,255,0.04)",
+                color: juste || actif ? clair : fausse ? "#ef9a9a" : vert, fontWeight: juste || actif ? 700 : rappel ? 600 : 500 }}>
+              <span>{juste || rappel ? "✅ " : fausse ? "❌ " : ""}{c}</span>
+              {(aMoi || rappel) && <span style={{ fontSize:10.5, fontWeight:700, flexShrink:0, opacity:0.9 }}>{aMoi ? "ta réponse" : "bonne réponse"}</span>}
             </button>
           );
         })}
