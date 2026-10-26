@@ -122,6 +122,9 @@
 - Niveaux (refonte, décisions de Jordan du 26/10/2026) : Visiteur, Gratuit, Premium ; contenu unique `src/lib/niveaux.json`
   (page « Choisir son niveau » `/subscribe`, carte « Avec Premium », consignes de Bob), une ligne par fonction réelle. Plan annuel
   inclus dans Premium, plus vendu à l'unité (plans déjà achetés gardés : `publicMetadata.plansAnnuels`).
+  Accueil visiteur (`src/pages/AccueilVisiteur.jsx`, remplace la présentation et la démo, `/demo` redirigée vers `/`) :
+  météo du jour de sa commune, conseil de Bob du jour (`src/lib/conseilsBob.json`, partagé avec les notifications),
+  diagnostic d'essai, articles de saison ; barre visiteur Accueil, Conseils, Diagnostic, Compte.
 
 ## Équipements connectés
 - Table `equipements` (serveur uniquement, RLS sans politique) via `api/objets.js` ; logique et connecteurs dans

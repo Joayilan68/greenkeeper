@@ -6,6 +6,7 @@ import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAnonId, setAnonPending } from "../lib/anonId";
 import { trackFunnel } from "../lib/funnel";
+import BarreVisiteur from "../components/BarreVisiteur";
 
 const G = {
   bg:     "linear-gradient(165deg,#0F2F1F 0%,#164a2b 45%,#0d2519 100%)",
@@ -111,7 +112,7 @@ export default function EssaiDiagnostic() {
 
   const Shell = ({ children }) => (
     <div style={{ background:G.bg, minHeight:"100vh", color:G.text, fontFamily:"'Nunito','Segoe UI',sans-serif" }}>
-      <div style={{ maxWidth:480, margin:"0 auto", padding:"22px 18px 48px" }}>
+      <div style={{ maxWidth:480, margin:"0 auto", padding:"22px 18px 110px" }}>
         <header style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20 }}>
           <div style={{ display:"flex", alignItems:"center", gap:9 }}>
             <img src="/mg360-mascot-transparent.png" alt="" style={{ width:34, height:34, objectFit:"contain" }} />
@@ -121,6 +122,7 @@ export default function EssaiDiagnostic() {
         </header>
         {children}
       </div>
+      <BarreVisiteur />
     </div>
   );
 
@@ -223,7 +225,7 @@ export default function EssaiDiagnostic() {
             </div>
             <button onClick={() => goSignup("result")} style={{ ...btnPrimary, width:"auto", padding:"14px 26px" }}>Créer mon compte gratuit →</button>
             <div style={{ fontSize:11, color:G.soft, marginTop:12 }}>Sans carte bancaire · 1 clic avec Google</div>
-            <button onClick={() => navigate("/demo")} style={{ background:"rgba(255,255,255,0.1)", border:"1px solid rgba(165,214,167,0.35)", color:"#e8f5e9", borderRadius:12, padding:"12px 18px", fontSize:13.5, fontWeight:700, cursor:"pointer", marginTop:14, fontFamily:"inherit", width:"auto" }}>👀 Explorer l'app en démo</button>
+            <button onClick={() => navigate("/")} style={{ background:"rgba(255,255,255,0.1)", border:"1px solid rgba(165,214,167,0.35)", color:"#e8f5e9", borderRadius:12, padding:"12px 18px", fontSize:13.5, fontWeight:700, cursor:"pointer", marginTop:14, fontFamily:"inherit", width:"auto" }}>🏠 Revenir à l'accueil</button>
           </div>
         </div>
 
@@ -243,7 +245,7 @@ export default function EssaiDiagnostic() {
         </div>
         <button onClick={() => goSignup("wall")} style={{ ...btnPrimary, width:"auto", padding:"14px 26px" }}>Créer mon compte gratuit →</button>
         <div style={{ fontSize:12, color:G.soft, marginTop:14 }}>Déjà un compte ? <button onClick={() => navigate("/login")} style={{ background:"none", border:"none", color:G.accent, fontWeight:800, cursor:"pointer", fontSize:12, fontFamily:"inherit" }}>Se connecter</button></div>
-        <button onClick={() => navigate("/demo")} style={{ background:"none", border:"none", color:G.muted, fontSize:12.5, textDecoration:"underline", cursor:"pointer", marginTop:14, fontFamily:"inherit" }}>Explorer l'app en démo →</button>
+        <button onClick={() => navigate("/")} style={{ background:"none", border:"none", color:G.muted, fontSize:12.5, textDecoration:"underline", cursor:"pointer", marginTop:14, fontFamily:"inherit" }}>Revenir à l'accueil →</button>
       </div>
     </Shell>
   );
