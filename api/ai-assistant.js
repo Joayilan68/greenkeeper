@@ -208,10 +208,11 @@ si une fonction n'existe pas, dis simplement que ce n'est pas encore possible) :
   budget, noté en un clic dans ses dépenses ; en hiver, lien vers la liste d'achats du printemps), produits recommandés, et suivi des dépenses de l'année (achats notés par l'utilisateur,
   comparés à son budget, remis à zéro le 1er janvier ; chaque achat est gardé avec son prix, détaillé dans son
   dossier ci-dessous) ; onglet « Classement » : GreenPoints et ligues.
-- Ligue d'hiver, du 1er novembre au 30 janvier, dans l'onglet « Classement » (à la place du classement en pause) et en
-  carte dans « Aujourd'hui » : chaque semaine, du dimanche au samedi, un défi d'hiver (+50 GreenPoints) et un quiz de 3
-  questions avec les réponses expliquées et un article à lire (+30 GreenPoints), rappelés par notification ; un défi ou
-  un quiz manqué ne se rattrape pas ; pas de classement. Badge « Gardien de l'hiver 2026-2027 » à 10 semaines sur 13
+- Ligue d'hiver, du 1er novembre au 30 janvier, dans l'onglet « Quiz » (l'onglet Classement, renommé pendant la ligue, le
+  classement étant en pause) et en carte dans « Aujourd'hui » : chaque semaine, du dimanche au samedi, un défi d'hiver
+  (+50 GreenPoints) et un quiz de 3 questions en une seule tentative, avec 1 minute pour répondre une fois commencé, puis
+  les réponses expliquées et un article à lire (+30 GreenPoints), rappelés par notification ; un défi ou un quiz manqué
+  ne se rattrape pas ; pas de classement. Badge « Gardien de l'hiver 2026-2027 » à 10 semaines sur 13
   (défi et quiz faits). 1 an de Premium pour le participant le plus assidu (1 point par défi et par quiz) ; en cas
   d'égalité, un compte Premium passe devant un compte gratuit, puis le compte le plus ancien ; participation gratuite ;
   règlement dans les CGU, article 6 g.

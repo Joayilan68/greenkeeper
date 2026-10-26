@@ -316,7 +316,7 @@ function checkLigueHiver(ligue, today, notifLog) {
   if (!ligue.quiz && !envoyee("ligue_quiz")) {
     return { priority: 5, type: "ligue_quiz", url: "/classement",
       title: `🧠 Quiz du dimanche : ${p.theme.toLowerCase()}`,
-      body: `${p.quiz[0].q} Réponds dans l'app : ${points.quiz} GreenPoints.` };
+      body: `${p.quiz[0].q} 3 questions, 1 minute : réponds dans l'onglet Quiz (${points.quiz} GreenPoints).` };
   }
   const jour = new Date(Date.parse(today || new Date().toISOString().slice(0, 10))).getUTCDay();
   if (jour >= 3 && !ligue.defi && !envoyee("ligue_defi")) {

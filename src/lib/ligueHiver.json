@@ -5,6 +5,7 @@
   "debutTest": "2026-10-18",
   "semaines": 13,
   "points": { "defi": 50, "quiz": 30 },
+  "dureeQuiz": 60,
   "badge": { "id": "gardien_hiver_2026", "semainesMin": 10 },
   "dotation": "1 an d'abonnement Premium",
   "partage": {

@@ -1,6 +1,6 @@
 // src/lib/useLigueHiver.js
 // Participations à la ligue d'hiver (POST /api/send?type=ligue, api/ligueHiver.cjs) : état de la saison (semaine en cours,
-// défis et quiz faits, points d'assiduité), validation du défi et réponses au quiz de la semaine.
+// défis et quiz faits, points d'assiduité), validation du défi, début du quiz (chrono tenu par le serveur) et réponses.
 // Chargé seulement pendant la période affichée de la ligue (periodeLigue).
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@clerk/clerk-react";
@@ -36,6 +36,7 @@ export function useLigueHiver() {
     etat,
     erreur,
     faireDefi: (semaine) => appeler({ action: "defi", semaine }),
+    demarrerQuiz: (semaine) => appeler({ action: "debut_quiz", semaine }),
     repondre: (semaine, reponses) => appeler({ action: "quiz", semaine, reponses }),
   };
 }
