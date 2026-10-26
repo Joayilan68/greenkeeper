@@ -533,12 +533,12 @@ export function CGV() {
   const navigate = useNavigate();
   return (
     <div>
-      <PageHeader emoji="💳" title="Conditions Générales de Vente" subtitle="Mise à jour : 5 octobre 2026" />
+      <PageHeader emoji="💳" title="Conditions Générales de Vente" subtitle="Mise à jour : 26 octobre 2026" />
       <div style={scroll}>
 
         <div style={{ ...card(), background:"rgba(33,150,243,0.06)", border:"1px solid rgba(33,150,243,0.2)" }}>
           <div style={{ fontSize:12, color:"#90caf9", lineHeight:1.6 }}>
-            ℹ️ Les présentes CGV s'appliquent à la souscription d'un abonnement Premium à l'application Mongazon360<sup style={{ fontSize:7 }}>®</sup> à l'achat du plan annuel personnalisé (article 7 bis) et au programme de parrainage (article 7 ter). Elles complètent les{" "}
+            ℹ️ Les présentes CGV s'appliquent à la souscription d'un abonnement Premium à l'application Mongazon360<sup style={{ fontSize:7 }}>®</sup>, au plan annuel personnalisé inclus dans Premium (article 7 bis) et au programme de parrainage (article 7 ter). Elles complètent les{" "}
             <span onClick={() => navigate("/cgu")} style={{ color:"#a5d6a7", textDecoration:"underline", cursor:"pointer" }}>
               Conditions Générales d'Utilisation
             </span>{" "}qui restent applicables.
@@ -609,11 +609,9 @@ export function CGV() {
           </SubSection>
         </Section>
 
-        <Section title="7 bis. Achat unique : plan annuel personnalisé">
+        <Section title="7 bis. Plan annuel personnalisé">
           Le plan annuel personnalisé est un contenu numérique : les douze mois d'entretien du gazon de l'Utilisateur pour l'année indiquée, établis à partir des informations de son profil (zone, sol, type de gazon, équipement) et des règles d'entretien de l'Application. Les dates qu'il contient sont indicatives.<br/><br/>
-          <strong style={{ color:"#a5d6a7" }}>Prix :</strong> 0,99 € TTC, payé en une fois, sans abonnement ni renouvellement. L'achat est ouvert à tous les Utilisateurs, abonnés Premium compris, et s'effectue depuis le site web ou l'application web (paiement traité par Stripe).<br/><br/>
-          <strong style={{ color:"#a5d6a7" }}>Fourniture :</strong> le plan est accessible dans l'Application (Mon Gazon → Mon plan annuel) dès la confirmation du paiement, téléchargeable en PDF, et un lien est adressé par email. Il reste accessible tant que le compte de l'Utilisateur est actif.<br/><br/>
-          <strong style={{ color:"#a5d6a7" }}>Rétractation :</strong> le plan étant fourni immédiatement, l'Utilisateur est invité, avant le paiement, à demander expressément cette fourniture immédiate et à reconnaître qu'il perd son droit de rétractation (article L.221-28 du Code de la consommation), selon les modalités de l'article 8.
+          <strong style={{ color:"#a5d6a7" }}>Accès :</strong> le plan est inclus dans l'abonnement Premium, sans supplément. Il est accessible dans l'Application (Mon gazon → Mon plan gazon) et téléchargeable en PDF pendant toute la durée de l'accès Premium. Un plan acheté à l'unité lorsque cette vente existait reste accessible tant que le compte de l'Utilisateur est actif.
         </Section>
 
         <Section title="7 ter. Parrainage et codes créateurs">

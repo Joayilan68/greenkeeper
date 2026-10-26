@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { useAuth, useUser } from "@clerk/clerk-react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useUser } from "@clerk/clerk-react";
 import { useProfile } from "../lib/useProfile";
 import { isAndroidTWA } from "../lib/platform";
-import { planAnnuel, htmlPlanAnnuel, anneePlan, PRIX_PLAN_ANNUEL } from "../lib/planAnnuel";
+import { useSubscription } from "../lib/useSubscription";
+import { planAnnuel, htmlPlanAnnuel, anneePlan } from "../lib/planAnnuel";
 import { card, scroll } from "../lib/styles";
 
 const bouton = { width:"100%", background:"linear-gradient(135deg,#43a047,#2e7d32)", color:"#fff", border:"none", borderRadius:12, padding:"12px 16px", fontSize:14, fontWeight:800, cursor:"pointer" };
@@ -25,44 +26,19 @@ function Mois({ m }) {
   );
 }
 
-// Plan annuel personnalisé (achat unique, Mon Gazon) : aperçu + achat, puis les 12 mois et leur version PDF
+// Plan annuel personnalisé (Mon gazon), inclus dans Premium (décision de Jordan du 26/10/2026) : les 12 mois et leur
+// version PDF pour un compte Premium ou un plan acheté à l'unité quand cette vente existait ; sinon un aperçu.
 export default function PlanAnnuel() {
   const navigate = useNavigate();
-  const [params] = useSearchParams();
-  const { getToken } = useAuth();
   const { user } = useUser();
   const { profile } = useProfile();
-  const [cgv, setCgv] = useState(false);
-  const [retractation, setRetractation] = useState(false);
-  const [envoi, setEnvoi] = useState(false);
+  const { isPaid = false } = useSubscription() || {};
   const [erreur, setErreur] = useState("");
   const annee = anneePlan();
-  const achete = (user?.publicMetadata?.plansAnnuels || []).includes(annee);
-  const retourAchat = params.get("achat") === "ok";
-
-  // Retour de Stripe : l'achat est enregistré par le webhook quelques secondes après le paiement
-  useEffect(() => {
-    if (!retourAchat || achete || !user) return;
-    const t = setInterval(() => user.reload(), 3000);
-    return () => clearInterval(t);
-  }, [retourAchat, achete, user]);
+  const acces = isPaid || (user?.publicMetadata?.plansAnnuels || []).includes(annee);
 
   if (!profile) return null;
   const plan = planAnnuel(profile, annee);
-
-  const acheter = async () => {
-    setErreur(""); setEnvoi(true);
-    try {
-      const r = await fetch("/api/create-checkout", {
-        method: "POST",
-        headers: { "Content-Type":"application/json", Authorization:`Bearer ${await getToken()}` },
-        body: JSON.stringify({ plan: "plan_annuel", email: user?.primaryEmailAddress?.emailAddress }),
-      });
-      const d = await r.json().catch(() => ({}));
-      if (!r.ok || !d.url) throw new Error(d.error || "Paiement indisponible");
-      window.location.href = d.url;
-    } catch (e) { setErreur(e.message); setEnvoi(false); }
-  };
 
   const pdf = () => {
     const w = window.open("", "_blank");
@@ -83,7 +59,7 @@ export default function PlanAnnuel() {
       <div style={scroll}>
         {erreur && <div style={{ ...card(), color:"#ef9a9a", fontSize:12 }}>⚠️ {erreur}</div>}
 
-        {achete ? (
+        {acces ? (
           <>
             <div style={card()}>
               <div style={{ fontSize:12, color:"#a5d6a7", lineHeight:1.6, marginBottom:10 }}>
@@ -93,44 +69,27 @@ export default function PlanAnnuel() {
             </div>
             {plan.mois.map(m => <Mois key={m.num} m={m} />)}
           </>
-        ) : retourAchat ? (
-          <div style={{ ...card(), color:"#a5d6a7", fontSize:13 }}>✅ Paiement reçu, ton plan arrive dans quelques secondes…</div>
         ) : (
           <>
             <div style={card()}>
               <div style={{ fontSize:13, color:"#e8f5e9", lineHeight:1.7 }}>
-                Toute l'année d'entretien de <strong>ton</strong> gazon, mois par mois : tontes et hauteurs, arrosage selon ton sol, engrais, scarification ou aération, regarnissage dans les fenêtres de ta zone, travaux d'hiver. À garder en PDF ou à imprimer, idéal aussi à offrir.
+                Toute l'année d'entretien de <strong>ton</strong> gazon, mois par mois : tontes et hauteurs, arrosage selon ton sol, engrais, scarification ou aération, regarnissage dans les fenêtres de ta zone, travaux d'hiver. À garder en PDF ou à imprimer.
               </div>
             </div>
             <div style={{ fontSize:11, color:"#81c784", margin:"0 4px 6px" }}>Aperçu : le mois de {apercu.nom}</div>
             <Mois m={apercu} />
-
-            {isAndroidTWA() ? (
-              <div style={{ ...card(), fontSize:13, color:"#c8e6c9", lineHeight:1.6, textAlign:"center" }}>
-                L'achat du plan annuel se fait depuis notre site <strong style={{ color:"#a5d6a7" }}>mongazon360.fr</strong>, dans ton navigateur.
+            <div style={{ ...card(), textAlign:"center" }}>
+              <div style={{ fontSize:14, fontWeight:800, color:"#ffe082", marginBottom:6 }}>⭐ Inclus dans Premium</div>
+              <div style={{ fontSize:12, color:"#c8e6c9", lineHeight:1.6, marginBottom: isAndroidTWA() ? 0 : 12 }}>
+                Les 12 mois de ton plan, et leur version PDF, font partie de Premium.
               </div>
-            ) : (
-              <div style={card()}>
-                <div style={{ fontSize:18, fontWeight:900, color:"#F1F8F2", textAlign:"center", marginBottom:10 }}>{PRIX_PLAN_ANNUEL} <span style={{ fontSize:12, fontWeight:400, color:"#81c784" }}>achat unique</span></div>
-                <label style={{ display:"flex", gap:8, fontSize:11, color:"#c8e6c9", lineHeight:1.5, marginBottom:8 }}>
-                  <input type="checkbox" checked={cgv} onChange={() => setCgv(v => !v)} />
-                  <span>J'accepte les <a href="/cgv" target="_blank" rel="noopener noreferrer" style={{ color:"#a5d6a7" }}>conditions générales de vente</a>.</span>
-                </label>
-                <label style={{ display:"flex", gap:8, fontSize:11, color:"#c8e6c9", lineHeight:1.5, marginBottom:12 }}>
-                  <input type="checkbox" checked={retractation} onChange={() => setRetractation(v => !v)} />
-                  <span>Je demande la fourniture immédiate du plan dès le paiement et reconnais perdre mon droit de rétractation de 14 jours (article L.221-28 du Code de la consommation).</span>
-                </label>
-                <button onClick={acheter} disabled={!cgv || !retractation || envoi} style={{ ...bouton, opacity: cgv && retractation && !envoi ? 1 : 0.5 }}>
-                  {envoi ? "Ouverture du paiement…" : `Obtenir mon plan ${annee}`}
-                </button>
-                <div style={{ fontSize:10, color:"#4a7c5c", textAlign:"center", marginTop:8 }}>Paiement sécurisé par Stripe · plan envoyé aussi par email</div>
-              </div>
-            )}
+              {!isAndroidTWA() && <button onClick={() => navigate("/subscribe")} style={bouton}>Découvrir Premium</button>}
+            </div>
           </>
         )}
 
         <div onClick={() => navigate("/my-lawn")} style={{ textAlign:"center", fontSize:12, color:"#81c784", textDecoration:"underline", cursor:"pointer", margin:"8px 0 24px" }}>
-          Retour à Mon Gazon
+          Retour à Mon gazon
         </div>
       </div>
     </div>

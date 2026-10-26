@@ -1,5 +1,5 @@
 // src/lib/planAnnuel.js
-// Plan annuel personnalisé (page /plan-annuel, achat unique) : les 12 mois d'entretien du gazon de l'utilisateur,
+// Plan annuel personnalisé (page /plan-annuel, inclus dans Premium) : les 12 mois d'entretien du gazon de l'utilisateur,
 // construits uniquement à partir des règles partagées de l'app : calendrier des actions (calendrierActions.json),
 // dates de la zone (zonesGazon.json), hauteurs de tonte (tonteGazon.json), arrosage selon le sol (arrosageSol.json),
 // doses d'engrais du plan mensuel, et travaux d'hiver des notifications. Aucune règle propre à ce fichier.
@@ -9,10 +9,9 @@ import ARROSAGE from "./arrosageSol.json";
 import { MONTHLY_PLAN } from "./lawn";
 import { moisCalendrier, zoneClimatique, hasRobotTondeuse, hasArrosageAuto } from "./planEntretien";
 
-export const PRIX_PLAN_ANNUEL = "0,99 €";
 export const MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
 
-// Plan vendu : celui de l'année suivante à partir d'octobre (même règle que api/create-checkout.js)
+// Plan proposé : celui de l'année suivante à partir d'octobre
 export const anneePlan = (now = new Date()) => now.getMonth() >= 9 ? now.getFullYear() + 1 : now.getFullYear();
 
 const jourMois = ([m, j]) => `${j === 1 ? "1er" : j} ${MOIS[m - 1]}`;

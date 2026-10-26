@@ -70,6 +70,17 @@ async function appelGroq(corps) {
 
 const prix = (n) => `${Number(n).toFixed(2).replace(".", ",")} €`;
 
+// Niveaux et prix (src/lib/niveaux.json, src/lib/offreSaison.json : mêmes textes que la page « Choisir son niveau »)
+const NIVEAUX = require("../src/lib/niveaux.json");
+const OFFRE = require("../src/lib/offreSaison.json");
+const texteNiveaux = () => {
+  const liste = (n) => n.avantages.map(a => a.startsWith("Bob") ? a : a.charAt(0).toLowerCase() + a.slice(1)).join(" ; ");
+  return `- Niveaux (page « Choisir son niveau ») : Visiteur, sans compte (${liste(NIVEAUX.visiteur)}) ; Gratuit, avec un compte
+  (en plus : ${liste(NIVEAUX.gratuit)}) ; Premium à ${prix(OFFRE.prixMensuel)} par mois ou ${prix(OFFRE.prixAnnuel)} par an, sans
+  engagement (en plus : ${liste(NIVEAUX.premium)}). Offre de saison : l'annuel à ${prix(OFFRE.prixOffre)} la 1re année, du 1er
+  décembre au 25 février et du 1er juillet au 15 août. Chaque nouveau compte a 7 jours d'essai Premium, sans carte bancaire.`;
+};
+
 // [[produit:cle:gamme]] écrit par Bob → lien affilié Amazon (les jetons inconnus sont retirés)
 function lierProduits(texte, produits) {
   return texte.replace(/\[\[produit:([a-zA-Z]+):([a-z]+)\]\]/g, (_, cle, tier) => {
@@ -199,7 +210,8 @@ si une fonction n'existe pas, dis simplement que ce n'est pas encore possible) :
   score, problèmes réglés, encore là ou nouveaux (pas de notification, rien pendant l'essai de 7 jours).
 - Onglet « Mon gazon » : profil du gazon, score détaillé, évolution du score et actions de l'année, historique des
   actions (une action notée par erreur se retire), « Mes progrès » (série, GreenPoints, classement mensuel) et badges ;
-  « Mon plan gazon » : plan annuel personnalisé (12 mois d'entretien selon sa zone, son sol, son gazon et son équipement), achat unique à 0,99 €, en PDF.
+  « Mon plan gazon » : plan annuel personnalisé (12 mois d'entretien selon sa zone, son sol, son gazon et son équipement), en PDF,
+  inclus dans Premium.
   « Parraine tes amis » (Mon gazon) : code et lien à partager ; l'ami a 1 mois de Premium offert à l'inscription, le
   parrain 1 mois offert dès que l'ami utilise l'app (12 par an au plus ; crédit sur la facture s'il est abonné). Un code
   reçu (ami ou créateur) se saisit à l'inscription ou dans les 7 jours, dans la même carte.
@@ -240,6 +252,7 @@ si une fonction n'existe pas, dis simplement que ce n'est pas encore possible) :
   d'égalité, un compte Premium passe devant un compte gratuit, puis le compte le plus ancien ; participation gratuite ;
   règlement dans les CGU, article 6 g.
 - Arrosage calculé au millimètre selon l'évaporation et la pluie (Premium).
+${texteNiveaux()}
 - Rubrique « Conseils gazon » sur mongazon360.fr/conseils : guides saison par saison (liste ci-dessous).
 L'app ne permet PAS de planifier des actions futures, de piloter un programmateur ou un robot, ni de commander
 des produits.
