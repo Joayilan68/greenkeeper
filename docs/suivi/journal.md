@@ -487,3 +487,12 @@ du premier onglet).
   10 abonnés Premium payants (0 aujourd'hui), vues de « Choisir son niveau » suivies. Bilan le 15/02/2027, choix de
   Jordan : le temps de récolter chiffres et tendances, et de corriger ou réorienter avant la reprise de mars. Mesure :
   30 jours avant la mise en prod de décembre comparés à la période de la mise en prod au 14/02 (base PROD, admins exclus).
+- 26/10/2026 — Décisions de Jordan sur la refonte (document de refonte, section « Décisions du 26/10 ») : 3 niveaux validés
+  (maquettes du 18/10), sauf « Paysagistes partenaires » : pour tous les comptes, gratuits et Premium, quand le service
+  ouvrira ; essai Premium de 7 jours gardé ; nouveaux prix : 2,99 € par mois, 24,99 € par an, offre de saison à 12,99 € la
+  1re année, en prod avant le 1/12 (exception à la règle de décembre ; 2 nouveaux prix à créer dans Stripe) ; plan annuel
+  inclus dans Premium, plus vendu à part ; comptes existants prévenus par une carte « Nouveautés » et par un email avec
+  l'offre d'hiver (comptes qui acceptent les offres) ; diagnostic d'essai sans compte gardé (1 par appareil) ; paiement
+  Google Play dans l'app Android (Stripe reste le paiement du site) ; navigation à 4 onglets, plus l'onglet « Quiz »
+  jusqu'au 30/01 ; série et GreenPoints sur l'accueil, classement et badges dans Mon gazon ; onglet Produits retiré ;
+  visiteurs distincts mesurés sur STA (identifiant tiré au hasard, effacé à la fermeture de l'onglet).
