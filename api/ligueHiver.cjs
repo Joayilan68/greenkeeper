@@ -1,7 +1,9 @@
 // api/ligueHiver.cjs
 // Ligue d'hiver (src/lib/ligueHiver.json) : un défi et un quiz de 3 questions par semaine, du dimanche au samedi
 // (heure de Paris), sans classement. Table ligue_hiver (serveur uniquement, RLS sans politique).
-//   POST /api/send?type=ligue { action: "etat" | "defi" | "quiz", semaine, reponses } — jeton Clerk obligatoire
+//   POST /api/send?type=ligue { action: "etat" | "defi" | "debut_quiz" | "quiz", semaine, reponses } — jeton Clerk obligatoire
+// Quiz : une seule tentative, une minute (dureeQuiz) pour les 3 questions à partir de son début, contrôlée ici ; il compte
+// comme fait dès qu'il est commencé, et les réponses arrivées hors délai ne comptent pas.
 // Aussi : contexte des notifications (tâche du matin), statistiques et participant le plus assidu (Pilotage → Activité),
 // suppression des participations le 1er août qui suit la saison (règlement, CGU 6 g).
 // Hors production (STA, préversions), la ligue démarre à debutTest pour pouvoir la tester avant le 1er novembre.
@@ -24,15 +26,22 @@ function semaineDe(jour) {
 }
 const debutSemaine = (n) => saisie(num(debut()) + 7 * (n - 1));
 
+const MARGE_QUIZ = 10; // secondes accordées au réseau pour des réponses envoyées à la fin de la minute
+const quizFait = (r) => !!(r.quiz_le || r.quiz_debut);
+// Secondes restantes d'un quiz commencé et pas encore envoyé (0 sinon)
+const restantQuiz = (r) => (r.quiz_le || !r.quiz_debut ? 0
+  : Math.max(0, Math.ceil(L.dureeQuiz - (Date.now() - Date.parse(r.quiz_debut)) / 1000)));
+
 // Participations de l'utilisateur pour la saison, telles que l'app les affiche
 async function etat(supabase, userId, jour) {
   const { data, error } = await supabase.from("ligue_hiver")
-    .select("semaine, defi_le, quiz_le, quiz_reponses, quiz_bonnes")
+    .select("semaine, defi_le, quiz_debut, quiz_le, quiz_reponses, quiz_bonnes")
     .eq("user_id", userId).eq("saison", L.saison).order("semaine");
   if (error) throw new Error(error.message);
+  // Quiz commencé : en cours tant qu'il reste du temps (restant), puis fait, avec ou sans réponses envoyées à temps
   const semaines = (data || []).map(r => ({
     semaine: r.semaine, defi: !!r.defi_le,
-    quiz: r.quiz_le ? { reponses: r.quiz_reponses || [], bonnes: r.quiz_bonnes } : null,
+    quiz: quizFait(r) ? { reponses: r.quiz_reponses || [], bonnes: r.quiz_bonnes || 0, restant: restantQuiz(r) } : null,
   }));
   const n = semaineDe(jour);
   return {
@@ -52,22 +61,29 @@ async function handler(req, res) {
   try {
     const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
     const jour = jourParis();
-    if (body.action === "defi" || body.action === "quiz") {
+    if (body.action === "defi" || body.action === "debut_quiz" || body.action === "quiz") {
       const n = semaineDe(jour);
       if (!n || Number(body.semaine) !== n) return res.status(409).json({ error: "Cette semaine de la ligue est terminée : recharge la page." });
       const cle = { user_id: userId, saison: L.saison, semaine: n };
-      const { data: ligne, error } = await supabase.from("ligue_hiver").select("defi_le, quiz_le").match(cle).maybeSingle();
+      const { data: ligne, error } = await supabase.from("ligue_hiver").select("defi_le, quiz_debut, quiz_le").match(cle).maybeSingle();
       if (error) throw new Error(error.message);
       let maj = null;
       if (body.action === "defi" && !ligne?.defi_le) maj = { ...cle, defi_le: new Date().toISOString() };
+      // Le chrono part au premier début et ne repart jamais (une seule tentative)
+      if (body.action === "debut_quiz" && !quizFait(ligne || {})) maj = { ...cle, quiz_debut: new Date().toISOString() };
       if (body.action === "quiz") {
         if (ligne?.quiz_le) return res.status(409).json({ error: "Tu as déjà répondu au quiz de cette semaine." });
+        if (!ligne?.quiz_debut) return res.status(409).json({ error: "Commence le quiz pour y répondre." });
         const quiz = L.programme[n - 1].quiz, rep = body.reponses;
         if (!Array.isArray(rep) || rep.length !== quiz.length
-          || rep.some((r, i) => !Number.isInteger(r) || r < 0 || r >= quiz[i].choix.length)) {
-          return res.status(400).json({ error: "Réponds aux 3 questions." });
+          || rep.some((r, i) => r !== null && (!Number.isInteger(r) || r < 0 || r >= quiz[i].choix.length))) {
+          return res.status(400).json({ error: "Réponses du quiz illisibles : recharge la page." });
         }
-        maj = { ...cle, quiz_le: new Date().toISOString(), quiz_reponses: rep, quiz_bonnes: rep.filter((r, i) => r === quiz[i].bonne).length };
+        // Question sans réponse (null) : fausse ; envoi après la minute (et la marge réseau) : aucune réponse retenue
+        const aTemps = Date.now() - Date.parse(ligne.quiz_debut) <= (L.dureeQuiz + MARGE_QUIZ) * 1000;
+        const retenues = aTemps ? rep : rep.map(() => null);
+        maj = { ...cle, quiz_le: new Date().toISOString(), quiz_reponses: retenues,
+          quiz_bonnes: retenues.filter((r, i) => r === quiz[i].bonne).length };
       }
       if (maj) {
         const { error: e } = await supabase.from("ligue_hiver").upsert(maj, { onConflict: "user_id,saison,semaine" });
@@ -88,11 +104,11 @@ async function handler(req, res) {
 async function contexteNotifications(supabase, jour) {
   const n = semaineDe(jour);
   if (!n) return null;
-  const { data, error } = await supabase.from("ligue_hiver").select("user_id, defi_le, quiz_le")
+  const { data, error } = await supabase.from("ligue_hiver").select("user_id, defi_le, quiz_debut, quiz_le")
     .eq("saison", L.saison).eq("semaine", n);
   if (error) throw new Error(error.message);
   const faits = {};
-  for (const r of data || []) faits[r.user_id] = { defi: !!r.defi_le, quiz: !!r.quiz_le };
+  for (const r of data || []) faits[r.user_id] = { defi: !!r.defi_le, quiz: quizFait(r) };
   const astuces = L.programme.slice(0, n - 1).flatMap(s => s.quiz.map(q => ({ title: "📚 Le savais-tu ?", body: q.explication })));
   const commun = { semaine: n, debutSemaine: debutSemaine(n), programme: L.programme[n - 1], points: L.points, astuces };
   return { astuces, pour: (userId) => ({ ...commun, defi: false, quiz: false, ...faits[userId] }) };
@@ -116,7 +132,7 @@ const accesPremium = (u) => {
 // comptes exclus (admins, comptes de test)
 async function statsPilotage(supabase) {
   const { data, error } = await supabase.from("ligue_hiver")
-    .select("user_id, semaine, defi_le, quiz_le, quiz_bonnes").eq("saison", L.saison);
+    .select("user_id, semaine, defi_le, quiz_debut, quiz_le, quiz_bonnes").eq("saison", L.saison);
   if (error) throw new Error(error.message);
   const ids = [...new Set((data || []).map(r => r.user_id))];
   const comptes = {};
@@ -128,15 +144,15 @@ async function statsPilotage(supabase) {
   }
   const lignes = (data || []).filter(r => comptes[r.user_id] && !compteExclu(comptes[r.user_id]));
   const semaines = L.programme.map((s, i) => {
-    const l = lignes.filter(r => r.semaine === i + 1), q = l.filter(r => r.quiz_le);
+    const l = lignes.filter(r => r.semaine === i + 1), q = l.filter(quizFait);
     return { semaine: i + 1, debut: debutSemaine(i + 1), theme: s.theme, defis: l.filter(r => r.defi_le).length, quiz: q.length,
-      bonnes: q.length ? Math.round(q.reduce((t, r) => t + r.quiz_bonnes, 0) / q.length * 10) / 10 : null };
+      bonnes: q.length ? Math.round(q.reduce((t, r) => t + (r.quiz_bonnes || 0), 0) / q.length * 10) / 10 : null };
   });
   const parUser = {};
   for (const r of lignes) {
     const p = parUser[r.user_id] ||= { points: 0, completes: 0, bonnes: 0 };
-    p.points += (r.defi_le ? 1 : 0) + (r.quiz_le ? 1 : 0);
-    p.completes += r.defi_le && r.quiz_le ? 1 : 0;
+    p.points += (r.defi_le ? 1 : 0) + (quizFait(r) ? 1 : 0);
+    p.completes += r.defi_le && quizFait(r) ? 1 : 0;
     p.bonnes += r.quiz_bonnes || 0;
   }
   const classes = Object.entries(parUser)

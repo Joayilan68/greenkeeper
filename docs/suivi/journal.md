@@ -467,3 +467,12 @@ du premier onglet).
   le même plantage était signalé par chaque Error Boundary avant que l'anti-doublon ne joue. Go prod de Jordan pour le
   correctif, en prod le 26/10 : la page ne plante plus quand la traduction ou une extension l'a modifiée, une seule
   alerte par plantage. Recette « Déjà en prod » n° 33 et 34.
+- 26/10/2026 — Ligue d'hiver testée par Jordan sur STA : « top, ça fonctionne ». 3 changements demandés, faits sur STA :
+  (1) l'onglet Classement s'appelle « Quiz » pendant la ligue ; (2) anti-triche : quiz en une seule tentative, 1 minute
+  pour les 3 questions à partir de « Commencer », chrono tenu par le serveur (colonne quiz_debut ajoutée sur STA et PROD),
+  quiz compté dès qu'il est commencé, réponses hors délai non retenues, envoi automatique à la fin de la minute ;
+  règlement (CGU 6 g, mise à jour du 26/10), annonce, notification du quiz et consignes de Bob à jour ; (3) une
+  participation par compte : déjà assurée par le serveur (un défi et un quiz par semaine et par compte, deuxième réponse
+  refusée) et, par personne, par le règlement. Bancs : 11 contrôles du serveur et parcours de l'écran (avant, pendant,
+  fin du temps) OK. Limite connue : la 1re question est publique (post du dimanche, notification), le chrono protège
+  surtout les questions 2 et 3. Reste : nouveau test de Jordan sur STA, puis go prod avant le 30/10.

@@ -22,6 +22,11 @@ export function periodeLigue(jour = jourParis()) {
   return n === L.semaines + 1 ? { statut: "terminee", debut: debut() } : null;
 }
 
+// L'onglet Classement affiche la ligue (et s'appelle « Quiz ») pendant ses semaines, puis la semaine de clôture tant que
+// le classement n'a pas repris
+export const ligueAffichee = (classementActif, p = periodeLigue()) =>
+  p?.statut === "en_cours" || (p?.statut === "terminee" && !classementActif);
+
 // Premier et dernier jour de la semaine n (« AAAA-MM-JJ »)
 export function datesSemaine(n, deb = debut()) {
   const a = num(deb) + 7 * (n - 1);

@@ -1,4 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
+import { ligueAffichee } from "../lib/ligueHiver";
+import { SAISONS } from "../lib/useSaison";
 
 // Version test — hooks retirés temporairement pour isoler le bug
 const tabs = [
@@ -9,10 +11,13 @@ const tabs = [
   { path: "/products",   icon: "🛒", label: "Produits" },
   { path: "/classement", icon: "🏆", label: "Classement" },
 ];
+// Pendant la ligue d'hiver, l'onglet Classement affiche la ligue : il s'appelle « Quiz »
+const ongletQuiz = { path: "/classement", icon: "🧠", label: "Quiz" };
 
 export default function BottomNav() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const quiz = ligueAffichee(SAISONS[new Date().getMonth() + 1].classement);
 
   return (
     <nav style={{
@@ -23,7 +28,7 @@ export default function BottomNav() {
       display: "flex", justifyContent: "space-around",
       padding: "8px 0 20px", zIndex: 100,
     }}>
-      {tabs.map(t => {
+      {tabs.map(t => (quiz && t.path === ongletQuiz.path ? ongletQuiz : t)).map(t => {
         const active = pathname === t.path;
         return (
           <button key={t.path} onClick={() => navigate(t.path)} style={{

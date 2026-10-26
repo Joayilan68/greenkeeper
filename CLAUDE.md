@@ -96,10 +96,15 @@
   samedi (heure de Paris), un défi et un quiz de 3 questions par semaine, sans classement ; mise en prod en avance, seule,
   par exception à la règle de décembre. Contenu unique `src/lib/ligueHiver.json` (gestes, questions, réponses et explications
   tirés de la base de connaissances, articles liés), partagé par l'app (`src/lib/ligueHiver.js` ; écran de l'onglet
-  Classement, carte de « Aujourd'hui » et annonce : `src/components/LigueHiver.jsx`) et le serveur (`api/ligueHiver.cjs`,
-  `POST /api/send?type=ligue`). Hors production (STA, préversions), la ligue démarre à `debutTest` pour être testée.
+  Classement, renommé « Quiz » pendant la ligue (décision de Jordan du 26/10), carte de « Aujourd'hui » et annonce :
+  `src/components/LigueHiver.jsx`) et le serveur (`api/ligueHiver.cjs`, `POST /api/send?type=ligue`). Hors production (STA,
+  préversions), la ligue démarre à `debutTest` pour être testée.
 - Table `ligue_hiver` (serveur uniquement, RLS sans politique) : une ligne par utilisateur, saison et semaine ; supprimée le
   1er août qui suit la saison par la tâche du matin. Un défi ou un quiz manqué ne se rattrape pas.
+- Quiz (anti-triche, décision de Jordan du 26/10) : une seule tentative, 1 minute pour les 3 questions à partir de
+  « Commencer » (`dureeQuiz`, chrono tenu par le serveur, colonne `quiz_debut`) ; le quiz compte comme fait dès qu'il est
+  commencé, une question sans réponse dans la minute est fausse, des réponses envoyées hors délai ne comptent pas. Règle
+  citée dans le règlement (CGU 6 g), l'annonce et la notification du quiz.
 - Défi 50 GreenPoints, quiz 30 (aussi pendant la pause d'hiver) ; badge « Gardien de l'hiver 2026-2027 » à 10 semaines
   complètes (défi et quiz). Notifications au même rythme (une le matin au plus) : quiz (dimanche, sinon les jours suivants)
   et défi (à partir du mercredi), chacun une fois par semaine s'il n'est pas fait ; astuces « Le savais-tu ? » tirées des

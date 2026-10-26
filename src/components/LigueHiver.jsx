@@ -1,8 +1,8 @@
 // src/components/LigueHiver.jsx
-// Ligue d'hiver (src/lib/ligueHiver.js) : écran de l'onglet Classement de novembre à janvier (défi et quiz de la semaine,
-// progression, dotation, semaines passées), carte de « Aujourd'hui » et annonce du départ les 7 jours avant.
+// Ligue d'hiver (src/lib/ligueHiver.js) : écran de l'onglet Classement, renommé « Quiz » de novembre à janvier (défi et quiz
+// de la semaine, progression, dotation, semaines passées), carte de « Aujourd'hui » et annonce du départ les 7 jours avant.
 // GreenPoints à la première validation ; badge « Gardien de l'hiver » enregistré dans le profil à 10 semaines complètes.
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { card, cardTitle, scroll } from "../lib/styles";
 import { LIGUE, periodeLigue, datesSemaine, dateLongue } from "../lib/ligueHiver";
@@ -35,7 +35,7 @@ export function AnnonceLigue({ debut }) {
     <div style={givre}>
       <div style={{ fontSize:15, fontWeight:800, color:clair, marginBottom:6 }}>❄️ La Ligue d'hiver démarre le dimanche {dateLongue(debut)}</div>
       <div style={{ fontSize:12.5, color:vert, lineHeight:1.55 }}>
-        Chaque semaine jusqu'à fin janvier : un défi d'hiver pour ta pelouse et un quiz de 3 questions. Des GreenPoints à chaque
+        Chaque semaine jusqu'à fin janvier : un défi d'hiver pour ta pelouse et un quiz de 3 questions en {duree}. Des GreenPoints à chaque
         fois, un badge pour les plus réguliers, et {LIGUE.dotation} pour le plus assidu.
       </div>
     </div>
@@ -97,36 +97,92 @@ function CarteDefi({ n, fait, onFait }) {
   );
 }
 
-function CarteQuiz({ n, resultat, onRepondre }) {
+// Quiz de la semaine : une seule tentative, LIGUE.dureeQuiz secondes pour les 3 questions à partir de « Commencer » (chrono
+// tenu par le serveur, qui ne retient pas les réponses hors délai) ; à la fin du temps, les réponses données sont envoyées.
+const duree = LIGUE.dureeQuiz % 60 ? `${LIGUE.dureeQuiz} secondes` : `${LIGUE.dureeQuiz / 60} minute${LIGUE.dureeQuiz > 60 ? "s" : ""}`;
+const minSec = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+
+function CarteQuiz({ n, resultat, onDemarrer, onRepondre }) {
   const { theme, quiz } = LIGUE.programme[n - 1];
   const [choix, setChoix] = useState([]);
   const [envoi, setEnvoi] = useState(false);
   const [msg, setMsg] = useState("");
+  const [reste, setReste] = useState(0);
+  const choixFaits = useRef([]), envoye = useRef(false);
+  choixFaits.current = choix;
+  const enCours = !!resultat && resultat.restant > 0;
+  const corrige = !!resultat && !enCours;
   const complet = quiz.every((_, i) => Number.isInteger(choix[i]));
-  const envoyer = async () => {
+
+  const demarrer = async () => {
     setEnvoi(true); setMsg("");
-    try { await onRepondre(choix); } catch (e) { setMsg(`⚠️ ${e.message}`); }
+    try { await onDemarrer(); } catch (e) { setMsg(`⚠️ ${e.message}`); }
     finally { setEnvoi(false); }
   };
+  const envoyer = async (finDuTemps = false) => {
+    if (envoye.current) return;
+    envoye.current = true; setEnvoi(true); setMsg("");
+    const reponses = quiz.map((_, i) => (Number.isInteger(choixFaits.current[i]) ? choixFaits.current[i] : null));
+    try { await onRepondre(reponses); if (finDuTemps) setMsg("⏱️ Temps écoulé : tes réponses ont été envoyées."); }
+    catch (e) { envoye.current = false; setMsg(`⚠️ ${e.message}`); }
+    finally { setEnvoi(false); }
+  };
+  // Compte à rebours sur le temps restant donné par le serveur (pas d'horloge du téléphone) ; envoi à 0
+  useEffect(() => {
+    if (!enCours) return undefined;
+    const fin = Date.now() + resultat.restant * 1000;
+    let minuteur = null;
+    const tic = () => {
+      const r = Math.max(0, Math.ceil((fin - Date.now()) / 1000));
+      setReste(r);
+      if (r === 0) { clearInterval(minuteur); envoyer(true); }
+    };
+    tic();
+    minuteur = setInterval(tic, 250);
+    return () => clearInterval(minuteur);
+  }, [enCours]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const partager = async () => { const info = await partagerQuiz(); if (info) setMsg(info); };
   return (
     <div style={card()}>
       <div style={cardTitle}>
         <span>🧠 Quiz du dimanche · {theme}</span>
-        <span style={{ color: resultat ? "#66bb6a" : "#f9a825" }}>{resultat ? `${resultat.bonnes}/${quiz.length}` : `+${LIGUE.points.quiz} pts`}</span>
+        {!enCours && <span style={{ color: corrige ? "#66bb6a" : "#f9a825" }}>{corrige ? `${resultat.bonnes}/${quiz.length}` : `+${LIGUE.points.quiz} pts`}</span>}
       </div>
-      {quiz.map((q, i) => (
-        <Question key={i} q={q} i={i} corrige={!!resultat} choisi={resultat ? resultat.reponses[i] : choix[i]}
+      {enCours && (
+        <div style={{ marginBottom:12 }}>
+          <div style={{ display:"flex", justifyContent:"space-between", fontSize:13, fontWeight:800, color: reste <= 10 ? "#ef9a9a" : "#ffe082", marginBottom:5 }}>
+            <span>⏱️ Temps restant</span><span>{minSec(reste)}</span>
+          </div>
+          <div style={{ height:6, borderRadius:3, background:"rgba(255,255,255,0.1)", overflow:"hidden" }}>
+            <div style={{ height:"100%", width:`${(reste / LIGUE.dureeQuiz) * 100}%`, background: reste <= 10 ? "#ef5350" : "#66bb6a", transition:"width 0.25s linear" }} />
+          </div>
+        </div>
+      )}
+      {!resultat && (
+        <>
+          <div style={{ fontSize:12.5, color:vert, lineHeight:1.55, marginBottom:10 }}>
+            3 questions, {duree} pour y répondre. Une seule tentative : le chrono démarre dès que tu commences, et le quiz
+            compte même si tu ne vas pas au bout.
+          </div>
+          <button onClick={demarrer} disabled={envoi} style={{ ...plein, width:"100%" }}>{envoi ? "Chargement…" : "▶️ Commencer le quiz"}</button>
+        </>
+      )}
+      {resultat && quiz.map((q, i) => (
+        <Question key={i} q={q} i={i} corrige={corrige} choisi={corrige ? resultat.reponses[i] : choix[i]}
           onChoix={(k) => setChoix(c => { const x = [...c]; x[i] = k; return x; })} />
       ))}
-      {!resultat && (
-        <button onClick={envoyer} disabled={!complet || envoi} style={{ ...plein, width:"100%", opacity: complet ? 1 : 0.5 }}>
+      {enCours && (
+        <button onClick={() => envoyer()} disabled={!complet || envoi} style={{ ...plein, width:"100%", opacity: complet ? 1 : 0.5 }}>
           {envoi ? "Envoi…" : complet ? "Valider mes réponses" : "Réponds aux 3 questions"}
         </button>
       )}
-      {resultat && (
+      {corrige && (
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:8, flexWrap:"wrap" }}>
-          <div style={{ fontSize:12.5, color:vert }}>{resultat.bonnes === quiz.length ? "Sans faute, bravo !" : "Les bonnes réponses sont en vert."}</div>
+          <div style={{ fontSize:12.5, color:vert }}>
+            {!resultat.reponses.length ? "⏱️ Temps écoulé : aucune réponse envoyée."
+              : resultat.bonnes === quiz.length ? "Sans faute, bravo !" : "Les bonnes réponses sont en vert."}
+          </div>
           <button onClick={partager} style={leger}>📤 Partager le quiz</button>
         </div>
       )}
@@ -211,7 +267,7 @@ function SemainesPassees({ etat, jusqua }) {
 
 export default function LigueHiver() {
   const periode = periodeLigue();
-  const { etat, erreur, faireDefi, repondre } = useLigueHiver();
+  const { etat, erreur, faireDefi, demarrerQuiz, repondre } = useLigueHiver();
   const { gagnerPoints } = useGreenPoints();
   const { profile, saveProfile } = useProfile();
   const statut = periode?.statut;
@@ -241,7 +297,7 @@ export default function LigueHiver() {
           <>
             <CarteDefi n={n} fait={!!semaine?.defi}
               onFait={async () => { const avant = !!semaine?.defi; await faireDefi(n); if (!avant) gagnerPoints("defi_hiver"); }} />
-            <CarteQuiz key={n} n={n} resultat={semaine?.quiz}
+            <CarteQuiz key={n} n={n} resultat={semaine?.quiz} onDemarrer={() => demarrerQuiz(n)}
               onRepondre={async (reponses) => { await repondre(n, reponses); gagnerPoints("quiz_hiver"); }} />
           </>
         )}
@@ -261,7 +317,7 @@ export default function LigueHiver() {
   );
 }
 
-// Carte de « Aujourd'hui » : annonce, puis défi et quiz de la semaine (faits ou à faire), vers l'onglet Classement
+// Carte de « Aujourd'hui » : annonce, puis défi et quiz de la semaine (faits ou à faire), vers l'onglet Quiz
 export function CarteLigueHiver() {
   const navigate = useNavigate();
   const periode = periodeLigue();
@@ -278,7 +334,7 @@ export function CarteLigueHiver() {
     <div data-tuile="aujourdhui-ligue-hiver" role="button" onClick={() => navigate("/classement")} style={{ ...givre, cursor:"pointer" }}>
       <div style={cardTitle}><span>❄️ Ligue d'hiver · semaine {n}/{LIGUE.semaines}</span><span>→</span></div>
       {ligne("🎯", p.defi.titre, s?.defi && "✅ fait")}
-      {ligne("🧠", `Quiz : ${p.theme.toLowerCase()}`, s?.quiz && `✅ ${s.quiz.bonnes}/3`)}
+      {ligne("🧠", `Quiz : ${p.theme.toLowerCase()}`, s?.quiz && (s.quiz.restant > 0 ? "⏱️ en cours" : `✅ ${s.quiz.bonnes}/3`))}
     </div>
   );
 }
