@@ -505,6 +505,6 @@ du premier onglet).
   funnel_events.visite et vue funnel_visites_30j (service_role uniquement) créées en STA et en PROD. Recette de
   décembre n° 68 à 80. Reste : paiement Google Play (Play Console de Jordan).
 - 27/10/2026 — Mammotion : 2e réponse d'attente du support (Mira) : leurs ingénieurs sont pressés d'accélérer, nouvelles
-  « dès que possible », toujours sans date. Message prêt donné à Jordan pour le même ticket : réponse écrite demandée
-  avant le 1er décembre 2026 pour la mise en prod de décembre, et contact direct de leur équipe partenariats ou
-  développeurs. Le connecteur Mammotion reste sur STA tant que l'accord écrit n'est pas arrivé ; point au 03/11.
+  « dès que possible », toujours sans date. Message envoyé par Jordan le jour même dans le même ticket : réponse écrite
+  demandée avant le 1er décembre 2026 pour la mise en prod de décembre, et contact direct de leur équipe partenariats
+  ou développeurs. Le connecteur Mammotion reste sur STA tant que l'accord écrit n'est pas arrivé ; point au 03/11.
