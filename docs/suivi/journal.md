@@ -552,3 +552,6 @@ du premier onglet).
   8 h 43). Base d'octobre (du 2 au 27/10) : 277 visites, 35 entrées dans l'app (mesurées depuis le 9/10), 4 nouveaux
   comptes, aucune vue de « Choisir son niveau ». Comptage anonyme des abonnements payants ajouté au webhook Stripe
   (funnel_events, premium_souscrit), sur STA et dans la version de prod de la refonte ; recette de décembre n° 82.
+- 28/10/2026 — Base des KPI de la refonte : 0 abonnement Premium payant pris en octobre (chiffre de Pilotage → Finances
+  donné par Jordan). L'objectif de 10 abonnés payants au 15/02/2027 demande donc 10 abonnements pris après la mise en
+  prod, soit environ 2 toutes les 3 semaines.
