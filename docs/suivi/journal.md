@@ -527,3 +527,14 @@ du premier onglet).
   lisibles : valeur de la plus haute barre visible, dates espacées. Go prod de Jordan le jour même (exception, page
   réservée à l'admin) : en prod le 28/10/2026, recette « Déjà en prod (exceptions) » n° 43 ; la recette de décembre
   garde ses vérifications finales en n° 81 à 83.
+- 28/10/2026 — Décision de Jordan (priorité 1) : la refonte de l'app est avancée, en prod au plus tard le week-end du
+  31/10-1/11 au lieu de décembre, pour analyser conversion et appropriation et corriger d'ici au bilan du 15/02/2027 ;
+  constat de Jordan : visites en hausse depuis plusieurs jours, après la progression des semaines précédentes malgré la
+  baisse de S-1. Elle part avec les nouveaux prix (qu'elle affiche) et la météo du jour des comptes gratuits (validée
+  sur STA le 09/10, promise par le niveau Gratuit) ; le reste de STA attend décembre (parrainage, équipements Netatmo,
+  Davis, Mammotion et SILENO, capteurs de sol, diagnostic de suivi et niveau de confiance, notifications après la
+  première aide…). Version de prod préparée le 28/10 sur la branche refonte-prod (depuis main : prix, refonte, météo
+  gratuite, sans les fonctions restées sur STA ; niveaux et consignes de Bob limités à la prod), construite et testée
+  (bancs de la refonte : 15, 11, 12 et 4 vérifications sur autant, actions du jour 56 cas sur 56). Mise en prod prévue
+  le samedi 31/10 au matin avec le go de Jordan, après son test sur STA et la création des prix Stripe (identifiants
+  réels mis dans Vercel Production juste avant).

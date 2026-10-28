@@ -15,6 +15,8 @@
   partent en prod dès qu'ils sont prêts, sans toucher à l'app, pour le référencement de saison ; `main` est ensuite
   fusionné dans `Staging`. Accord permanent de Jordan (10/10/2026) : pas de nouvelle confirmation pour ces publications,
   mais Jordan est informé à chaque fois du contenu des articles publiés.
+  Exception (décision du 28/10/2026) : la refonte de l'app et les nouveaux prix partent en prod au plus tard le week-end
+  du 31/10-1/11/2026, pour en mesurer les effets avant le bilan du 15/02/2027 ; le reste de STA attend décembre.
 - Toute modification de schéma Supabase s'applique aux **deux** projets. Depuis le 30/10/2026, une nouvelle table du schéma
   `public` n'est plus ouverte automatiquement à l'API : la migration qui la crée donne ses droits explicitement
   (`grant select, insert, update, delete on public.<table> to service_role;` pour une table serveur uniquement ; `anon` et
