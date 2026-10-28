@@ -511,11 +511,13 @@ du premier onglet).
 - 28/10/2026 — Influenceurs, décision de Jordan : plus aucune relance ni nouvelle démarche vers les influenceurs pour
   l'instant (relances des vagues 1 et 2 envoyées le 19/10, sans nouvelle réponse ; 2e relance annulée, vague 3 des
   experts du gazon sportif mise en pause). Les 2 propositions d'influenceurs payants reçues seront analysées en janvier
-  2027 (en activer un ou non ; rappel le 11/01/2027). D'ici là, croissance sans influenceurs, par tous les autres leviers
-  (articles Conseils, Pinterest, page Facebook et Instagram, réponses dans les groupes, ligue d'hiver, refonte), quitte à
-  aller moins vite. La presse (SecteurVert, NewsJardinTV) reste prévue fin janvier.
+  2027 (en activer un ou non ; rappel le 11/01/2027). D'ici là, croissance sans influenceurs, par tous les autres
+  leviers (articles Conseils, Pinterest, page Facebook et Instagram, réponses dans les groupes, ligue d'hiver, refonte),
+  quitte à aller moins vite. La presse (SecteurVert, NewsJardinTV) reste prévue fin janvier. Préférence de Jordan :
+  avancer avec des entreprises aux échanges constructifs (fabricants, marques), même si leur réponse finit par être
+  négative, plutôt qu'avec des influenceurs qui ne répondent pas.
 - 28/10/2026 — Mammotion : 3e réponse d'attente du support (Mira) : ils se réjouissent que nous lancions la fonction
   dans notre app et donneront des nouvelles dès que possible, mais ne répondent toujours à aucune des 4 questions et ne
-  donnent pas d'accord écrit. Message court proposé à Jordan pour le même ticket : une simple confirmation écrite
-  (« oui ») de l'usage de l'API dans notre app payante, chaque utilisateur connectant son robot avec ses propres
+  donnent pas d'accord écrit. Message court envoyé par Jordan le jour même dans le même ticket : une simple confirmation
+  écrite (« oui ») de l'usage de l'API dans notre app payante, chaque utilisateur connectant son robot avec ses propres
   identifiants développeur, les autres questions pouvant suivre. Le connecteur Mammotion reste sur STA ; point au 03/11.
