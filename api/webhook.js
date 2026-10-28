@@ -1,6 +1,6 @@
 // api/webhook.js
 // ─────────────────────────────────────────────────────────────────────────────
-// Stripe webhook — vérification signature + activation/désactivation Premium + achat du plan annuel
+// Stripe webhook — vérification signature, activation/désactivation Premium, comptage des abonnements pris
 // Events : checkout.session.completed · subscription.updated · subscription.deleted
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -22,6 +22,22 @@ function getRawBody(req) {
     req.on("end",  ()    => resolve(Buffer.concat(chunks)));
     req.on("error", reject);
   });
+}
+
+// Mesure : un abonnement payant pris (point KPI du lundi), sans identifiant d'utilisateur, dans funnel_events ;
+// un échec de la mesure ne bloque jamais l'activation de Premium
+async function compterAbonnement(session) {
+  try {
+    const { createClient } = require("@supabase/supabase-js");
+    const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY);
+    const { error } = await sb.from("funnel_events").insert({
+      step: "premium_souscrit",
+      meta: { formule: session.metadata?.plan === "yearly" ? "annuel" : "mensuel", offre: session.metadata?.offre || null },
+    });
+    if (error) throw error;
+  } catch (e) {
+    await require("./alerting.cjs").recordError({ source: "server", severity: "warning", kind: "Mesure — abonnement Premium non compté", message: e.message });
+  }
 }
 
 module.exports = async function handler(req, res) {
@@ -53,6 +69,7 @@ module.exports = async function handler(req, res) {
           publicMetadata: { isSubscribed: true, subscriptionStatus: "active" },
         });
         console.log(`[Webhook] Premium activé — user ${userId}`);
+        await compterAbonnement(session);
         break;
       }
 
