@@ -1,5 +1,5 @@
 // src/pages/Pilotage.jsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import { useSubscription } from "../lib/useSubscription";
@@ -11,6 +11,7 @@ import PublicationsCard from "../components/PublicationsCard";
 import DemandesEquipementsCard from "../components/DemandesEquipementsCard";
 import { CHARGES_ACTIVES, CHARGES_PREVUES, STRIPE_FEES, URSSAF_RATE, montant } from "../lib/charges";
 import LigueHiverCard from "../components/LigueHiverCard";
+import Agrandir from "../components/Agrandir";
 import { periodeLigue } from "../lib/ligueHiver";
 import { OFFRE, enEuros } from "../lib/offreSaison";
 
@@ -25,26 +26,93 @@ function Bar({ value, max = 100, color = "#43a047" }) {
   );
 }
 
-function MiniChart({ data, valueKey, color = "#43a047", unit = "" }) {
+function MiniChart({ data, valueKey, color = "#43a047", unit = "", taille = null }) {
   if (!data?.length) return null;
   const max  = Math.max(...data.map(d => d[valueKey] || 0), 1);
-  const W    = 280; const H = 60; const BAR = Math.floor((W - data.length * 2) / data.length);
+  if (taille) return <MiniChartGrand data={data} valueKey={valueKey} color={color} unit={unit} max={max} taille={taille} />;
+  const W    = 280; const H = 60; const HAUT = 12; const BAR = Math.floor((W - data.length * 2) / data.length);
+  // Étiquettes du bas : une sur « pas » (en partant de la plus récente) pour qu'elles ne se chevauchent pas
+  const pas  = Math.max(1, Math.ceil((Math.max(...data.map(d => String(d.label).length)) * 4.8 + 4) / (BAR + 2)));
   return (
     <div style={{ overflowX:"auto" }}>
-      <svg width={W} height={H + 20} style={{ display:"block" }}>
+      <svg width={W} height={HAUT + H + 20} style={{ display:"block" }}>
         {data.map((d, i) => {
           const h   = Math.max(2, Math.round((d[valueKey] / max) * H));
           const x   = i * (BAR + 2);
-          const y   = H - h;
+          const y   = HAUT + H - h;
+          const lt  = String(d.label).length * 4.8, cx = x + BAR / 2;
+          const ancre = cx - lt / 2 < 0 ? "start" : cx + lt / 2 > W ? "end" : "middle";
           return (
             <g key={i}>
               <rect x={x} y={y} width={BAR} height={h} fill={color} opacity={0.8} rx={2} />
-              <text x={x + BAR/2} y={H + 14} textAnchor="middle" fill="#81c784" fontSize={8}>{d.label}</text>
+              {(data.length - 1 - i) % pas === 0 && (
+                <text x={ancre === "start" ? 0 : ancre === "end" ? W : cx} y={HAUT + H + 14} textAnchor={ancre} fill="#81c784" fontSize={8}>{d.label}</text>
+              )}
               {d[valueKey] > 0 && <text x={x + BAR/2} y={y - 2} textAnchor="middle" fill="#e8f5e9" fontSize={8}>{d[valueKey]}{unit}</text>}
             </g>
           );
         })}
       </svg>
+    </div>
+  );
+}
+
+// Vue agrandie trop large pour l'écran : position de départ du défilement horizontal (« fin » = le plus récent)
+function useDefilement(actif, position) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (actif && el) el.scrollLeft = position === "fin" ? el.scrollWidth : (el.scrollWidth - el.clientWidth) / 2;
+  });
+  return ref;
+}
+
+// Version agrandie (Agrandir) : barres d'au moins 24 px, défilement horizontal si l'écran est trop étroit, une étiquette
+// sur deux ou plus pour qu'elles ne se chevauchent pas, et détail des valeurs du plus récent au plus ancien.
+function MiniChartGrand({ data, valueKey, color, unit, max, taille }) {
+  const n = data.length;
+  const fente = Math.max(24, Math.floor(taille.largeur / n));
+  const W = fente * n, H = Math.max(160, Math.min(320, Math.round(taille.hauteur * 0.45))), HAUT = 16;
+  const police = fente >= 34 ? 11 : 9.5;
+  const largeurTexte = (t) => String(t).length * police * 0.6;
+  const pas = Math.max(1, Math.ceil((Math.max(...data.map(d => largeurTexte(d.label))) + 6) / fente));
+  const valeur = (d) => `${(d[valueKey] || 0).toLocaleString("fr-FR")}${unit}`;
+  const defilement = useDefilement(true, "fin");
+  return (
+    <div>
+      <div ref={defilement} style={{ overflowX:"auto" }}>
+        <svg width={W} height={HAUT + H + 24} style={{ display:"block" }} role="img"
+          aria-label={data.map(d => `${d.label} : ${valeur(d)}`).join(", ")}>
+          {data.map((d, i) => {
+            const v = d[valueKey] || 0;
+            const h = Math.max(2, Math.round((v / max) * H));
+            const x = i * fente, y = HAUT + H - h, cx = x + fente / 2;
+            // Étiquette du bas une fois sur « pas », en partant de la plus récente ; calée au bord si elle déborde
+            const lt = largeurTexte(d.label);
+            const ancre = cx - lt / 2 < 0 ? "start" : cx + lt / 2 > W ? "end" : "middle";
+            return (
+              <g key={i}>
+                <rect x={x + 3} y={y} width={fente - 6} height={h} fill={color} opacity={0.85} rx={3} />
+                {v > 0 && <text x={cx} y={y - 4} textAnchor="middle" fill="#e8f5e9" fontSize={police}>{valeur(d)}</text>}
+                {(n - 1 - i) % pas === 0 && (
+                  <text x={ancre === "start" ? 0 : ancre === "end" ? W : cx} y={HAUT + H + 17} textAnchor={ancre} fill="#81c784" fontSize={police}>{d.label}</text>
+                )}
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+      {W > taille.largeur && (
+        <div style={{ fontSize:11, color:"#81c784", marginTop:6 }}>↔ Fais glisser le graphique, ou tourne ton téléphone pour le voir en entier.</div>
+      )}
+      <div style={{ marginTop:14, display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(130px, 1fr))", columnGap:16 }}>
+        {data.slice().reverse().map((d, i) => (
+          <div key={i} style={{ display:"flex", justifyContent:"space-between", gap:8, fontSize:12, color:"#a5d6a7", padding:"4px 0",
+            borderBottom:"1px solid rgba(255,255,255,0.06)", fontVariantNumeric:"tabular-nums" }}>
+            <span>{d.label}</span><b style={{ color:"#e8f5e9" }}>{valeur(d)}</b>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -58,20 +126,26 @@ const nomMois = (m, long) => new Date(`${m}-01T12:00:00Z`).toLocaleDateString("f
 const tauxClic = (p) => p.affichages ? Math.round((p.clics / p.affichages) * 1000) / 10 : null;
 const taux = (p) => { const t = tauxClic(p); return t === null ? "—" : `${virgule(t)} %`; };
 
-function PositionChart({ mois }) {
+function PositionChart({ mois, taille = null }) {
   const [survol, setSurvol] = useState(null);
   if (!mois?.length) return <div style={{ fontSize:11, color:"#81c784" }}>Pas encore de données Google.</div>;
-  const W = 320, H = 150, GAUCHE = 30, DROITE = 16, HAUT = 14, BAS = 24;
+  // Vue agrandie : toute la largeur disponible, plus haute, textes 25 % plus grands
+  const t = taille ? 1.25 : 1;
+  const W = taille ? Math.max(320, taille.largeur) : 320, H = taille ? Math.max(150, Math.min(340, Math.round(taille.hauteur * 0.45))) : 150;
+  const GAUCHE = 30, DROITE = 16, HAUT = 14, BAS = 24;
   const max = Math.max(10, Math.ceil(Math.max(...mois.map(m => m.position)) / 10) * 10);
   const x = (i) => mois.length === 1 ? (GAUCHE + W - DROITE) / 2 : GAUCHE + (i * (W - GAUCHE - DROITE)) / (mois.length - 1);
   const y = (p) => HAUT + ((p - 1) * (H - HAUT - BAS)) / (max - 1);
   // Repères par ordre d'importance (top 3, fin de la 1re page…), sans étiquettes qui se chevauchent
   const reperes = [3, 10, 1, 20, 30, 50, 70, 100].filter(v => v <= max)
-    .reduce((garde, v) => garde.every(g => Math.abs(y(g) - y(v)) >= 11) ? [...garde, v] : garde, []);
+    .reduce((garde, v) => garde.every(g => Math.abs(y(g) - y(v)) >= 11 * t) ? [...garde, v] : garde, []);
   const enCours = new Date().toISOString().slice(0, 7);
   const der = mois[mois.length - 1], prec = mois[mois.length - 2];
   const ecart = prec ? Math.round((prec.position - der.position) * 10) / 10 : null; // positif = on remonte
   const m = survol !== null ? mois[survol] : null;
+  // Bulle de détail du côté du point touché, sans déborder du graphique
+  const px = m ? (x(survol) / W) * 100 : 0;
+  const bulle = px < 50 ? { left: `${Math.max(0, px - 10)}%` } : { right: `${Math.max(0, 90 - px)}%` };
   return (
     <div>
       <div style={{ display:"flex", alignItems:"baseline", gap:8, marginBottom:2, flexWrap:"wrap" }}>
@@ -86,30 +160,30 @@ function PositionChart({ mois }) {
       <div style={{ fontSize:11, color:"#a5d6a7", marginBottom:6, fontVariantNumeric:"tabular-nums" }}>
         Taux de clic <b style={{ color:"#e8f5e9" }}>{taux(der)}</b> · {der.clics} clic{der.clics >= 2 ? "s" : ""} pour {der.affichages.toLocaleString("fr-FR")} affichage{der.affichages >= 2 ? "s" : ""}
       </div>
-      <div style={{ position:"relative", maxWidth:420 }}>
+      <div style={{ position:"relative", maxWidth: taille ? "none" : 420 }}>
         <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display:"block" }} role="img"
           aria-label={`Position moyenne sur Google par mois : ${mois.map(p => `${nomMois(p.mois, true)} ${virgule(p.position)}`).join(", ")}`}>
           {reperes.map(v => (
             <g key={v}>
               <line x1={GAUCHE} x2={W - DROITE} y1={y(v)} y2={y(v)} stroke="rgba(255,255,255,0.12)" strokeWidth={1} />
-              <text x={GAUCHE - 6} y={y(v) + 3} textAnchor="end" fill="#81c784" fontSize={9}>{v}</text>
+              <text x={GAUCHE - 6} y={y(v) + 3} textAnchor="end" fill="#81c784" fontSize={9 * t}>{v}</text>
             </g>
           ))}
           {mois.length > 1 && <polyline points={mois.map((p, i) => `${x(i)},${y(p.position)}`).join(" ")}
             fill="none" stroke="#66BB6A" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />}
           {mois.map((p, i) => (
             <g key={p.mois}>
-              <circle cx={x(i)} cy={y(p.position)} r={4} fill="#66BB6A" stroke="#1e3b2b" strokeWidth={2} />
-              <text x={x(i)} y={H - 8} textAnchor="middle" fill="#81c784" fontSize={9}>{nomMois(p.mois)}</text>
-              <circle cx={x(i)} cy={y(p.position)} r={14} fill="transparent" style={{ cursor:"pointer" }}
+              <circle cx={x(i)} cy={y(p.position)} r={4 * t} fill="#66BB6A" stroke="#1e3b2b" strokeWidth={2} />
+              <text x={x(i)} y={H - 8} textAnchor="middle" fill="#81c784" fontSize={9 * t}>{nomMois(p.mois)}</text>
+              <circle cx={x(i)} cy={y(p.position)} r={14 * t} fill="transparent" style={{ cursor:"pointer" }}
                 onMouseEnter={() => setSurvol(i)} onMouseLeave={() => setSurvol(null)} onClick={() => setSurvol(survol === i ? null : i)} />
             </g>
           ))}
-          <text x={x(mois.length - 1)} y={y(der.position) - 9} textAnchor="middle" fill="#e8f5e9" fontSize={10} fontWeight={700}>{virgule(der.position)}</text>
+          <text x={x(mois.length - 1)} y={y(der.position) - 9 * t} textAnchor="middle" fill="#e8f5e9" fontSize={10 * t} fontWeight={700}>{virgule(der.position)}</text>
         </svg>
         {m && (
-          <div style={{ position:"absolute", top:4, left:`${Math.min(70, Math.max(0, (x(survol) / W) * 100 - 15))}%`, background:"#0d2519",
-            border:"1px solid rgba(255,255,255,0.15)", borderRadius:8, padding:"6px 8px", fontSize:10, color:"#e8f5e9", pointerEvents:"none", whiteSpace:"nowrap" }}>
+          <div style={{ position:"absolute", top:4, ...bulle, maxWidth:"75%", background:"#0d2519",
+            border:"1px solid rgba(255,255,255,0.15)", borderRadius:8, padding:"6px 8px", fontSize:10 * t, color:"#e8f5e9", pointerEvents:"none" }}>
             <b>{nomMois(m.mois, true)}{m.mois === enCours ? " (en cours)" : ""}</b><br />
             Position {virgule(m.position)} · {m.affichages.toLocaleString("fr-FR")} affichages · {m.clics} clics · {taux(m)} de clic
           </div>
@@ -117,7 +191,7 @@ function PositionChart({ mois }) {
       </div>
       <div style={{ marginTop:8 }}>
         {mois.slice().reverse().map(p => (
-          <div key={p.mois} style={{ display:"flex", justifyContent:"space-between", gap:8, flexWrap:"wrap", fontSize:10, color:"#a5d6a7", padding:"2px 0", fontVariantNumeric:"tabular-nums" }}>
+          <div key={p.mois} style={{ display:"flex", justifyContent:"space-between", gap:8, flexWrap:"wrap", fontSize:10 * t, color:"#a5d6a7", padding:"2px 0", fontVariantNumeric:"tabular-nums" }}>
             <span>{nomMois(p.mois, true)}{p.mois === enCours ? " (en cours)" : ""}</span>
             <span>position {virgule(p.position)} · {p.affichages.toLocaleString("fr-FR")} aff. · {p.clics} clics · {taux(p)}</span>
           </div>
@@ -224,16 +298,18 @@ function makeProj(W, H, pad) {
 function borderPath(coords, proj) {
   return coords.map((c, i) => `${i ? "L" : "M"}${proj(c[0], c[1]).map(n => n.toFixed(1)).join(" ")}`).join(" ") + " Z";
 }
-function FranceMap({ points }) {
+function FranceMap({ points, taille = null }) {
   const W = 300, H = 300, pad = 10;
+  const cote = taille ? Math.max(600, taille.largeur) : W; // vue agrandie : à faire glisser sur un écran étroit
+  const defilement = useDefilement(!!taille, "milieu");
   const proj  = makeProj(W, H, pad);
   const inFR  = p => p.lat >= 41.3 && p.lat <= 51.2 && p.lon >= -5.2 && p.lon <= 9.6;
   const fr    = (points || []).filter(inFR);
   const out   = (points || []).filter(p => !inFR(p));
   const maxC  = Math.max(1, ...fr.map(p => p.count));
   return (
-    <div style={{ overflowX: "auto" }}>
-      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ maxWidth: "100%", display: "block", margin: "0 auto" }}>
+    <div ref={defilement} style={{ overflowX: "auto" }}>
+      <svg width={cote} height={cote} viewBox={`0 0 ${W} ${H}`} style={{ maxWidth: taille ? "none" : "100%", display: "block", margin: "0 auto" }}>
         <path d={borderPath(FR_BORDER, proj)} fill="rgba(76,175,80,0.10)" stroke="rgba(165,214,167,0.55)" strokeWidth="1.2" strokeLinejoin="round" />
         <path d={borderPath(FR_CORSE, proj)}  fill="rgba(76,175,80,0.10)" stroke="rgba(165,214,167,0.55)" strokeWidth="1.2" strokeLinejoin="round" />
         {fr.map((p, i) => {
@@ -550,7 +626,7 @@ export default function Pilotage() {
                   <span>🗺️ Répartition des inscrits</span>
                   <span style={{ fontSize:11, color:"#81c784" }}>{users.geo.reduce((s,p)=>s+p.count,0)} localisés</span>
                 </div>
-                <FranceMap points={users.geo} />
+                <Agrandir titre="🗺️ Répartition des inscrits">{taille => <FranceMap points={users.geo} taille={taille} />}</Agrandir>
                 <div style={{ fontSize:10, color:"#4a7c5c", marginTop:6, lineHeight:1.5 }}>
                   Basé sur les profils avec ville renseignée. Taille du point = nombre d'inscrits sur la commune.
                 </div>
@@ -594,13 +670,13 @@ export default function Pilotage() {
             {users?.days?.length > 0 && (
               <div style={card()}>
                 <div style={cardTitle}><span>🆕 Nouveaux inscrits — 30 jours</span></div>
-                <MiniChart data={users.days} valueKey="count" color="#90caf9" />
+                <Agrandir titre="🆕 Nouveaux inscrits — 30 jours">{taille => <MiniChart data={users.days} valueKey="count" color="#90caf9" taille={taille} />}</Agrandir>
               </div>
             )}
             {users?.dauByDay?.length > 0 && (
               <div style={card()}>
                 <div style={cardTitle}><span>🟢 Actifs par jour</span></div>
-                <MiniChart data={users.dauByDay} valueKey="count" color="#66BB6A" />
+                <Agrandir titre="🟢 Actifs par jour">{taille => <MiniChart data={users.dauByDay} valueKey="count" color="#66BB6A" taille={taille} />}</Agrandir>
                 <div style={{ fontSize:10, color:"#4a7c5c", marginTop:6, lineHeight:1.5 }}>
                   Connexions réelles, hors admins. L'historique se construit jour après jour depuis l'activation du suivi.
                 </div>
@@ -609,7 +685,7 @@ export default function Pilotage() {
             {users?.siteVisits?.byDay?.length > 0 && (
               <div style={card()}>
                 <div style={cardTitle}><span>🌐 Visiteurs du site — 30 j</span><span style={{ fontSize:11, color:"#81c784" }}>{users.siteVisits.total30} sur 30 j</span></div>
-                <MiniChart data={users.siteVisits.byDay} valueKey="count" color="#4FC3F7" />
+                <Agrandir titre="🌐 Visiteurs du site — 30 jours">{taille => <MiniChart data={users.siteVisits.byDay} valueKey="count" color="#4FC3F7" taille={taille} />}</Agrandir>
                 <div style={{ fontSize:10, color:"#4a7c5c", marginTop:6, lineHeight:1.5 }}>
                   Visiteurs non connectés, toutes pages confondues (accueil, essai, démo, mentions…), 1 par appareil/jour. Les connectés sont dans « Actifs ». Robots (Google…) exclus depuis le 26/09/2026 au soir.
                 </div>
@@ -619,7 +695,7 @@ export default function Pilotage() {
               <div style={card()}>
                 <div style={cardTitle}><span>🔎 Position moyenne sur Google — par mois</span></div>
                 {seo.success
-                  ? <PositionChart mois={seo.mois} />
+                  ? <Agrandir titre="🔎 Position moyenne sur Google — par mois">{taille => <PositionChart mois={seo.mois} taille={taille} />}</Agrandir>
                   : <div style={{ fontSize:11, color:"#ffcc80" }}>Données Google indisponibles : {seo.error}</div>}
                 <div style={{ fontSize:10, color:"#4a7c5c", marginTop:6, lineHeight:1.5 }}>
                   Toutes nos pages, d'après la Search Console (moyenne pondérée par les affichages). Plus c'est bas, mieux c'est : 1 à 3 = top 3, jusqu'à 10 = première page. Le mois en cours est provisoire. Quand de nouvelles pages apparaissent loin dans Google, la moyenne peut reculer le temps qu'elles montent. Le taux de clic (clics ÷ affichages) dit combien d'affichages donnent une visite : il suit mieux les progrès réels que la position, qui recule mécaniquement quand on apparaît sur de nouvelles requêtes.
@@ -711,13 +787,13 @@ export default function Pilotage() {
             {users?.weeks && (
               <div style={card()}>
                 <div style={cardTitle}><span>📈 Inscriptions — 8 semaines</span></div>
-                <MiniChart data={users.weeks} valueKey="count" color="#43a047" />
+                <Agrandir titre="📈 Inscriptions — 8 semaines">{taille => <MiniChart data={users.weeks} valueKey="count" color="#43a047" taille={taille} />}</Agrandir>
               </div>
             )}
             {users?.months && (
               <div style={card()}>
                 <div style={cardTitle}><span>📅 Inscriptions — 6 mois</span></div>
-                <MiniChart data={users.months} valueKey="count" color="#1565c0" />
+                <Agrandir titre="📅 Inscriptions — 6 mois">{taille => <MiniChart data={users.months} valueKey="count" color="#1565c0" taille={taille} />}</Agrandir>
               </div>
             )}
             {users?.notifs && (
@@ -847,13 +923,13 @@ export default function Pilotage() {
             {revenue?.weeks && (
               <div style={card()}>
                 <div style={cardTitle}><span>📈 Revenus — 8 semaines (€)</span></div>
-                <MiniChart data={revenue.weeks} valueKey="revenue" color="#f9a825" unit="€" />
+                <Agrandir titre="📈 Revenus — 8 semaines (€)">{taille => <MiniChart data={revenue.weeks} valueKey="revenue" color="#f9a825" unit="€" taille={taille} />}</Agrandir>
               </div>
             )}
             {revenue?.months && (
               <div style={card()}>
                 <div style={cardTitle}><span>📅 Revenus — 6 mois (€)</span></div>
-                <MiniChart data={revenue.months} valueKey="revenue" color="#e65100" unit="€" />
+                <Agrandir titre="📅 Revenus — 6 mois (€)">{taille => <MiniChart data={revenue.months} valueKey="revenue" color="#e65100" unit="€" taille={taille} />}</Agrandir>
               </div>
             )}
             {/* ── Compte de résultat : produits − charges (mensuel / annuel) ── */}
@@ -1190,7 +1266,7 @@ export default function Pilotage() {
             {social?.byMonth?.length > 0 && (
               <div style={card()}>
                 <div style={cardTitle}><span>📈 Followers total — par mois</span></div>
-                <MiniChart data={social.byMonth} valueKey="total" color="#43a047" />
+                <Agrandir titre="📈 Followers au total — par mois">{taille => <MiniChart data={social.byMonth} valueKey="total" color="#43a047" taille={taille} />}</Agrandir>
               </div>
             )}
 
@@ -1212,7 +1288,11 @@ export default function Pilotage() {
                         </span>
                         <span style={{ fontSize:12, fontWeight:700, color:m.color }}>{a.followers} <span style={{ fontSize:9, color:"#81c784" }}>({pct}%)</span></span>
                       </div>
-                      {serie.length > 1 && <MiniChart data={serie} valueKey="count" color={m.color} />}
+                      {serie.length > 1 && (
+                        <Agrandir titre={`${m.icon} ${a.compte} (${m.label}) — followers par mois`}>
+                          {taille => <MiniChart data={serie} valueKey="count" color={m.color} taille={taille} />}
+                        </Agrandir>
+                      )}
                     </div>
                   );
                 })}
