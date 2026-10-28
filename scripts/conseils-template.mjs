@@ -34,7 +34,9 @@ const essai = (campagne) => `/essai?utm_source=conseils&amp;utm_medium=article&a
 // Mesure d'audience des pages Conseils (même logique que l'app, sans cookie ni donnée personnelle) :
 // 1. origine du visiteur conservée jusqu'à l'inscription : même clé sessionStorage que useUTMCapture
 //    (utm_source, sinon site d'origine ; campagne = utm_campaign, sinon l'article) ;
-// 2. visite comptée dans site_visits (1 par appareil et par jour, clé partagée avec l'app, comptes
+// 2. page lue comptée dans funnel_events (« conseils_vue », 1 par page et par onglet) avec l'identifiant de visite de l'app
+//    (sessionStorage « mg360_visite ») : relie la lecture d'un article à l'entrée dans l'app au cours de la même visite ;
+// 3. visite comptée dans site_visits (1 par appareil et par jour, clé partagée avec l'app, comptes
 //    connectés et robots exclus) si l'URL et la clé publique Supabase sont fournies au build.
 const SUPABASE_URL  = process.env.VITE_SUPABASE_URL || "";
 const SUPABASE_ANON = process.env.VITE_SUPABASE_ANON_KEY || "";
@@ -47,10 +49,15 @@ if(ref&&!/mongazon360\\./i.test(ref)){src="autre";for(var i=0;i<m.length;i++)if(
 var cap=null;try{cap=JSON.parse(sessionStorage.getItem(K));}catch(e){}
 if(!cap){cap={source:src,medium:p.get("utm_medium")||"conseils",campaign:p.get("utm_campaign")||"${campagne}",referer:ref,landingPath:location.pathname+location.search,capturedAt:new Date().toISOString()};sessionStorage.setItem(K,JSON.stringify(cap));}
 var U="${SUPABASE_URL}",A="${SUPABASE_ANON}",d=new Date().toLocaleDateString("fr-CA"),V="mg360_visit_"+d;
-if(!U||!A||localStorage.getItem(V)||/__client_uat=[1-9]/.test(document.cookie)||navigator.webdriver||${ROBOT_UA}.test(navigator.userAgent))return;
+if(!U||!A||/__client_uat=[1-9]/.test(document.cookie)||navigator.webdriver||${ROBOT_UA}.test(navigator.userAgent))return;
+var H={apikey:A,Authorization:"Bearer "+A,"Content-Type":"application/json",Prefer:"return=minimal"},vis=null,L="mg360_conseils_"+location.pathname;
+try{vis=sessionStorage.getItem("mg360_visite");if(!vis){vis=window.crypto&&crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+"-"+Math.random().toString(36).slice(2);sessionStorage.setItem("mg360_visite",vis);}
+if(!sessionStorage.getItem(L)){sessionStorage.setItem(L,"1");
+fetch(U+"/rest/v1/funnel_events",{method:"POST",headers:H,body:JSON.stringify({step:"conseils_vue",meta:{page:"${campagne}",source:String(cap.source).slice(0,40)},path:location.pathname,visite:vis})}).catch(function(){});}}catch(e){}
+if(localStorage.getItem(V))return;
 localStorage.setItem(V,"1");
 var ua=navigator.userAgent||"",ios=/iPhone|iPad|iPod/i.test(ua)||(/Macintosh/i.test(ua)&&navigator.maxTouchPoints>1);
-fetch(U+"/rest/v1/site_visits",{method:"POST",headers:{apikey:A,Authorization:"Bearer "+A,"Content-Type":"application/json",Prefer:"return=minimal"},
+fetch(U+"/rest/v1/site_visits",{method:"POST",headers:H,
 body:JSON.stringify({path:location.pathname,os:ios?"ios":/Android/i.test(ua)?"android":"ordinateur",installed:matchMedia("(display-mode: standalone)").matches,source:String(cap.source).slice(0,40),campaign:cap.campaign?String(cap.campaign).slice(0,80):null})}).catch(function(){});
 }catch(e){}})();</script>`;
 

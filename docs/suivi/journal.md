@@ -555,3 +555,10 @@ du premier onglet).
 - 28/10/2026 — Base des KPI de la refonte : 0 abonnement Premium payant pris en octobre (chiffre de Pilotage → Finances
   donné par Jordan). L'objectif de 10 abonnés payants au 15/02/2027 demande donc 10 abonnements pris après la mise en
   prod, soit environ 2 toutes les 3 semaines.
+- 28/10/2026 — Hausse des visites analysée à la demande de Jordan : 118 visites du 25 au 28/10 (26 sur les 6 jours
+  d'avant), dont 47 le 28/10. Premier levier : les 2 réponses de Jordan dans le groupe Facebook (liens groupe-engrais et
+  groupe-arrosage), 32 visites en 2 jours ; Google repart (8 à 12 visites par jour depuis le 26/10) ; 3 visites sur 4
+  arrivent sur un article. Fuite vers l'app : 13 entrées dans l'app (11 % des visites), 3 diagnostics d'essai, 1 nouveau
+  compte ; dans les articles, l'appel vers l'app est générique (diagnostic photo) et placé en bas. Mesure ajoutée,
+  invisible et partant avec la refonte : chaque page Conseils lue (conseils_vue) est reliée à l'entrée dans l'app au
+  cours de la même visite ; recette de décembre n° 83.

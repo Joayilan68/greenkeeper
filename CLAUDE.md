@@ -186,7 +186,8 @@
   des visiteurs dans `funnel_events`, mesuré depuis le 9/10) → inscriptions gratuites (premier jour d'un compte dans
   `daily_active_users`, admins exclus) → abonnements Premium payants (`premium_souscrit`, écrit dans `funnel_events` par le
   webhook Stripe depuis la mise en prod de la refonte ; avant : chiffre de Pilotage → Finances). En plus : vues de « Choisir
-  son niveau » et abonnements annuels pris avec l'offre.
+  son niveau », abonnements annuels pris avec l'offre, et articles qui mènent à l'app (`conseils_vue`, écrit par les pages
+  Conseils avec l'identifiant de visite de l'app : lecture d'un article puis entrée dans l'app au cours de la même visite).
 - Point chaque lundi matin (tâche programmée « Point KPI du lundi ») pour Jordan, noté dans `docs/suivi/journal.md`.
 - Gel du 31/10 au 21/11/2026 inclus : en prod, aucun changement visible des utilisateurs hors correctifs (les articles
   Conseils, les lots de comm et les mesures invisibles continuent ; les évolutions restent sur STA).
