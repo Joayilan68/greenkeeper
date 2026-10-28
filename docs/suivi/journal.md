@@ -521,8 +521,9 @@ du premier onglet).
   donnent pas d'accord écrit. Message court envoyé par Jordan le jour même dans le même ticket : une simple confirmation
   écrite (« oui ») de l'usage de l'API dans notre app payante, chaque utilisateur connectant son robot avec ses propres
   identifiants développeur, les autres questions pouvant suivre. Le connecteur Mammotion reste sur STA ; point au 03/11.
-- 28/10/2026 — Pilotage : graphiques agrandis au toucher (demande de Jordan du 28/10), sur STA : chaque graphique (ou
-  son lien « ⤢ Agrandir ») s'ouvre en plein écran, en grand, sur les jours les plus récents, avec le détail des
-  valeurs ; fermeture par ✕, en touchant le fond, par Échap ou avec le bouton retour du téléphone. Petits graphiques
-  plus lisibles : valeur de la plus haute barre visible, dates espacées. Recette de décembre n° 81 (vérifications
-  finales n° 82 à 84).
+- 28/10/2026 — Pilotage : graphiques agrandis au toucher (demande de Jordan du 28/10) : chaque graphique (ou son lien
+  « ⤢ Agrandir ») s'ouvre en plein écran, en grand, sur les jours les plus récents, avec le détail des valeurs ;
+  fermeture par ✕, en touchant le fond, par Échap ou avec le bouton retour du téléphone. Petits graphiques plus lisibles
+  : valeur de la plus haute barre visible, dates espacées. Go prod de Jordan le jour même (exception, page réservée à
+  l'admin) : en prod le 28/10/2026, recette « Déjà en prod (exceptions) » n° 43 ; la recette de décembre garde ses
+  vérifications finales en n° 81 à 83.
