@@ -523,7 +523,7 @@ du premier onglet).
   identifiants développeur, les autres questions pouvant suivre. Le connecteur Mammotion reste sur STA ; point au 03/11.
 - 28/10/2026 — Pilotage : graphiques agrandis au toucher (demande de Jordan du 28/10) : chaque graphique (ou son lien
   « ⤢ Agrandir ») s'ouvre en plein écran, en grand, sur les jours les plus récents, avec le détail des valeurs ;
-  fermeture par ✕, en touchant le fond, par Échap ou avec le bouton retour du téléphone. Petits graphiques plus lisibles
-  : valeur de la plus haute barre visible, dates espacées. Go prod de Jordan le jour même (exception, page réservée à
-  l'admin) : en prod le 28/10/2026, recette « Déjà en prod (exceptions) » n° 43 ; la recette de décembre garde ses
-  vérifications finales en n° 81 à 83.
+  fermeture par ✕, en touchant le fond, par Échap ou avec le bouton retour du téléphone. Petits graphiques plus
+  lisibles : valeur de la plus haute barre visible, dates espacées. Go prod de Jordan le jour même (exception, page
+  réservée à l'admin) : en prod le 28/10/2026, recette « Déjà en prod (exceptions) » n° 43 ; la recette de décembre
+  garde ses vérifications finales en n° 81 à 83.
