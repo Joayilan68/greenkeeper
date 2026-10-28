@@ -8,8 +8,8 @@ import { OFFRE, offreEnCours, enEuros } from "../lib/offreSaison";
 import { isAndroidTWA } from "../lib/platform";
 import { card } from "../lib/styles";
 
-// Jour de la mise en prod de décembre : à mettre à jour ce jour-là (recette de décembre)
-const MISE_EN_PROD = "2026-12-01";
+// Jour de la mise en prod de la refonte (décision de Jordan du 28/10/2026)
+const MISE_EN_PROD = "2026-10-31";
 const CLE = "mg360_nouveautes_refonte_vues";
 
 export default function CarteNouveautes({ isPaid }) {

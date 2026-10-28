@@ -14,6 +14,8 @@
   Exception (décision du 10/10/2026) : les articles Conseils (`content/conseils/*.md` : titres, descriptions, contenu)
   partent en prod dès qu'ils sont prêts, sans toucher à l'app, pour le référencement de saison ; `main` est ensuite
   fusionné dans `Staging`.
+  Exception (décision du 28/10/2026) : la refonte de l'app et les nouveaux prix partent en prod au plus tard le week-end
+  du 31/10-1/11/2026, pour en mesurer les effets avant le bilan du 15/02/2027 ; le reste de STA attend décembre.
 - Toute modification de schéma Supabase s'applique aux **deux** projets.
 - **Google Play** : l'app Android est une TWA (`fr.mongazon360.app`) qui charge mongazon360.fr en direct
   (service worker sans cache, `index.html` en no-store) → tout déploiement de `main` met à jour l'app

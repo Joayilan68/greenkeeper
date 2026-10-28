@@ -148,7 +148,7 @@ export function MentionsLegales() {
 export function Confidentialite() {
   return (
     <div>
-      <PageHeader emoji="🔒" title="Politique de confidentialité" subtitle="Mise à jour : 26 octobre 2026" />
+      <PageHeader emoji="🔒" title="Politique de confidentialité" subtitle="Mise à jour : 31 octobre 2026" />
       <div style={scroll}>
 
         <Section title="1. Préambule">
@@ -325,7 +325,7 @@ export function CGU() {
   const navigate = useNavigate();
   return (
     <div>
-      <PageHeader emoji="📜" title="Conditions Générales d'Utilisation" subtitle="Mise à jour : 26 octobre 2026" />
+      <PageHeader emoji="📜" title="Conditions Générales d'Utilisation" subtitle="Mise à jour : 31 octobre 2026" />
       <div style={scroll}>
 
         <div style={{ ...card(), background:"rgba(33,150,243,0.06)", border:"1px solid rgba(33,150,243,0.2)" }}>
@@ -531,7 +531,7 @@ export function CGV() {
   const navigate = useNavigate();
   return (
     <div>
-      <PageHeader emoji="💳" title="Conditions Générales de Vente" subtitle="Mise à jour : 26 octobre 2026" />
+      <PageHeader emoji="💳" title="Conditions Générales de Vente" subtitle="Mise à jour : 31 octobre 2026" />
       <div style={scroll}>
 
         <div style={{ ...card(), background:"rgba(33,150,243,0.06)", border:"1px solid rgba(33,150,243,0.2)" }}>
@@ -690,7 +690,7 @@ export function CGV() {
 export function Cookies() {
   return (
     <div>
-      <PageHeader emoji="🍪" title="Politique de cookies" subtitle="Mise à jour : 26 octobre 2026" />
+      <PageHeader emoji="🍪" title="Politique de cookies" subtitle="Mise à jour : 31 octobre 2026" />
       <div style={scroll}>
 
         <Section title="Qu'est-ce qu'un cookie ?">
