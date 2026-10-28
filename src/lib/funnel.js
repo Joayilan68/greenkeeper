@@ -10,6 +10,7 @@
 //   • auth_screen_view  → il arrive sur l'écran compte (inscription / connexion)
 //   • signup_completed  → il a créé son compte (nouvel utilisateur)
 //   • page_view, tuile  → mesure d'usage des pages et des tuiles (voir mesure.js)
+//   • premium_souscrit  → abonnement payant pris (écrit par le webhook Stripe, api/webhook.js)
 //
 // Les vues (landing_view, auth_screen_view) sont limitées à 1 par SESSION de
 // navigateur pour que l'entonnoir soit comparable étape par étape. Les clics

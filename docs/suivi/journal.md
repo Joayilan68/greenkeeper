@@ -545,3 +545,10 @@ du premier onglet).
   lendemain de la mise en prod prévue de la refonte et des nouveaux prix ; l'email de lancement part tout seul par la
   tâche du matin aux comptes gratuits qui acceptent les offres (25 par jour au plus). Recette de décembre n° 81
   (vérifications finales n° 82 à 84) ; n° 58 mise à jour (12,99 €, à partir du 1/11).
+- 28/10/2026 — Décisions de Jordan : les 4 conseils du jour sont appliqués (test de la refonte sur STA avant le go ; gel
+  de 3 semaines après la mise en prod, du 31/10 au 21/11 inclus, hors correctifs ; indicateurs de l'offre suivis ;
+  retour arrière prévu). Indicateurs principaux : visites → entrées dans l'app → inscriptions gratuites → abonnements
+  Premium, en volume et en taux, avant et après le 1/11 ; point chaque lundi matin (tâche « Point KPI du lundi »,
+  8 h 43). Base d'octobre (du 2 au 27/10) : 277 visites, 35 entrées dans l'app (mesurées depuis le 9/10), 4 nouveaux
+  comptes, aucune vue de « Choisir son niveau ». Comptage anonyme des abonnements payants ajouté au webhook Stripe
+  (funnel_events, premium_souscrit), sur STA et dans la version de prod de la refonte ; recette de décembre n° 82.
