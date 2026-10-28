@@ -73,12 +73,16 @@ const prix = (n) => `${Number(n).toFixed(2).replace(".", ",")} €`;
 // Niveaux et prix (src/lib/niveaux.json, src/lib/offreSaison.json : mêmes textes que la page « Choisir son niveau »)
 const NIVEAUX = require("../src/lib/niveaux.json");
 const OFFRE = require("../src/lib/offreSaison.json");
+// « 11-01 » → « 1er novembre » (périodes de l'offre de saison)
+const MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+const jourMois = (md) => { const [m, j] = md.split("-").map(Number); return `${j === 1 ? "1er" : j} ${MOIS[m - 1]}`; };
 const texteNiveaux = () => {
   const liste = (n) => n.avantages.map(a => a.startsWith("Bob") ? a : a.charAt(0).toLowerCase() + a.slice(1)).join(" ; ");
+  const periodes = OFFRE.fenetres.map(f => `du ${jourMois(f.debut)} au ${jourMois(f.fin)}`).join(" et ");
   return `- Niveaux (page « Choisir son niveau ») : Visiteur, sans compte (${liste(NIVEAUX.visiteur)}) ; Gratuit, avec un compte
   (en plus : ${liste(NIVEAUX.gratuit)}) ; Premium à ${prix(OFFRE.prixMensuel)} par mois ou ${prix(OFFRE.prixAnnuel)} par an, sans
-  engagement (en plus : ${liste(NIVEAUX.premium)}). Offre de saison : l'annuel à ${prix(OFFRE.prixOffre)} la 1re année, du 1er
-  décembre au 25 février et du 1er juillet au 15 août. Chaque nouveau compte a 7 jours d'essai Premium, sans carte bancaire.`;
+  engagement (en plus : ${liste(NIVEAUX.premium)}). Offre de saison : l'annuel à ${prix(OFFRE.prixOffre)} la 1re année, ${periodes}.
+  Chaque nouveau compte a 7 jours d'essai Premium, sans carte bancaire.`;
 };
 
 // [[produit:cle:gamme]] écrit par Bob → lien affilié Amazon (les jetons inconnus sont retirés)

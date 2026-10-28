@@ -1,6 +1,6 @@
 // src/lib/offreSaison.js
 // Prix de Premium (mensuel, annuel) et offre saisonnière : abonnement annuel à prixOffre la 1re année au lieu de
-// prixAnnuel pendant les périodes creuses — 1/12 → 25/02 et 1/07 → 15/08, chaque année. Source unique : offreSaison.json,
+// prixAnnuel pendant les périodes creuses de chaque année (« fenetres »). Source unique : offreSaison.json,
 // partagé avec le serveur (api/create-checkout.js vérifie le prix Stripe et applique la remise, api/send.js envoie les
 // emails) ; les prix Stripe correspondants sont dans les variables STRIPE_PRICE_MONTHLY et STRIPE_PRICE_YEARLY.
 import config from "./offreSaison.json";

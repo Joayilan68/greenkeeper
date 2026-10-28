@@ -538,3 +538,10 @@ du premier onglet).
   (bancs de la refonte : 15, 11, 12 et 4 vérifications sur autant, actions du jour 56 cas sur 56). Mise en prod prévue
   le samedi 31/10 au matin avec le go de Jordan, après son test sur STA et la création des prix Stripe (identifiants
   réels mis dans Vercel Production juste avant).
+- 28/10/2026 — Décision de Jordan : l'offre d'hiver (Premium annuel à 12,99 € la 1re année au lieu de 24,99 €) commence
+  désormais le 1er novembre chaque année, au lieu du 1er décembre, et finit toujours le 25 février ; l'offre d'été
+  (1/07 → 15/08) ne change pas. Fait sur STA et sur la version de prod de la refonte (src/lib/offreSaison.json ;
+  consignes de Bob désormais tirées des périodes de ce fichier). Cette année, l'offre démarre le dimanche 1/11, au
+  lendemain de la mise en prod prévue de la refonte et des nouveaux prix ; l'email de lancement part tout seul par la
+  tâche du matin aux comptes gratuits qui acceptent les offres (25 par jour au plus). Recette de décembre n° 81
+  (vérifications finales n° 82 à 84) ; n° 58 mise à jour (12,99 €, à partir du 1/11).
