@@ -570,3 +570,8 @@ du premier onglet).
   au milieu et un à la fin de chaque article, un bouton fixe sur téléphone ; seulement des fonctions réellement en prod.
   Aperçu à Jordan vers le 16/11, mise en prod le 22/11 à la fin du gel ; effet mesuré article par article
   (conseils_vue → entrée dans l'app).
+- 28/10/2026 — Calendrier du chantier « l'app sur toutes les pages » validé par Jordan, avec remise des visuels pour
+  qu'il les challenge avant la mise en prod (captures réelles et numérotées, sur téléphone et sur ordinateur, sur une
+  page privée qu'il peut commenter) : 1re série au plus tard le 6/11 (les 10 accroches, un article complet avec ses 3
+  encarts et le bouton fixe, la grille « Ce que fait l'app »), ses retours jusqu'au 11/11 ; 2e série le 16/11 (toutes
+  les pages, et le lien STA pour naviguer), ses retours jusqu'au 20/11 ; mise en prod le 22/11 seulement après son go.
