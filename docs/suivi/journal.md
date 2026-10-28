@@ -508,3 +508,9 @@ du premier onglet).
   « dès que possible », toujours sans date. Message envoyé par Jordan le jour même dans le même ticket : réponse écrite
   demandée avant le 1er décembre 2026 pour la mise en prod de décembre, et contact direct de leur équipe partenariats
   ou développeurs. Le connecteur Mammotion reste sur STA tant que l'accord écrit n'est pas arrivé ; point au 03/11.
+- 28/10/2026 — Influenceurs, décision de Jordan : plus aucune relance ni nouvelle démarche vers les influenceurs pour
+  l'instant (relances des vagues 1 et 2 envoyées le 19/10, sans nouvelle réponse ; 2e relance annulée, vague 3 des
+  experts du gazon sportif mise en pause). Les 2 propositions d'influenceurs payants reçues seront analysées en janvier
+  2027 (en activer un ou non ; rappel le 11/01/2027). D'ici là, croissance sans influenceurs, par tous les autres leviers
+  (articles Conseils, Pinterest, page Facebook et Instagram, réponses dans les groupes, ligue d'hiver, refonte), quitte à
+  aller moins vite. La presse (SecteurVert, NewsJardinTV) reste prévue fin janvier.
