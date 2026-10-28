@@ -5,7 +5,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { trackFunnel, trackFunnelOncePerSession } from "../lib/funnel";
-import { codeRecu } from "../lib/codeParrainage";
 import { periodeLigue, dateLongue } from "../lib/ligueHiver";
 import { RESEAUX } from "../lib/reseaux";
 import { getWMO } from "../lib/lawn";
@@ -44,7 +43,6 @@ function conseilDuJour() {
 
 export default function AccueilVisiteur() {
   const navigate = useNavigate();
-  const code = codeRecu(); // arrivé par un lien de parrainage ou de créateur
   const ligue = periodeLigue();
   const saison = SAISONS[Number(jourParis().slice(5, 7))];
   const conseil = conseilDuJour();
@@ -125,15 +123,6 @@ export default function AccueilVisiteur() {
             Se connecter
           </button>
         </header>
-
-        {/* ── Code de parrainage ou créateur reçu par lien ── */}
-        {code && (
-          <div data-tuile="visiteur-code" role="button" onClick={() => goSignup("code")} style={{ ...carte, background:"linear-gradient(135deg,rgba(249,168,37,0.22),rgba(13,43,26,0.6))",
-            border:"1px solid rgba(249,168,37,0.45)", cursor:"pointer", textAlign:"center" }}>
-            <div style={{ fontSize:14, fontWeight:800, color:"#ffe082" }}>🎁 Code {code} : 1 mois de Premium offert</div>
-            <div style={{ fontSize:12, color:G.muted, marginTop:3 }}>Crée ton compte, le mois offert s'active tout seul.</div>
-          </div>
-        )}
 
         {/* ── Ligue d'hiver : annoncée 7 jours avant le départ, puis jusqu'à fin janvier ── */}
         {ligue && ligue.statut !== "terminee" && (
