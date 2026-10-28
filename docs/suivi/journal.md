@@ -562,3 +562,11 @@ du premier onglet).
   compte ; dans les articles, l'appel vers l'app est générique (diagnostic photo) et placé en bas. Mesure ajoutée,
   invisible et partant avec la refonte : chaque page Conseils lue (conseils_vue) est reliée à l'entrée dans l'app au
   cours de la même visite ; recette de décembre n° 83.
+- 28/10/2026 — Décision de Jordan : sur toutes les pages du site (articles Conseils, rubrique, Qui sommes-nous, accueil
+  visiteur), démultiplier la communication sur l'app en la diversifiant, avec 10 thèmes : diagnostic, quiz, plan
+  d'entretien, robot et arrosage connectés, météo, parcours semis et regarnissage (et les suivants), recommandation de
+  Bob, suivi d'entretien, conseils d'achat, suivi du budget. Mise en œuvre sur STA à partir du 2/11 (après la mise en
+  prod de la refonte, pour ne pas changer STA pendant le test de Jordan) : un encart adapté au sujet après le résumé, un
+  au milieu et un à la fin de chaque article, un bouton fixe sur téléphone ; seulement des fonctions réellement en prod.
+  Aperçu à Jordan vers le 16/11, mise en prod le 22/11 à la fin du gel ; effet mesuré article par article
+  (conseils_vue → entrée dans l'app).
