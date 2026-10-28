@@ -514,3 +514,8 @@ du premier onglet).
   2027 (en activer un ou non ; rappel le 11/01/2027). D'ici là, croissance sans influenceurs, par tous les autres leviers
   (articles Conseils, Pinterest, page Facebook et Instagram, réponses dans les groupes, ligue d'hiver, refonte), quitte à
   aller moins vite. La presse (SecteurVert, NewsJardinTV) reste prévue fin janvier.
+- 28/10/2026 — Mammotion : 3e réponse d'attente du support (Mira) : ils se réjouissent que nous lancions la fonction
+  dans notre app et donneront des nouvelles dès que possible, mais ne répondent toujours à aucune des 4 questions et ne
+  donnent pas d'accord écrit. Message court proposé à Jordan pour le même ticket : une simple confirmation écrite
+  (« oui ») de l'usage de l'API dans notre app payante, chaque utilisateur connectant son robot avec ses propres
+  identifiants développeur, les autres questions pouvant suivre. Le connecteur Mammotion reste sur STA ; point au 03/11.
