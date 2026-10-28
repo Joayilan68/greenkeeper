@@ -1,6 +1,6 @@
 {
   "fenetres": [
-    { "nom": "hiver", "debut": "12-01", "fin": "02-25" },
+    { "nom": "hiver", "debut": "11-01", "fin": "02-25" },
     { "nom": "été",   "debut": "07-01", "fin": "08-15" }
   ],
   "prixMensuel": 2.99,
