@@ -638,3 +638,7 @@ du premier onglet).
   « Choisir son niveau » : il est renvoyé à l'accueil sans voir la page (aucun lien n'y menait déjà dans l'app ; seules
   une adresse tapée ou un ancien lien d'email pouvaient y mener). L'essai de 7 jours garde la page pour s'abonner. STA
   et version de prod ; banc d'essai et recette n° 73 à jour.
+- 29/10/2026 — Sur STA (instance Clerk de test, séparée de la prod), l'adresse personnelle de Jordan est rattachée au
+  compte Mongazon360 et Clerk refuse de l'en retirer : se connecter avec elle ouvre ce compte. Sans impact (en prod, les
+  deux comptes sont bien distincts, vérifié en base) : Jordan laisse ainsi ; tests Premium avec le compte Mongazon360,
+  tests gratuits avec les comptes de test « + ».
