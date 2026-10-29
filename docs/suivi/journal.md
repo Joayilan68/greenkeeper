@@ -628,3 +628,6 @@ du premier onglet).
 - 29/10/2026 — Mon gazon épuré jugé « beaucoup mieux » par Jordan sur STA ; à sa demande, « Mes progrès » (série,
   GreenPoints, classement) regroupé en une seule carte au lieu de 3 (STA et version de prod). Validation finale sur STA
   au plus tard le 30/10 au soir.
+- 29/10/2026 — Mon gazon épuré validé par Jordan sur STA : il part en prod avec la refonte samedi (déjà dans la version
+  de prod). Restent à tester sur STA d'ici le 30/10 au soir : la page /subscribe d'un abonné, le compte gratuit et
+  l'accueil sans être connecté.
