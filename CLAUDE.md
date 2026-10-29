@@ -127,7 +127,8 @@
   inclus dans Premium, plus vendu à l'unité (plans déjà achetés gardés : `publicMetadata.plansAnnuels`).
   Accueil visiteur (`src/pages/AccueilVisiteur.jsx`, remplace la présentation et la démo, `/demo` redirigée vers `/`) :
   météo du jour de sa commune, conseil de Bob du jour (`src/lib/conseilsBob.json`, partagé avec les notifications),
-  diagnostic d'essai, articles de saison ; barre visiteur Accueil, Conseils, Diagnostic, Compte.
+  diagnostic d'essai, articles de saison ; barre visiteur Accueil, Conseils, Diagnostic, Compte (aussi sur l'essai du
+  diagnostic, la création de compte et la connexion).
 
 ## Équipements connectés
 - Table `equipements` (serveur uniquement, RLS sans politique) via `api/objets.js` ; logique et connecteurs dans

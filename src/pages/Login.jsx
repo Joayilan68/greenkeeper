@@ -4,6 +4,7 @@ import { appShell } from "../lib/styles";
 import { isInAppBrowser } from "../lib/inapp";
 import { trackFunnelOncePerSession } from "../lib/funnel";
 import { pixelTrack } from "../lib/metaPixel";
+import BarreVisiteur from "../components/BarreVisiteur";
 
 // mode = "signup" (création de compte, parcours d'acquisition par défaut)
 //      | "signin" (connexion, pour ceux qui ont déjà un compte)
@@ -53,7 +54,7 @@ export default function Login({ mode = "signin" }) {
   };
 
   return (
-    <div style={{ ...appShell, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 16px" }}>
+    <div style={{ ...appShell, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 16px 96px" }}>
       <div style={{ textAlign: "center", marginBottom: 24 }}>
         <img
           src="/mg360-mascot-transparent.png"
@@ -121,6 +122,9 @@ export default function Login({ mode = "signin" }) {
       <div style={{ marginTop: 20, fontSize: 10, color: "#4a7c5c", textAlign: "center", maxWidth: 360, lineHeight: 1.6 }}>
         Mongazon360® est une marque déposée et enregistrée à l'EUIPO — protégée dans les 27 pays de l'Union européenne.
       </div>
+
+      {/* Barre du bas du visiteur : création de compte et connexion restent dans l'app (décision de Jordan du 29/10/2026) */}
+      <BarreVisiteur />
     </div>
   );
 }
