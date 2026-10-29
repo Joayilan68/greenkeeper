@@ -49,7 +49,7 @@ export default function Subscribe() {
   const navigate = useNavigate();
   const { getToken } = useAuth();
   const { user } = useUser();
-  const { tier, isTrial, trialDaysLeft } = useSubscription();
+  const { tier, isPaid, isTrial, trialDaysLeft } = useSubscription(); // isPaid : abonné, Premium offert ou admin
   const offre = offreEnCours(); // offre saisonnière : annuel à prix réduit la 1re année
   const [selected, setSelected] = useState(offre ? "yearly" : "monthly");
   const [loading, setLoading] = useState(false);
@@ -160,7 +160,7 @@ export default function Subscribe() {
       </Niveau>
       <Niveau niveau={NIVEAUX.premium} couleur="#ffe082"
         precision={`${enEuros(OFFRE.prixMensuel)}/mois · ${enEuros(OFFRE.prixAnnuel)}/an`}
-        badge={isTrial ? `Ton essai : encore ${trialDaysLeft} jour${trialDaysLeft > 1 ? "s" : ""}` : tier === "paid" ? "Ton niveau" : null}
+        badge={isTrial ? `Ton essai : encore ${trialDaysLeft} jour${trialDaysLeft > 1 ? "s" : ""}` : isPaid ? "Ton niveau" : null}
         style={{ background:"linear-gradient(160deg,rgba(245,158,11,0.24),rgba(13,43,26,0.94))", border:"2px solid #F59E0B" }}>
         {offre && (
           <div style={{ fontSize:13, color:"#ffe082", background:"rgba(245,158,11,0.16)", borderRadius:10, padding:"8px 10px", lineHeight:1.45, marginTop:4 }}>
@@ -169,7 +169,7 @@ export default function Subscribe() {
         )}
       </Niveau>
 
-      {tier === "paid" && !isTrial ? (
+      {isPaid && !isTrial ? (
         <div style={{ ...card(), textAlign:"center", fontSize:13, color:"#c8e6c9", lineHeight:1.6 }}>
           ✅ Tu es déjà Premium. Ton abonnement se gère depuis les Paramètres.
         </div>
