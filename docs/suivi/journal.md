@@ -599,3 +599,8 @@ du premier onglet).
   des prix de test mis dans Vercel Preview (lignes de la branche Staging, qui a aussi sa clé et son webhook de test) ;
   STA redéployée pour l'abonnement de test. En Production, les prix sont lus sur les lignes « All Environments » de
   STRIPE_PRICE_MONTHLY et STRIPE_PRICE_YEARLY : à changer samedi juste avant la mise en prod.
+- 29/10/2026 — STA branchée sur le bac à sable Stripe « Environnement de test Greenkeeper Premium » (1er test : « prix
+  introuvable », la clé de test de STA venait d'un autre environnement Stripe) : clé secrète du bac à sable, webhook
+  créé vers STA (/api/webhook ; événements checkout.session.completed, customer.subscription.updated et
+  customer.subscription.deleted, format « snapshot ») et son secret, prix de test à 2,99 € et 24,99 €, mis par Jordan
+  dans Vercel sur les lignes « Preview · Staging ». STA redéployée pour l'abonnement de test.
