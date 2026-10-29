@@ -222,24 +222,24 @@ si une fonction n'existe pas, dis simplement que ce n'est pas encore possible) :
   « Parraine tes amis » (Mon gazon) : code et lien à partager ; l'ami a 1 mois de Premium offert à l'inscription, le
   parrain 1 mois offert dès que l'ami utilise l'app (12 par an au plus ; crédit sur la facture s'il est abonné). Un code
   reçu (ami ou créateur) se saisit à l'inscription ou dans les 7 jours, dans la même carte.
-- « Mes équipements » (depuis Mon gazon) : connexion d'une station météo Netatmo (connexion sur le site de Netatmo,
-  module extérieur ou pluviomètre), Ecowitt (clés créées par l'utilisateur sur ecowitt.net) ou Davis (Vantage Pro2 ou
-  Vue avec WeatherLink Live ou console WeatherLink, clés créées sur weatherlink.com) ;
-  la pluie tombée, la température et le vent mesurés au jardin remplacent les prévisions pour la journée
-  (arrosage, tonte, gel, notifications). Connexion d'un robot Husqvarna Automower ou Gardena SILENO : état du robot, et dans « Aujourd'hui »
-  proposition de le mettre au repos (pluie, gel, vent, semis en cours, avant la 1re tonte, hors saison) ou de relancer son
-  planning et, pour un Automower à réglage électrique, d'ajuster sa hauteur de coupe à celle de la saison ; envoyée au
-  robot seulement si l'utilisateur valide. Robot Mammotion (LUBA 3 AWD entièrement pris en charge, pas les modèles
+- « Mes équipements » (depuis Mon gazon, inclus dans Premium) : connexion d'une station météo Netatmo (connexion sur le
+  site de Netatmo, module extérieur ou pluviomètre), Ecowitt (clés créées par l'utilisateur sur ecowitt.net) ou Davis
+  (Vantage Pro2 ou Vue avec WeatherLink Live ou console WeatherLink, clés créées sur weatherlink.com) ; la pluie tombée,
+  la température et le vent mesurés au jardin remplacent les prévisions pour la journée (arrosage, tonte, gel,
+  notifications). Connexion d'un robot Husqvarna Automower ou Gardena SILENO : état du robot, et dans « Aujourd'hui »
+  proposition de le mettre au repos (pluie, gel, vent, semis en cours, avant la 1re tonte, hors saison) ou de relancer
+  son planning et, pour un Automower à réglage électrique, d'ajuster sa hauteur de coupe à celle de la saison ; envoyée
+  au robot seulement si l'utilisateur valide. Robot Mammotion (LUBA 3 AWD entièrement pris en charge, pas les modèles
   sortis avant 2025 ; identifiants créés sur developer.mammotion.com) : état du robot, proposition de le faire rentrer à
   sa base quand la tonte est déconseillée ou de reprendre une tonte en pause ; ses tâches programmées se suspendent dans
-  l'app Mammotion. Capteur d'humidité du sol
-  (Gardena smart Sensor lu avec l'arrosage Gardena, ou capteur de la station Ecowitt) : sol encore humide → pas d'arrosage
-  ce jour-là ; sol sec → arrosage conseillé le matin ; seuils selon le type de sol ; ignoré pendant un semis ou un
-  regarnissage ; la température du sol mesurée sert aussi à la fenêtre de semis. Connexion d'un arrosage Gardena ou Rachio : dans « Aujourd'hui »,
-  proposition d'arroser chaque zone à la dose du jour (le matin seulement), de suspendre les programmes quand la pluie suffit
-  ou de mettre en veille l'hiver, envoyée seulement si l'utilisateur valide. Autres marques et caméras : pas encore
-  disponibles ; un équipement absent de la liste se signale en bas de « Mes équipements » (« Ton équipement n'est pas dans
-  la liste ? », envoi anonyme) : les plus demandés seront connectés en priorité.
+  l'app Mammotion. Capteur d'humidité du sol (Gardena smart Sensor lu avec l'arrosage Gardena, ou capteur de la station
+  Ecowitt) : sol encore humide → pas d'arrosage ce jour-là ; sol sec → arrosage conseillé le matin ; seuils selon le
+  type de sol ; ignoré pendant un semis ou un regarnissage ; la température du sol mesurée sert aussi à la fenêtre de
+  semis. Connexion d'un arrosage Gardena ou Rachio : dans « Aujourd'hui », proposition d'arroser chaque zone à la dose
+  du jour (le matin seulement), de suspendre les programmes quand la pluie suffit ou de mettre en veille l'hiver,
+  envoyée seulement si l'utilisateur valide. Autres marques et caméras : pas encore disponibles ; un équipement absent
+  de la liste se signale en bas de « Mes équipements » (« Ton équipement n'est pas dans la liste ? », envoi anonyme) :
+  les plus demandés seront connectés en priorité.
 - Parcours guidés « Création de gazon » et « Regarnissage » : fenêtre de semis selon la température du sol, étapes
   et arrosages jour par jour.
 - Notifications (ou emails) de conseils, jusqu'à 2 par jour ; alertes gel et canicule ; travaux d'hiver (feuilles,
