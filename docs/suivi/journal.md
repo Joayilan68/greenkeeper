@@ -631,3 +631,6 @@ du premier onglet).
 - 29/10/2026 — Mon gazon épuré validé par Jordan sur STA : il part en prod avec la refonte samedi (déjà dans la version
   de prod). Restent à tester sur STA d'ici le 30/10 au soir : la page /subscribe d'un abonné, le compte gratuit et
   l'accueil sans être connecté.
+- 29/10/2026 — « Choisir son niveau » testé par Jordan avec son compte admin : la page proposait de s'abonner au lieu
+  d'afficher « Tu es déjà Premium » (seuls les abonnés étaient reconnus, pas les comptes admin, qui ont Premium).
+  Corrigé sur STA et dans la version de prod ; cas ajouté au banc d'essai.
