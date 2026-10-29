@@ -608,3 +608,10 @@ du premier onglet).
   paiement, webhook reçu, Premium activé (constaté par Jordan), abonnement compté (premium_souscrit, formule mensuel),
   aucune erreur. Prérequis Stripe de la refonte terminés ; reste le test de la refonte sur STA par Jordan (recette de
   décembre n° 68 à 75 et 79 ; n° 76 vérifié, n° 77 et 80 le jour de la mise en prod).
+- 29/10/2026 — Test de la refonte sur STA par Jordan : barre du bas, accueil, série et GreenPoints, Mon gazon,
+  raccourcis Premium, plan annuel et Bob OK. Mon gazon jugé trop chargé (trop de tuiles et d'informations) : à épurer
+  ensemble, à partir d'une proposition qu'il challengera (chantier à part). « Choisir son niveau » sans lien pour un
+  abonné : voulu (pas d'invitation à s'abonner ; niveau et gestion de l'abonnement dans Paramètres). Classement qui mène
+  au Quiz : propre à STA (ligue lancée en avance pour les tests pendant que le classement d'octobre tourne) ; consigne
+  de Bob précisée : classement en pause de novembre à janvier, remplacé par la ligue d'hiver (STA et version de prod).
+  Restent les tests avec un compte gratuit et sans être connecté.

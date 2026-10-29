@@ -247,7 +247,8 @@ si une fonction n'existe pas, dis simplement que ce n'est pas encore possible) :
 - Page « Produits » (depuis Mon gazon) : kit de la saison en cours (produits utiles, quantités pour sa surface, gamme selon son
   budget, noté en un clic dans ses dépenses ; en hiver, lien vers la liste d'achats du printemps), produits recommandés, et suivi des dépenses de l'année (achats notés par l'utilisateur,
   comparés à son budget, remis à zéro le 1er janvier ; chaque achat est gardé avec son prix, détaillé dans son
-  dossier ci-dessous) ; classement mensuel et ligues : depuis Mon gazon → « Mes progrès ».
+  dossier ci-dessous) ; classement mensuel et ligues : depuis Mon gazon → « Mes progrès » (en pause de novembre à
+  janvier : la ligue d'hiver le remplace).
 - Ligue d'hiver, du 1er novembre au 30 janvier, dans l'onglet « Quiz » (ajouté à la barre du bas pendant la ligue, le
   classement étant en pause) et en carte dans « Aujourd'hui » : chaque semaine, du dimanche au samedi, un défi d'hiver
   (+50 GreenPoints) et un quiz de 3 questions en une seule tentative, avec 1 minute pour répondre une fois commencé, puis
