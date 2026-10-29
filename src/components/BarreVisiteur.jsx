@@ -1,13 +1,14 @@
 // src/components/BarreVisiteur.jsx
 // Barre du bas d'un visiteur sans compte (refonte, décision de Jordan du 26/10/2026) : Accueil, Conseils (rubrique
-// statique /conseils, hors de l'app), Diagnostic (essai sans compte), Compte (création ou connexion).
+// statique /conseils, hors de l'app), Diagnostic (essai sans compte), Compte (création ou connexion, aussi affichée sur
+// ces pages : décision du 29/10/2026).
 import { useNavigate, useLocation } from "react-router-dom";
 
 const onglets = [
   { path: "/",         icon: "🏠", label: "Accueil" },
   { path: "/conseils", icon: "📚", label: "Conseils", page: true },
   { path: "/essai",    icon: "🔬", label: "Diagnostic" },
-  { path: "/signup",   icon: "👤", label: "Compte" },
+  { path: "/signup",   icon: "👤", label: "Compte", aussi: ["/login"] },
 ];
 
 export default function BarreVisiteur() {
@@ -23,7 +24,7 @@ export default function BarreVisiteur() {
       padding: "8px 0 20px", zIndex: 100,
     }}>
       {onglets.map(t => {
-        const active = pathname === t.path;
+        const active = pathname === t.path || t.aussi?.includes(pathname);
         return (
           <button key={t.path} onClick={() => (t.page ? window.location.assign(t.path) : navigate(t.path))} style={{
             display: "flex", flexDirection: "column", alignItems: "center", gap: 2,

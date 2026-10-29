@@ -131,7 +131,8 @@
   inclus dans Premium, plus vendu à l'unité (plans déjà achetés gardés : `publicMetadata.plansAnnuels`).
   Accueil visiteur (`src/pages/AccueilVisiteur.jsx`, remplace la présentation et la démo, `/demo` redirigée vers `/`) :
   météo du jour de sa commune, conseil de Bob du jour (`src/lib/conseilsBob.json`, partagé avec les notifications),
-  diagnostic d'essai, articles de saison ; barre visiteur Accueil, Conseils, Diagnostic, Compte.
+  diagnostic d'essai, articles de saison ; barre visiteur Accueil, Conseils, Diagnostic, Compte (aussi sur l'essai du
+  diagnostic, la création de compte et la connexion).
 - Parrainage et codes créateurs : `api/parrainage.cjs` (tables `codes` et `parrainages`, serveur uniquement), conditions
   dans les CGV (article 7 ter) ; filleul 1 mois offert, parrain 1 mois par filleul actif (tâche du matin) ; codes
   créateurs et commissions dans Pilotage → Finances. Lien : `https://mongazon360.fr/?p=CODE`.
@@ -145,9 +146,10 @@
   seulement) ; connexions et commandes refusées par `api/objets.js` sans Premium (abonnement, essai, Premium offert ou
   admin) ; robot, arrosage et station ne sont utilisés par l'app qu'avec Premium.
 - Toute décision prise avec un équipement suit le calendrier unique et la base de connaissances.
-- Équipements demandés : formulaire « Ton équipement n'est pas dans la liste ? » en bas de « Mes équipements » (type,
-  marque, modèle), demandes anonymes dans la table `equipements_demandes` (serveur uniquement, RLS sans politique),
-  synthèse dans Pilotage → Activité : choix des prochains connecteurs et chiffres à présenter aux marques.
+- Équipements demandés (comptes Premium, décision de Jordan du 29/10/2026) : formulaire « Ton équipement n'est pas dans
+  la liste ? » en bas de « Mes équipements » (type, marque, modèle), demandes anonymes dans la table
+  `equipements_demandes` (serveur uniquement, RLS sans politique), synthèse dans Pilotage → Activité : choix des
+  prochains connecteurs et chiffres à présenter aux marques.
 - Netatmo (station) : connexion OAuth (accès en lecture `read_station`), adresse de retour `https://<domaine>/api/objets`
   à déclarer dans l'application Netatmo (dev.netatmo.com) ; variables Vercel `NETATMO_CLIENT_ID` et `NETATMO_CLIENT_SECRET`
   (Production et Preview). Mesures : module extérieur, pluviomètre (pluie depuis minuit), anémomètre ; ignorées au-delà de 3 h.

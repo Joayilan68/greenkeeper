@@ -649,3 +649,13 @@ du premier onglet).
   STA), connexions et commandes refusées par le serveur sans Premium (abonnement, essai, Premium offert ou admin), tuile
   « Mes équipements » de Mon gazon marquée Premium, consignes de Bob, CLAUDE.md et recette n° 72 à jour ; bancs d'essai
   (page et serveur) au vert.
+- 29/10/2026 — Accueil sans compte testé par Jordan sur STA : OK. Sa demande : que les pages Conseils et Compte restent
+  « dans l'app », avec la barre du bas. Découpage validé par Jordan : « Compte » avant samedi (création de compte et
+  connexion gardent la barre du visiteur, onglet Compte en surbrillance ; STA et version de prod) ; « Conseils en mode
+  app » pour le 22/11 (liste et lecture des articles dans l'app avec la barre du bas, liens entre articles gardés dans
+  l'app, tuile « Conseils gazon » de l'accueil aussi, pages web gardées pour le référencement et Facebook), préparé sur
+  STA dès le 2/11 avec les encarts et à challenger avec les visuels du 6/11.
+- 29/10/2026 — Compte gratuit vérifié par Jordan sur STA : plus aucune connexion d'équipement possible. Décision de
+  Jordan : masquer aussi la demande d'équipement non listé (« Ton équipement n'est pas dans la liste ? ») pour un compte
+  gratuit, réservée à Premium (STA ; la version de prod n'a pas ce formulaire). Consignes de Bob, CLAUDE.md et recette
+  n° 49 et 72 à jour.

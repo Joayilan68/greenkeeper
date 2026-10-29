@@ -181,40 +181,9 @@ export default function Equipements() {
   const eqArrosage = donnees?.equipements?.find(e => e.type === "arrosage");
   const m = donnees?.station || eq?.mesures;
 
-  // Équipement non listé : demande anonyme, ouverte à tous (choix des prochains connecteurs)
-  const carteDemande = (
-    <div style={card()}>
-      <div style={{ fontSize:14, fontWeight:800, color:"#F1F8F2", marginBottom:4 }}>🙋 Ton équipement n'est pas dans la liste ?</div>
-      {demandeEnvoyee ? (
-        <div style={{ fontSize:12, color:"#a5d6a7", lineHeight:1.6 }}>✅ Merci, c'est noté : les équipements les plus demandés seront connectés en priorité.</div>
-      ) : (
-        <>
-          <div style={{ fontSize:11, color:"#a5d6a7", lineHeight:1.6, marginBottom:8 }}>
-            Dis-nous lequel : les équipements les plus demandés seront connectés en priorité. Envoi anonyme.
-          </div>
-          <label style={{ fontSize:11, color:"#81c784" }}>Type
-            <select value={demande.type} onChange={e => setDemande({ ...demande, type: e.target.value })} style={champ}>
-              {TYPES_DEMANDE.map(([valeur, libelle]) => <option key={valeur} value={valeur}>{libelle}</option>)}
-            </select>
-          </label>
-          <div style={{ height:8 }} />
-          <label style={{ fontSize:11, color:"#81c784" }}>Marque
-            <input value={demande.marque} onChange={e => setDemande({ ...demande, marque: e.target.value })} maxLength={60} placeholder="ex. Worx, Bosch, Rain Bird" style={champ} />
-          </label>
-          <div style={{ height:8 }} />
-          <label style={{ fontSize:11, color:"#81c784" }}>Modèle (facultatif)
-            <input value={demande.modele} onChange={e => setDemande({ ...demande, modele: e.target.value })} maxLength={80} style={champ} />
-          </label>
-          <button onClick={envoyerDemande} disabled={envoi || !demande.marque.trim()} style={{ ...bouton, marginTop:12, opacity: demande.marque.trim() ? 1 : 0.5 }}>
-            {envoi ? "Envoi…" : "Envoyer"}
-          </button>
-        </>
-      )}
-    </div>
-  );
-
   // Compte gratuit : les équipements connectés sont inclus dans Premium (niveaux.json), connexions et commandes refusées
-  // par le serveur ; un équipement déjà connecté (essai, abonnement terminé) reste visible pour être déconnecté
+  // par le serveur ; un équipement déjà connecté (essai, abonnement terminé) reste visible pour être déconnecté ; pas de
+  // demande d'équipement non listé (décision de Jordan du 29/10/2026)
   if (!subLoading && !isPaid) return (
     <div>
       <div style={{ padding:"48px 20px 16px" }}>
@@ -248,7 +217,6 @@ export default function Equipements() {
             ))}
           </div>
         )}
-        {carteDemande}
         <div onClick={() => navigate("/my-lawn")} style={{ textAlign:"center", fontSize:12, color:"#81c784", textDecoration:"underline", cursor:"pointer", margin:"8px 0 24px" }}>
           Retour à Mon Gazon
         </div>
@@ -511,7 +479,34 @@ export default function Equipements() {
           </div>
         </div>
 
-        {carteDemande}
+        <div style={card()}>
+          <div style={{ fontSize:14, fontWeight:800, color:"#F1F8F2", marginBottom:4 }}>🙋 Ton équipement n'est pas dans la liste ?</div>
+          {demandeEnvoyee ? (
+            <div style={{ fontSize:12, color:"#a5d6a7", lineHeight:1.6 }}>✅ Merci, c'est noté : les équipements les plus demandés seront connectés en priorité.</div>
+          ) : (
+            <>
+              <div style={{ fontSize:11, color:"#a5d6a7", lineHeight:1.6, marginBottom:8 }}>
+                Dis-nous lequel : les équipements les plus demandés seront connectés en priorité. Envoi anonyme.
+              </div>
+              <label style={{ fontSize:11, color:"#81c784" }}>Type
+                <select value={demande.type} onChange={e => setDemande({ ...demande, type: e.target.value })} style={champ}>
+                  {TYPES_DEMANDE.map(([valeur, libelle]) => <option key={valeur} value={valeur}>{libelle}</option>)}
+                </select>
+              </label>
+              <div style={{ height:8 }} />
+              <label style={{ fontSize:11, color:"#81c784" }}>Marque
+                <input value={demande.marque} onChange={e => setDemande({ ...demande, marque: e.target.value })} maxLength={60} placeholder="ex. Worx, Bosch, Rain Bird" style={champ} />
+              </label>
+              <div style={{ height:8 }} />
+              <label style={{ fontSize:11, color:"#81c784" }}>Modèle (facultatif)
+                <input value={demande.modele} onChange={e => setDemande({ ...demande, modele: e.target.value })} maxLength={80} style={champ} />
+              </label>
+              <button onClick={envoyerDemande} disabled={envoi || !demande.marque.trim()} style={{ ...bouton, marginTop:12, opacity: demande.marque.trim() ? 1 : 0.5 }}>
+                {envoi ? "Envoi…" : "Envoyer"}
+              </button>
+            </>
+          )}
+        </div>
 
         <div onClick={() => navigate("/my-lawn")} style={{ textAlign:"center", fontSize:12, color:"#81c784", textDecoration:"underline", cursor:"pointer", margin:"8px 0 24px" }}>
           Retour à Mon Gazon
