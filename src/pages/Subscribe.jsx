@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import { useAuth, useUser } from "@clerk/clerk-react";
 import { appShell, btn, card } from "../lib/styles";
 import { isAndroidTWA } from "../lib/platform";
@@ -9,7 +9,7 @@ import { OFFRE, offreEnCours, enEuros } from "../lib/offreSaison";
 
 // ════════════════════════════════════════════════════════════════════════════
 // CHOISIR SON NIVEAU — les 3 niveaux (refonte, décision de Jordan du 26/10/2026), puis la souscription Premium
-// (avant Stripe Checkout)
+// (avant Stripe Checkout) ; un compte qui a déjà Premium n'y arrive jamais (décision du 29/10/2026)
 // ════════════════════════════════════════════════════════════════════════════
 // Conforme aux exigences avocat (Cabinet Victoris) :
 //   Mention 2 — Checkbox renonciation droit de rétractation 14j (décochée par défaut)
@@ -49,7 +49,7 @@ export default function Subscribe() {
   const navigate = useNavigate();
   const { getToken } = useAuth();
   const { user } = useUser();
-  const { tier, isPaid, isTrial, trialDaysLeft } = useSubscription(); // isPaid : abonné, Premium offert ou admin
+  const { tier, isPaid, isTrial, trialDaysLeft, isLoading } = useSubscription(); // isPaid : abonné, Premium offert ou admin
   const offre = offreEnCours(); // offre saisonnière : annuel à prix réduit la 1re année
   const [selected, setSelected] = useState(offre ? "yearly" : "monthly");
   const [loading, setLoading] = useState(false);
@@ -99,6 +99,11 @@ export default function Subscribe() {
     }
     setLoading(false);
   };
+
+  // Un compte qui a déjà Premium (abonné, Premium offert ou admin) n'a rien à choisir ici : retour à l'accueil, sans
+  // afficher la page (décision de Jordan du 29/10/2026) ; l'essai de 7 jours garde la page pour s'abonner
+  if (isLoading) return <div style={appShell} />;
+  if (isPaid && !isTrial) return <Navigate to="/" replace />;
 
   // ── Option C : conformité Google Play ──────────────────────────────────────
   // Dans le TWA Android (app installée depuis le Play Store), on NE propose PAS
@@ -160,7 +165,7 @@ export default function Subscribe() {
       </Niveau>
       <Niveau niveau={NIVEAUX.premium} couleur="#ffe082"
         precision={`${enEuros(OFFRE.prixMensuel)}/mois · ${enEuros(OFFRE.prixAnnuel)}/an`}
-        badge={isTrial ? `Ton essai : encore ${trialDaysLeft} jour${trialDaysLeft > 1 ? "s" : ""}` : isPaid ? "Ton niveau" : null}
+        badge={isTrial ? `Ton essai : encore ${trialDaysLeft} jour${trialDaysLeft > 1 ? "s" : ""}` : null}
         style={{ background:"linear-gradient(160deg,rgba(245,158,11,0.24),rgba(13,43,26,0.94))", border:"2px solid #F59E0B" }}>
         {offre && (
           <div style={{ fontSize:13, color:"#ffe082", background:"rgba(245,158,11,0.16)", borderRadius:10, padding:"8px 10px", lineHeight:1.45, marginTop:4 }}>
@@ -169,11 +174,6 @@ export default function Subscribe() {
         )}
       </Niveau>
 
-      {isPaid && !isTrial ? (
-        <div style={{ ...card(), textAlign:"center", fontSize:13, color:"#c8e6c9", lineHeight:1.6 }}>
-          ✅ Tu es déjà Premium. Ton abonnement se gère depuis les Paramètres.
-        </div>
-      ) : (<>
       <div style={{ fontSize:16, fontWeight:900, color:"#ffe082", margin:"8px 0 14px" }}>⭐ Passer Premium</div>
 
       {/* ── Sélecteur de plan ──────────────────────────────────────────────── */}
@@ -287,7 +287,6 @@ export default function Subscribe() {
       <div style={{ textAlign:"center", fontSize:10, color:"#4a7c5c", marginTop:8 }}>
         <span style={{ color:"#ef9a9a" }}>*</span> Champs obligatoires
       </div>
-      </>)}
 
       {/* ── Mention marque déposée EUIPO ───────────────────────────────────── */}
       <div style={{ fontSize:9, color:"#3a5c44", textAlign:"center", marginTop:20, lineHeight:1.6 }}>

@@ -634,3 +634,7 @@ du premier onglet).
 - 29/10/2026 — « Choisir son niveau » testé par Jordan avec son compte admin : la page proposait de s'abonner au lieu
   d'afficher « Tu es déjà Premium » (seuls les abonnés étaient reconnus, pas les comptes admin, qui ont Premium).
   Corrigé sur STA et dans la version de prod ; cas ajouté au banc d'essai.
+- 29/10/2026 — Décision de Jordan : un compte qui a déjà Premium (abonné, Premium offert, admin) n'arrive jamais sur
+  « Choisir son niveau » : il est renvoyé à l'accueil sans voir la page (aucun lien n'y menait déjà dans l'app ; seules
+  une adresse tapée ou un ancien lien d'email pouvaient y mener). L'essai de 7 jours garde la page pour s'abonner. STA
+  et version de prod ; banc d'essai et recette n° 73 à jour.
