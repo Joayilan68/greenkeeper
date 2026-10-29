@@ -625,3 +625,6 @@ du premier onglet).
   bloc (passé dans le profil) et ancien bloc Premium. Page 61 % plus courte (rendu de test en Premium : 4 645 →
   1 790 px). Courbe de l'évolution du score réparée : elle ne s'affichait pas, seuls les points apparaissaient.
   Consignes de Bob et recette n° 71 à jour.
+- 29/10/2026 — Mon gazon épuré jugé « beaucoup mieux » par Jordan sur STA ; à sa demande, « Mes progrès » (série,
+  GreenPoints, classement) regroupé en une seule carte au lieu de 3 (STA et version de prod). Validation finale sur STA
+  au plus tard le 30/10 au soir.
