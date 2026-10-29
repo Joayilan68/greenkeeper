@@ -593,3 +593,9 @@ du premier onglet).
   ticket (usage décrit point par point, aucune revente, distribution ni préinstallation ; informations de la société ou
   signature d'un accord proposées ; réponse demandée avant le 1/12 ; prévenir quand le Client ID dédié sera disponible ;
   compte de test ou robot de démonstration redemandé). Point au 3/11 (relances des demandes d'accès API).
+- 29/10/2026 — Refonte, prérequis Stripe faits par Jordan : nouveaux prix créés sur le produit Premium (2,99 € par mois,
+  24,99 € par an, taxes comprises), en mode test et en réel ; anciens prix (4,99 € et 39,99 €) gardés actifs, la prod
+  les utilise jusqu'au passage et ils servent au retour arrière (aucun abonnement actif dessus au 29/10). Identifiants
+  des prix de test mis dans Vercel Preview (lignes de la branche Staging, qui a aussi sa clé et son webhook de test) ;
+  STA redéployée pour l'abonnement de test. En Production, les prix sont lus sur les lignes « All Environments » de
+  STRIPE_PRICE_MONTHLY et STRIPE_PRICE_YEARLY : à changer samedi juste avant la mise en prod.
