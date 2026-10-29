@@ -642,3 +642,10 @@ du premier onglet).
   compte Mongazon360 et Clerk refuse de l'en retirer : se connecter avec elle ouvre ce compte. Sans impact (en prod, les
   deux comptes sont bien distincts, vérifié en base) : Jordan laisse ainsi ; tests Premium avec le compte Mongazon360,
   tests gratuits avec les comptes de test « + ».
+- 29/10/2026 — Constat de Jordan sur STA avec un compte gratuit : « Mes équipements » permettait de connecter station,
+  robot et arrosage, alors que niveaux.json les range dans Premium (aucun contrôle dans la page ni dans api/objets.js ;
+  leur usage était déjà réservé à Premium). Corrigé sur STA et dans la version de prod : page « Inclus dans Premium »
+  pour un compte gratuit (équipement déjà connecté : déconnexion seule ; demande d'équipement toujours possible sur
+  STA), connexions et commandes refusées par le serveur sans Premium (abonnement, essai, Premium offert ou admin), tuile
+  « Mes équipements » de Mon gazon marquée Premium, consignes de Bob, CLAUDE.md et recette n° 72 à jour ; bancs d'essai
+  (page et serveur) au vert.
