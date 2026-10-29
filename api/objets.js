@@ -13,7 +13,8 @@
 //   POST { action: "retirer", id }            → déconnexion (clés effacées)
 
 const { createClient } = require("@supabase/supabase-js");
-const { verifiedUserId } = require("./auth.cjs");
+const { verifiedUserId, getAuthUser, ADMIN_EMAILS } = require("./auth.cjs");
+const { essaiActif, isGuestUser } = require("./premium.cjs");
 const E = require("./equipements.cjs");
 
 const COLONNES = "id, type, marque, nom, statut, erreur, mesures, mesures_at, created_at";
@@ -53,6 +54,17 @@ async function connexionHusqvarna(req, res, supabase) {
   }
 }
 
+// Connexions et commandes réservées à Premium (niveaux.json : station, robot, arrosage et capteurs connectés) : abonnement,
+// essai de 7 jours, Premium offert ou admin ; la liste, la déconnexion et la demande d'un équipement restent ouvertes à tous
+const ACTIONS_PREMIUM = new Set(["stations", "ajouter", "husqvarna", "gardena", "rachio_programmateurs", "rachio", "arrosage", "robot"]);
+async function accesPremium(req, userId) {
+  const u = await getAuthUser(req);
+  if (!u) return false;
+  const pm = u.publicMetadata;
+  return ADMIN_EMAILS.includes(u.email) || pm.role === "admin" || pm.isSubscribed === true
+    || ["active", "trialing"].includes(pm.subscriptionStatus) || essaiActif(u.createdAt) || await isGuestUser(userId, pm);
+}
+
 module.exports = async function handler(req, res) {
   if (!["GET", "POST"].includes(req.method)) return res.status(405).end();
   const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
@@ -72,6 +84,8 @@ module.exports = async function handler(req, res) {
 
     const { action, applicationKey, apiKey, mac, nom, id, commande, programmateur, zone, minutes } = req.body || {};
     const cles = { applicationKey: String(applicationKey || "").trim(), apiKey: String(apiKey || "").trim() };
+    if (ACTIONS_PREMIUM.has(action) && !await accesPremium(req, userId))
+      return res.status(403).json({ error: "Les équipements connectés sont inclus dans Premium." });
 
     if (action === "stations") {
       if (!cles.applicationKey || !cles.apiKey) return res.status(400).json({ error: "Application Key et API Key requises" });

@@ -34,6 +34,7 @@ async function getAuthUser(req) {
       id: u.id,
       email: (u.email_addresses?.[0]?.email_address || "").toLowerCase(),
       publicMetadata: u.public_metadata || {},
+      createdAt: u.created_at,
     };
   } catch { return null; }
 }

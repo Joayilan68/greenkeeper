@@ -6,6 +6,8 @@ import { useProfile } from "../lib/useProfile";
 import { hasRobotTondeuse, hasArrosageAuto } from "../lib/planEntretien";
 import CarteRobot from "../components/CarteRobot";
 import CarteArrosage from "../components/CarteArrosage";
+import { useSubscription } from "../lib/useSubscription";
+import { isAndroidTWA } from "../lib/platform";
 
 const nombre = (v, u) => typeof v === "number" ? `${v.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} ${u}` : "—";
 const champ = { width:"100%", boxSizing:"border-box", background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:8, padding:"9px 10px", color:"#e8f5e9", fontSize:12, marginTop:4 };
@@ -27,6 +29,14 @@ const RETOURS_GARDENA = {
   erreur: "La connexion Gardena a échoué : l'accès Gardena n'est peut-être pas encore ouvert, réessaie plus tard.",
 };
 
+// Compte gratuit : ce que les équipements connectés apportent avec Premium (mêmes promesses que les cartes de connexion)
+const AVEC_PREMIUM = [
+  ["🌡️", "Station météo : la pluie réellement tombée et la température de ton jardin remplacent les prévisions pour arroser, tondre ou protéger ton gazon du gel."],
+  ["🤖", "Robot tondeuse : l'app te propose de le mettre au repos ou de le relancer, rien n'est envoyé sans ta validation."],
+  ["💧", "Arrosage : la bonne dose le matin, et les programmes suspendus quand il pleut."],
+];
+const TYPES_EQUIPEMENT = { station:"Station météo", robot:"Robot tondeuse", arrosage:"Arrosage" };
+
 const A_VENIR = [
   { icone:"📷", titre:"Caméra", texte:"Une photo de ta pelouse chaque semaine, analysée comme un diagnostic." },
 ];
@@ -38,6 +48,7 @@ export default function Equipements() {
   const [params] = useSearchParams();
   const { profile, saveProfile } = useProfile();
   const { donnees, erreur, setErreur, envoi, charger, action } = useEquipements();
+  const { isPaid = false, isLoading: subLoading = true } = useSubscription() || {};
   const [cles, setCles] = useState({ applicationKey:"", apiKey:"" });
   const [stations, setStations] = useState(null);
   const retourHq = RETOURS_HUSQVARNA[params.get("husqvarna")] || RETOURS_GARDENA[params.get("gardena")];
@@ -90,6 +101,48 @@ export default function Equipements() {
   const eqRobot = donnees?.equipements?.find(e => e.type === "robot");
   const eqArrosage = donnees?.equipements?.find(e => e.type === "arrosage");
   const m = donnees?.station || eq?.mesures;
+
+  // Compte gratuit : les équipements connectés sont inclus dans Premium (niveaux.json), connexions et commandes refusées
+  // par le serveur ; un équipement déjà connecté (essai, abonnement terminé) reste visible pour être déconnecté
+  if (!subLoading && !isPaid) return (
+    <div>
+      <div style={{ padding:"48px 20px 16px" }}>
+        <div style={{ fontSize:20, fontWeight:800, color:"#F1F8F2" }}>📡 Mes équipements</div>
+        <div style={{ fontSize:12, color:"#66BB6A", marginTop:2 }}>Tes appareils au service de ta pelouse</div>
+      </div>
+      <div style={scroll}>
+        {erreur && <div style={{ ...card(), color:"#ef9a9a", fontSize:12 }}>⚠️ {erreur}</div>}
+        <div data-tuile="equipements-premium" style={{ ...card(), background:"linear-gradient(135deg,rgba(245,158,11,0.18),rgba(13,43,26,0.85))", border:"1px solid rgba(245,158,11,0.45)" }}>
+          <div style={{ fontSize:14, fontWeight:900, color:"#ffe082", marginBottom:8 }}>⭐ Inclus dans Premium</div>
+          {AVEC_PREMIUM.map(([icone, texte]) => (
+            <div key={icone} style={{ display:"flex", gap:8, fontSize:12, color:"#e8f5e9", lineHeight:1.5, padding:"3px 0" }}><span>{icone}</span><span>{texte}</span></div>
+          ))}
+          {!isAndroidTWA() && (
+            <button onClick={() => navigate("/subscribe")} style={{ ...bouton, width:"100%", marginTop:10, background:"linear-gradient(135deg,#F59E0B,#D97706)", color:"#1a1a1a" }}>
+              Découvrir Premium
+            </button>
+          )}
+        </div>
+        {donnees?.equipements?.length > 0 && (
+          <div style={card()}>
+            <div style={{ fontSize:14, fontWeight:800, color:"#F1F8F2", marginBottom:4 }}>Tes équipements déjà connectés</div>
+            <div style={{ fontSize:11, color:"#a5d6a7", lineHeight:1.6, marginBottom:6 }}>Sans Premium, l'app ne les utilise plus : tu peux les déconnecter, ou les retrouver en passant Premium.</div>
+            {donnees.equipements.map(e => (
+              <div key={e.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:8, padding:"7px 0", borderTop:"1px solid rgba(255,255,255,0.06)" }}>
+                <span style={{ fontSize:12, color:"#e8f5e9" }}>{TYPES_EQUIPEMENT[e.type] || "Équipement"} · {e.nom}</span>
+                <button onClick={() => retirer(e.id)} disabled={envoi} style={{ background:"none", border:"none", padding:0, color:"#81c784", fontSize:11, cursor:"pointer", textDecoration:"underline", whiteSpace:"nowrap" }}>
+                  Déconnecter
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        <div onClick={() => navigate("/my-lawn")} style={{ textAlign:"center", fontSize:12, color:"#81c784", textDecoration:"underline", cursor:"pointer", margin:"8px 0 24px" }}>
+          Retour à Mon Gazon
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div>

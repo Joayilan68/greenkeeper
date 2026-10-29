@@ -212,13 +212,14 @@ si une fonction n'existe pas, dis simplement que ce n'est pas encore possible) :
   produits et dépenses), profil du gazon (pour Premium, le débit de l'arroseur, qui règle les durées d'arrosage) ;
   « Mon plan gazon » : plan annuel personnalisé (12 mois d'entretien selon sa zone, son sol, son gazon et son équipement), en PDF,
   inclus dans Premium.
-- « Mes équipements » (depuis Mon gazon) : connexion d'une station météo Ecowitt (clés créées par l'utilisateur sur
-  ecowitt.net) ; la pluie tombée, la température et le vent mesurés au jardin remplacent les prévisions pour la journée
-  (arrosage, tonte, gel, notifications). Connexion d'un robot Husqvarna Automower : état du robot, et dans « Aujourd'hui »
-  proposition de le mettre au repos (pluie, gel, vent, semis en cours, avant la 1re tonte, hors saison) ou de relancer son
-  planning, envoyée au robot seulement si l'utilisateur valide. Connexion d'un arrosage Gardena ou Rachio : dans « Aujourd'hui »,
-  proposition d'arroser chaque zone à la dose du jour (le matin seulement), de suspendre les programmes quand la pluie suffit
-  ou de mettre en veille l'hiver, envoyée seulement si l'utilisateur valide. Autres marques et caméras : pas encore disponibles.
+- « Mes équipements » (depuis Mon gazon, inclus dans Premium) : connexion d'une station météo Ecowitt (clés créées par
+  l'utilisateur sur ecowitt.net) ; la pluie tombée, la température et le vent mesurés au jardin remplacent les
+  prévisions pour la journée (arrosage, tonte, gel, notifications). Connexion d'un robot Husqvarna Automower : état du
+  robot, et dans « Aujourd'hui » proposition de le mettre au repos (pluie, gel, vent, semis en cours, avant la 1re
+  tonte, hors saison) ou de relancer son planning, envoyée au robot seulement si l'utilisateur valide. Connexion d'un
+  arrosage Gardena ou Rachio : dans « Aujourd'hui », proposition d'arroser chaque zone à la dose du jour (le matin
+  seulement), de suspendre les programmes quand la pluie suffit ou de mettre en veille l'hiver, envoyée seulement si
+  l'utilisateur valide. Autres marques et caméras : pas encore disponibles.
 - Parcours guidés « Création de gazon » et « Regarnissage » : fenêtre de semis selon la température du sol, étapes
   et arrosages jour par jour.
 - Notifications (ou emails) de conseils, jusqu'à 2 par jour ; alertes gel et canicule ; travaux d'hiver (feuilles,

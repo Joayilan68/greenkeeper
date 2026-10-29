@@ -428,7 +428,7 @@ export default function MyLawn() {
           <div style={cardTitle}><span>🧰 Mes outils</span></div>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
             <Outil tuile="mongazon-plan-annuel" icone="📅" titre="Mon plan gazon" sous={isPaid ? "Les 12 mois, en PDF" : "Aperçu · inclus dans Premium"} onClick={() => navigate("/plan-annuel")} />
-            <Outil tuile="mongazon-equipements" icone="📡" titre="Mes équipements" sous="Station, robot, arrosage" onClick={() => navigate("/equipements")} />
+            <Outil tuile="mongazon-equipements" icone="📡" titre="Mes équipements" sous={isPaid ? "Station, robot, arrosage" : "Station, robot, arrosage · Premium"} onClick={() => navigate("/equipements")} />
             <Outil tuile="mongazon-lancer-parcours" icone="🌱" titre="Semer ou regarnir" sous="Guidé étape par étape" onClick={() => navigate("/parcours")} />
             <Outil tuile="mongazon-produits" icone="🛒" titre="Produits et dépenses" sous="Kit de saison, budget" onClick={() => navigate("/products")} />
           </div>
