@@ -212,8 +212,11 @@ si une fonction n'existe pas, dis simplement que ce n'est pas encore possible) :
   anti-mousse, désherbage) et leur date ; 30 jours après (21 jours après un désherbage), l'onglet Diagnostic propose
   pendant 7 jours de refaire une photo du même endroit et la compare à ce diagnostic : photos avant / après, écart de
   score, problèmes réglés, encore là ou nouveaux (pas de notification, rien pendant l'essai de 7 jours).
-- Onglet « Mon gazon » : profil du gazon, score détaillé, évolution du score et actions de l'année, historique des
-  actions (une action notée par erreur se retire), « Mes progrès » (série, GreenPoints, classement mensuel) et badges ;
+- Onglet « Mon gazon » : score santé (« Pourquoi ce score ? » : les 4 critères et les problèmes prioritaires), évolution
+  du score et actions de l'année, historique des actions (une action notée par erreur se retire), « Mes progrès »
+  (série, GreenPoints, classement mensuel) et badges, « Mes outils » (plan gazon, équipements, semis ou regarnissage,
+  produits et dépenses, parrainage), profil du gazon (pour Premium, le débit de l'arroseur, qui règle les durées
+  d'arrosage) ;
   « Mon plan gazon » : plan annuel personnalisé (12 mois d'entretien selon sa zone, son sol, son gazon et son équipement), en PDF,
   inclus dans Premium.
   « Parraine tes amis » (Mon gazon) : code et lien à partager ; l'ami a 1 mois de Premium offert à l'inscription, le

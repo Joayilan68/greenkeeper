@@ -615,3 +615,13 @@ du premier onglet).
   au Quiz : propre à STA (ligue lancée en avance pour les tests pendant que le classement d'octobre tourne) ; consigne
   de Bob précisée : classement en pause de novembre à janvier, remplacé par la ligue d'hiver (STA et version de prod).
   Restent les tests avec un compte gratuit et sans être connecté.
+- 29/10/2026 — Mon gazon épuré, décision de Jordan (à valider sur STA au plus tard le 30/10 au soir, puis en prod avec
+  la refonte samedi) : 19 blocs → 7, dans l'ordre score santé compact (« Pourquoi ce score ? » : détail des 4 critères
+  et problèmes prioritaires ; « Partager »), évolution du score compacte, « Mes actions », « Mes progrès » et badges en
+  une ligne, « Mes outils » (plan gazon, équipements, semer ou regarnir, produits et dépenses, parrainage sur STA),
+  « Mon profil » (complétude fusionnée, débit de l'arroseur en Premium), « Avec Premium » pour les comptes gratuits
+  (même carte que l'accueil, contenu de niveaux.json). Retirés : conseil du mois, plan du mois, produits recommandés (0
+  à 1 touche en 30 jours en prod ; seul le détail du score était utilisé, 8 touches pour 19 visites), calibrage en grand
+  bloc (passé dans le profil) et ancien bloc Premium. Page 61 % plus courte (rendu de test en Premium : 4 645 →
+  1 790 px). Courbe de l'évolution du score réparée : elle ne s'affichait pas, seuls les points apparaissaient.
+  Consignes de Bob et recette n° 71 à jour.

@@ -1,92 +1,25 @@
+// src/pages/MyLawn.jsx
+// Mon gazon, épuré (décision de Jordan du 29/10/2026) : score santé compact et son détail, évolution du score, actions,
+// progrès et badges, outils, profil ; « Avec Premium » pour les comptes gratuits.
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useProfile } from "../lib/useProfile";
 import { useHistory } from "../lib/useHistory";
 import { useWeather } from "../lib/useWeather";
 import { useSubscription } from "../lib/useSubscription";
-import { useRecommandations } from "../lib/useRecommandations";
 import { calcLawnScore } from "../lib/lawnScore";
 import { useDiagnostics } from "../lib/useDiagnostics";
-import { MONTHLY_PLAN, MONTHS_FR, calcArrosage, DEBIT_DEFAULT_MMH, getDebitMmH } from "../lib/lawn";
-import { buildActions, zoneClimatique, ZONE_LABELS } from "../lib/planEntretien";
-import { card, cardTitle, btn, scroll, header } from "../lib/styles";
-import ProductCard from "../components/ProductCard";
+import { DEBIT_DEFAULT_MMH } from "../lib/lawn";
+import { card, cardTitle, scroll, header } from "../lib/styles";
+import { isAndroidTWA } from "../lib/platform";
 import { useStreak } from "../lib/useStreak";
 import { useBadges } from "../lib/useBadges";
-import { anneePlan } from "../lib/planAnnuel";
 import BadgesGallery from "../components/BadgesGallery";
 import CarteParrainage from "../components/CarteParrainage";
 import MesProgres from "../components/MesProgres";
 import EvolutionScore from "../components/EvolutionScore";
 import HistoriqueActions from "../components/HistoriqueActions";
-import { OFFRE, enEuros } from "../lib/offreSaison";
-
-// Mapping action.id → clé amazonProducts.js
-const ACTION_TO_AMAZON = {
-  engrais_starter: "engraisStarter",
-  engrais_ete:     "engraisEte",
-  engrais_automne: "engraisAutomne",
-  anti_mousse:     "antiMousse",
-  desherbage:      "desherbage",
-  aeration:        "aeration",
-  verticut:        "verticut",
-  regarnissage:    "regarnissage",
-  biostimulant:    "biostimulant",
-};
-
-// ── Fréquences agronomiques fixes (Knowledge Base v4) ─────────────────────────
-// Ces valeurs sont définitives — l'utilisateur ne les choisit pas.
-// ── Data Phase 2 ─────────────────────────────────────────────────────────────
-const SOLS = [
-  { id:"argileux", label:"Argileux",    icon:"🏔️" },
-  { id:"sableux",  label:"Sableux",     icon:"🏖️" },
-  { id:"limoneux", label:"Limoneux",    icon:"🌍" },
-  { id:"calcaire", label:"Calcaire",    icon:"🪨" },
-  { id:"humifere", label:"Humifère",    icon:"🌱" },
-  { id:"compacte", label:"Compacté",    icon:"🧱" },
-  { id:"inconnu",  label:"Je ne sais pas", icon:"🤷" },
-];
-const EXPOSITIONS = [
-  { id:"ensoleille", label:"Ensoleillé",  icon:"☀️" },
-  { id:"mi-ombre",   label:"Mi-ombre",    icon:"⛅" },
-  { id:"ombrage",    label:"Ombragé",     icon:"🌥️" },
-];
-const ARROSAGES = [
-  { id:"automatique", label:"Arrosage automatique", icon:"🤖" },
-  { id:"manuel",      label:"Tuyau / manuel",        icon:"🪣" },
-  { id:"aucun",       label:"Pas d'arrosage",        icon:"❌" },
-  { id:"rarement",    label:"Rarement / je ne sais pas", icon:"🤷" },
-];
-const TONDEUSES = [
-  { id:"electrique_filaire",  label:"Électrique filaire",   icon:"🔌" },
-  { id:"electrique_batterie", label:"Électrique batterie",  icon:"🔋" },
-  { id:"thermique",           label:"Thermique",             icon:"⛽" },
-  { id:"robot",               label:"Robot tondeuse",        icon:"🤖" },
-  { id:"helicoidale",         label:"Hélicoïdale",           icon:"🔧" },
-  { id:"autoportee",          label:"Autoportée / Rider",    icon:"🚜" },
-  { id:"inconnu",             label:"Je ne sais pas",        icon:"🤷" },
-];
-const MATERIELS = [
-  { id:"scarificateur",   label:"Scarificateur",      icon:"🔩" },
-  { id:"aerateur",        label:"Aérateur",           icon:"🌀" },
-  { id:"debroussailleuse",label:"Débroussailleuse",   icon:"✂️" },
-  { id:"epandeur",        label:"Épandeur",            icon:"🌱" },
-  { id:"pulverisateur",   label:"Pulvérisateur",      icon:"💧" },
-  { id:"motoculteur",     label:"Motoculteur",         icon:"🚜" },
-  { id:"rouleau",         label:"Rouleau à gazon",     icon:"🛞" },
-  { id:"arroseur",        label:"Arroseur/programmateur", icon:"⏱️" },
-  { id:"souffleur",       label:"Souffleur",           icon:"💨" },
-  { id:"raclette",        label:"Raclette/lame niveleuse", icon:"📐" },
-  { id:"aucun",           label:"Aucun matériel",      icon:"❌" },
-];
-const BUDGETS = [
-  { id:"0-50",    label:"0–50 € / an",     icon:"💶" },
-  { id:"50-150",  label:"50–150 € / an",   icon:"💶" },
-  { id:"150-300", label:"150–300 € / an",  icon:"💶" },
-  { id:"300-600", label:"300–600 € / an",  icon:"💶" },
-  { id:"600+",    label:"Plus de 600 € / an", icon:"💶" },
-  { id:"inconnu", label:"Je ne sais pas",  icon:"🤷" },
-];
+import AvecPremium from "../components/AvecPremium";
 
 // ── Calcul complétude profil ──────────────────────────────────────────────────
 function calcCompletion(profile, isPaid, diagnostics) {
@@ -109,48 +42,222 @@ function calcCompletion(profile, isPaid, diagnostics) {
   return total;
 }
 
-function ShareScore({ score, label, profile }) {
-  const [copied, setCopied]       = useState(false);
-  const [showPanel, setShowPanel] = useState(false);
+const petitBouton = { flex:1, background:"rgba(255,255,255,0.06)", border:"1px solid rgba(165,214,167,0.25)", borderRadius:10, padding:"7px 8px", color:"#a5d6a7", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"inherit" };
+
+// Déplie au clavier un élément cliquable qui n'est pas un bouton
+const auClavier = (action) => (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); action(); } };
+
+function PartageScore({ score, label }) {
+  const [copied, setCopied] = useState(false);
   const appUrl         = "https://mongazon360.fr";
   const emoji          = score >= 85 ? "🏆" : score >= 70 ? "😊" : score >= 55 ? "😐" : score >= 40 ? "😟" : "😰";
-  const gazon          = profile?.pelouse ? ` Mon ${profile.pelouse}` : " Mon gazon";
-  const surface        = profile?.surface ? ` (${profile.surface}m²)` : "";
   const message        = `${emoji} Mon gazon a un score santé de ${score}/100 sur Mongazon360® !\n🌿 "${label}"\n\nSuivez votre gazon en temps réel :\n${appUrl}`;
   const messageEncoded = encodeURIComponent(message);
   const urlEncoded     = encodeURIComponent(appUrl);
+  const copier = () => { navigator.clipboard.writeText(message); setCopied(true); setTimeout(() => setCopied(false), 3000); };
   const SHARE_OPTIONS  = [
     { id:"whatsapp", icon:"💬", label:"WhatsApp",    color:"#25D366", bg:"rgba(37,211,102,0.15)",  border:"rgba(37,211,102,0.35)",  action: () => window.open(`https://wa.me/?text=${messageEncoded}`, "_blank") },
     { id:"facebook", icon:"📘", label:"Facebook",    color:"#1877F2", bg:"rgba(24,119,242,0.15)",  border:"rgba(24,119,242,0.35)",  action: () => window.open(`https://www.facebook.com/sharer/sharer.php?u=${urlEncoded}&quote=${messageEncoded}`, "_blank") },
     { id:"twitter",  icon:"🐦", label:"Twitter / X", color:"#1DA1F2", bg:"rgba(29,161,242,0.15)",  border:"rgba(29,161,242,0.35)",  action: () => window.open(`https://twitter.com/intent/tweet?text=${messageEncoded}`, "_blank") },
-    { id:"instagram",icon:"📸", label:"Instagram",   color:"#E1306C", bg:"rgba(225,48,108,0.15)",  border:"rgba(225,48,108,0.35)",  action: () => { navigator.clipboard.writeText(message); setCopied(true); setTimeout(() => setCopied(false), 3000); } },
-    { id:"copy",     icon:"🔗", label:"Copier",      color:"#a5d6a7", bg:"rgba(165,214,167,0.1)",  border:"rgba(165,214,167,0.25)", action: () => { navigator.clipboard.writeText(message); setCopied(true); setTimeout(() => setCopied(false), 3000); } },
+    { id:"instagram",icon:"📸", label:"Instagram",   color:"#E1306C", bg:"rgba(225,48,108,0.15)",  border:"rgba(225,48,108,0.35)",  action: copier },
+    { id:"copy",     icon:"🔗", label:"Copier",      color:"#a5d6a7", bg:"rgba(165,214,167,0.1)",  border:"rgba(165,214,167,0.25)", action: copier },
   ];
   return (
-    <div style={{ marginTop:12 }}>
-      <button onClick={() => setShowPanel(!showPanel)} style={{ ...btn.ghost, fontSize:13, display:"flex", alignItems:"center", gap:8, justifyContent:"center" }}>
-        📤 Partager mon score {showPanel ? "▲" : "▼"}
-      </button>
-      {showPanel && (
-        <div style={{ marginTop:10 }}>
-          <div style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:12, padding:"12px 14px", marginBottom:12 }}>
-            <div style={{ fontSize:10, color:"#81c784", fontWeight:700, marginBottom:6, letterSpacing:1 }}>APERÇU DU MESSAGE</div>
-            <div style={{ fontSize:12, color:"#e8f5e9", lineHeight:1.7, whiteSpace:"pre-line" }}>{message}</div>
+    <div style={{ marginTop:10 }}>
+      <div style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:12, padding:"12px 14px", marginBottom:12 }}>
+        <div style={{ fontSize:10, color:"#81c784", fontWeight:700, marginBottom:6, letterSpacing:1 }}>APERÇU DU MESSAGE</div>
+        <div style={{ fontSize:12, color:"#e8f5e9", lineHeight:1.7, whiteSpace:"pre-line" }}>{message}</div>
+      </div>
+      {copied && <div style={{ background:"rgba(67,160,71,0.2)", border:"1px solid rgba(67,160,71,0.4)", borderRadius:10, padding:"8px 12px", marginBottom:10, fontSize:12, color:"#a5d6a7", textAlign:"center" }}>✅ Message copié !</div>}
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+        {SHARE_OPTIONS.map(opt => (
+          <button key={opt.id} onClick={opt.action} style={{ background:opt.bg, border:`1px solid ${opt.border}`, borderRadius:12, padding:"10px 8px", color:opt.color, fontSize:12, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
+            <span style={{ fontSize:16 }}>{opt.icon}</span>{opt.label}
+          </button>
+        ))}
+      </div>
+      <div style={{ fontSize:10, color:"#4a7c5c", textAlign:"center", marginTop:8 }}>📱 Instagram : le message est copié — collez-le dans votre story</div>
+    </div>
+  );
+}
+
+// « Pourquoi ce score ? » : les 4 critères en texte (pas de chiffres internes, même lecture en gratuit et en Premium)
+// et les problèmes prioritaires (2 pour un compte gratuit)
+function DetailScore({ composantes, issues, isPaid, sansHistorique, onPremium }) {
+  const e = composantes?.entretien   ?? 70;
+  const h = composantes?.hydratation ?? 70;
+  const n = composantes?.nutriments  ?? 70;
+  const s = composantes?.sol         ?? 75;
+
+  const getStatut = (val) => {
+    if (val >= 80) return { label:"✅ Bon",           color:"#66BB6A", bg:"rgba(102,187,106,0.12)", border:"rgba(102,187,106,0.25)" };
+    if (val >= 50) return { label:"⚠️ À surveiller", color:"#f9a825", bg:"rgba(249,168,37,0.12)",  border:"rgba(249,168,37,0.25)"  };
+    return              { label:"🔴 À corriger",     color:"#ef9a9a", bg:"rgba(239,83,80,0.12)",   border:"rgba(239,83,80,0.25)"   };
+  };
+
+  const entretienCtx = () => {
+    if (e >= 80) return "Entretien régulier — continuez comme ça";
+    if (e >= 50) return "Quelques actions d'entretien à rattraper";
+    return sansHistorique
+      ? "Commencez à journaliser vos actions pour améliorer ce score"
+      : "Tonte ou arrosage en retard — consultez l'onglet Aujourd'hui";
+  };
+
+  const hydratationCtx = () => {
+    if (h >= 90) return "Conditions météo favorables à votre position";
+    if (h >= 70) return "Légères contraintes météo détectées aujourd'hui";
+    if (h >= 50) return "Chaleur ou sécheresse — pensez à arroser";
+    return "Conditions difficiles — arrosage urgent si possible";
+  };
+
+  const nutrientsCtx = () => {
+    if (n >= 70) return "Fertilisation à jour selon l'historique";
+    if (n >= 30) return "Engrais recommandé — délai depuis la dernière application";
+    return sansHistorique
+      ? "Aucune fertilisation enregistrée — normal au démarrage"
+      : "Aucun engrais journalisé depuis plus de 90 jours";
+  };
+
+  const solCtx = () => {
+    if (s >= 80) return "Aucun facteur de risque détecté sur votre sol";
+    if (s >= 50) return "Type de sol nécessite une attention particulière";
+    return "Sol compacté ou argileux — aération recommandée";
+  };
+
+  const items = [
+    { icon:"🌱", label:"Entretien",    val:e, ctx:entretienCtx()   },
+    { icon:"💧", label:"Météo du jour", val:h, ctx:hydratationCtx() },
+    { icon:"🧪", label:"Nutriments",   val:n, ctx:nutrientsCtx()   },
+    { icon:"🌿", label:"Sol",           val:s, ctx:solCtx()         },
+  ];
+
+  return (
+    <div style={{ marginTop:10, display:"flex", flexDirection:"column", gap:6 }}>
+      {items.map((item) => {
+        const statut = getStatut(item.val);
+        return (
+          <div key={item.label} style={{ background:statut.bg, border:`1px solid ${statut.border}`, borderRadius:10, padding:"8px 12px" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:8 }}>
+              <span style={{ fontSize:12, fontWeight:700, color:"#e8f5e9" }}>{item.icon} {item.label}</span>
+              <span style={{ fontSize:10, fontWeight:800, color:statut.color, whiteSpace:"nowrap" }}>{statut.label}</span>
+            </div>
+            <div style={{ fontSize:11, color:"#81c784", lineHeight:1.4, marginTop:2 }}>{item.ctx}</div>
           </div>
-          {copied && <div style={{ background:"rgba(67,160,71,0.2)", border:"1px solid rgba(67,160,71,0.4)", borderRadius:10, padding:"8px 12px", marginBottom:10, fontSize:12, color:"#a5d6a7", textAlign:"center" }}>✅ Message copié !</div>}
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
-            {SHARE_OPTIONS.map(opt => (
-              <button key={opt.id} onClick={opt.action} style={{ background:opt.bg, border:`1px solid ${opt.border}`, borderRadius:12, padding:"10px 8px", color:opt.color, fontSize:12, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
-                <span style={{ fontSize:16 }}>{opt.icon}</span>{opt.label}
-              </button>
-            ))}
-          </div>
-          <div style={{ fontSize:10, color:"#4a7c5c", textAlign:"center", marginTop:8 }}>📱 Instagram : le message est copié — collez-le dans votre story</div>
+        );
+      })}
+      {issues.length > 0 && (
+        <div data-tuile="mongazon-problemes" style={{ marginTop:4 }}>
+          <div style={{ fontSize:11, fontWeight:800, color:"#f4a261", margin:"2px 0 6px" }}>⚠️ Problèmes prioritaires</div>
+          {(isPaid ? issues : issues.slice(0,2)).map((issue, i) => (
+            <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"7px 10px", background:"rgba(239,108,0,0.1)", borderRadius:10, marginBottom:5, border:"1px solid rgba(239,108,0,0.2)" }}>
+              <span style={{ fontSize:12 }}>{issue.icon} {issue.label}</span>
+              <span style={{ fontSize:11, fontWeight:700, color:"#ef9a9a" }}>{issue.impact} pts</span>
+            </div>
+          ))}
+          {!isPaid && issues.length > 2 && (
+            <div style={{ fontSize:11, color:"#f9a825", textAlign:"center", marginTop:4 }}>
+              🔒 +{issues.length - 2} problème{issues.length-2>1?"s":""} masqué{issues.length-2>1?"s":""} — <span role="button" tabIndex={0} onClick={onPremium} onKeyDown={auClavier(onPremium)} style={{ cursor:"pointer", textDecoration:"underline" }}>Premium</span>
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 }
+
+// Débit de l'arroseur (Premium) : il règle les durées d'arrosage de « Aujourd'hui »
+function ReglageDebit({ debitMmH, saveDebit, debitSaved }) {
+  return (
+    <div style={{ marginTop:10 }}>
+      <div style={{ fontSize:12, color:"#81c784", marginBottom:12, lineHeight:1.6 }}>
+        Renseignez le débit de votre arroseur pour obtenir des durées d'arrosage précises. La durée s'ajuste automatiquement dans "Aujourd'hui".
+      </div>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:6, marginBottom:14 }}>
+        {[
+          { label:"Arroseur oscillant", val:3.5 },
+          { label:"Arroseur rotatif",   val:5   },
+          { label:"Enrouleur tuyau",     val:8   },
+          { label:"Micro-asperseur",     val:2   },
+        ].map(({ label, val }) => (
+          <button key={label} onClick={() => saveDebit(val)} style={{
+            background: Math.abs(debitMmH - val) < 0.1 ? "rgba(100,181,246,0.3)" : "rgba(100,181,246,0.08)",
+            border:     `1px solid ${Math.abs(debitMmH - val) < 0.1 ? "#64b5f6" : "rgba(100,181,246,0.25)"}`,
+            borderRadius:10, padding:"8px 6px", cursor:"pointer", textAlign:"center",
+          }}>
+            <div style={{ fontSize:11, color:"#81c784", fontWeight:600 }}>{label}</div>
+            <div style={{ fontSize:13, color:"#e8f5e9", fontWeight:800 }}>{val} mm/h</div>
+          </button>
+        ))}
+      </div>
+      <div style={{ marginBottom:12 }}>
+        <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
+          <span style={{ fontSize:12, color:"#81c784" }}>Réglage précis</span>
+          <span style={{ fontSize:14, fontWeight:800, color:"#64b5f6" }}>{debitMmH.toFixed(1)} mm/h</span>
+        </div>
+        <input
+          type="range" min="1" max="20" step="0.5" value={debitMmH}
+          onChange={e => saveDebit(parseFloat(e.target.value))}
+          style={{ width:"100%" }}
+        />
+        <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:"#4a7c5c", marginTop:2 }}>
+          <span>1 mm/h</span><span>10 mm/h</span><span>20 mm/h</span>
+        </div>
+      </div>
+      <div style={{ background:"rgba(100,181,246,0.08)", borderRadius:10, padding:"10px 14px", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+        <span style={{ fontSize:12, color:"#81c784" }}>Pour 7mm d'eau :</span>
+        <span style={{ fontSize:16, fontWeight:800, color:"#64b5f6" }}>{Math.round((7 / debitMmH) * 60)} min</span>
+      </div>
+
+      {/* ── Tip calibrage boîte de conserve ── */}
+      <div style={{ marginTop:14, background:"rgba(100,181,246,0.06)", border:"1px solid rgba(100,181,246,0.2)", borderRadius:12, padding:"12px 14px" }}>
+        <div style={{ fontSize:12, fontWeight:800, color:"#64b5f6", marginBottom:6 }}>
+          🥫 Comment mesurer votre débit réel ?
+        </div>
+        <div style={{ fontSize:12, color:"#81c784", lineHeight:1.7 }}>
+          Posez une <strong style={{ color:"#e8f5e9" }}>boîte de conserve vide</strong> sur votre pelouse, à portée de l'arroseur. Lancez l'arrosage pendant <strong style={{ color:"#e8f5e9" }}>exactement 1h</strong>. Mesurez la hauteur d'eau accumulée en mm — c'est votre débit réel.
+        </div>
+        <div style={{ marginTop:10, display:"flex", flexDirection:"column", gap:5 }}>
+          {[
+            { step:"1", text:"Posez la boîte sur la pelouse, dans la zone arrosée" },
+            { step:"2", text:"Arrosez 1h — ou faites une règle de 3 pour moins longtemps" },
+            { step:"3", text:"Mesurez l'eau en mm avec une règle" },
+            { step:"4", text:"Entrez la valeur dans le curseur ci-dessus" },
+          ].map(({ step, text }) => (
+            <div key={step} style={{ display:"flex", alignItems:"flex-start", gap:8 }}>
+              <span style={{ flexShrink:0, width:18, height:18, borderRadius:"50%", background:"rgba(100,181,246,0.25)", color:"#64b5f6", fontSize:10, fontWeight:800, display:"flex", alignItems:"center", justifyContent:"center" }}>{step}</span>
+              <span style={{ fontSize:11, color:"#a5d6a7", lineHeight:1.5 }}>{text}</span>
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop:10, fontSize:11, color:"#4a7c5c", fontStyle:"italic" }}>
+          💡 Répétez le test en 2–3 points de votre pelouse et faites la moyenne pour plus de précision.
+        </div>
+      </div>
+
+      {debitSaved && <div style={{ textAlign:"center", color:"#64b5f6", fontSize:12, marginTop:8 }}>✅ Débit enregistré</div>}
+    </div>
+  );
+}
+
+// Une tuile de « Mes outils »
+function Outil({ tuile, icone, titre, sous, onClick, large }) {
+  return (
+    <div data-tuile={tuile} role="button" tabIndex={0} onClick={onClick} onKeyDown={auClavier(onClick)} style={{
+      gridColumn: large ? "1 / -1" : undefined, background:"rgba(255,255,255,0.05)", border:"1px solid rgba(165,214,167,0.18)",
+      borderRadius:12, padding:"10px 12px", cursor:"pointer",
+    }}>
+      <div style={{ fontSize:18, lineHeight:1 }}>{icone}</div>
+      <div style={{ fontSize:12, fontWeight:800, color:"#F1F8F2", marginTop:6 }}>{titre}</div>
+      <div style={{ fontSize:10, color:"#81c784", marginTop:2, lineHeight:1.35 }}>{sous}</div>
+    </div>
+  );
+}
+
+const OBJECTIF_LABELS = { parfait:"Gazon parfait", fonctionnel:"Pelouse fonctionnelle", naturel:"Gazon naturel" };
+const SOL_LABELS      = { argileux:"Argileux", limoneux:"Limoneux", sableux:"Sableux", calcaire:"Calcaire", humifere:"Humifère", compacte:"Compacté", inconnu:"Non défini" };
+const EXPO_LABELS     = { ensoleille:"Ensoleillé", "mi-ombre":"Mi-ombre", ombrage:"Ombragé" };
+const ARROSAGE_LABELS = { automatique:"Arrosage auto", manuel:"Tuyau/manuel", aucun:"Pas d'arrosage", rarement:"Rarement" };
+const GAZON_LABELS    = { sport:"Sport", ombre:"Ombre / mi-ombre", sec:"Sec / méditerranéen", ornemental:"Ornemental", universel:"Universel", chaud:"Gazon chaud", inconnu:"Non défini" };
 
 export default function MyLawn() {
   const navigate                  = useNavigate();
@@ -164,7 +271,7 @@ export default function MyLawn() {
   const { profile, saveProfile }  = useProfile();
   const { history = [], removeEntry } = useHistory();
   const { weather }               = useWeather() || {};
-  const { isPaid = false }        = useSubscription() || {};
+  const { isPaid = false, isLoading: subLoading = true } = useSubscription() || {};
   const { diagnostics } = useDiagnostics(); // ✅ Déclaré en premier — utilisé dans calcCompletion et calcLawnScore
 
   // ── Débit arroseur (Premium) ────────────────────────────────────────────────
@@ -217,48 +324,22 @@ export default function MyLawn() {
     setTimeout(() => setDebitSaved(false), 2000);
   };
 
-  // ── État complétion profil ──────────────────────────────────────────────
-  const [p2, setP2] = useState({
-    sol:        profile?.sol        || null,
-    exposition: profile?.exposition || null,
-    arrosage:   profile?.arrosage   || null,
-    tondeuse:   profile?.tondeuse   || [],
-    materiel:   profile?.materiel   || [],
-    budget:     profile?.budget     || null,
-  });
+  // Panneaux dépliables : détail ou partage du score, réglage du débit, carte de parrainage
+  const [panneauScore, setPanneauScore] = useState(null);
+  const basculer = (panneau) => setPanneauScore(ouvert => ouvert === panneau ? null : panneau);
+  const [debitOuvert, setDebitOuvert] = useState(false);
+  const [parrainage, setParrainage]   = useState(false);
 
   const completion = calcCompletion(profile, isPaid, diagnostics);
 
-  const toggleMulti = (field, id) => {
-    setP2(prev => {
-      const arr = prev[field] || [];
-      if (id === "aucun") return { ...prev, [field]: ["aucun"] };
-      const filtered = arr.filter(x => x !== "aucun");
-      return {
-        ...prev,
-        [field]: filtered.includes(id) ? filtered.filter(x => x !== id) : [...filtered, id]
-      };
-    });
-  };
-
-  const handleSaveP2 = () => {
-    const updated = { ...profile, ...p2 };
-    updated.profileCompletion = calcCompletion(updated, isPaid, diagnostics);
-    saveProfile(updated);
-  };
-
   const month = new Date().getMonth() + 1;
-  const plan  = MONTHLY_PLAN[month];
 
-  const { score, potential, label, color, issues, strengths, composantes } = calcLawnScore({ weather, profile, history, month, diagnostics });
+  const { score, potential, label, color, issues, composantes } = calcLawnScore({ weather, profile, history, month, diagnostics });
 
   // ── Badges collectionnables (détection client, stockage profiles.data.badges) ──
   const streak = useStreak();
   const { badges: badgesList, nbUnlocked, total: badgesTotal, justUnlocked, clearJustUnlocked } =
     useBadges({ profile, saveProfile, score, diagnostics, streak, history, isPaid });
-
-  // ── Conseil du mois ──
-  const { recommandationPrincipale } = useRecommandations(profile, score, weather, history);
 
   const safeHistory = Array.isArray(history) ? history : [];
 
@@ -283,7 +364,7 @@ export default function MyLawn() {
               <div style={{ fontSize:12, color:"#66BB6A", opacity:0.9 }}>Centre de pilotage</div>
             </div>
           </div>
-          <button onClick={() => navigate("/parametres")} style={{ background:"rgba(102,187,106,0.12)", border:"1px solid rgba(102,187,106,0.3)", borderRadius:10, padding:"7px 12px", color:"#66BB6A", fontSize:12, cursor:"pointer", display:"flex", alignItems:"center", gap:6 }}>
+          <button onClick={() => navigate("/parametres")} style={{ background:"rgba(102,187,106,0.12)", border:"1px solid rgba(102,187,106,0.3)", borderRadius:10, padding:"7px 12px", color:"#a5d6a7", fontSize:12, cursor:"pointer", fontWeight:700 }}>
             ⚙️ Paramètres
           </button>
         </div>
@@ -291,191 +372,51 @@ export default function MyLawn() {
 
       <div style={scroll}>
 
-        {/* ── MON PROFIL ────────────────────────────────────────────────── */}
-        {profile ? (
-          <div data-tuile="mongazon-profil" style={card()}>
-            <div style={cardTitle}>
-              <span>👤 Mon profil</span>
-              <button onClick={() => navigate("/setup")} style={{ background:"rgba(76,175,80,0.2)", border:"none", borderRadius:8, padding:"4px 10px", color:"#a5d6a7", fontSize:11, cursor:"pointer" }}>
-                ✏️ Modifier
-              </button>
-            </div>
-            {/* Barre complétude */}
-            <div style={{ marginBottom:12 }}>
-              <div style={{ display:"flex", justifyContent:"space-between", fontSize:11, marginBottom:4 }}>
-                <span style={{ color:"#81c784", fontWeight:700 }}>Complétude du profil</span>
-                <span style={{ color: completion >= 90 ? "#a5d6a7" : "#f4a261", fontWeight:800 }}>{completion}%</span>
-              </div>
-              <div style={{ height:6, background:"rgba(255,255,255,0.08)", borderRadius:6, overflow:"hidden" }}>
-                <div style={{ width:`${completion}%`, height:"100%", borderRadius:6, background:"linear-gradient(90deg,#2d6a4f,#52b788)", transition:"width 0.6s" }} />
-              </div>
-              <div style={{ display:"flex", justifyContent:"space-between", fontSize:9, color:"#4a7c5c", marginTop:2 }}>
-                <span>Onboarding ✅</span><span>Profil 90%</span><span>📸 Premium 100%</span>
-              </div>
-            </div>
-            {/* Infos profil */}
-            {(() => {
-              const OBJECTIF_LABELS = { parfait:"Gazon parfait", fonctionnel:"Pelouse fonctionnelle", naturel:"Gazon naturel" };
-              const SOL_LABELS      = { argileux:"Argileux", limoneux:"Limoneux", sableux:"Sableux", calcaire:"Calcaire", humifere:"Humifère", compacte:"Compacté", inconnu:"Non défini" };
-              const EXPO_LABELS     = { ensoleille:"Ensoleillé", "mi-ombre":"Mi-ombre", ombrage:"Ombragé" };
-              const ARROSAGE_LABELS = { automatique:"Arrosage auto", manuel:"Tuyau/manuel", aucun:"Pas d'arrosage", rarement:"Rarement" };
-              const GAZON_LABELS    = { sport:"Sport", ombre:"Ombre / mi-ombre", sec:"Sec / méditerranéen", ornemental:"Ornemental", universel:"Universel", chaud:"Gazon chaud", inconnu:"Non défini" };
-              const phase1 = [
-                profile.objectif  ? { icon:"🎯", val: OBJECTIF_LABELS[profile.objectif] || profile.objectif } : null,
-                profile.pelouse   ? { icon:"🌿", val: GAZON_LABELS[profile.pelouse] || profile.pelouse } : null,
-                profile.surface   ? { icon:"📐", val: `${profile.surface} m²` } : null,
-                profile.ville     ? { icon:"📍", val: profile.ville.split(",")[0] } : null,
-              ].filter(Boolean);
-              const phase2 = [
-                profile.sol && profile.sol !== "N/A" ? { icon:"🏔️", val: SOL_LABELS[profile.sol] || profile.sol } : null,
-                profile.exposition ? { icon:"☀️", val: EXPO_LABELS[profile.exposition] || profile.exposition } : null,
-                profile.arrosage && profile.arrosage !== "N/A" ? { icon:"💧", val: ARROSAGE_LABELS[profile.arrosage] || profile.arrosage } : null,
-                profile.budget     ? { icon:"💰", val: profile.budget } : null,
-              ].filter(Boolean);
-              const manquants = [
-                !profile.sol || profile.sol === "N/A" ? "Sol" : null,
-                !profile.exposition ? "Exposition" : null,
-                !profile.arrosage || profile.arrosage === "N/A" ? "Arrosage" : null,
-              ].filter(Boolean);
-              return (
-                <>
-                  {phase1.length > 0 && (
-                    <div style={{ marginBottom:8 }}>
-                      <div style={{ fontSize:10, fontWeight:700, color:"#4a7c5c", letterSpacing:1, marginBottom:5 }}>PROFIL DE BASE</div>
-                      <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
-                        {phase1.map(({ icon, val }) => (
-                          <span key={val} style={{ background:"rgba(82,183,136,0.1)", border:"1px solid rgba(82,183,136,0.2)", borderRadius:20, padding:"3px 9px", fontSize:11, color:"#95d5b2" }}>{icon} {val}</span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {phase2.length > 0 && (
-                    <div style={{ marginBottom:8 }}>
-                      <div style={{ fontSize:10, fontWeight:700, color:"#4a7c5c", letterSpacing:1, marginBottom:5 }}>PROFIL DÉTAILLÉ</div>
-                      <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
-                        {phase2.map(({ icon, val }) => (
-                          <span key={val} style={{ background:"rgba(255,255,255,0.06)", border:"1px solid rgba(149,213,178,0.18)", borderRadius:20, padding:"3px 9px", fontSize:11, color:"#e8f5e9" }}>{icon} {val}</span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {manquants.length > 0 && (
-                    isPaid ? (
-                      <div style={{ background:"rgba(244,162,97,0.08)", border:"1px solid rgba(244,162,97,0.25)", borderRadius:10, padding:"8px 12px" }}>
-                        <div style={{ fontSize:11, fontWeight:700, color:"#f4a261", marginBottom:4 }}>📋 À compléter : {manquants.join(", ")}</div>
-                        <button onClick={() => navigate("/setup")} style={{ width:"100%", background:"rgba(244,162,97,0.2)", color:"#f4a261", border:"1px solid rgba(244,162,97,0.3)", borderRadius:8, padding:"6px", fontSize:11, fontWeight:700, cursor:"pointer" }}>Compléter → +{manquants.length * 8}%</button>
-                      </div>
-                    ) : (
-                      <button onClick={() => navigate("/setup")} style={{ width:"100%", background:"rgba(249,168,37,0.1)", color:"#f9a825", border:"1px solid rgba(249,168,37,0.25)", borderRadius:8, padding:"6px", fontSize:11, fontWeight:700, cursor:"pointer" }}>Compléter mon profil →</button>
-                    )
-                  )}
-                  {manquants.length === 0 && completion < 100 && (
-                    <div style={{ fontSize:11, color:"#52b788", textAlign:"center", padding:"4px 0" }}>
-                      ✅ {isPaid ? "Faites un diagnostic photo pour atteindre 100%" : "Passez Premium pour le diagnostic photo"}
-                    </div>
-                  )}
-                </>
-              );
-            })()}
-          </div>
-        ) : (
+        {/* ── PROFIL À CONFIGURER (sans profil, le score reste approximatif) ── */}
+        {!profile && (
           <div style={{ ...card(), textAlign:"center", padding:16 }}>
             <div style={{ fontSize:13, color:"#81c784", marginBottom:8 }}>Configurez votre profil pour un score précis</div>
             <button onClick={() => navigate("/setup")} style={{ background:"linear-gradient(135deg,#43a047,#2e7d32)", color:"#fff", border:"none", borderRadius:10, padding:"10px 24px", fontWeight:800, cursor:"pointer", fontSize:13 }}>🚀 Configurer mon gazon</button>
           </div>
         )}
 
-        {/* ── MES ÉQUIPEMENTS (station météo, robot et arrosage connectés ; caméras à venir) ── */}
-        <div data-tuile="mongazon-equipements" onClick={() => navigate("/equipements")} style={{ ...card(), cursor:"pointer", display:"flex", alignItems:"center", gap:12 }}>
-          <span style={{ fontSize:24 }}>📡</span>
-          <div style={{ flex:1 }}>
-            <div style={{ fontSize:13, fontWeight:800, color:"#F1F8F2" }}>Mes équipements</div>
-            <div style={{ fontSize:11, color:"#81c784", marginTop:2 }}>Station météo, robot, arrosage : l'app décide avec ton jardin</div>
-          </div>
-          <span style={{ color:"#a5d6a7", fontSize:16 }}>→</span>
-        </div>
-
-        {/* ── PARRAINAGE (1 mois offert au filleul et au parrain) ── */}
-        <CarteParrainage />
-
-        {/* ── PLAN ANNUEL PERSONNALISÉ (achat unique) ── */}
-        <div data-tuile="mongazon-plan-annuel" onClick={() => navigate("/plan-annuel")} style={{ ...card(), cursor:"pointer", display:"flex", alignItems:"center", gap:12 }}>
-          <span style={{ fontSize:24 }}>📅</span>
-          <div style={{ flex:1 }}>
-            <div style={{ fontSize:13, fontWeight:800, color:"#F1F8F2" }}>Mon plan gazon {anneePlan()}</div>
-            <div style={{ fontSize:11, color:"#81c784", marginTop:2 }}>Les 12 mois d'entretien de ton gazon, en PDF · inclus dans Premium</div>
-          </div>
-          <span style={{ color:"#a5d6a7", fontSize:16 }}>→</span>
-        </div>
-
-        {/* ── BOUTON COMPLÉTER PROFIL ── */}
-        <div data-tuile="mongazon-completer-profil" style={{ marginBottom:12, display:"flex", alignItems:"center", justifyContent:"space-between", background:"rgba(255,255,255,0.05)", border:`1px solid ${completion < 90 ? "rgba(244,162,97,0.25)" : "rgba(82,183,136,0.25)"}`, borderRadius:14, padding:"10px 14px" }}>
-          <div>
-            <div style={{ fontSize:12, fontWeight:700, color: completion < 90 ? "#f4a261" : "#95d5b2" }}>👤 Profil complété à {completion}%</div>
-            <div style={{ fontSize:11, color:"#81c784", marginTop:2 }}>
-              {completion < 90 ? "Complétez pour de meilleurs conseils" : "Modifier vos informations à tout moment"}
-            </div>
-          </div>
-          <button onClick={() => navigate("/setup")} style={{ background: completion < 90 ? "rgba(244,162,97,0.2)" : "rgba(82,183,136,0.15)", border:`1px solid ${completion < 90 ? "rgba(244,162,97,0.4)" : "rgba(82,183,136,0.3)"}`, borderRadius:10, padding:"7px 12px", color: completion < 90 ? "#f4a261" : "#95d5b2", fontSize:12, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap" }}>
-            ✏️ {completion < 90 ? "Compléter →" : "Modifier →"}
-          </button>
-        </div>
-{/* ── LANCER UN PARCOURS (Semis / Regarnissage) ────────────────── */}
-        <div data-tuile="mongazon-lancer-parcours" style={{ ...card(), border:"1px solid rgba(82,183,136,0.3)", background:"linear-gradient(135deg, rgba(45,106,79,0.25), rgba(15,47,31,0.5))" }}>
-          <div style={{ fontSize:14, fontWeight:800, color:"#F1F8F2", marginBottom:4 }}>🌱 Lancer un parcours</div>
-          <div style={{ fontSize:12, color:"#81c784", marginBottom:12, lineHeight:1.5 }}>
-            Créez une nouvelle pelouse ou densifiez l'existante, guidé étape par étape selon votre zone et la météo.
-          </div>
-          <div style={{ display:"flex", gap:10 }}>
-            <button onClick={() => navigate("/parcours?type=creation")}
-              style={{ flex:1, padding:"12px 8px", borderRadius:12, cursor:"pointer", fontWeight:700, fontSize:13, fontFamily:"inherit",
-                background:"rgba(76,175,80,0.2)", border:"1px solid rgba(76,175,80,0.4)", color:"#a5d6a7" }}>
-              🌱 Créer un gazon
-            </button>
-            <button onClick={() => navigate("/parcours?type=regarnissage")}
-              style={{ flex:1, padding:"12px 8px", borderRadius:12, cursor:"pointer", fontWeight:700, fontSize:13, fontFamily:"inherit",
-                background:"rgba(76,175,80,0.2)", border:"1px solid rgba(76,175,80,0.4)", color:"#a5d6a7" }}>
-              🌾 Regarnir
-            </button>
-          </div>
-        </div>
-        {/* ── 1. SCORE HÉRO ── */}
-        <div data-tuile="mongazon-score" style={{ ...card(), background:`linear-gradient(135deg, rgba(27,94,32,0.5), rgba(13,43,26,0.7))`, border:`2px solid ${color}55`, padding:20 }}>
-          <div style={{ fontSize:11, color:"#66BB6A", fontWeight:700, letterSpacing:1.5, marginBottom:12, textAlign:"center" }}>🌿 SCORE SANTÉ</div>
-          <div style={{ display:"flex", justifyContent:"center", alignItems:"center", gap:24, marginBottom:12 }}>
-            <div style={{ position:"relative" }}>
-              <svg width="160" height="100" viewBox="0 0 160 100">
-                <path d="M 15 90 A 65 65 0 0 1 145 90" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="12" strokeLinecap="round"/>
-                <path d="M 15 90 A 65 65 0 0 1 145 90" fill="none" stroke={color} strokeWidth="12" strokeLinecap="round"
-                  strokeDasharray={`${(score/100)*204} 204`}/>
-                <text x="80" y="82" textAnchor="middle" fill="white" fontSize="32" fontWeight="bold" fontFamily="Nunito,Arial">{score}</text>
-                <text x="80" y="95" textAnchor="middle" fill={color} fontSize="11" fontFamily="Nunito,Arial">/100 — {label}</text>
-              </svg>
-            </div>
-            <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-              <div style={{ textAlign:"center" }}>
-                <div style={{ fontSize:20, marginBottom:2 }}>{scoreDiff >= 0 ? "📈" : "📉"}</div>
-                <div style={{ fontSize:16, fontWeight:800, color: scoreDiff >= 0 ? "#66BB6A" : "#ef9a9a" }}>{scoreDiff >= 0 ? "+" : ""}{scoreDiff}</div>
-                <div style={{ fontSize:10, color:"#81c784" }}>vs 7 jours</div>
-              </div>
-              <div style={{ textAlign:"center" }}>
-                <div style={{ fontSize:10, color:"#81c784", marginBottom:2 }}>Potentiel</div>
-                <div style={{ fontSize:14, fontWeight:800, color:"#f9a825" }}>{potential}</div>
-                <div style={{ fontSize:9, color:"#81c784" }}>/100</div>
+        {/* ── SCORE SANTÉ (compact) : détail et partage dépliables ── */}
+        <div data-tuile="mongazon-score" style={{ ...card(), padding:"12px 14px", background:"linear-gradient(135deg, rgba(27,94,32,0.5), rgba(13,43,26,0.7))", border:`1px solid ${color}55` }}>
+          <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+            <svg width="92" height="58" viewBox="0 0 160 100" role="img" aria-label={`Score santé : ${score} sur 100`} style={{ flexShrink:0 }}>
+              <path d="M 15 90 A 65 65 0 0 1 145 90" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="14" strokeLinecap="round"/>
+              <path d="M 15 90 A 65 65 0 0 1 145 90" fill="none" stroke={color} strokeWidth="14" strokeLinecap="round"
+                strokeDasharray={`${(score/100)*204} 204`}/>
+              <text x="80" y="88" textAnchor="middle" fill="white" fontSize="44" fontWeight="bold" fontFamily="Nunito,Arial">{score}</text>
+            </svg>
+            <div style={{ flex:1, minWidth:0 }}>
+              <div style={{ fontSize:10, color:"#66BB6A", fontWeight:700, letterSpacing:1.2 }}>🌿 SCORE SANTÉ</div>
+              <div style={{ fontSize:16, fontWeight:800, color }}>{label}</div>
+              <div style={{ fontSize:11, color:"#81c784", marginTop:2 }}>
+                <span style={{ fontWeight:700, color: scoreDiff >= 0 ? "#66BB6A" : "#ef9a9a" }}>{scoreDiff >= 0 ? "📈 +" : "📉 "}{scoreDiff}</span> en 7 jours · potentiel <b style={{ color:"#f9a825" }}>{potential}</b>
               </div>
             </div>
           </div>
-          <ShareScore score={score} label={label} profile={profile} />
+          <div style={{ display:"flex", gap:8, marginTop:10 }}>
+            <button data-tuile="mongazon-detail-score" onClick={() => basculer("detail")} aria-expanded={panneauScore === "detail"} style={petitBouton}>
+              📊 Pourquoi ce score ? {panneauScore === "detail" ? "▲" : "▼"}
+            </button>
+            <button data-tuile="mongazon-partage-score" onClick={() => basculer("partage")} aria-expanded={panneauScore === "partage"} style={{ ...petitBouton, flex:"0 0 auto" }}>
+              📤 Partager
+            </button>
+          </div>
+          {panneauScore === "detail" && (
+            <DetailScore composantes={composantes} issues={issues} isPaid={isPaid} sansHistorique={safeHistory.length === 0} onPremium={() => navigate("/subscribe")} />
+          )}
+          {panneauScore === "partage" && <PartageScore score={score} label={label} />}
         </div>
 
-        {/* ── ÉVOLUTION DU SCORE ET ACTIONS DE L'ANNÉE (venues de l'accueil), HISTORIQUE (ancienne page /history) ── */}
+        {/* ── ÉVOLUTION DU SCORE ET ACTIONS DE L'ANNÉE, HISTORIQUE (ancienne page /history) ── */}
         <EvolutionScore weather={weather} profile={profile} history={history} diagnostics={diagnostics} />
         <HistoriqueActions history={history} removeEntry={removeEntry} />
 
         {/* ── MES PROGRÈS : série, GreenPoints, classement ; badges juste après ── */}
         <MesProgres />
-
-        {/* ── BADGES COLLECTIONNABLES ── */}
         <BadgesGallery
           badges={badgesList}
           nbUnlocked={nbUnlocked}
@@ -484,460 +425,83 @@ export default function MyLawn() {
           clearJustUnlocked={clearJustUnlocked}
         />
 
-        {/* ── 2. CONSEIL DU MOIS ── */}
-        {recommandationPrincipale && (
-          <div data-tuile="mongazon-conseil-du-mois" style={{ ...card(), border:`2px solid ${recommandationPrincipale.urgence === "haute" ? "rgba(198,40,40,0.5)" : "rgba(102,187,106,0.4)"}`, background:`linear-gradient(135deg, ${recommandationPrincipale.urgence === "haute" ? "rgba(198,40,40,0.12)" : "rgba(15,47,31,0.7)"}, rgba(27,94,32,0.3))` }}>
-            <div style={cardTitle}>
-              <span style={{ fontSize:13 }}>{recommandationPrincipale.icone} Conseil du mois</span>
-              <span style={{ fontSize:11, background: recommandationPrincipale.urgence === "haute" ? "rgba(198,40,40,0.2)" : "rgba(102,187,106,0.2)", color: recommandationPrincipale.urgence === "haute" ? "#ef9a9a" : "#66BB6A", borderRadius:20, padding:"2px 10px", fontWeight:700 }}>
-                {recommandationPrincipale.urgence === "haute" ? "🔴 Maintenant" : "🟡 Bientôt"}
-              </span>
-            </div>
-            <div style={{ fontWeight:800, color:"#F1F8F2", fontSize:15, marginBottom:8 }}>{recommandationPrincipale.label}</div>
-            <div style={{ fontSize:12, color:"#A5D6A7", lineHeight:1.6, marginBottom:12 }}>{recommandationPrincipale.message(score, profile)}</div>
-            <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-              <span style={{ background:"rgba(102,187,106,0.2)", color:"#66BB6A", borderRadius:8, padding:"4px 10px", fontSize:11, fontWeight:700, border:"1px solid rgba(102,187,106,0.3)" }}>📈 {recommandationPrincipale.impact_score}</span>
-              <button onClick={() => navigate("/products")} style={{ marginLeft:"auto", background:"linear-gradient(135deg,#43A047,#2E7D32)", color:"#fff", border:"none", borderRadius:10, padding:"8px 16px", fontSize:12, fontWeight:700, cursor:"pointer", boxShadow:"0 2px 8px rgba(46,125,50,0.4)" }}>Voir le produit →</button>
-            </div>
+        {/* ── MES OUTILS ── */}
+        <div style={card()}>
+          <div style={cardTitle}><span>🧰 Mes outils</span></div>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+            <Outil tuile="mongazon-plan-annuel" icone="📅" titre="Mon plan gazon" sous={isPaid ? "Les 12 mois, en PDF" : "Aperçu · inclus dans Premium"} onClick={() => navigate("/plan-annuel")} />
+            <Outil tuile="mongazon-equipements" icone="📡" titre="Mes équipements" sous="Station, robot, arrosage" onClick={() => navigate("/equipements")} />
+            <Outil tuile="mongazon-lancer-parcours" icone="🌱" titre="Semer ou regarnir" sous="Guidé étape par étape" onClick={() => navigate("/parcours")} />
+            <Outil tuile="mongazon-produits" icone="🛒" titre="Produits et dépenses" sous="Kit de saison, budget" onClick={() => navigate("/products")} />
+            <Outil tuile="mongazon-parrainage" icone="🎁" titre="Parraine tes amis" sous="1 mois de Premium offert à ton ami, puis à toi" onClick={() => setParrainage(ouvert => !ouvert)} large />
           </div>
-        )}
-
-        {/* ── 3. DÉTAIL DU SCORE — version contextuelle texte ──
-            Pas de chiffres internes exposés à l'utilisateur.
-            Pas de distinction Free/Premium — c'est de la lisibilité, pas de la valeur ajoutée.
-        ── */}
-        {(() => {
-          const e = composantes?.entretien   ?? 70;
-          const h = composantes?.hydratation ?? 70;
-          const n = composantes?.nutriments  ?? 70;
-          const s = composantes?.sol         ?? 75;
-
-          const getStatut = (val) => {
-            if (val >= 80) return { label:"✅ Bon",           color:"#66BB6A", bg:"rgba(102,187,106,0.12)", border:"rgba(102,187,106,0.25)" };
-            if (val >= 50) return { label:"⚠️ À surveiller", color:"#f9a825", bg:"rgba(249,168,37,0.12)",  border:"rgba(249,168,37,0.25)"  };
-            return              { label:"🔴 À corriger",     color:"#ef9a9a", bg:"rgba(239,83,80,0.12)",   border:"rgba(239,83,80,0.25)"   };
-          };
-
-          const entretienCtx = () => {
-            if (e >= 80) return "Entretien régulier — continuez comme ça";
-            if (e >= 50) return "Quelques actions d'entretien à rattraper";
-            return safeHistory.length === 0
-              ? "Commencez à journaliser vos actions pour améliorer ce score"
-              : "Tonte ou arrosage en retard — consultez le plan du mois";
-          };
-
-          const hydratationCtx = () => {
-            if (h >= 90) return "Conditions météo favorables à votre position";
-            if (h >= 70) return "Légères contraintes météo détectées aujourd'hui";
-            if (h >= 50) return "Chaleur ou sécheresse — pensez à arroser";
-            return "Conditions difficiles — arrosage urgent si possible";
-          };
-
-          const nutrientsCtx = () => {
-            if (n >= 70) return "Fertilisation à jour selon l'historique";
-            if (n >= 30) return "Engrais recommandé — délai depuis la dernière application";
-            return safeHistory.length === 0
-              ? "Aucune fertilisation enregistrée — normal au démarrage"
-              : "Aucun engrais journalisé depuis plus de 90 jours";
-          };
-
-          const solCtx = () => {
-            if (s >= 80) return "Aucun facteur de risque détecté sur votre sol";
-            if (s >= 50) return "Type de sol nécessite une attention particulière";
-            return "Sol compacté ou argileux — aération recommandée";
-          };
-
-          const items = [
-            { icon:"🌱", label:"Entretien",    val:e, ctx:entretienCtx()   },
-            { icon:"💧", label:"Météo du jour", val:h, ctx:hydratationCtx() },
-            { icon:"🧪", label:"Nutriments",   val:n, ctx:nutrientsCtx()   },
-            { icon:"🌿", label:"Sol",           val:s, ctx:solCtx()         },
-          ];
-
-          return (
-            <div data-tuile="mongazon-detail-score" style={card()}>
-              <div style={cardTitle}><span>📊 Détail du score</span></div>
-              <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-                {items.map((item) => {
-                  const statut = getStatut(item.val);
-                  return (
-                    <div key={item.label} style={{ background:statut.bg, border:`1px solid ${statut.border}`, borderRadius:12, padding:"10px 14px" }}>
-                      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
-                        <span style={{ fontSize:13, fontWeight:700, color:"#e8f5e9" }}>
-                          {item.icon} {item.label}
-                        </span>
-                        <span style={{ fontSize:11, fontWeight:800, color:statut.color, background:statut.bg, border:`1px solid ${statut.border}`, borderRadius:20, padding:"2px 10px" }}>
-                          {statut.label}
-                        </span>
-                      </div>
-                      <div style={{ fontSize:11, color:"#81c784", lineHeight:1.5 }}>
-                        {item.ctx}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })()}
-
-        {/* ── 4. PROBLÈMES PRIORITAIRES ── */}
-        {issues.length > 0 && (
-          <div data-tuile="mongazon-problemes" style={card()}>
-            <div style={cardTitle}><span>⚠️ Problèmes prioritaires</span></div>
-            {(isPaid ? issues : issues.slice(0,2)).map((issue, i) => (
-              <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 10px", background:"rgba(239,108,0,0.1)", borderRadius:10, marginBottom:6, border:"1px solid rgba(239,108,0,0.2)" }}>
-                <span style={{ fontSize:13 }}>{issue.icon} {issue.label}</span>
-                <span style={{ fontSize:12, fontWeight:700, color:"#ef9a9a" }}>{issue.impact} pts</span>
-              </div>
-            ))}
-            {!isPaid && issues.length > 2 && (
-              <div style={{ fontSize:12, color:"#f9a825", textAlign:"center", marginTop:6 }}>
-                🔒 +{issues.length - 2} problème{issues.length-2>1?"s":""} masqué{issues.length-2>1?"s":""} — <span style={{ cursor:"pointer", textDecoration:"underline" }} onClick={() => navigate("/subscribe")}>Premium</span>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ── 5. PLAN DU MOIS ──────────────────────────────────────────────────
-            Logique : affiche ce qui est agronomiquement prévu ce mois.
-            horsS = calculé mais non affiché (usage interne dev uniquement).
-            Optimisé smartphone : lignes haute densité, touch targets ≥44px.
-        ── */}
-        {(() => {
-          const _arrosPlanRaw = profile && weather
-            ? calcArrosage(month, profile, weather, history, getDebitMmH())
-            : null;
-          const arrosPlan = (_arrosPlanRaw && !_arrosPlanRaw.skip) ? _arrosPlanRaw : null;
-          const zone    = zoneClimatique(profile);
-          const statuts = buildActions(profile, weather, history, score, month, _arrosPlanRaw);
-
-          // horsS conservé côté code pour usage interne — non affiché à l'utilisateur
-          const recommandes = statuts.filter(a => a.status === "recommended" || a.status === "done_today" || a.status === "too_soon");
-          const bloques     = statuts.filter(a => a.status === "blocked" || a.status === "exclusive");
-
-          const countAFaire = recommandes.filter(a => a.status === "recommended").length;
-
-          // Icône par action id — adapté aux Tabler icons (emoji fallback si inconnu)
-          const iconFor = (id) => {
-            const map = {
-              tonte:          "✂️",
-              arrosage:       "💧",
-              engrais_starter:"🌱",
-              engrais_ete:    "☀️",
-              engrais_automne:"🍂",
-              engrais_hiver:  "❄️",
-              verticut:       "🔧",
-              aeration:       "🌀",
-              scarification:  "🔩",
-              desherbage:     "🪴",
-              antimousse:     "💊",
-              biostimulant:   "🌿",
-              regarnissage:   "🌾",
-            };
-            return map[id] || "📋";
-          };
-
-          // Raison blocage lisible
-          const raisonCourte = (status, blockedReason, exclusiveWith, daysLeft) => {
-            if (status === "too_soon")  return `Disponible dans ${daysLeft}j`;
-            if (status === "exclusive") return `Attendre après ${exclusiveWith}`;
-            if (blockedReason)          return blockedReason;
-            return "Conditions non réunies";
-          };
-
-          return (
-            <div data-tuile="mongazon-plan-du-mois" style={card()}>
-
-              {/* ── Header ── */}
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:14 }}>
-                <div>
-                  <div style={{ fontSize:16, fontWeight:800, color:"#F1F8F2" }}>
-                    📅 Plan {MONTHS_FR[month]}
-                  </div>
-                  <div style={{ fontSize:11, color:"#66BB6A", marginTop:2 }}>
-                    {plan?.label} · {ZONE_LABELS[zone] || zone}
-                  </div>
-                </div>
-                {countAFaire > 0 && (
-                  <span style={{
-                    fontSize:11, fontWeight:800,
-                    background:"rgba(102,187,106,0.2)",
-                    color:"#66BB6A",
-                    border:"1px solid rgba(102,187,106,0.35)",
-                    borderRadius:20, padding:"3px 10px",
-                    whiteSpace:"nowrap",
-                  }}>
-                    {countAFaire} à faire
-                  </span>
-                )}
-              </div>
-
-              {/* ── À faire / Fait / Bientôt ── */}
-              {recommandes.length > 0 && (
-                <div style={{ marginBottom:14 }}>
-                  <div style={{ fontSize:10, fontWeight:800, color:"#4a7c5c", letterSpacing:1, marginBottom:8 }}>
-                    À FAIRE CE MOIS
-                  </div>
-                  <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
-                    {recommandes.map(({ action, status, daysLeft }) => {
-                      const detail = action.detail?.(plan, arrosPlan, profile, month, zone);
-                      const isDone   = status === "done_today";
-                      const isSoon   = status === "too_soon";
-                      const borderColor = isDone ? "#4ade80" : isSoon ? "#fbbf24" : "#66BB6A";
-                      return (
-                        <div key={action.id} style={{
-                          display:"flex", alignItems:"center", gap:12,
-                          padding:"11px 12px",
-                          background:"rgba(255,255,255,0.04)",
-                          borderRadius:12,
-                          borderLeft:`3px solid ${borderColor}`,
-                          minHeight:44, // touch target
-                        }}>
-                          <span style={{ fontSize:20, flexShrink:0, lineHeight:1 }}>{iconFor(action.id)}</span>
-                          <div style={{ flex:1, minWidth:0 }}>
-                            <div style={{ fontSize:13, fontWeight:700, color: isDone ? "#4ade80" : "#e8f5e9", lineHeight:1.3 }}>
-                              {action.label.replace(/[✂️💧🌱☀️🍂❄️🔧🌀🔩🪴💊🌿🌾]/gu, "").trim()}
-                              {isDone && <span style={{ fontSize:11, color:"#4ade80", marginLeft:6 }}>✓ Fait aujourd'hui</span>}
-                              {isSoon  && <span style={{ fontSize:11, color:"#fbbf24", marginLeft:6 }}>Dans {daysLeft}j</span>}
-                            </div>
-                            {detail && (
-                              <div style={{ fontSize:11, color:"#81c784", marginTop:2, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
-                                {detail}
-                              </div>
-                            )}
-                          </div>
-                          {/* Lien produit — bouton discret, pas de ProductCard inline */}
-                          {action.needsProduct && status === "recommended" && ACTION_TO_AMAZON[action.id] && (
-                            <button
-                              onClick={() => navigate("/products")}
-                              style={{
-                                flexShrink:0,
-                                background:"rgba(249,168,37,0.15)",
-                                border:"1px solid rgba(249,168,37,0.35)",
-                                borderRadius:20,
-                                padding:"5px 10px",
-                                color:"#f9a825",
-                                fontSize:11,
-                                fontWeight:700,
-                                cursor:"pointer",
-                                whiteSpace:"nowrap",
-                              }}
-                            >
-                              🛒 Voir
-                            </button>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* ── Bloqués ── */}
-              {bloques.length > 0 && (
-                <div>
-                  <div style={{ fontSize:10, fontWeight:800, color:"#4a7c5c", letterSpacing:1, marginBottom:8 }}>
-                    BLOQUÉS AUJOURD'HUI
-                  </div>
-                  <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
-                    {bloques.map(({ action, status, blockedReason, exclusiveWith, daysLeft }) => (
-                      <div key={action.id} style={{
-                        display:"flex", alignItems:"center", gap:12,
-                        padding:"9px 12px",
-                        background:"rgba(255,255,255,0.02)",
-                        borderRadius:10,
-                        border:"1px solid rgba(255,255,255,0.06)",
-                        opacity:0.75,
-                        minHeight:44,
-                      }}>
-                        <span style={{ fontSize:18, flexShrink:0, lineHeight:1 }}>{iconFor(action.id)}</span>
-                        <div style={{ flex:1, minWidth:0 }}>
-                          <div style={{ fontSize:13, color:"#81c784", fontWeight:600 }}>
-                            {action.label.replace(/[✂️💧🌱☀️🍂❄️🔧🌀🔩🪴💊🌿🌾]/gu, "").trim()}
-                          </div>
-                          <div style={{ fontSize:11, color:"#ef9a9a", marginTop:2, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
-                            {raisonCourte(status, blockedReason, exclusiveWith, daysLeft)}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Aucune action ce mois */}
-              {recommandes.length === 0 && bloques.length === 0 && (
-                <div style={{ textAlign:"center", padding:"16px 0", color:"#4a7c5c", fontSize:13 }}>
-                  ✅ Aucune intervention prévue ce mois
-                </div>
-              )}
-
-            </div>
-          );
-        })()}
-
-        {/* ── 7. CALIBRAGE ARROSEUR ── */}
-        <div data-tuile="mongazon-calibrage" style={{ ...card(), background:"linear-gradient(135deg,rgba(25,118,210,0.1),rgba(13,43,26,0.6))", border:"1px solid rgba(100,181,246,0.3)" }}>
-          <div style={cardTitle}>
-            <span>💧 Calibrage arroseur</span>
-            {!isPaid && <span style={{ fontSize:10, color:"#f9a825", background:"rgba(249,168,37,0.15)", borderRadius:20, padding:"2px 8px" }}>🔒 Premium</span>}
-          </div>
-          {isPaid ? (
-            <div>
-              <div style={{ fontSize:12, color:"#81c784", marginBottom:14, lineHeight:1.6 }}>
-                Renseignez le débit de votre arroseur pour obtenir des durées d'arrosage précises. La durée s'ajuste automatiquement dans "Aujourd'hui".
-              </div>
-              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:6, marginBottom:16 }}>
-                {[
-                  { label:"Arroseur oscillant", val:3.5 },
-                  { label:"Arroseur rotatif",   val:5   },
-                  { label:"Enrouleur tuyau",     val:8   },
-                  { label:"Micro-asperseur",     val:2   },
-                ].map(({ label, val }) => (
-                  <button key={label} onClick={() => saveDebit(val)} style={{
-                    background: Math.abs(debitMmH - val) < 0.1 ? "rgba(100,181,246,0.3)" : "rgba(100,181,246,0.08)",
-                    border:     `1px solid ${Math.abs(debitMmH - val) < 0.1 ? "#64b5f6" : "rgba(100,181,246,0.25)"}`,
-                    borderRadius:10, padding:"8px 6px", cursor:"pointer", textAlign:"center",
-                  }}>
-                    <div style={{ fontSize:11, color:"#81c784", fontWeight:600 }}>{label}</div>
-                    <div style={{ fontSize:13, color:"#e8f5e9", fontWeight:800 }}>{val} mm/h</div>
-                  </button>
-                ))}
-              </div>
-              <div style={{ marginBottom:12 }}>
-                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
-                  <span style={{ fontSize:12, color:"#81c784" }}>Réglage précis</span>
-                  <span style={{ fontSize:14, fontWeight:800, color:"#64b5f6" }}>{debitMmH.toFixed(1)} mm/h</span>
-                </div>
-                <input
-                  type="range" min="1" max="20" step="0.5" value={debitMmH}
-                  onChange={e => saveDebit(parseFloat(e.target.value))}
-                  style={{ width:"100%" }}
-                />
-                <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:"#4a7c5c", marginTop:2 }}>
-                  <span>1 mm/h</span><span>10 mm/h</span><span>20 mm/h</span>
-                </div>
-              </div>
-              <div style={{ background:"rgba(100,181,246,0.08)", borderRadius:10, padding:"10px 14px", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-                <span style={{ fontSize:12, color:"#81c784" }}>Pour 7mm d'eau :</span>
-                <span style={{ fontSize:16, fontWeight:800, color:"#64b5f6" }}>{Math.round((7 / debitMmH) * 60)} min</span>
-              </div>
-
-              {/* ── Tip calibrage boîte de conserve ── */}
-              <div style={{ marginTop:14, background:"rgba(100,181,246,0.06)", border:"1px solid rgba(100,181,246,0.2)", borderRadius:12, padding:"12px 14px" }}>
-                <div style={{ fontSize:12, fontWeight:800, color:"#64b5f6", marginBottom:6 }}>
-                  🥫 Comment mesurer votre débit réel ?
-                </div>
-                <div style={{ fontSize:12, color:"#81c784", lineHeight:1.7 }}>
-                  Posez une <strong style={{ color:"#e8f5e9" }}>boîte de conserve vide</strong> sur votre pelouse, à portée de l'arroseur. Lancez l'arrosage pendant <strong style={{ color:"#e8f5e9" }}>exactement 1h</strong>. Mesurez la hauteur d'eau accumulée en mm — c'est votre débit réel.
-                </div>
-                <div style={{ marginTop:10, display:"flex", flexDirection:"column", gap:5 }}>
-                  {[
-                    { step:"1", text:"Posez la boîte sur la pelouse, dans la zone arrosée" },
-                    { step:"2", text:"Arrosez 1h — ou faites une règle de 3 pour moins longtemps" },
-                    { step:"3", text:"Mesurez l'eau en mm avec une règle" },
-                    { step:"4", text:"Entrez la valeur dans le curseur ci-dessus" },
-                  ].map(({ step, text }) => (
-                    <div key={step} style={{ display:"flex", alignItems:"flex-start", gap:8 }}>
-                      <span style={{ flexShrink:0, width:18, height:18, borderRadius:"50%", background:"rgba(100,181,246,0.25)", color:"#64b5f6", fontSize:10, fontWeight:800, display:"flex", alignItems:"center", justifyContent:"center" }}>{step}</span>
-                      <span style={{ fontSize:11, color:"#a5d6a7", lineHeight:1.5 }}>{text}</span>
-                    </div>
-                  ))}
-                </div>
-                <div style={{ marginTop:10, fontSize:11, color:"#4a7c5c", fontStyle:"italic" }}>
-                  💡 Répétez le test en 2–3 points de votre pelouse et faites la moyenne pour plus de précision.
-                </div>
-              </div>
-
-              {debitSaved && <div style={{ textAlign:"center", color:"#64b5f6", fontSize:12, marginTop:8 }}>✅ Débit enregistré</div>}
-            </div>
-          ) : (
-            <div style={{ padding:"4px 0" }}>
-              <div style={{ fontSize:13, color:"#81c784", lineHeight:1.7, marginBottom:14 }}>
-                Calibrez la durée d'arrosage selon votre matériel et obtenez des recommandations au plus précis.
-              </div>
-              <div style={{ display:"flex", gap:8, flexDirection:"column", marginBottom:16 }}>
-                {["⏱️ Durée calculée selon votre arroseur réel","🎯 Arroseur oscillant, rotatif, enrouleur, micro-asperseur","💡 Économies d'eau grâce à l'arrosage optimisé"].map(f => (
-                  <div key={f} style={{ fontSize:12, color:"#81c784" }}>✓ {f}</div>
-                ))}
-              </div>
-              <button onClick={() => navigate("/subscribe")} style={{ background:"linear-gradient(135deg,#F59E0B,#D97706)", color:"#1a1a1a", fontWeight:800, border:"none", borderRadius:10, cursor:"pointer", fontSize:13, padding:"12px", width:"100%" }}>
-                ⭐ Passer Premium — {enEuros(OFFRE.prixMensuel)}/mois
-              </button>
-            </div>
-          )}
         </div>
+        {parrainage && <CarteParrainage />}
 
-        {/* ── 8. PRODUITS RECOMMANDÉS ── */}
-        {(() => {
-          const _arrosProdRaw = profile && weather ? calcArrosage(month, profile, weather, history, getDebitMmH()) : null;
-          const arrosProd = (_arrosProdRaw && !_arrosProdRaw.skip) ? _arrosProdRaw : null;
-          const allStatuts = buildActions(profile, weather, history, score, month, _arrosProdRaw);
-
-
-          const actionKeys = allStatuts
-            .filter(a => a.status === "recommended" && a.action.needsProduct && ACTION_TO_AMAZON[a.action.id])
-            .map(a => ACTION_TO_AMAZON[a.action.id]);
-
-          const ISSUE_TO_AMAZON = {
-            mousse:           "antiMousse",
-            fertilite:        month <= 4 || month === 12 ? "engraisStarter" : month <= 8 ? "engraisEte" : "engraisAutomne",
-            nutriments:       month <= 4 || month === 12 ? "engraisStarter" : month <= 8 ? "engraisEte" : "engraisAutomne",
-            mauvaises_herbes: "desherbage",
-            sol_compacte:     "aeration",
-            thatch:           "verticut",
-            stress_hydrique:  "biostimulant",
-          };
-          const issueKeys = issues.map(i => ISSUE_TO_AMAZON[i.id] || null).filter(Boolean);
-          const allKeys = [...new Set([...actionKeys, ...issueKeys])];
-          const keysToShow = isPaid ? allKeys.slice(0, 3) : allKeys.slice(0, 1);
-
+        {/* ── MON PROFIL : complétude, infos, débit de l'arroseur (Premium) ── */}
+        {profile && (() => {
+          const infos = [
+            profile.objectif  ? { icon:"🎯", val: OBJECTIF_LABELS[profile.objectif] || profile.objectif } : null,
+            profile.pelouse   ? { icon:"🌿", val: GAZON_LABELS[profile.pelouse] || profile.pelouse } : null,
+            profile.surface   ? { icon:"📐", val: `${profile.surface} m²` } : null,
+            profile.ville     ? { icon:"📍", val: profile.ville.split(",")[0] } : null,
+            profile.sol && profile.sol !== "N/A" ? { icon:"🏔️", val: SOL_LABELS[profile.sol] || profile.sol } : null,
+            profile.exposition ? { icon:"☀️", val: EXPO_LABELS[profile.exposition] || profile.exposition } : null,
+            profile.arrosage && profile.arrosage !== "N/A" ? { icon:"💧", val: ARROSAGE_LABELS[profile.arrosage] || profile.arrosage } : null,
+            profile.budget     ? { icon:"💰", val: profile.budget } : null,
+          ].filter(Boolean);
+          const manquants = [
+            !profile.sol || profile.sol === "N/A" ? "Sol" : null,
+            !profile.exposition ? "Exposition" : null,
+            !profile.arrosage || profile.arrosage === "N/A" ? "Arrosage" : null,
+          ].filter(Boolean);
           return (
-            <div data-tuile="mongazon-produits" style={card()}>
-              <div style={cardTitle}><span>🛒 Produits recommandés</span></div>
-              <div style={{ fontSize:11, color:"#81c784", marginBottom:12, fontStyle:"italic", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-                <span>{actionKeys.length > 0 ? "Liés aux actions prioritaires du mois" : "Sélectionnés selon votre score"}</span>
-                {isPaid && <span style={{ fontSize:10, color:"#66BB6A", background:"rgba(102,187,106,0.1)", border:"1px solid rgba(102,187,106,0.2)", borderRadius:20, padding:"2px 8px", fontStyle:"normal", fontWeight:700 }}>⭐ Personnalisés Premium</span>}
+            <div data-tuile="mongazon-profil" style={card()}>
+              <div style={cardTitle}>
+                <span>👤 Mon profil</span>
+                <button onClick={() => navigate("/setup")} style={{ background: manquants.length ? "rgba(244,162,97,0.2)" : "rgba(76,175,80,0.2)", border:"none", borderRadius:8, padding:"4px 10px", color: manquants.length ? "#f4a261" : "#a5d6a7", fontSize:11, fontWeight:700, cursor:"pointer" }}>
+                  ✏️ {manquants.length ? "Compléter" : "Modifier"}
+                </button>
               </div>
-              {keysToShow.length > 0 ? (
-                <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-                  {profile && keysToShow.map(key => (
-                    <ProductCard key={key} actionKey={key} profile={profile} compact />
+              <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
+                <div style={{ flex:1, height:5, background:"rgba(255,255,255,0.08)", borderRadius:6, overflow:"hidden" }}>
+                  <div style={{ width:`${completion}%`, height:"100%", borderRadius:6, background:"linear-gradient(90deg,#2d6a4f,#52b788)", transition:"width 0.6s" }} />
+                </div>
+                <span style={{ fontSize:11, fontWeight:800, color: completion >= 90 ? "#a5d6a7" : "#f4a261", whiteSpace:"nowrap" }}>Complété à {completion}%</span>
+              </div>
+              {infos.length > 0 && (
+                <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
+                  {infos.map(({ icon, val }) => (
+                    <span key={val} style={{ background:"rgba(82,183,136,0.1)", border:"1px solid rgba(82,183,136,0.2)", borderRadius:20, padding:"3px 9px", fontSize:11, color:"#95d5b2" }}>{icon} {val}</span>
                   ))}
                 </div>
-              ) : (
-                <div style={{ fontSize:12, color:"#81c784", textAlign:"center", padding:"12px 0" }}>
-                  ✅ Aucun produit nécessaire pour le moment — votre gazon est en bonne santé !
+              )}
+              {manquants.length > 0 && (
+                <div style={{ fontSize:11, color:"#f4a261", marginTop:8 }}>📋 À compléter : {manquants.join(", ")}</div>
+              )}
+              {manquants.length === 0 && completion < 100 && (
+                <div style={{ fontSize:11, color:"#52b788", marginTop:8 }}>
+                  ✅ {isPaid ? "Faites un diagnostic photo pour atteindre 100%" : "Passez Premium pour le diagnostic photo"}
                 </div>
               )}
-              {!isPaid && allKeys.length > 1 && (
-                <div style={{ fontSize:12, color:"#f9a825", textAlign:"center", marginTop:10 }}>
-                  🔒 +{allKeys.length - 1} produit{allKeys.length - 1 > 1 ? "s" : ""} masqué{allKeys.length - 1 > 1 ? "s" : ""} —{" "}
-                  <span style={{ cursor:"pointer", textDecoration:"underline" }} onClick={() => navigate("/subscribe")}>Premium</span>
+              {isPaid && (
+                <div data-tuile="mongazon-debit-arroseur" style={{ marginTop:10, paddingTop:10, borderTop:"1px solid rgba(255,255,255,0.06)" }}>
+                  <div role="button" tabIndex={0} aria-expanded={debitOuvert} onClick={() => setDebitOuvert(ouvert => !ouvert)} onKeyDown={auClavier(() => setDebitOuvert(ouvert => !ouvert))}
+                    style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:8, cursor:"pointer" }}>
+                    <span style={{ fontSize:12, color:"#e8f5e9" }}>💧 Débit de ton arroseur : <b style={{ color:"#64b5f6" }}>{debitMmH.toFixed(1)} mm/h</b></span>
+                    <span style={{ fontSize:11, color:"#64b5f6", fontWeight:700, whiteSpace:"nowrap" }}>{debitOuvert ? "Fermer ▲" : "Régler ▼"}</span>
+                  </div>
+                  {debitOuvert && <ReglageDebit debitMmH={debitMmH} saveDebit={saveDebit} debitSaved={debitSaved} />}
                 </div>
               )}
-              <button onClick={() => navigate("/products")} style={{ ...btn.primary, marginTop:12, fontSize:12, padding:"8px" }}>Voir tous les produits →</button>
             </div>
           );
         })()}
 
-        {/* ── 9. BLOC PREMIUM ── */}
-        {!isPaid && (
-          <div data-tuile="mongazon-premium" style={{ ...card(), background:"linear-gradient(135deg, rgba(249,168,37,0.15), rgba(230,81,0,0.1))", border:"1px solid rgba(249,168,37,0.4)", textAlign:"center" }}>
-            <div style={{ fontSize:28, marginBottom:8 }}>⭐</div>
-            <div style={{ fontSize:15, fontWeight:800, color:"#f9a825", marginBottom:8 }}>Passez Premium</div>
-            {["Détail complet du score","Arrosage précis calculé","Produits personnalisés","Rappels push + email"].map(f => (
-              <div key={f} style={{ fontSize:12, color:"#e8f5e9", padding:"3px 0" }}>✔ {f}</div>
-            ))}
-            <button onClick={() => navigate("/subscribe")} style={{ background:"linear-gradient(135deg,#F59E0B,#D97706)", color:"#1a1a1a", fontWeight:800, border:"none", borderRadius:10, cursor:"pointer", marginTop:14, padding:"12px 28px", fontSize:14 }}>
-              ⭐ Améliorer mon gazon — {enEuros(OFFRE.prixMensuel)}/mois
-            </button>
-          </div>
-        )}
+        {/* ── AVEC PREMIUM (comptes gratuits ; pas de carte d'achat dans l'app Android) ── */}
+        {!isPaid && !subLoading && !isAndroidTWA() && <AvecPremium tuile="mongazon-avec-premium" />}
 
       </div>
     </div>
   );
 }
-

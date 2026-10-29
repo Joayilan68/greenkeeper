@@ -1,7 +1,7 @@
 // src/components/EvolutionScore.jsx
 // Mon gazon : évolution du score depuis le 1er janvier (ou la 1re action de l'année), recalculé chaque semaine avec les
-// actions et diagnostics connus à cette date (la météo reste celle du jour) ; actions de l'année, mêmes chiffres que le
-// bilan de saison, et lien vers le bilan.
+// actions et diagnostics connus à cette date (la météo reste celle du jour), en version compacte (décision de Jordan du
+// 29/10/2026) ; actions de l'année, mêmes chiffres que le bilan de saison, et lien vers le bilan.
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
@@ -45,52 +45,49 @@ export default function EvolutionScore({ weather, profile, history = [], diagnos
   const scoreRange = maxScore - minScore || 1;
 
   return (
-    <div data-tuile="mongazon-evolution-score" style={{ ...card(), padding:14 }}>
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
-        <span style={{ fontWeight:700, color:"#66BB6A", fontSize:14 }}>📈 Évolution du score</span>
-        <span style={{ fontSize:11, color:"#81c784" }}>{anneeEnCours}, semaine par semaine</span>
+    <div data-tuile="mongazon-evolution-score" style={{ ...card(), padding:"12px 14px" }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", marginBottom:6 }}>
+        <span style={{ fontWeight:700, color:"#66BB6A", fontSize:13 }}>📈 Évolution du score</span>
+        <span style={{ fontSize:10, color:"#81c784" }}>depuis le {scoreHistory[0].t.toLocaleDateString("fr-FR", { day:"numeric", month:"short" })}</span>
       </div>
 
-      <div style={{ position:"relative", height:60, marginBottom:8 }}>
-        <svg width="100%" height="60" style={{ overflow:"visible" }}>
-          {scoreHistory.length > 1 && (() => {
-            const w = 100 / (scoreHistory.length - 1);
-            const points = scoreHistory.map((p,i) => `${i*w}%,${60 - ((p.score - minScore) / scoreRange) * 50}`).join(" ");
-            return (
-              <>
-                <polyline points={points} fill="none" stroke="#43a047" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke"/>
-                {scoreHistory.map((p,i) => (scoreHistory.length <= 12 || i === scoreHistory.length - 1) && (
-                  <circle key={i} cx={`${i*w}%`} cy={60 - ((p.score - minScore) / scoreRange) * 50} r="3" fill="#66BB6A"/>
-                ))}
-                <text x="100%" y={60 - ((scoreHistory[scoreHistory.length-1].score - minScore) / scoreRange) * 50 - 6} textAnchor="end" fill="#a5d6a7" fontSize="11" fontWeight="bold">{scoreHistory[scoreHistory.length-1].score}</text>
-              </>
-            );
-          })()}
-        </svg>
-      </div>
-
-      <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:"#4a7c5c", marginBottom:12 }}>
-        <span>{scoreHistory[0].t.toLocaleDateString("fr-FR", { day:"numeric", month:"short" })}</span>
-        <span>Aujourd'hui</span>
-      </div>
-
-      <div style={{ fontSize:10, color:"#81c784", marginBottom:6 }}>Actions depuis le 1er janvier {anneeEnCours}</div>
-      <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:4 }}>
-        {TYPES_ACTIONS.map(({ cle, icone, court }) => (
-          <div key={cle} style={{ flexShrink:0, minWidth:56, background:"rgba(255,255,255,0.05)", borderRadius:10, padding:"8px 6px", textAlign:"center" }}>
-            <div style={{ fontSize:16 }}>{icone}</div>
-            <div style={{ fontSize:16, fontWeight:800, color:"#a5d6a7" }}>{compteurs[cle]}</div>
-            <div style={{ fontSize:9, color:"#81c784" }}>{court}</div>
+      {/* Courbe en coordonnées 0-100 étirées sur la largeur (les points d'une polyline n'acceptent pas les %), points et
+          dernier score par-dessus, en % pour rester ronds */}
+      {scoreHistory.length > 1 && (() => {
+        const w = 100 / (scoreHistory.length - 1);
+        const y = (p) => 40 - ((p.score - minScore) / scoreRange) * 32;
+        const dernier = scoreHistory[scoreHistory.length - 1];
+        return (
+          <div style={{ position:"relative", height:40 }}>
+            <svg viewBox="0 0 100 40" preserveAspectRatio="none" width="100%" height="40" style={{ position:"absolute", inset:0 }}>
+              <polyline points={scoreHistory.map((p,i) => `${i*w},${y(p)}`).join(" ")} fill="none" stroke="#43a047" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke"/>
+            </svg>
+            <svg width="100%" height="40" style={{ position:"absolute", inset:0, overflow:"visible" }}>
+              {scoreHistory.map((p,i) => (scoreHistory.length <= 12 || i === scoreHistory.length - 1) && (
+                <circle key={i} cx={`${i*w}%`} cy={y(p)} r="2.5" fill="#66BB6A"/>
+              ))}
+              <text x="100%" y={y(dernier) - 5} textAnchor="end" fill="#a5d6a7" fontSize="11" fontWeight="bold">{dernier.score}</text>
+            </svg>
           </div>
-        ))}
+        );
+      })()}
+
+      {/* Actions de l'année : seulement les types déjà faits, en une ligne */}
+      <div style={{ display:"flex", flexWrap:"wrap", gap:"4px 10px", marginTop:8, fontSize:11, color:"#a5d6a7" }}>
+        <span style={{ color:"#81c784" }}>Actions {anneeEnCours} :</span>
+        {TYPES_ACTIONS.some(({ cle }) => compteurs[cle] > 0)
+          ? TYPES_ACTIONS.filter(({ cle }) => compteurs[cle] > 0).map(({ cle, icone, court }) => (
+              <span key={cle} title={court} aria-label={`${court} : ${compteurs[cle]}`}><span aria-hidden="true">{icone}</span> <b>{compteurs[cle]}</b></span>
+            ))
+          : <span style={{ color:"#81c784" }}>aucune notée pour l'instant</span>}
       </div>
 
       {/* Bilan de saison : toute l'année, mis en avant du 15 novembre à fin février (aussi sur l'accueil) */}
-      <div data-tuile="mongazon-bilan" role="button" onClick={() => navigate("/bilan")} style={{ marginTop:10, display:"flex", alignItems:"center", justifyContent:"space-between", gap:8, cursor:"pointer",
-        borderRadius:10, padding:"9px 12px", ...(bilanDisponible()
+      <div data-tuile="mongazon-bilan" role="button" onClick={() => navigate("/bilan")} style={{ marginTop:8, display:"flex", alignItems:"center", justifyContent:"space-between", gap:8, cursor:"pointer",
+        borderRadius:10, padding:"7px 10px", ...(bilanDisponible()
           ? { background:"linear-gradient(135deg,rgba(249,168,37,0.22),rgba(13,43,26,0.4))", border:"1px solid rgba(249,168,37,0.45)" }
           : { background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)" }) }}>
-        <span style={{ fontSize:12, fontWeight:700, color: bilanDisponible() ? "#f9a825" : "#a5d6a7" }}>
+        <span style={{ fontSize:11, fontWeight:700, color: bilanDisponible() ? "#f9a825" : "#a5d6a7" }}>
           🏆 {bilanDisponible() ? `Ton bilan de saison ${anneeDuBilan()} est prêt` : `Mon bilan de saison ${anneeDuBilan()} (toute l'année)`}
         </span>
         <span style={{ color: bilanDisponible() ? "#f9a825" : "#81c784" }}>›</span>

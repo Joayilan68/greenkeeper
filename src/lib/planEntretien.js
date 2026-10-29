@@ -2,8 +2,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // SOURCE UNIQUE DE VÉRITÉ — Toutes les recommandations d'entretien Mongazon360
 // Aligné sur la matrice Excel v4 "Zones x Mois"
-// Importé par Today.jsx (journaliser) ET MyLawn.jsx (plan du mois)
-// → cohérence parfaite garantie entre les deux pages
+// Utilisé par Aujourd'hui, le score, le plan annuel, le kit de saison et les équipements : mêmes règles partout
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import { MONTHLY_PLAN, pluieUtile, solSecSansPluie } from "./lawn";
