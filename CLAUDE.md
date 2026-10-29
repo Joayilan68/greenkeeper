@@ -159,10 +159,12 @@
 - Robot Gardena SILENO : même connexion Husqvarna Group (une connexion Gardena enregistre l'arrosage et le robot du
   compte, jetons partagés : renouvelés et révoqués ensemble). Gardena n'a pas de repos d'une durée donnée : « repos jusqu'à
   demain matin » = repos jusqu'à nouvel ordre puis planning relancé par la tâche du matin (`reprendreRobotsGardena`).
-- Robot Mammotion : identifiants personnels (client_id, client_secret) créés par l'utilisateur sur developer.mammotion.com,
-  chiffrés, jeton d'une heure redemandé avec eux ; l'API ne couvre que les modèles sortis à partir de 2025 et ne sait ni
-  mettre au repos pour une durée ni suspendre les tâches programmées : proposition de retour à la base quand la tonte est
-  déconseillée, ou de reprise d'une tonte en pause.
+- Robot Mammotion : identifiants personnels (client_id, client_secret) créés par l'utilisateur sur
+  developer.mammotion.com, chiffrés, jeton d'une heure redemandé avec eux ; l'API ne couvre que les modèles sortis à
+  partir de 2025 (entièrement : le LUBA 3 AWD seul au 29/10/2026, liste complète annoncée par Mammotion) et ne sait ni
+  mettre au repos pour une durée ni suspendre les tâches programmées : proposition de retour à la base quand la tonte
+  est déconseillée, ou de reprise d'une tonte en pause. Usage commercial soumis à l'autorisation écrite préalable de
+  Mammotion (réponse du 29/10/2026, demande en cours) : pas de mise en prod sans elle.
 - Arrosage : Gardena par la même connexion Husqvarna Group (l'API « GARDENA smart system » doit être rattachée à
   l'application Husqvarna ; 700 requêtes/semaine pour toute l'app : lecture au plus toutes les 10 min) ; Rachio par la clé
   API de l'utilisateur. Lancement d'une zone seulement le matin (heures de la base, src/lib/arrosageConnecte.js).

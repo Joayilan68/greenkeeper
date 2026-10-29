@@ -580,3 +580,12 @@ du premier onglet).
   partir du 1/11, 7 jours de Premium à l'inscription ; aucun prix, la prod affichant encore les anciens) ; lien direct
   vers le diagnostic d'essai, campagne groupe-pub : 3 visites le soir même, sans diagnostic lancé ni inscription au
   29/10 au matin. Effet suivi au point KPI du lundi.
+- 29/10/2026 — Mammotion : réponse de Jerry (support) aux 4 questions, après consultation de leur équipe technique.
+  1) Licence actuelle : usage non commercial seulement ; tout usage commercial demande une autorisation écrite préalable
+  de Mammotion (ce n'est donc pas encore le « oui » demandé le 28/10). 2) Pas encore de Client ID dédié à une app :
+  chaque utilisateur garde ses propres identifiants développeur. 3) Aucune limite d'appels pour l'instant, une
+  limitation dynamique viendra (le connecteur gère déjà un refus pour trop de demandes). 4) Seul le LUBA 3 AWD est
+  entièrement pris en charge, rien d'avant 2025 ; liste complète dans leur future documentation (écran Mes équipements,
+  Bob, CLAUDE.md et recette n° 40 alignés sur STA). Suite : demande de l'autorisation écrite d'usage commercial dans le
+  même ticket (réponse préparée pour Jordan, avant le 1/12) ; Mammotion reste sur STA et sera masqué en prod en décembre
+  sans cette autorisation.

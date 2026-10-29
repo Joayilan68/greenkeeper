@@ -337,7 +337,7 @@ export default function Equipements() {
               {marqueRobot === "mammotion" && (
                 <>
                   <div style={explication}>
-                    Modèles sortis à partir de 2025.<br/>
+                    Entièrement pris en charge : LUBA 3 AWD (liste complète à venir chez Mammotion). Modèles sortis avant 2025 : non pris en charge.<br/>
                     1. Sur <a href="https://developer.mammotion.com" target="_blank" rel="noopener noreferrer" style={{ color:"#a5d6a7" }}>developer.mammotion.com</a>, connecte-toi avec ton compte Mammotion et touche « Create Credentials » : note le <strong>client_id</strong> et le <strong>client_secret</strong>, affichés une seule fois.<br/>
                     2. Colle-les ci-dessous.
                   </div>
