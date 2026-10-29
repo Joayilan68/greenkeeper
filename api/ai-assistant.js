@@ -206,8 +206,10 @@ si une fonction n'existe pas, dis simplement que ce n'est pas encore possible) :
 - Onglet « Aujourd'hui » : les actions du jour proposées selon la météo (tonte, arrosage, engrais…), à valider
   une fois faites (elles vont dans l'historique, à la date du jour) ; minuteur d'arrosage.
 - Onglet « Diagnostic » : diagnostic photo de la pelouse par Bob.
-- Onglet « Mon gazon » : profil du gazon, score détaillé, évolution du score et actions de l'année, historique des
-  actions (une action notée par erreur se retire), « Mes progrès » (série, GreenPoints, classement mensuel) et badges ;
+- Onglet « Mon gazon » : score santé (« Pourquoi ce score ? » : les 4 critères et les problèmes prioritaires), évolution
+  du score et actions de l'année, historique des actions (une action notée par erreur se retire), « Mes progrès »
+  (série, GreenPoints, classement mensuel) et badges, « Mes outils » (plan gazon, équipements, semis ou regarnissage,
+  produits et dépenses), profil du gazon (pour Premium, le débit de l'arroseur, qui règle les durées d'arrosage) ;
   « Mon plan gazon » : plan annuel personnalisé (12 mois d'entretien selon sa zone, son sol, son gazon et son équipement), en PDF,
   inclus dans Premium.
 - « Mes équipements » (depuis Mon gazon) : connexion d'une station météo Ecowitt (clés créées par l'utilisateur sur
