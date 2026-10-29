@@ -575,3 +575,8 @@ du premier onglet).
   page privée qu'il peut commenter) : 1re série au plus tard le 6/11 (les 10 accroches, un article complet avec ses 3
   encarts et le bouton fixe, la grille « Ce que fait l'app »), ses retours jusqu'au 11/11 ; 2e série le 16/11 (toutes
   les pages, et le lien STA pour naviguer), ses retours jusqu'au 20/11 ; mise en prod le 22/11 seulement après son go.
+- 28/10/2026 — Post de présentation de Mongazon360 publié le soir par Jordan dans un groupe Facebook qui autorise les
+  publicités de pros (« je m'occupe de Mongazon360 » ; diagnostic photo d'essai, plan d'entretien, Bob, ligue d'hiver à
+  partir du 1/11, 7 jours de Premium à l'inscription ; aucun prix, la prod affichant encore les anciens) ; lien direct
+  vers le diagnostic d'essai, campagne groupe-pub : 3 visites le soir même, sans diagnostic lancé ni inscription au
+  29/10 au matin. Effet suivi au point KPI du lundi.
