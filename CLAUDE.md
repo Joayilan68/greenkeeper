@@ -133,6 +133,10 @@
 - Table `equipements` (serveur uniquement, RLS sans politique) via `api/objets.js` ; logique et connecteurs dans
   `api/equipements.cjs`. Clés d'accès des utilisateurs chiffrées (AES-256-GCM) avec la variable Vercel
   `EQUIPEMENTS_SECRET` (Production et Preview) : ne jamais la changer sans reconnecter les équipements.
+- Équipements connectés inclus dans Premium (niveaux.json ; constat de Jordan du 29/10/2026) : un compte gratuit voit
+  « Inclus dans Premium » dans « Mes équipements », sans connexion possible (un équipement déjà connecté s'y déconnecte
+  seulement) ; connexions et commandes refusées par `api/objets.js` sans Premium (abonnement, essai, Premium offert ou
+  admin) ; robot, arrosage et station ne sont utilisés par l'app qu'avec Premium.
 - Toute décision prise avec un équipement suit le calendrier unique et la base de connaissances.
 - Husqvarna (robot) : connexion OAuth, adresse de retour `https://<domaine>/api/objets` à déclarer dans l'application
   Husqvarna (PROD et alias Staging) ; variables Vercel `HUSQVARNA_CLIENT_ID` (Application key) et
