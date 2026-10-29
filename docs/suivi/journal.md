@@ -589,3 +589,7 @@ du premier onglet).
   Bob, CLAUDE.md et recette n° 40 alignés sur STA). Suite : demande de l'autorisation écrite d'usage commercial dans le
   même ticket (réponse préparée pour Jordan, avant le 1/12) ; Mammotion reste sur STA et sera masqué en prod en décembre
   sans cette autorisation.
+- 29/10/2026 — Mammotion : demande formelle de l'autorisation écrite d'usage commercial envoyée par Jordan dans le même
+  ticket (usage décrit point par point, aucune revente, distribution ni préinstallation ; informations de la société ou
+  signature d'un accord proposées ; réponse demandée avant le 1/12 ; prévenir quand le Client ID dédié sera disponible ;
+  compte de test ou robot de démonstration redemandé). Point au 3/11 (relances des demandes d'accès API).
