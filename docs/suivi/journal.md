@@ -604,3 +604,7 @@ du premier onglet).
   créé vers STA (/api/webhook ; événements checkout.session.completed, customer.subscription.updated et
   customer.subscription.deleted, format « snapshot ») et son secret, prix de test à 2,99 € et 24,99 €, mis par Jordan
   dans Vercel sur les lignes « Preview · Staging ». STA redéployée pour l'abonnement de test.
+- 29/10/2026 — Abonnement de test réussi sur STA à 22 h 02 (Premium mensuel à 2,99 €, carte de test du bac à sable) :
+  paiement, webhook reçu, Premium activé (constaté par Jordan), abonnement compté (premium_souscrit, formule mensuel),
+  aucune erreur. Prérequis Stripe de la refonte terminés ; reste le test de la refonte sur STA par Jordan (recette de
+  décembre n° 68 à 75 et 79 ; n° 76 vérifié, n° 77 et 80 le jour de la mise en prod).
