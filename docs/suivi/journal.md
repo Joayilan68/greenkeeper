@@ -662,3 +662,8 @@ du premier onglet).
 - 30/10/2026 — Mammotion : réponse d'attente du support (Fay) à la demande formelle d'autorisation écrite du 29/10 :
   transmise à l'équipe concernée, réponse « dès que possible », sans date. Rien à répondre ; le connecteur reste sur STA
   (pas de mise en prod sans l'autorisation écrite) ; point au 03/11, relance polie sans nouvelles.
+- 30/10/2026 — Tests de Jordan sur STA avec un compte gratuit (essai terminé) : carte « Avec Premium » de l'accueil, du
+  diagnostic et de Mon gazon (prix à 2,99 € et 24,99 €, offre d'hiver à partir du 1/11), aperçu du plan annuel, Mes
+  équipements verrouillé sans formulaire de demande, création de compte et connexion avec la barre du bas : OK (recette
+  n° 49, 72, 74 et 75). Tous les tests de la refonte prévus avant la mise en prod sont faits ; restent les vérifications
+  en prod samedi (page de paiement des 2 formules, app Android).
