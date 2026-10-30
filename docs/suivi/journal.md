@@ -678,3 +678,7 @@ du premier onglet).
   inviter à ouvrir l'app dès l'ouverture d'un article ; recommandation : bandeau sous le titre qui ne cache pas le texte
   (Google pénalise sur téléphone une fenêtre qui couvre l'article) et promesse vraie, pas « plus d'articles dans l'app »
   (ce sont les mêmes) ; forme et texte à challenger sur les visuels du 6/11.
+- 30/10/2026 — Limite de liens Meta vérifiée par Jordan dans Meta Business Suite (publication préparée avec le lien d'un
+  article, non publiée) : aucun message de limite ni de « Meta One ». Lots de comm inchangés. Une limite de 2 liens par
+  mois ne se verrait qu'au-delà de 2 publications avec lien dans le mois : contrôle des 3 premières publications
+  automatiques le 5/11.
