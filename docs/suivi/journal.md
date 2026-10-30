@@ -689,3 +689,7 @@ du premier onglet).
   pour 20 questions par jour, « Parraine un ami ») ; recette n° 13 à jour. Rappel : un nouveau compte a 7 jours de
   Premium (essai) ; pour tester un compte gratuit sur STA, prendre un compte de plus de 7 jours ou annuler son
   abonnement de test dans le bac à sable Stripe.
+- 30/10/2026 — Décisions de Jordan : compteur de Bob écrit en toutes lettres (« 1 question restante sur 3 ce mois-ci »,
+  « plus de question ce mois-ci » ; « 0/3 » se lisait à l'envers), sur STA pour décembre, recette n° 13 ; contact des
+  paysagistes décalé au 6/11 ; chantier du 22/11 commencé le soir même, 1re page de visuels le 31/10 ; points Google
+  Play (statut de professionnel, localisation) faits par Jordan le 31/10 en journée.

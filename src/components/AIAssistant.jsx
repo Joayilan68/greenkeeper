@@ -28,6 +28,15 @@ const SUGGESTIONS = {
 const saison = (m) => m >= 3 && m <= 5 ? "printemps" : m >= 6 && m <= 8 ? "ete" : m >= 9 && m <= 11 ? "automne" : "hiver";
 const HISTORY_MAX = 20; // messages gardés sur l'appareil
 
+// Compteur de l'en-tête : questions restantes, en toutes lettres (« 0/3 » se lisait comme « 0 utilisée », demande de
+// Jordan du 30/10/2026)
+const compteurQuestions = ({ remaining, limit, period }) => {
+  const quand = period === "day" ? "aujourd'hui" : "ce mois-ci";
+  if (remaining <= 0) return `plus de question ${quand}`;
+  const s = remaining > 1 ? "s" : "";
+  return `${remaining} question${s} restante${s} sur ${limit} ${quand}`;
+};
+
 // ── Message d'accueil avec mention IA obligatoire ──────────────────────────
 const WELCOME_MESSAGE = {
   role: "assistant",
@@ -256,7 +265,7 @@ export default function AIAssistant() {
                 <div style={{ fontSize:10, color:"#81c784" }}>
                   Ton assistant gazon · Score : {score}/100
                   {isAdmin && " · 👑 Admin"}
-                  {quota && !quota.unlimited && ` · ${quota.remaining}/${quota.limit} question${quota.limit > 1 ? "s" : ""} ${quota.period === "day" ? "aujourd'hui" : "ce mois-ci"}`}
+                  {quota && !quota.unlimited && ` · ${compteurQuestions(quota)}`}
                 </div>
               </div>
             </div>
