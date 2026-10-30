@@ -667,3 +667,6 @@ du premier onglet).
   équipements verrouillé sans formulaire de demande, création de compte et connexion avec la barre du bas : OK (recette
   n° 49, 72, 74 et 75). Tous les tests de la refonte prévus avant la mise en prod sont faits ; restent les vérifications
   en prod samedi (page de paiement des 2 formules, app Android).
+- 30/10/2026 — Abonnement annuel de test (24,99 €) réussi par Jordan sur STA (bac à sable Stripe) : paiement, page de
+  bienvenue, Premium activé et app utilisée en Premium ; premium_souscrit compté (formule annuel), aucune erreur. Les 2
+  formules sont testées de bout en bout sur STA (mensuel le 29/10) ; recette n° 82 à jour.
