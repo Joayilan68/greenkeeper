@@ -685,3 +685,7 @@ du premier onglet).
 - 30/10/2026 — Resend vérifié par Jordan : emails des 15 derniers jours tous « Delivered » (démarrage, fin d'essai,
   arrosage, gel). Les 3 alertes Stripe reçues le 29/10 au soir (prix introuvable, signature de webhook absente) venaient
   de STA pendant le branchement du bac à sable Stripe, réglées depuis ; aucune en prod.
+- 30/10/2026 — Bandeau de Bob à 3/3 questions testé par Jordan sur STA avec un compte gratuit : OK (« Passe Premium »
+  pour 20 questions par jour, « Parraine un ami ») ; recette n° 13 à jour. Rappel : un nouveau compte a 7 jours de
+  Premium (essai) ; pour tester un compte gratuit sur STA, prendre un compte de plus de 7 jours ou annuler son
+  abonnement de test dans le bac à sable Stripe.
