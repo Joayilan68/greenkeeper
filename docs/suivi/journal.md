@@ -682,3 +682,6 @@ du premier onglet).
   article, non publiée) : aucun message de limite ni de « Meta One ». Lots de comm inchangés. Une limite de 2 liens par
   mois ne se verrait qu'au-delà de 2 publications avec lien dans le mois : contrôle des 3 premières publications
   automatiques le 5/11.
+- 30/10/2026 — Resend vérifié par Jordan : emails des 15 derniers jours tous « Delivered » (démarrage, fin d'essai,
+  arrosage, gel). Les 3 alertes Stripe reçues le 29/10 au soir (prix introuvable, signature de webhook absente) venaient
+  de STA pendant le branchement du bac à sable Stripe, réglées depuis ; aucune en prod.
