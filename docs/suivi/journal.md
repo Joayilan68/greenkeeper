@@ -670,3 +670,11 @@ du premier onglet).
 - 30/10/2026 — Abonnement annuel de test (24,99 €) réussi par Jordan sur STA (bac à sable Stripe) : paiement, page de
   bienvenue, Premium activé et app utilisée en Premium ; premium_souscrit compté (formule annuel), aucune erreur. Les 2
   formules sont testées de bout en bout sur STA (mensuel le 29/10) ; recette n° 82 à jour.
+- 30/10/2026 — Décisions de Jordan pour faire revenir les utilisateurs dans l'app, ajoutées au chantier du 22/11
+  (Conseils en mode app) : « Lire l'article » sur chaque action d'« Aujourd'hui », carte « Le conseil de la semaine »
+  sur l'accueil connecté (badge « Nouveau » quand un article sort), mesure des articles lus par les comptes connectés.
+  Pas d'onglet Conseils pour les comptes connectés pour l'instant (5 onglets avec Quiz jusqu'au 30/01) : à décider fin
+  janvier à la place de « Quiz », chiffres à l'appui (rappel le 26/01/2027). Demande de Jordan pour les pages Conseils :
+  inviter à ouvrir l'app dès l'ouverture d'un article ; recommandation : bandeau sous le titre qui ne cache pas le texte
+  (Google pénalise sur téléphone une fenêtre qui couvre l'article) et promesse vraie, pas « plus d'articles dans l'app »
+  (ce sont les mêmes) ; forme et texte à challenger sur les visuels du 6/11.
