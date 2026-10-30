@@ -1,0 +1,120 @@
+{
+  "_source": "Catalogue unique des arguments de l'app (chantier « l'app sur toutes les pages », décision de Jordan du 28/10/2026) : encarts, bandeau et grille des pages Conseils (scripts/conseils-template.mjs). Seulement des fonctions en prod (niveaux.json de main), textes en « vous » comme les articles, jamais de promesse fausse ni de règle qui contredise la base de connaissances. Thèmes d'un article : en-tête « app » facultatif (ids séparés par des virgules), sinon mots-clés cherchés dans l'adresse, le titre et la description ; « fin » = dernier jour d'affichage.",
+  "themes": [
+    {
+      "id": "diagnostic",
+      "icone": "📸",
+      "court": "Diagnostic photo",
+      "ligne": "Bob repère mousse, carences et maladies sur votre photo",
+      "titre": "Un doute sur votre pelouse ? Montrez-la à Bob",
+      "texte": "Prenez votre gazon en photo : Bob repère mousse, carences et maladies, et vous dit quoi faire. Le premier diagnostic est offert, sans créer de compte.",
+      "bouton": "Essayer le diagnostic gratuit",
+      "cible": "/essai",
+      "motsCles": ["maladie", "champignon", "tache", "jaune", "mousse", "vers blancs", "vers-blancs", "renover", "oiseau"]
+    },
+    {
+      "id": "plan",
+      "icone": "📅",
+      "court": "Plan jour par jour",
+      "ligne": "Quoi faire sur votre pelouse, chaque jour",
+      "titre": "Le bon geste, le bon jour, chez vous",
+      "texte": "Avec un compte gratuit, l'app vous dit chaque jour quoi faire sur votre pelouse (tonte, arrosage, engrais), selon votre région et votre météo. Avec Premium, tout votre plan de l'année en PDF.",
+      "bouton": "Créer mon compte gratuit",
+      "cible": "/signup",
+      "motsCles": ["calendrier", "entretien", "quand", "preparer"]
+    },
+    {
+      "id": "meteo",
+      "icone": "🌦️",
+      "court": "Météo de votre commune",
+      "ligne": "Pluie, gel, chaleur : arroser, tondre ou attendre",
+      "titre": "La météo de votre commune, traduite en conseils",
+      "texte": "Pluie, gel, canicule : l'app suit la météo de votre commune et vous dit s'il faut arroser, tondre ou attendre.",
+      "bouton": "Voir la météo de ma commune",
+      "cible": "/",
+      "motsCles": ["arros", "pluie", "canicule", "secheresse", "gel", "detrempee", "flaque", "chaleur"]
+    },
+    {
+      "id": "equipements",
+      "icone": "🤖",
+      "court": "Robot et arrosage connectés",
+      "ligne": "Mis au repos quand il pleut, avec votre accord",
+      "titre": "Votre robot et votre arrosage, guidés par la météo",
+      "texte": "Avec Premium, connectez votre robot tondeuse ou votre programmateur d'arrosage : l'app vous propose de mettre le robot au repos quand il pleut ou gèle, et de suspendre l'arrosage quand la pluie suffit. Rien n'est envoyé sans votre accord.",
+      "bouton": "Essayer 7 jours offerts",
+      "cible": "/signup",
+      "motsCles": ["robot", "tondeuse", "arrosage-automatique", "arrosage automatique", "programmateur", "hiverner", "tonte", "tondre", "mulching"]
+    },
+    {
+      "id": "semis",
+      "icone": "🌱",
+      "court": "Parcours semis",
+      "ligne": "Semer ou regarnir, étape par étape",
+      "titre": "Semer ou regarnir : l'app vous guide pas à pas",
+      "texte": "Le parcours semis ou regarnissage vous indique la bonne période pour semer, puis les étapes et les arrosages, jour après jour.",
+      "bouton": "Créer mon compte gratuit",
+      "cible": "/signup",
+      "motsCles": ["semer", "semis", "regarnir", "creer", "plaque", "quel-gazon", "pousse"]
+    },
+    {
+      "id": "bob",
+      "icone": "💬",
+      "court": "Bob répond",
+      "ligne": "Vos questions sur le gazon, des réponses claires",
+      "titre": "Une question sur votre gazon ? Demandez à Bob",
+      "texte": "Bob, l'assistant de l'app, répond à vos questions sur votre pelouse : 3 questions par mois avec un compte gratuit, 20 par jour avec Premium.",
+      "bouton": "Poser ma question à Bob",
+      "cible": "/signup",
+      "motsCles": ["taupe", "fourmi", "ombre", "calcaire", "chaul", "naturelle", "sans-chimie"]
+    },
+    {
+      "id": "suivi",
+      "icone": "📒",
+      "court": "Historique",
+      "ligne": "Toutes vos actions, saison après saison",
+      "titre": "Gardez la trace de tout ce que vous faites",
+      "texte": "Tonte, engrais, scarification : notez vos actions en un geste et retrouvez l'historique de votre pelouse, saison après saison.",
+      "bouton": "Créer mon compte gratuit",
+      "cible": "/signup",
+      "motsCles": ["scarif", "aerer", "carottage", "derniere", "premiere"]
+    },
+    {
+      "id": "achats",
+      "icone": "🛒",
+      "court": "Kit de saison",
+      "ligne": "Les bons produits, en bonne quantité",
+      "titre": "Achetez juste ce qu'il faut",
+      "texte": "Le kit de saison de l'app liste les produits utiles en ce moment, avec les quantités pour votre surface.",
+      "bouton": "Voir mon kit de saison",
+      "cible": "/signup",
+      "motsCles": ["engrais", "biostimulant", "anti-mousse", "desherb", "sulfate"]
+    },
+    {
+      "id": "budget",
+      "icone": "💰",
+      "court": "Budget",
+      "ligne": "Vos dépenses comparées à votre budget",
+      "titre": "Votre budget pelouse sous contrôle",
+      "texte": "Notez vos achats : l'app les additionne sur l'année et vous dit combien il vous reste sur le budget que vous vous êtes fixé.",
+      "bouton": "Créer mon compte gratuit",
+      "cible": "/signup",
+      "motsCles": ["plaques", "creer", "renover", "quel-gazon", "choisir"]
+    },
+    {
+      "id": "quiz",
+      "icone": "🧠",
+      "court": "Quiz d'hiver",
+      "ligne": "3 questions par semaine jusqu'au 30 janvier",
+      "titre": "Le quiz d'hiver : 3 questions par semaine",
+      "texte": "Jusqu'au 30 janvier, un quiz et un défi gazon chaque semaine, gratuits. Le participant le plus assidu gagne 1 an de Premium.",
+      "bouton": "Participer gratuitement",
+      "cible": "/signup",
+      "mention": {
+        "texte": "Règlement : CGU, article 6 g",
+        "lien": "/cgu"
+      },
+      "fin": "2027-01-30",
+      "motsCles": ["hiver", "feuilles", "gel", "derniere-tonte", "novembre", "hiverner"]
+    }
+  ]
+}

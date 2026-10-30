@@ -6,7 +6,7 @@
 // 3. dist/sitemap.xml, dist/conseils.json et dist/produits.json (articles et catalogue Amazon lus par Bob).
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from "node:fs";
 import { marked } from "marked";
-import { articlePage, indexPage, aProposPage } from "./conseils-template.mjs";
+import { articlePage, indexPage, aProposPage, IDS_APP } from "./conseils-template.mjs";
 import AMAZON_PRODUCTS from "../src/lib/amazonProducts.js";
 
 const SITE  = "https://mongazon360.fr";
@@ -54,7 +54,8 @@ for (const page of pages) {
 // Chaque fichier : en-tête « clé: valeur » entre deux lignes « --- » (title, description,
 // saison = automne|hiver|printemps|ete, date AAAA-MM-JJ, maj facultative, brouillon: oui pour masquer,
 // produits facultatif = catégories du catalogue Amazon pour l'encadré « matériel conseillé »,
-// image facultative = photo de public/images/conseils avec son texte de remplacement image_alt).
+// image facultative = photo de public/images/conseils avec son texte de remplacement image_alt,
+// app facultatif = thèmes des encarts de l'app, ids de src/lib/argumentsApp.json séparés par des virgules).
 const articles = readdirSync("content/conseils").filter(f => f.endsWith(".md")).map(f => {
   const [, head, md] = readFileSync(`content/conseils/${f}`, "utf8").match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/)
     || (() => { throw new Error(`[seo] en-tête manquant : ${f}`); })();
@@ -74,6 +75,9 @@ writeFileSync("dist/produits.json", JSON.stringify(produits));
 
 for (const a of articles) for (const cle of (a.produits || "").split(",").map(x => x.trim()).filter(Boolean)) {
   if (!produits[cle]) throw new Error(`[seo] ${a.slug} : catégorie de produits inconnue « ${cle} »`);
+}
+for (const a of articles) for (const id of (a.app || "").split(",").map(x => x.trim()).filter(Boolean)) {
+  if (!IDS_APP.has(id)) throw new Error(`[seo] ${a.slug} : thème de l'app inconnu « ${id} » (src/lib/argumentsApp.json)`);
 }
 mkdirSync("dist/conseils", { recursive: true });
 writeFileSync("dist/conseils/index.html", indexPage(articles));

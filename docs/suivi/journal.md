@@ -693,3 +693,9 @@ du premier onglet).
   « plus de question ce mois-ci » ; « 0/3 » se lisait à l'envers), sur STA pour décembre, recette n° 13 ; contact des
   paysagistes décalé au 6/11 ; chantier du 22/11 commencé le soir même, 1re page de visuels le 31/10 ; points Google
   Play (statut de professionnel, localisation) faits par Jordan le 31/10 en journée.
+- 30/10/2026 — Chantier du 22/11 commencé sur STA, à la demande de Jordan : catalogue des 10 arguments de l'app
+  (src/lib/argumentsApp.json, fonctions en prod seulement) ; dans chaque article, un bandeau sous le titre (2 versions à
+  départager), 3 encarts (après « En bref », au milieu, à la fin) et un bouton fixe sur téléphone ; grille « Ce que fait
+  l'app » sur la rubrique et Qui sommes-nous ; liens balisés « encart », enregistrés avec la page_view de l'app ;
+  tableaux des articles défilants sur téléphone (ils élargissaient la page). Recette n° 84, CLAUDE.md. 1re page de
+  visuels pour Jordan le 31/10 ; suite : Conseils en mode app et comptes connectés.
