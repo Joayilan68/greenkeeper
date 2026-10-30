@@ -659,3 +659,6 @@ du premier onglet).
   Jordan : masquer aussi la demande d'équipement non listé (« Ton équipement n'est pas dans la liste ? ») pour un compte
   gratuit, réservée à Premium (STA ; la version de prod n'a pas ce formulaire). Consignes de Bob, CLAUDE.md et recette
   n° 49 et 72 à jour.
+- 30/10/2026 — Mammotion : réponse d'attente du support (Fay) à la demande formelle d'autorisation écrite du 29/10 :
+  transmise à l'équipe concernée, réponse « dès que possible », sans date. Rien à répondre ; le connecteur reste sur STA
+  (pas de mise en prod sans l'autorisation écrite) ; point au 03/11, relance polie sans nouvelles.
