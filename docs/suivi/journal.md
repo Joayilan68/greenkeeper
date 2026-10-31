@@ -737,3 +737,7 @@ du premier onglet).
   fois le même texte dans un groupe, sujets de saison d'abord. Catalogue généré par scripts/reponses-groupe.mjs (46
   articles), testé sur 23 questions types ; CLAUDE.md. Rappel le mardi et le vendredi à 18 h 37 ; le point des stats lit
   désormais l'historique de la page au lieu de préparer une liste de réponses.
+- 31/10/2026 — Constat de Jordan : le partage du score sur Facebook ne montre que le lien, sans le score (Facebook
+  ignore le texte tout prêt et ne garde que le lien ; WhatsApp garde le message). Correctif sur STA : en touchant
+  Facebook, le message est copié avant l'ouverture de Facebook, à coller dans la publication, comme pour Instagram ;
+  paramètre « quote » ignoré retiré. Recette décembre n° 63. Passage en prod comme correctif proposé à Jordan.

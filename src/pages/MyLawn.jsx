@@ -48,19 +48,22 @@ const petitBouton = { flex:1, background:"rgba(255,255,255,0.06)", border:"1px s
 const auClavier = (action) => (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); action(); } };
 
 function PartageScore({ score, label }) {
-  const [copied, setCopied] = useState(false);
+  const [copie, setCopie] = useState("");
   const appUrl         = "https://mongazon360.fr";
   const emoji          = score >= 85 ? "🏆" : score >= 70 ? "😊" : score >= 55 ? "😐" : score >= 40 ? "😟" : "😰";
   const message        = `${emoji} Mon gazon a un score santé de ${score}/100 sur Mongazon360® !\n🌿 "${label}"\n\nSuivez votre gazon en temps réel :\n${appUrl}`;
   const messageEncoded = encodeURIComponent(message);
   const urlEncoded     = encodeURIComponent(appUrl);
-  const copier = () => { navigator.clipboard.writeText(message); setCopied(true); setTimeout(() => setCopied(false), 3000); };
+  // Facebook et Instagram n'acceptent pas de texte tout prêt (Facebook ne garde que le lien) : le message est copié
+  // pour être collé dans la publication
+  const copier = (confirmation) => navigator.clipboard?.writeText(message)
+    .then(() => { setCopie(confirmation); setTimeout(() => setCopie(""), 4000); }, () => {});
   const SHARE_OPTIONS  = [
     { id:"whatsapp", icon:"💬", label:"WhatsApp",    color:"#25D366", bg:"rgba(37,211,102,0.15)",  border:"rgba(37,211,102,0.35)",  action: () => window.open(`https://wa.me/?text=${messageEncoded}`, "_blank") },
-    { id:"facebook", icon:"📘", label:"Facebook",    color:"#1877F2", bg:"rgba(24,119,242,0.15)",  border:"rgba(24,119,242,0.35)",  action: () => window.open(`https://www.facebook.com/sharer/sharer.php?u=${urlEncoded}&quote=${messageEncoded}`, "_blank") },
+    { id:"facebook", icon:"📘", label:"Facebook",    color:"#1877F2", bg:"rgba(24,119,242,0.15)",  border:"rgba(24,119,242,0.35)",  action: () => { copier("✅ Message copié : collez-le dans votre publication Facebook"); window.open(`https://www.facebook.com/sharer/sharer.php?u=${urlEncoded}`, "_blank"); } },
     { id:"twitter",  icon:"🐦", label:"Twitter / X", color:"#1DA1F2", bg:"rgba(29,161,242,0.15)",  border:"rgba(29,161,242,0.35)",  action: () => window.open(`https://twitter.com/intent/tweet?text=${messageEncoded}`, "_blank") },
-    { id:"instagram",icon:"📸", label:"Instagram",   color:"#E1306C", bg:"rgba(225,48,108,0.15)",  border:"rgba(225,48,108,0.35)",  action: copier },
-    { id:"copy",     icon:"🔗", label:"Copier",      color:"#a5d6a7", bg:"rgba(165,214,167,0.1)",  border:"rgba(165,214,167,0.25)", action: copier },
+    { id:"instagram",icon:"📸", label:"Instagram",   color:"#E1306C", bg:"rgba(225,48,108,0.15)",  border:"rgba(225,48,108,0.35)",  action: () => copier("✅ Message copié : collez-le dans votre story Instagram") },
+    { id:"copy",     icon:"🔗", label:"Copier",      color:"#a5d6a7", bg:"rgba(165,214,167,0.1)",  border:"rgba(165,214,167,0.25)", action: () => copier("✅ Message copié !") },
   ];
   return (
     <div style={{ marginTop:10 }}>
@@ -68,7 +71,7 @@ function PartageScore({ score, label }) {
         <div style={{ fontSize:10, color:"#81c784", fontWeight:700, marginBottom:6, letterSpacing:1 }}>APERÇU DU MESSAGE</div>
         <div style={{ fontSize:12, color:"#e8f5e9", lineHeight:1.7, whiteSpace:"pre-line" }}>{message}</div>
       </div>
-      {copied && <div style={{ background:"rgba(67,160,71,0.2)", border:"1px solid rgba(67,160,71,0.4)", borderRadius:10, padding:"8px 12px", marginBottom:10, fontSize:12, color:"#a5d6a7", textAlign:"center" }}>✅ Message copié !</div>}
+      {copie && <div style={{ background:"rgba(67,160,71,0.2)", border:"1px solid rgba(67,160,71,0.4)", borderRadius:10, padding:"8px 12px", marginBottom:10, fontSize:12, color:"#a5d6a7", textAlign:"center" }}>{copie}</div>}
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
         {SHARE_OPTIONS.map(opt => (
           <button key={opt.id} onClick={opt.action} style={{ background:opt.bg, border:`1px solid ${opt.border}`, borderRadius:12, padding:"10px 8px", color:opt.color, fontSize:12, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
@@ -76,7 +79,7 @@ function PartageScore({ score, label }) {
           </button>
         ))}
       </div>
-      <div style={{ fontSize:10, color:"#4a7c5c", textAlign:"center", marginTop:8 }}>📱 Instagram : le message est copié — collez-le dans votre story</div>
+      <div style={{ fontSize:10, color:"#4a7c5c", textAlign:"center", marginTop:8 }}>📱 Facebook et Instagram n'acceptent pas de texte tout prêt : le message est copié, il suffit de le coller.</div>
     </div>
   );
 }
