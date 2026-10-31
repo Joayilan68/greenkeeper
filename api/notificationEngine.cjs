@@ -13,11 +13,13 @@
 // aux dates de la zone climatique (src/lib/zonesGazon.json, comme le compte à rebours du printemps).
 // Ligue d'hiver (api/ligueHiver.cjs) : quiz du dimanche et défi de la semaine au niveau 5, astuces « Le savais-tu ? » tirées
 // des quiz passés au niveau 6 — même rythme (une notification le matin au plus).
+// Annonces aux utilisateurs (src/lib/annonces.json) : une seule fois par compte, au niveau 4.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const { zoneFromLatLon, ZONES } = require("./parcoursEngine.cjs");
 const CALENDRIER = require("../src/lib/calendrierActions.json");
 const PLUIE_TONTE = require("../src/lib/tonteGazon.json").pluie;
+const ANNONCES = require("../src/lib/annonces.json").annonces;
 
 // Mois où une action est proposée : même calendrier et mêmes exceptions que le plan d'entretien de l'app
 // (moisCalendrier de src/lib/planEntretien.js) — une notification ne propose jamais une action hors saison
@@ -443,6 +445,30 @@ function conseilDuJour(today, month, astucesLigue = []) {
   return liste[jour % liste.length];
 }
 
+// ── Annonces aux utilisateurs (src/lib/annonces.json) ─────────────────────
+// Annonce en cours ce jour-là (dates de Paris, bornes incluses)
+function annonceDuJour(today) {
+  return ANNONCES.find(a => today >= a.debut && today <= a.fin) || null;
+}
+
+// Texte de l'annonce pour un compte : seulement les comptes créés avant l'annonce ; l'offre de saison pour un compte
+// sans Premium quand elle est en cours ({ prix, fin }), sinon le texte général
+function annoncePour(annonce, { creeLe, premium, offre }) {
+  if (!annonce || !creeLe || new Date(creeLe).toISOString().slice(0, 10) >= annonce.comptesAvant) return null;
+  const corps = !premium && offre
+    ? annonce.corpsGratuit.replace("{prixOffre}", offre.prix).replace("{finOffre}", offre.fin)
+    : annonce.corps;
+  return { id: annonce.id, titre: annonce.titre, corps, url: annonce.url };
+}
+
+// NIVEAU 4 — une seule fois par compte (notif_log), avant les autres conseils du niveau 4
+function checkAnnonce(annonce, notifLog) {
+  if (!annonce) return null;
+  const type = `annonce_${annonce.id}`;
+  if ((notifLog?.history || []).some(x => x.type === type)) return null;
+  return { priority: 4, type, title: annonce.titre, body: annonce.corps, url: annonce.url };
+}
+
 function checkEducatif(today, month, astucesLigue) {
   const c = conseilDuJour(today, month, astucesLigue);
   return { priority: 6, type: "educatif", title: c.title, body: c.body };
@@ -456,7 +482,7 @@ function decideNotification(ctx) {
   const {
     profile = {}, weather = null, reminderPrefs = {}, history = [],
     notifLog = null, month = null, slot = "matin", today = null,
-    gami = null, parcours: parcoursState = null, joursInactif = 0, ligue = null,
+    gami = null, parcours: parcoursState = null, joursInactif = 0, ligue = null, annonce = null,
   } = ctx || {};
 
   const sent = sentTodayInfo(notifLog, today);
@@ -514,6 +540,7 @@ function decideNotification(ctx) {
   const candidates = [
     checkEntretienDu(profile, reminderPrefs, history, month, weather, today), // 3 (N08)
     checkMaladie(weather, profile, month, notifLog, today),   // 3 bis
+    checkAnnonce(annonce, notifLog),                  // 4 (annonce aux utilisateurs, une seule fois)
     checkBilanSaison(month, today, notifLog),         // 4 (bilan de saison, novembre)
     checkTravauxHiver(profile, weather, month, notifLog, today), // 4 (travaux d'hiver)
     checkConseilMeteo(weather, profile, month),       // 4
@@ -566,4 +593,4 @@ function appendNotifLog(notifLog, entry) {
   return { history: pruned, ignored_streak: base.ignored_streak || 0 };
 }
 
-module.exports = { decideNotification, appendNotifLog, conseilDuJour, INTERVALLES, LABELS };
+module.exports = { decideNotification, appendNotifLog, conseilDuJour, annonceDuJour, annoncePour, INTERVALLES, LABELS };

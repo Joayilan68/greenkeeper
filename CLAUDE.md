@@ -168,6 +168,10 @@
   Conseils, les lots de comm et les mesures invisibles continuent ; les évolutions restent sur STA).
 - Retour arrière en quelques minutes : déploiement précédent remis en production dans Vercel (Instant Rollback) ou revert
   sur `main`, avec les anciens identifiants de prix Stripe remis dans Vercel Production.
+- Annonce de la nouvelle version (décision de Jordan du 31/10/2026, pendant le gel) : notification unique « Mongazon360
+  fait peau neuve » du 3 au 8/11, aux comptes créés avant le 31/10 qui acceptent les conseils (notification, sinon
+  email), avec l'offre de saison pour un compte sans Premium. Annonces dans `src/lib/annonces.json` (moteur des
+  notifications, niveau 4, une seule fois par compte) ; une annonce passée est retirée du fichier.
 
 ## Contraintes
 - Vercel Hobby : 12 fonctions maximum dans `api/` — pas de nouvel endpoint sans en libérer un.
