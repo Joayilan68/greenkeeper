@@ -1,5 +1,6 @@
 // scripts/conseils-template.mjs — gabarit HTML statique de la rubrique « Conseils gazon »
 // (pages complètes sans JavaScript : lisibles par Google et par les aperçus de partage).
+import { readFileSync } from "node:fs";
 import { ROBOT_UA } from "../src/lib/platform.js";
 import { RESEAUX } from "../src/lib/reseaux.js";
 const SITE = "https://mongazon360.fr";
@@ -67,7 +68,9 @@ const frDate = (d) => new Date(d).toLocaleDateString("fr-FR", { day: "numeric", 
 // Image de partage : photo de l'article (1200 × 800) si elle existe, sinon l'image générale du site
 const IMAGE_SITE = { src: "/og-image.jpg", largeur: 1200, hauteur: 630 };
 
-function page({ title, description, path, ogType, jsonLd, body, campagne, image = IMAGE_SITE }) {
+// style : CSS propre à la page. pro : page destinée aux professionnels, bouton d'en-tête vers son formulaire (#demande)
+// et sans la mesure d'audience de l'app (site_visits, conseils_vue), pour ne pas fausser la mesure de la refonte.
+function page({ title, description, path, ogType, jsonLd, body, campagne, image = IMAGE_SITE, style = "", pro = false }) {
   const url = SITE + path;
   return `<!DOCTYPE html>
 <html lang="fr">
@@ -94,13 +97,14 @@ function page({ title, description, path, ogType, jsonLd, body, campagne, image 
 <meta name="twitter:description" content="${esc(description)}" />
 <meta name="twitter:image" content="${SITE}${image.src}" />
 <script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
-<style>${CSS}</style>
+<style>${CSS}${style}</style>
 <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
-<header><div class="bar"><a class="logo" href="/"><img src="/icon-192.png" alt="" />Mongazon360<sup>®</sup></a><a class="btn" href="${essai(campagne)}">Diagnostic gratuit</a></div></header>
+<header><div class="bar"><a class="logo" href="/"><img src="/icon-192.png" alt="" />Mongazon360<sup>®</sup></a>${pro
+  ? `<a class="btn" href="#demande">Devenir partenaire</a>` : `<a class="btn" href="${essai(campagne)}">Diagnostic gratuit</a>`}</div></header>
 <main>${body}</main>
-${suivi(campagne)}
+${pro ? "" : suivi(campagne)}
 <footer><div><a href="/conseils">Conseils gazon</a><a href="/a-propos">Qui sommes-nous</a><a href="/mentions-legales">Mentions légales</a><a href="/confidentialite">Confidentialité</a><a href="/cookies">Cookies</a><br />Suivez-nous : ${RESEAUX.map(r => `<a href="${esc(r.url)}" rel="me noopener" target="_blank">${r.nom}</a>`).join("")}<br />© ${new Date().getFullYear()} Mongazon360® — marque déposée et enregistrée à l'EUIPO</div></footer>
 </body>
 </html>
@@ -167,4 +171,82 @@ export function indexPage(articles) {
   return page({ title: "Conseils gazon : entretien de la pelouse saison par saison — Mongazon360®",
     description: "Guides pratiques pour une belle pelouse toute l'année : regarnissage, scarification, mousse, engrais, tonte et arrosage, saison par saison.",
     path: "/conseils", ogType: "website", jsonLd, body, campagne: "rubrique" });
+}
+
+// ── Page « Devenir partenaire » (paysagistes, jardiniers ; décision de Jordan du 31/10/2026) ─────────────────────────
+// Formulaire envoyé à /api/send?type=partenaire (api/partenaires.cjs : email à contact@, accusé de réception) ; origine
+// = utm_source et utm_campaign de l'adresse (sinon origine notée par une page Conseils lue avant, sinon site d'origine) ;
+// vue de la page comptée dans funnel_events (« partenaires_vue », 1 par onglet, robots exclus).
+const SERVICES_PARTENAIRES = JSON.parse(readFileSync(new URL("../src/lib/servicesPartenaires.json", import.meta.url), "utf8"));
+const CSS_PARTENAIRES = `
+[hidden]{display:none!important}.intro{font-size:18px}.etapes{counter-reset:e;list-style:none;padding:0}
+.etapes li{position:relative;padding:0 0 14px 46px}.etapes li::before{counter-increment:e;content:counter(e);position:absolute;left:0;top:0;width:32px;height:32px;border-radius:50%;background:#43a047;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center}
+.form{display:grid;gap:14px;background:#fff;border:1px solid #dfe8e1;border-radius:16px;padding:20px}.form label{display:grid;gap:4px;font-size:15px;font-weight:600;color:#1a4731}
+.form small{font-weight:400;color:#5b6f61}.form input,.form select,.form textarea{font:inherit;font-size:16px;font-weight:400;padding:10px 12px;border:1px solid #c9d8cc;border-radius:10px;background:#fff;color:#1f2d24;width:100%}
+.form .duo2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.form fieldset{border:1px solid #dfe8e1;border-radius:12px;padding:10px 14px;margin:0}
+.form legend{font-size:15px;font-weight:600;color:#1a4731;padding:0 4px}.form .case{display:flex;align-items:center;gap:10px;font-weight:400;color:#1f2d24;padding:3px 0}
+.form .case input{width:20px;height:20px;flex:none;margin:0}.form .piege{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.rgpd{font-size:13px;color:#5b6f61;margin:0}.form button{border:0;cursor:pointer;font-size:16px;padding:13px 22px;justify-self:start}.form button:disabled{opacity:.6}
+.etat{margin:0;font-size:15px;color:#b3261e}.merci{padding:20px;border-radius:16px;background:#e8f5e9;border:1px solid #a5d6a7;font-size:17px}
+@media(max-width:520px){.form .duo2{grid-template-columns:1fr}}`;
+
+const scriptPartenaires = () => `<script>(function(){
+var f=document.getElementById("demande-form"),etat=f.querySelector(".etat"),bouton=f.querySelector("button"),ouvert=Date.now();
+var p=new URLSearchParams(location.search),ref=document.referrer||"",cap=null;
+try{cap=JSON.parse(sessionStorage.getItem("mg360_utm_capture"));}catch(e){}
+var source=String(p.get("utm_source")||(cap&&cap.source)||(/facebook\\.|fb\\.com/i.test(ref)?"facebook":/google\\.|bing\\.|duckduckgo\\./i.test(ref)?"google":ref&&!/mongazon360\\./i.test(ref)?"autre":"direct")).toLowerCase().slice(0,40);
+var campagne=String(p.get("utm_campaign")||(cap&&cap.campaign)||"").slice(0,80)||null;
+var U="${SUPABASE_URL}",A="${SUPABASE_ANON}";
+try{if(U&&A&&!navigator.webdriver&&!${ROBOT_UA}.test(navigator.userAgent)&&!sessionStorage.getItem("mg360_partenaires_vue")){sessionStorage.setItem("mg360_partenaires_vue","1");
+fetch(U+"/rest/v1/funnel_events",{method:"POST",headers:{apikey:A,Authorization:"Bearer "+A,"Content-Type":"application/json",Prefer:"return=minimal"},
+body:JSON.stringify({step:"partenaires_vue",meta:{source:source,campagne:campagne},path:location.pathname})}).catch(function(){});}}catch(e){}
+f.addEventListener("submit",function(ev){ev.preventDefault();
+var d=new FormData(f),corps={services:d.getAll("services"),source:source,campagne:campagne,duree:Date.now()-ouvert};
+["entreprise","siret","contact","email","telephone","code_postal","rayon_km","message","piege"].forEach(function(k){corps[k]=String(d.get(k)||"").trim();});
+if(!corps.services.length){etat.textContent="Cochez au moins un service.";return;}
+bouton.disabled=true;etat.textContent="Envoi en cours…";
+fetch("/api/send?type=partenaire",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(corps)})
+.then(function(r){return r.json().catch(function(){return {};}).then(function(j){if(!r.ok||!j.ok)throw new Error(j.error||"");});})
+.then(function(){var m=document.getElementById("merci");f.hidden=true;m.hidden=false;m.scrollIntoView({block:"center"});})
+.catch(function(e){bouton.disabled=false;etat.textContent=e.message||"L'envoi n'a pas abouti. Réessayez dans un instant ou écrivez-nous à contact@mongazon360.fr.";});
+});})();</script>`;
+
+export function partenairesPage() {
+  const description = "Paysagistes, jardiniers : recevez les demandes de travaux des particuliers de votre secteur avec Mongazon360. Paiement au contact reçu, puis commission au contrat signé.";
+  const jsonLd = { "@context": "https://schema.org", "@type": "WebPage", name: "Devenir partenaire Mongazon360", url: `${SITE}/partenaires`,
+    inLanguage: "fr", description, publisher: { "@type": "Organization", name: "Mongazon360", url: SITE, email: "contact@mongazon360.fr",
+      logo: `${SITE}/icon-512x512.png` } };
+  const champ = (nom, libelle, attributs = "") => `<label><span>${libelle}</span><input name="${nom}" ${attributs} /></label>`;
+  const body = `<div class="crumb"><a href="/">Accueil</a> › Professionnels</div>
+<article><h1>Paysagistes, jardiniers : recevez des demandes de travaux près de chez vous</h1>
+<p class="intro">Mongazon360 est une application française qui aide les particuliers à entretenir leur pelouse : diagnostic photo, conseils selon la météo de leur commune, plan d'entretien saison par saison.</p>
+<p>Au printemps 2027, l'app ouvre <b>« Trouver un pro »</b> : quand un chantier dépasse ce qu'ils peuvent faire eux-mêmes, nos utilisateurs demandent un professionnel de leur secteur. <b>Nous choisissons dès maintenant les entreprises qui recevront ces demandes.</b></p>
+<h2>Comment ça marche</h2>
+<ol class="etapes"><li><b>Vous présentez votre entreprise</b> avec le formulaire ci-dessous : vos services, votre zone d'intervention, vos coordonnées.</li>
+<li><b>Nous vous répondons sous 2 jours ouvrés</b>, avec nos conditions et nos tarifs.</li>
+<li><b>Vous recevez les demandes de votre secteur</b> qui correspondent à vos services, avec le besoin du client et sa commune.</li></ol>
+<h2>Nos conditions</h2>
+<ul><li><b>Vous payez les contacts reçus</b> : chaque demande qui vous est transmise est facturée.</li>
+<li><b>Puis une commission sur les contrats signés</b> avec ces clients.</li>
+<li>Le détail de nos tarifs vous est envoyé avec notre réponse.</li></ul>
+<h2 id="demande">Devenir partenaire</h2>
+<form id="demande-form" class="form">
+${champ("entreprise", "Entreprise *", 'required maxlength="120" autocomplete="organization"')}
+${champ("siret", "SIRET <small>(facultatif)</small>", 'inputmode="numeric" maxlength="17" pattern="[0-9 ]{14,17}"')}
+${champ("contact", "Nom de la personne à contacter *", 'required maxlength="80" autocomplete="name"')}
+<div class="duo2">${champ("email", "Email *", 'type="email" required maxlength="120" autocomplete="email"')}
+${champ("telephone", "Téléphone *", 'type="tel" required minlength="10" maxlength="20" autocomplete="tel"')}</div>
+<div class="duo2">${champ("code_postal", "Code postal de l'entreprise *", 'required inputmode="numeric" maxlength="5" pattern="[0-9]{5}" autocomplete="postal-code"')}
+<label><span>Rayon d'intervention</span><select name="rayon_km"><option value="">Choisir</option>${[10, 20, 30, 50, 80, 100].map(km => `<option value="${km}">${km} km</option>`).join("")}</select></label></div>
+<fieldset><legend>Services proposés *</legend>${Object.entries(SERVICES_PARTENAIRES).map(([cle, libelle]) =>
+    `<label class="case"><input type="checkbox" name="services" value="${cle}" />${esc(libelle)}</label>`).join("")}</fieldset>
+<label><span>Votre message <small>(facultatif)</small></span><textarea name="message" rows="4" maxlength="1500" placeholder="Votre activité, votre équipe, vos disponibilités…"></textarea></label>
+<label class="piege" aria-hidden="true">Ne pas remplir<input name="piege" tabindex="-1" autocomplete="off" /></label>
+<p class="rgpd">Vos informations servent uniquement à étudier votre demande et à vous répondre. Elles sont conservées 3 ans au plus. <a href="/confidentialite">Politique de confidentialité</a></p>
+<button class="btn" type="submit">Envoyer ma demande</button><p class="etat" role="status" aria-live="polite"></p></form>
+<div id="merci" class="merci" hidden>✅ <b>Demande envoyée, merci !</b> Nous revenons vers vous sous 2 jours ouvrés avec nos conditions et nos tarifs. Une confirmation part aussi par email.</div>
+<p>Une question ? Écrivez-nous à <a href="mailto:contact@mongazon360.fr">contact@mongazon360.fr</a>.</p></article>
+${scriptPartenaires()}`;
+  return page({ title: "Paysagistes, jardiniers : recevez des demandes de travaux — Mongazon360®", description,
+    path: "/partenaires", ogType: "website", jsonLd, body, style: CSS_PARTENAIRES, pro: true });
 }

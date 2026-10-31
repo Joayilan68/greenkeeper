@@ -129,7 +129,7 @@
       "destination": "/sw.js"
     },
     {
-      "source": "/:page(essai|mentions-legales|confidentialite|cgu|cgv|cookies|login|signup|a-propos)",
+      "source": "/:page(essai|mentions-legales|confidentialite|cgu|cgv|cookies|login|signup|a-propos|partenaires)",
       "destination": "/:page/index.html"
     },
     {

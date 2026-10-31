@@ -2,11 +2,12 @@
 // 1. Pages publiques de l'app (src/lib/seoPages.json) : dist/<page>/index.html avec leur titre,
 //    description, adresse canonique et balises de partage (lues sans JavaScript).
 // 2. Rubrique « Conseils gazon » : articles Markdown de content/conseils → pages HTML statiques,
-//    et page « Qui sommes-nous » (content/a-propos.md → dist/a-propos/index.html).
+//    page « Qui sommes-nous » (content/a-propos.md → dist/a-propos/index.html) et page « Devenir partenaire » des
+//    professionnels (dist/partenaires/index.html).
 // 3. dist/sitemap.xml, dist/conseils.json et dist/produits.json (articles et catalogue Amazon lus par Bob).
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from "node:fs";
 import { marked } from "marked";
-import { articlePage, indexPage, aProposPage } from "./conseils-template.mjs";
+import { articlePage, indexPage, aProposPage, partenairesPage } from "./conseils-template.mjs";
 import AMAZON_PRODUCTS from "../src/lib/amazonProducts.js";
 
 const SITE  = "https://mongazon360.fr";
@@ -92,6 +93,8 @@ for (const a of articles) {
 
 mkdirSync("dist/a-propos", { recursive: true });
 writeFileSync("dist/a-propos/index.html", aProposPage(marked.parse(readFileSync("content/a-propos.md", "utf8"))));
+mkdirSync("dist/partenaires", { recursive: true });
+writeFileSync("dist/partenaires/index.html", partenairesPage());
 
 const today = new Date().toISOString().slice(0, 10);
 const urls  = [
@@ -99,6 +102,7 @@ const urls  = [
     `  <url><loc>${SITE}${p.path === "/" ? "/" : p.path}</loc><lastmod>${today}</lastmod><priority>${p.priority}</priority></url>`),
   `  <url><loc>${SITE}/conseils</loc><lastmod>${today}</lastmod><priority>0.8</priority></url>`,
   `  <url><loc>${SITE}/a-propos</loc><lastmod>${today}</lastmod><priority>0.5</priority></url>`,
+  `  <url><loc>${SITE}/partenaires</loc><lastmod>${today}</lastmod><priority>0.4</priority></url>`,
   ...articles.map(a => `  <url><loc>${SITE}/conseils/${a.slug}</loc><lastmod>${a.maj || a.date}</lastmod><priority>0.7</priority></url>`),
 ];
 writeFileSync("dist/sitemap.xml",
