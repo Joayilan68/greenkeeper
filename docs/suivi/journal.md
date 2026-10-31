@@ -729,3 +729,11 @@ du premier onglet).
   la forme et les couleurs des encarts (clairs au fil du texte, vert foncé à la fin). Recette décembre n° 60. Suite :
   Conseils en mode app et comptes connectés (« Lire l'article », « Le conseil de la semaine », mesure des articles lus),
   visuels complétés pour le 6/11.
+- 31/10/2026 — Décision de Jordan : page privée « Réponses de groupe » pour ses réponses dans les groupes Facebook
+  (proposée le 26/10). Il colle la question lue ; la page propose l'article qui répond le mieux et une réponse en « tu »
+  tirée de son « En bref », avec le lien suivi du groupe (campagne groupe-<nom>) et la mention « je m'occupe de
+  Mongazon360 » ; il copie, publie lui-même, puis note la réponse. Règles tenues par la page : 2 liens par groupe sur 7
+  jours au plus (1 ou aucun selon le groupe), ni lien ni nom du site dans un groupe qui interdit les liens, jamais deux
+  fois le même texte dans un groupe, sujets de saison d'abord. Catalogue généré par scripts/reponses-groupe.mjs (46
+  articles), testé sur 23 questions types ; CLAUDE.md. Rappel le mardi et le vendredi à 18 h 37 ; le point des stats lit
+  désormais l'historique de la page au lieu de préparer une liste de réponses.

@@ -85,6 +85,14 @@
   Saisie par Jordan : jamais dans la conversation ni dans le dépôt ; contrôle dans Pilotage → Services. App Meta
   « Mongazon360 Publications » (administrateurs : Jordan et Ayfer), à garder publiée : sinon les publications ne sont
   visibles que par ses administrateurs.
+- Réponses dans les groupes Facebook (décision de Jordan du 31/10/2026) : Jordan publie lui-même, avec sa page privée
+  « Réponses de groupe » (claude.ai) : réponse en « tu » tirée du « En bref » de l'article qui répond le mieux, lien
+  suivi `?utm_source=facebook&utm_medium=groupe&utm_campaign=groupe-<nom du groupe>` (Pilotage → Activité, par
+  campagne), 2 liens par groupe sur 7 jours au plus (moins si le groupe le demande), mention « je m'occupe de
+  Mongazon360 » avec chaque lien, ni lien ni nom du site dans un groupe qui interdit les liens, jamais deux fois le même
+  texte dans un groupe, sujets de saison d'abord ; rappel le mardi et le vendredi soir (tâche « Réponses de groupe —
+  rappel »). Catalogue de la page : `node scripts/reponses-groupe.mjs > catalogue.json`, à republier avec la page après
+  un nouvel article ou un « En bref » modifié.
 - Pinterest : une épingle par article (1000 × 1500 : photo de notre pelouse, saison, titre), fichier
   `public/images/pinterest/<slug>.jpg` lu par Pinterest : ne jamais le supprimer ni le renommer. Nouvel article : créer
   son épingle au même format et l'importer dans Pinterest (fichier .csv), lien vers l'article suivi de
