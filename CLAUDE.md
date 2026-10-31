@@ -158,6 +158,18 @@
   créateurs et commissions dans Pilotage → Finances. Lien : `https://mongazon360.fr/?p=CODE`. Le code de l'utilisateur
   accompagne ses partages du score et du quiz (lien, texte et image ; `src/lib/useMonCode.js`, décision de Jordan du
   31/10/2026).
+## Paysagistes partenaires
+- Décision de Jordan du 31/10/2026 (prod le jour même, exception au gel) : page « Devenir partenaire » `/partenaires`, pour les
+  pros seulement, sans lien depuis l'app (`partenairesPage` de `scripts/conseils-template.mjs`, sans la mesure de l'app ; vue
+  comptée dans `funnel_events`, étape `partenaires_vue`, avec la source et la campagne). Formulaire → `POST /api/send?type=partenaire`
+  (`api/partenaires.cjs`, services dans `src/lib/servicesPartenaires.json`) : table `partenaires_demandes` (serveur uniquement,
+  RLS sans politique ; 3 ans, sauf partenariat conclu : politique de confidentialité 5.5), email à contact@mongazon360.fr
+  (« répondre » va à l'entreprise) et accusé de réception (réponse promise sous 2 jours ouvrés, avec conditions et tarifs).
+- Modèle : aucune gratuité ; fournisseur de leads payant au contact, puis commission au contrat signé ; tarifs envoyés avec la
+  réponse, jamais sur la page. « Trouver un pro » annoncé aux pros pour le printemps 2027, pour tous les comptes.
+- Recrutement : publications de Jordan dans ses groupes de pros (lien suivi `utm_campaign=groupe-<nom>`), puis petite pub
+  Facebook vers la page s'il y a moins de 3 demandes en une semaine. Pas de démarchage ni de réponse par message privé.
+
 ## Équipements connectés
 - Table `equipements` (serveur uniquement, RLS sans politique) via `api/objets.js` ; logique et connecteurs dans
   `api/equipements.cjs`. Clés d'accès des utilisateurs chiffrées (AES-256-GCM) avec la variable Vercel

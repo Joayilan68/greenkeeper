@@ -765,3 +765,12 @@ du premier onglet).
   formulaire sur mongazon360.fr, reçu par email (pas de message privé). Aucune gratuité : l'offre pilote gratuite du
   dossier V1 est abandonnée, les partenaires entrent directement comme fournisseurs de leads payants, au contact puis
   par une commission au contrat signé. Service « Trouver un pro » ouvert aux utilisateurs au printemps 2027.
+- 31/10/2026 — Paysagistes partenaires, décisions de Jordan : demandes reçues sur contact@mongazon360.fr, tarifs envoyés
+  avec la réponse, page lancée tout de suite (exception au gel). Page « Devenir partenaire » mongazon360.fr/partenaires
+  en prod (main bc9b03d), pour les pros seulement (aucun lien depuis l'app) : principe, 3 étapes, conditions (payant au
+  contact, puis commission au contrat signé) et formulaire (entreprise, SIRET facultatif, contact, email, téléphone,
+  code postal, rayon, services, message). Chaque demande est enregistrée (table partenaires_demandes, créée sur les deux
+  projets Supabase), envoyée par email à contact@ (« répondre » va à l'entreprise) et confirmée à l'entreprise (réponse
+  promise sous 2 jours ouvrés). Vue de la page comptée à part (funnel_events, partenaires_vue), hors mesure de la
+  refonte. Politique de confidentialité 5.5 (conservation 3 ans). Envoi réel de test réussi (demande enregistrée, emails
+  partis). Recette « Déjà en prod » n° 70 ; CLAUDE.md.

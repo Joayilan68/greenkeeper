@@ -1296,6 +1296,12 @@ module.exports = async function handler(req, res) {
   if (type === "ligue") return require("./ligueHiver.cjs").handler(req, res);
 
   // ════════════════════════════════════════════════════════════════════════
+  // PARTENAIRES — formulaire de la page /partenaires (paysagistes, jardiniers) : api/partenaires.cjs
+  // POST /api/send?type=partenaire { entreprise, contact, email, telephone, code_postal, services[], … } — public
+  // ════════════════════════════════════════════════════════════════════════
+  if (type === "partenaire") return require("./partenaires.cjs").handler(req, res);
+
+  // ════════════════════════════════════════════════════════════════════════
   // CUSTOMER-PORTAL — Lien Stripe Customer Portal (mention 10 avocat)
   // POST /api/send?type=customer-portal — Bearer Clerk obligatoire
   // ════════════════════════════════════════════════════════════════════════

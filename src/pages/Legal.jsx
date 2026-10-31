@@ -230,6 +230,13 @@ export function Confidentialite() {
             Les données personnelles des Utilisateurs sont collectées directement auprès d'eux par Mongazon360, dans le cadre de la création de leur compte, de l'utilisation de l'application et de la souscription d'un abonnement. Certaines données sont collectées indirectement via le compte Google de l'utilisateur.<br/><br/>
             <strong>Caractère obligatoire des données :</strong> les données collectées présentent un caractère obligatoire pour réaliser les finalités de traitement, à l'exception de la géolocalisation GPS qui est optionnelle.
           </SubSection>
+
+          <SubSection title="5.5 Demandes de partenariat des professionnels">
+            Les professionnels (paysagistes, jardiniers) qui demandent à devenir partenaires depuis la page « Devenir partenaire » (mongazon360.fr/partenaires) nous transmettent : nom de l'entreprise, SIRET (facultatif), nom de la personne à contacter, email, téléphone, code postal, rayon d'intervention, services proposés, message éventuel et page ou campagne d'origine de la demande.<br/><br/>
+            <strong>Finalité :</strong> étudier la demande, y répondre avec nos conditions et nos tarifs, puis gérer le partenariat — Base légale : mesures précontractuelles prises à la demande du professionnel.<br/><br/>
+            <strong>Conservation :</strong> 3 ans à compter de la demande, puis suppression automatique ; si le partenariat est conclu, pendant sa durée, puis selon nos obligations légales (factures : 10 ans).<br/><br/>
+            <strong>Destinataires :</strong> l'équipe Mongazon360 uniquement, avec ses prestataires techniques Supabase (base de données) et Resend (envoi des emails).
+          </SubSection>
         </Section>
 
         <Section title="6. Destinataires de vos données">
