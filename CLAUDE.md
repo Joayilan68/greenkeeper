@@ -66,10 +66,12 @@
   `index.html` (site revendiqué).
 - Réseaux sociaux : profils officiels dans `src/lib/reseaux.js` (pied de page de l'accueil et des pages Conseils,
   profils déclarés à Google), même liste dans les données structurées de `index.html`.
-- Partage du score (Mon gazon → Partager, décisions de Jordan du 31/10/2026) : Facebook et Instagram ne reprennent pas
-  le texte, le message est copié pour être collé ; image du score 1080 × 1350 (`src/lib/carteScore.js` : jauge, libellé,
-  notre pelouse, Bob, invitation au diagnostic gratuit), partagée par le menu de partage du téléphone quand il sait
-  partager une image (prod le 22/11) ; chaque partage compté dans `funnel_events` (`partage_score`, avec le canal).
+- Partages en image (décisions de Jordan du 31/10/2026) : Facebook et Instagram ne reprennent pas le texte, le message
+  est copié pour être collé ; images 1080 × 1350 (`src/lib/cartesPartage.js`, fond commun : notre pelouse et Bob)
+  partagées par le menu de partage du téléphone quand il sait partager une image (prod le 22/11) : score santé (Mon
+  gazon → Partager : jauge, libellé, invitation au diagnostic gratuit) et résultat du quiz de la ligue d'hiver (bonnes
+  réponses, jamais les réponses ; texte `partage.resultat` de `src/lib/ligueHiver.json`) ; chaque partage compté dans
+  `funnel_events` (`partage_score` et `partage_quiz`, avec le canal).
 - Lots de comm (page Facebook et Instagram de Mongazon360, décisions de Jordan des 17 et 18/10/2026) : chaque samedi matin,
   la tâche programmée « Lot de comm du samedi » prépare la semaine qui commence 8 jours plus tard (du dimanche au samedi) :
   4 publications (dimanche 8 h, lundi, mercredi et vendredi 16 h 30, heure de Paris), texte Facebook avec un lien suivi

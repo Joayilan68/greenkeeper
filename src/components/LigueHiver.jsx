@@ -10,6 +10,8 @@ import { LIGUE, periodeLigue, datesSemaine, dateLongue } from "../lib/ligueHiver
 import { useLigueHiver } from "../lib/useLigueHiver";
 import { useGreenPoints } from "../lib/useGreenPoints";
 import { useProfile } from "../lib/useProfile";
+import { carteQuiz } from "../lib/cartesPartage";
+import { trackFunnel } from "../lib/funnel";
 
 const clair = "#F1F8F2", vert = "#a5d6a7", doux = "#81c784";
 const plein = { border:"none", borderRadius:12, padding:"11px 16px", fontSize:13, fontWeight:800, cursor:"pointer",
@@ -20,12 +22,15 @@ const givre = { ...card(), background:"linear-gradient(135deg,rgba(100,181,246,0
 const article = (slug) => `/conseils/${slug}`;
 const semaineDu = (n) => { const { debut, fin } = datesSemaine(n); return `du ${dateLongue(debut)} au ${dateLongue(fin)}`; };
 
-// Partage du quiz (Partager du téléphone, sinon lien copié) : message à afficher, ou null si annulé ou impossible
-async function partagerQuiz() {
-  const { texte, url } = LIGUE.partage;
+// Partage du quiz ou de son résultat (Partager du téléphone, avec l'image du résultat quand le téléphone sait la partager ;
+// sinon lien copié) : message à afficher, ou null si annulé ou impossible
+async function partagerQuiz({ texte = LIGUE.partage.texte, image = null } = {}) {
+  const { url } = LIGUE.partage;
   if (navigator.share) {
-    try { await navigator.share({ title: "Quiz gazon Mongazon360", text: texte, url }); return "Merci pour le partage !"; }
-    catch (e) { if (e?.name === "AbortError") return null; }
+    try {
+      await navigator.share(image ? { files: [image], text: `${texte} ${url}` } : { title: "Quiz gazon Mongazon360", text: texte, url });
+      return "Merci pour le partage !";
+    } catch (e) { if (e?.name === "AbortError") return null; }
   }
   try { await navigator.clipboard.writeText(`${texte} ${url}`); return "Lien copié : colle-le dans un message."; }
   catch { return null; }
@@ -116,6 +121,7 @@ function CarteQuiz({ n, resultat, onDemarrer, onRepondre }) {
   const [envoi, setEnvoi] = useState(false);
   const [msg, setMsg] = useState("");
   const [reste, setReste] = useState(0);
+  const [image, setImage] = useState(null); // image du résultat, si le téléphone sait partager une image
   const choixFaits = useRef([]), envoye = useRef(false);
   choixFaits.current = choix;
   const enCours = !!resultat && resultat.restant > 0;
@@ -150,7 +156,24 @@ function CarteQuiz({ n, resultat, onDemarrer, onRepondre }) {
     return () => clearInterval(minuteur);
   }, [enCours]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const partager = async () => { const info = await partagerQuiz(); if (info) setMsg(info); };
+  // Image du résultat préparée dès la correction : le partage doit partir aussitôt le bouton touché
+  useEffect(() => {
+    if (!corrige) return undefined;
+    let actif = true;
+    const fichier = (contenu) => new File([contenu], "quiz-gazon-mongazon360.jpg", { type: "image/jpeg" });
+    if (typeof File === "undefined" || !navigator.canShare?.({ files: [fichier("")] })) return undefined;
+    carteQuiz({ bonnes: resultat.bonnes, total: quiz.length, semaine: n, theme, duree })
+      .then(blob => { if (actif) setImage(fichier(blob)); }).catch(() => {});
+    return () => { actif = false; };
+  }, [corrige]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Partage du résultat (jamais des réponses : une seule tentative par semaine)
+  const partager = async () => {
+    trackFunnel("partage_quiz", { canal: image ? "image" : "texte", semaine: n, bonnes: resultat.bonnes });
+    const texte = LIGUE.partage.resultat.replaceAll("{bonnes}", resultat.bonnes).replaceAll("{total}", quiz.length).replaceAll("{duree}", duree);
+    const info = await partagerQuiz({ texte, image });
+    if (info) setMsg(info);
+  };
   return (
     <div style={card()}>
       <div style={cardTitle}>
@@ -191,7 +214,7 @@ function CarteQuiz({ n, resultat, onDemarrer, onRepondre }) {
             {!resultat.reponses.length ? "⏱️ Temps écoulé : aucune réponse envoyée."
               : resultat.bonnes === quiz.length ? "Sans faute, bravo !" : "Les bonnes réponses sont en vert."}
           </div>
-          <button onClick={partager} style={leger}>📤 Partager le quiz</button>
+          <button onClick={partager} style={leger}>📤 Partager mon résultat</button>
         </div>
       )}
       {msg && <div style={{ fontSize:12, color: msg.startsWith("⚠️") ? "#ef9a9a" : vert, marginTop:8 }}>{msg}</div>}

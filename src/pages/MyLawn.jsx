@@ -20,7 +20,7 @@ import MesProgres from "../components/MesProgres";
 import EvolutionScore from "../components/EvolutionScore";
 import HistoriqueActions from "../components/HistoriqueActions";
 import AvecPremium from "../components/AvecPremium";
-import { carteScore } from "../lib/carteScore";
+import { carteScore } from "../lib/cartesPartage";
 import { trackFunnel } from "../lib/funnel";
 
 // ── Calcul complétude profil ──────────────────────────────────────────────────
