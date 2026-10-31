@@ -127,7 +127,7 @@ function page({ title, description, path, ogType, jsonLd, body, campagne, image 
 <main>${body}</main>
 ${pro ? "" : `<a class="btn fixe" href="${lien("/", "app-bouton", campagne)}">📱 Ouvrir l'app gratuite</a>
 ${body.includes('class="btn play"') ? SCRIPT_PLAY : ""}${suivi(campagne)}`}
-<footer><div><a href="/conseils">Conseils gazon</a><a href="/a-propos">Qui sommes-nous</a><a href="/mentions-legales">Mentions légales</a><a href="/confidentialite">Confidentialité</a><a href="/cookies">Cookies</a><br />Suivez-nous : ${RESEAUX.map(r => `<a href="${esc(r.url)}" rel="me noopener" target="_blank">${r.nom}</a>`).join("")}<br />© ${new Date().getFullYear()} Mongazon360® — marque déposée et enregistrée à l'EUIPO</div></footer>
+<footer><div><a href="/conseils">Conseils gazon</a><a href="/a-propos">Qui sommes-nous</a><a href="/partenaires">Paysagistes, jardiniers : devenez partenaire</a><a href="/mentions-legales">Mentions légales</a><a href="/confidentialite">Confidentialité</a><a href="/cookies">Cookies</a><br />Suivez-nous : ${RESEAUX.map(r => `<a href="${esc(r.url)}" rel="me noopener" target="_blank">${r.nom}</a>`).join("")}<br />© ${new Date().getFullYear()} Mongazon360® — marque déposée et enregistrée à l'EUIPO</div></footer>
 </body>
 </html>
 `;

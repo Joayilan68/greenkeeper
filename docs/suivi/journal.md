@@ -774,3 +774,17 @@ du premier onglet).
   promise sous 2 jours ouvrés). Vue de la page comptée à part (funnel_events, partenaires_vue), hors mesure de la
   refonte. Politique de confidentialité 5.5 (conservation 3 ans). Envoi réel de test réussi (demande enregistrée, emails
   partis). Recette « Déjà en prod » n° 70 ; CLAUDE.md.
+- 31/10/2026 — Paysagistes partenaires, décisions de Jordan : grille de prix validée (un prix pour un contact «
+  entretien », un autre pour un contact « projet », commission au contrat signé plafonnée, à partir d'un montant minimum
+  ; demande envoyée à 3 pros au plus), tenue hors du dépôt public et envoyée avec la réponse aux entreprises. Étude de
+  marché (Habitatpresto, Travaux.com, 123devis, AlloVoisins, hemea, Yoojo, apporteurs d'affaires du bâtiment) : personne
+  ne cumule contact payant et commission ; modèle jugé viable si le contact suffit à rémunérer et que la commission
+  reste un bonus (total pour le pro : 8 à 10 % d'un chantier signé) ; plan B si les pros refusent la commission :
+  contact « projet » plus cher sans commission. Vrai enjeu : le nombre de demandes (242 visites d'articles en 30 jours,
+  2 seulement sur des sujets où l'on fait appel à un pro).
+- 31/10/2026 — Go de Jordan (propositions 1 et 2) : 1) lien « Paysagistes, jardiniers : devenez partenaire » en bas des
+  pages du site (pages statiques et accueil visiteur), en prod le jour même (main 3991d58, exception au gel ; recette «
+  Déjà en prod » n° 71) ; 2) encart « Besoin d'un pro ? » (liste d'attente de « Trouver un pro » : email, code postal,
+  travaux ; prévenu à l'ouverture au printemps 2027) dans l'app et dans les articles où un pro a du sens, sur STA puis
+  en prod le 22/11 avec le chantier. Demande de test du formulaire partenaires : effacement demandé par Jordan, en
+  attente de sa confirmation dans Supabase.

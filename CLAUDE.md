@@ -160,13 +160,14 @@
   31/10/2026).
 ## Paysagistes partenaires
 - Décision de Jordan du 31/10/2026 (prod le jour même, exception au gel) : page « Devenir partenaire » `/partenaires`, pour les
-  pros seulement, sans lien depuis l'app (`partenairesPage` de `scripts/conseils-template.mjs`, sans la mesure de l'app ; vue
+  pros, avec un lien « Paysagistes, jardiniers : devenez partenaire » en bas des pages du site (pages statiques et accueil
+  visiteur ; go de Jordan du 31/10), aucun dans l'app d'un compte connecté (`partenairesPage` de `scripts/conseils-template.mjs`, sans la mesure de l'app ; vue
   comptée dans `funnel_events`, étape `partenaires_vue`, avec la source et la campagne). Formulaire → `POST /api/send?type=partenaire`
   (`api/partenaires.cjs`, services dans `src/lib/servicesPartenaires.json`) : table `partenaires_demandes` (serveur uniquement,
   RLS sans politique ; 3 ans, sauf partenariat conclu : politique de confidentialité 5.5), email à contact@mongazon360.fr
   (« répondre » va à l'entreprise) et accusé de réception (réponse promise sous 2 jours ouvrés, avec conditions et tarifs).
 - Modèle : aucune gratuité ; fournisseur de leads payant au contact, puis commission au contrat signé ; tarifs envoyés avec la
-  réponse, jamais sur la page. « Trouver un pro » annoncé aux pros pour le printemps 2027, pour tous les comptes.
+  réponse, jamais sur la page ni dans le dépôt public (grille validée par Jordan le 31/10/2026). « Trouver un pro » annoncé aux pros pour le printemps 2027, pour tous les comptes.
 - Recrutement : publications de Jordan dans ses groupes de pros (lien suivi `utm_campaign=groupe-<nom>`), puis petite pub
   Facebook vers la page s'il y a moins de 3 demandes en une semaine. Pas de démarchage ni de réponse par message privé.
 
