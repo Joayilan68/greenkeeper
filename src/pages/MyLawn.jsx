@@ -20,6 +20,8 @@ import MesProgres from "../components/MesProgres";
 import EvolutionScore from "../components/EvolutionScore";
 import HistoriqueActions from "../components/HistoriqueActions";
 import AvecPremium from "../components/AvecPremium";
+import { carteScore } from "../lib/carteScore";
+import { trackFunnel } from "../lib/funnel";
 
 // ── Calcul complétude profil ──────────────────────────────────────────────────
 function calcCompletion(profile, isPaid, diagnostics) {
@@ -49,6 +51,8 @@ const auClavier = (action) => (e) => { if (e.key === "Enter" || e.key === " ") {
 
 function PartageScore({ score, label }) {
   const [copie, setCopie] = useState("");
+  const [image, setImage] = useState(null); // carte du score prête, si le téléphone sait partager une image
+  const [apercu, setApercu] = useState("");
   const appUrl         = "https://mongazon360.fr";
   const emoji          = score >= 85 ? "🏆" : score >= 70 ? "😊" : score >= 55 ? "😐" : score >= 40 ? "😟" : "😰";
   const message        = `${emoji} Mon gazon a un score santé de ${score}/100 sur Mongazon360® !\n🌿 "${label}"\n\nSuivez votre gazon en temps réel :\n${appUrl}`;
@@ -58,6 +62,26 @@ function PartageScore({ score, label }) {
   // pour être collé dans la publication
   const copier = (confirmation) => navigator.clipboard?.writeText(message)
     .then(() => { setCopie(confirmation); setTimeout(() => setCopie(""), 4000); }, () => {});
+
+  // Carte du score préparée dès l'ouverture : le partage doit partir aussitôt le bouton touché
+  useEffect(() => {
+    let actif = true, adresse = "";
+    const fichier = (contenu) => new File([contenu], "score-gazon-mongazon360.jpg", { type: "image/jpeg" });
+    if (typeof File === "undefined" || !navigator.canShare?.({ files: [fichier("")] })) return;
+    carteScore({ score, label }).then(blob => {
+      if (!actif) return;
+      adresse = URL.createObjectURL(blob);
+      setImage(fichier(blob));
+      setApercu(adresse);
+    }).catch(() => {});
+    return () => { actif = false; if (adresse) URL.revokeObjectURL(adresse); };
+  }, [score, label]);
+
+  const partagerImage = () => {
+    trackFunnel("partage_score", { canal: "image" });
+    copier("✅ Message copié : collez-le sous l'image si l'app ne le reprend pas");
+    navigator.share({ files: [image], text: message }).catch(() => {});
+  };
   const SHARE_OPTIONS  = [
     { id:"whatsapp", icon:"💬", label:"WhatsApp",    color:"#25D366", bg:"rgba(37,211,102,0.15)",  border:"rgba(37,211,102,0.35)",  action: () => window.open(`https://wa.me/?text=${messageEncoded}`, "_blank") },
     { id:"facebook", icon:"📘", label:"Facebook",    color:"#1877F2", bg:"rgba(24,119,242,0.15)",  border:"rgba(24,119,242,0.35)",  action: () => { copier("✅ Message copié : collez-le dans votre publication Facebook"); window.open(`https://www.facebook.com/sharer/sharer.php?u=${urlEncoded}`, "_blank"); } },
@@ -71,10 +95,18 @@ function PartageScore({ score, label }) {
         <div style={{ fontSize:10, color:"#81c784", fontWeight:700, marginBottom:6, letterSpacing:1 }}>APERÇU DU MESSAGE</div>
         <div style={{ fontSize:12, color:"#e8f5e9", lineHeight:1.7, whiteSpace:"pre-line" }}>{message}</div>
       </div>
+      {image && (
+        <div style={{ display:"flex", gap:12, alignItems:"center", marginBottom:12 }}>
+          <img src={apercu} alt={`Image du score : ${score}/100`} style={{ width:72, height:90, objectFit:"cover", borderRadius:8, border:"1px solid rgba(165,214,167,0.3)", flexShrink:0 }} />
+          <button onClick={partagerImage} style={{ flex:1, background:"linear-gradient(135deg,#2e7d32,#43a047)", border:"none", borderRadius:12, padding:"12px 10px", color:"#fff", fontSize:13, fontWeight:800, cursor:"pointer", fontFamily:"inherit" }}>
+            🖼️ Partager l'image de mon score
+          </button>
+        </div>
+      )}
       {copie && <div style={{ background:"rgba(67,160,71,0.2)", border:"1px solid rgba(67,160,71,0.4)", borderRadius:10, padding:"8px 12px", marginBottom:10, fontSize:12, color:"#a5d6a7", textAlign:"center" }}>{copie}</div>}
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
         {SHARE_OPTIONS.map(opt => (
-          <button key={opt.id} onClick={opt.action} style={{ background:opt.bg, border:`1px solid ${opt.border}`, borderRadius:12, padding:"10px 8px", color:opt.color, fontSize:12, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
+          <button key={opt.id} onClick={() => { trackFunnel("partage_score", { canal: opt.id }); opt.action(); }} style={{ background:opt.bg, border:`1px solid ${opt.border}`, borderRadius:12, padding:"10px 8px", color:opt.color, fontSize:12, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
             <span style={{ fontSize:16 }}>{opt.icon}</span>{opt.label}
           </button>
         ))}

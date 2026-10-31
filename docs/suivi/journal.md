@@ -744,3 +744,11 @@ du premier onglet).
 - 31/10/2026 — Correctif du partage Facebook passé en prod au go de Jordan (« Maintenant ») : main passé de fe41e62 à
   e923e97 (même changement que sur STA), main fusionné dans Staging. Recette : ligne passée dans « Déjà en prod
   (exceptions) » (n° 69), décembre renuméroté (63 lignes).
+- 31/10/2026 — Visibilité, décisions de Jordan (propositions 1, 2 et 6 sur 8) : sur les 7 derniers jours, 178 visites de
+  visiteurs non connectés (Facebook 66, dont 41 venues des groupes ; Google 54 ; accès direct 49 ; Pinterest et
+  Instagram : 1 visite chacun en 30 jours). 1) Plus de groupes Facebook : 8 à 10 groupes actifs dans la page « Réponses
+  de groupe », environ une réponse par jour (action de Jordan pour le 8/11). 2) Deux articles d'hiver par semaine, le
+  mardi et le vendredi, jusqu'au 28/02/2027 (tâche « Articles d'hiver ») ; premiers sujets d'après la Search Console
+  (beaucoup d'affichages sur la chaux, positions 40 à 78) : chaux et mousse, pH de la pelouse, fusariose, tondre en
+  hiver, pelouse en décembre. 6) Image du score partagée par le menu de partage du téléphone (src/lib/carteScore.js),
+  sur STA, prod le 22/11 avec le chantier ; partages comptés (partage_score). Recette décembre n° 63 ; CLAUDE.md.
