@@ -699,3 +699,13 @@ du premier onglet).
   l'app » sur la rubrique et Qui sommes-nous ; liens balisés « encart », enregistrés avec la page_view de l'app ;
   tableaux des articles défilants sur téléphone (ils élargissaient la page). Recette n° 84, CLAUDE.md. 1re page de
   visuels pour Jordan le 31/10 ; suite : Conseils en mode app et comptes connectés.
+- 31/10/2026 — Refonte en prod, au go de Jordan (7 h 40) : main passé de 2e2a5cb à 6ae673f (avance rapide de la branche
+  refonte-prod), en ligne à 7 h 46 ; identifiants des prix réels à 2,99 € et 24,99 € collés par Jordan dans Vercel
+  Production juste avant (anciennes valeurs notées par lui pour le retour arrière). En prod : refonte (barre du bas,
+  accueil, Mon gazon épuré, Choisir son niveau, plan annuel inclus dans Premium, accueil visiteur, carte Nouveautés,
+  visiteurs distincts, Bob), nouveaux prix et offre d'hiver dès le 1/11, météo du jour des comptes gratuits et textes
+  sans « IA », équipements réservés à Premium, pages Compte dans l'app, mesures (abonnements, articles qui mènent à
+  l'app). Vérifié : accueil visiteur, pages Compte et essai sur téléphone, /demo redirigée, plan du site, pages Conseils
+  mesurées, aucune erreur. main fusionné dans Staging (versions de STA gardées). Recette : 24 lignes passées dans « Déjà
+  en prod (exceptions) » (n° 44 à 67), décembre renuméroté (63 lignes). Début du gel jusqu'au 21/11 inclus. Restent à
+  vérifier par Jordan : page de paiement des 2 formules en prod, app Android, Pilotage.
