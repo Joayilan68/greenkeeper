@@ -216,6 +216,7 @@ export default function AccueilVisiteur() {
 
         {/* ── Pied de page ── */}
         <footer style={{ marginTop:28, paddingTop:18, borderTop:"1px solid rgba(165,214,167,0.14)", textAlign:"center" }}>
+          <a href="/partenaires" style={{ display:"inline-block", fontSize:12.5, fontWeight:700, color:G.soft, textDecoration:"none", marginBottom:12 }}>🌿 Paysagistes, jardiniers : devenez partenaire</a>
           <div style={{ display:"flex", gap:16, justifyContent:"center", flexWrap:"wrap", fontSize:12 }}>
             <a href="/mentions-legales" style={{ color:G.soft, textDecoration:"none" }}>Mentions légales</a>
             <a href="/confidentialite" style={{ color:G.soft, textDecoration:"none" }}>Confidentialité</a>
