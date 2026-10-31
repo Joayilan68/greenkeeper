@@ -709,3 +709,15 @@ du premier onglet).
   mesurées, aucune erreur. main fusionné dans Staging (versions de STA gardées). Recette : 24 lignes passées dans « Déjà
   en prod (exceptions) » (n° 44 à 67), décembre renuméroté (63 lignes). Début du gel jusqu'au 21/11 inclus. Restent à
   vérifier par Jordan : page de paiement des 2 formules en prod, app Android, Pilotage.
+- 31/10/2026 — Tests de Jordan en prod après la mise en prod : app Android (nouvelle barre, pas de carte d'achat),
+  Pilotage (Activité, Finances) et carte « Mongazon360 fait peau neuve » : OK. Reste : la page de paiement des 2
+  formules.
+- 31/10/2026 — Lot de comm du 8 au 14/11 préparé et validé par Jordan : quiz du dimanche semaine 2 (feuilles mortes),
+  hivernage de l'arrosage, pelouse détrempée, et le 13/11 « Mongazon360 fait peau neuve » avec l'offre d'hiver.
+- 31/10/2026 — Décision de Jordan (pendant le gel) : prévenir les utilisateurs de la nouvelle version par une
+  notification unique « Mongazon360 fait peau neuve », du 3 au 8/11, aux comptes créés avant le 31/10 qui acceptent les
+  conseils (notification, sinon email), avec l'offre d'hiver pour un compte sans Premium ; en prod le jour même
+  (src/lib/annonces.json, moteur des notifications au niveau 4, une seule fois par compte), banc d'essai au vert,
+  CLAUDE.md, recette « Déjà en prod » n° 68. Déjà prévu pour informer : carte dans l'app, email de l'offre d'hiver le
+  1/11 (comptes qui acceptent les offres), publication du 13/11 ; notifications de la ligue d'hiver chaque semaine (quiz
+  le dimanche, défi à partir du mercredi).
