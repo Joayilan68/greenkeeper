@@ -67,7 +67,7 @@
 - Réseaux sociaux : profils officiels dans `src/lib/reseaux.js` (pied de page de l'accueil et des pages Conseils,
   profils déclarés à Google), même liste dans les données structurées de `index.html`.
 - Partages en image (décisions de Jordan du 31/10/2026) : Facebook et Instagram ne reprennent pas le texte, le message
-  est copié pour être collé ; images 1080 × 1350 (`src/lib/cartesPartage.js`, fond commun : notre pelouse et Bob)
+  est copié pour être collé (score, et quiz depuis le correctif du 1/11 : copié avant l'ouverture du menu de partage) ; images 1080 × 1350 (`src/lib/cartesPartage.js`, fond commun : notre pelouse et Bob)
   partagées par le menu de partage du téléphone quand il sait partager une image (prod le 22/11) : score santé (Mon
   gazon → Partager : jauge, libellé, invitation au diagnostic gratuit) et résultat du quiz de la ligue d'hiver (bonnes
   réponses, jamais les réponses ; texte `partage.resultat` de `src/lib/ligueHiver.json`) ; chaque partage compté dans

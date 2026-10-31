@@ -25,19 +25,26 @@ const semaineDu = (n) => { const { debut, fin } = datesSemaine(n); return `du ${
 
 // Partage du quiz ou de son résultat (Partager du téléphone, avec l'image du résultat quand le téléphone sait la partager ;
 // sinon lien copié) : message à afficher, ou null si annulé ou impossible
-// Avec le code de parrainage : l'ami qui s'inscrit par ce lien a 1 mois de Premium offert
+// Avec le code de parrainage : l'ami qui s'inscrit par ce lien a 1 mois de Premium offert.
+// Facebook et Instagram ne reprennent pas le texte d'un partage : le message est copié avant l'ouverture du menu de
+// partage, pour être collé dans la publication (comme pour le partage du score)
 async function partagerQuiz({ texte = LIGUE.partage.texte, image = null, code = null } = {}) {
   const url = code ? `${LIGUE.partage.url}&p=${code}` : LIGUE.partage.url;
   if (code) texte = `${texte} 🎁 Avec mon code ${code}, 1 mois de Premium offert.`;
+  const copie = navigator.clipboard ? navigator.clipboard.writeText(`${texte} ${url}`).then(() => true, () => false) : Promise.resolve(false);
   if (navigator.share) {
     try {
       await navigator.share(image ? { files: [image], text: `${texte} ${url}` } : { title: "Quiz gazon Mongazon360", text: texte, url });
       return "Merci pour le partage !";
     } catch (e) { if (e?.name === "AbortError") return null; }
   }
-  try { await navigator.clipboard.writeText(`${texte} ${url}`); return "Lien copié : colle-le dans un message."; }
-  catch { return null; }
+  return (await copie) ? "Lien copié : colle-le dans un message." : null;
 }
+const NoteCopie = () => (
+  <div style={{ fontSize:11, color:vert, lineHeight:1.5, marginTop:8 }}>
+    📱 Facebook et Instagram n'acceptent pas de texte tout prêt : le message est copié, il suffit de le coller.
+  </div>
+);
 
 export function AnnonceLigue({ debut }) {
   return (
@@ -109,6 +116,7 @@ function CarteDefi({ n, fait, onFait }) {
           ? <button onClick={partager} disabled={envoi} style={plein}>📤 Partager le quiz</button>
           : <button onClick={() => valider()} disabled={envoi} style={plein}>{envoi ? "Envoi…" : "C'est fait ✓"}</button>)}
       </div>
+      {!fait && d.partage && <NoteCopie />}
       {msg && <div style={{ fontSize:12, color: msg.startsWith("⚠️") ? "#ef9a9a" : vert, marginTop:8 }}>{msg}</div>}
     </div>
   );
@@ -222,6 +230,7 @@ function CarteQuiz({ n, resultat, onDemarrer, onRepondre }) {
           <button onClick={partager} style={leger}>📤 Partager mon résultat</button>
         </div>
       )}
+      {corrige && <NoteCopie />}
       {msg && <div style={{ fontSize:12, color: msg.startsWith("⚠️") ? "#ef9a9a" : vert, marginTop:8 }}>{msg}</div>}
     </div>
   );

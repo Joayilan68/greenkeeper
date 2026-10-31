@@ -806,3 +806,9 @@ du premier onglet).
   que le point KPI du lundi ; au 31/10 : 407 visites, 53 entrées (13 %), 6 inscriptions (1,5 % des visites, objectif 3
   %), 0 abonnement. Encarts, liste d'attente et articles lus dans l'app ajoutés après la mise en prod du 22/11. Recette
   « Déjà en prod » n° 72 ; CLAUDE.md.
+- 01/11/2026 — Constat de Jordan (quiz fait et partagé sur Facebook peu après minuit) : la publication ne montre que
+  l'aperçu général du site, sans texte (Facebook ignore le texte tout prêt) ; le partage du résultat en image arrive le
+  22/11. Oubli corrigé au go de Jordan : comme pour le score, « Partager le quiz » copie le message et le lien avant
+  d'ouvrir le menu de partage, avec la phrase « … le message est copié, il suffit de le coller » sous les boutons (défi
+  et quiz) ; en prod (main f36d9d7), et dans la version du 22/11 (partage de l'image du résultat). Recette « Déjà en
+  prod » n° 73 ; CLAUDE.md.
