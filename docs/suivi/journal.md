@@ -759,3 +759,9 @@ du premier onglet).
   x/3… », jamais les réponses), sur STA, prod le 22/11 avec le partage du score ; cartes réunies dans
   src/lib/cartesPartage.js. 8) Code de parrainage dans les partages du score et du quiz (src/lib/useMonCode.js), sur
   STA, prod en décembre avec le parrainage. Recette décembre n° 64 et 65 ; CLAUDE.md.
+- 31/10/2026 — Décision de Jordan, paysagistes partenaires : plus de démarchage. Recrutement par une publication dans
+  ses groupes Facebook de pros, puis, s'il y a moins de 3 demandes en une semaine, une petite pub Facebook ciblée
+  (principe des pubs d'AlloVoisins : les pros se manifestent d'eux-mêmes) ; les entreprises intéressées remplissent un
+  formulaire sur mongazon360.fr, reçu par email (pas de message privé). Aucune gratuité : l'offre pilote gratuite du
+  dossier V1 est abandonnée, les partenaires entrent directement comme fournisseurs de leads payants, au contact puis
+  par une commission au contrat signé. Service « Trouver un pro » ouvert aux utilisateurs au printemps 2027.
