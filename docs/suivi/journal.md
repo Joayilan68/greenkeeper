@@ -724,3 +724,8 @@ du premier onglet).
 - 31/10/2026 — Page de paiement vérifiée en prod par Jordan (sans payer) : 2,99 € par mois et 24,99 € par an, produit
   « Mongazon360 Premium » ; aucune alerte de paiement depuis la mise en prod. Tous les contrôles de la mise en prod de
   la refonte sont faits.
+- 31/10/2026 — Visuels du chantier du 22/11 validés par Jordan : bandeau A sous le titre (« Dans l'app, ces conseils
+  deviennent votre plan » ; version B retirée du code), les 10 accroches telles quelles, le bouton fixe sur téléphone,
+  la forme et les couleurs des encarts (clairs au fil du texte, vert foncé à la fin). Recette décembre n° 60. Suite :
+  Conseils en mode app et comptes connectés (« Lire l'article », « Le conseil de la semaine », mesure des articles lus),
+  visuels complétés pour le 6/11.

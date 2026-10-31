@@ -23,7 +23,6 @@ blockquote{margin:18px 0;padding:12px 16px;background:#e8f5e9;border-left:4px so
 .app.fin{background:#1a4731;border:none;color:#e8f5e9}.app.fin strong{font-size:20px;color:#fff}.app.fin p{color:#d7ead9}.app.fin small a{color:#a5d6a7}
 .bandeau{margin:0 0 22px;padding:14px 16px;border-radius:14px;background:#e8f5e9;border:1px solid #c5e1c9}.bandeau p{margin:0 0 10px;font-size:15px;line-height:1.5}
 .bandeau div{display:flex;flex-wrap:wrap;gap:8px}.bandeau .play{background:#fff;color:#1a4731;border:1px solid #1a4731}
-.bandeau.b{display:flex;align-items:center;gap:10px;padding:10px 12px}.bandeau.b p{flex:1;margin:0;font-size:14px}
 .grille{margin:36px 0;padding:22px;border-radius:16px;background:#1a4731;color:#e8f5e9}.grille h2{margin:0 0 14px;font-size:21px;color:#fff}
 .grille div{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}.grille .item{display:block;padding:12px;border-radius:12px;background:rgba(255,255,255,.08);color:#e8f5e9;text-decoration:none}
 .grille .item b{display:block;margin-top:4px;font-size:15px;color:#fff}.grille .item small{display:block;margin-top:2px;font-size:13px;line-height:1.4;color:#cfe3d3}
@@ -135,11 +134,8 @@ const encart = (t, position, campagne, fin = false) => `<aside class="app${fin ?
 <strong>${esc(t.titre)}</strong><p>${esc(t.texte)}</p><a class="btn" href="${lien(t.cible, `${t.id}-${position}`, campagne)}">${esc(t.bouton)}</a>${
   t.mention ? `<small><a href="${esc(t.mention.lien)}">${esc(t.mention.texte)}</a></small>` : ""}</div></aside>`;
 
-// Bandeau sous le titre d'un article, sans cacher le texte : 2 versions à départager par Jordan (visuels du 6/11)
-const BANDEAU = "a";
-const bandeau = (campagne, version = BANDEAU) => version === "b"
-  ? `<div class="bandeau b"><span aria-hidden="true">📱</span><p><b>Gratuit :</b> l'app vous dit quoi faire sur votre pelouse cette semaine.</p><a class="btn" href="${lien("/", "app-bandeau", campagne)}">Ouvrir l'app</a></div>`
-  : `<div class="bandeau"><p>📱 <b>Dans l'app, ces conseils deviennent votre plan</b> : quoi faire chez vous cette semaine, selon la météo de votre commune.</p><div><a class="btn" href="${lien("/", "app-bandeau", campagne)}">Ouvrir l'app</a><a class="btn play" hidden href="${PLAY}&amp;referrer=utm_source%3Dconseils%26utm_medium%3Dbandeau%26utm_campaign%3D${campagne}">Télécharger sur Google Play</a></div></div>`;
+// Bandeau sous le titre d'un article, sans cacher le texte (version validée par Jordan le 31/10/2026)
+const bandeau = (campagne) => `<div class="bandeau"><p>📱 <b>Dans l'app, ces conseils deviennent votre plan</b> : quoi faire chez vous cette semaine, selon la météo de votre commune.</p><div><a class="btn" href="${lien("/", "app-bandeau", campagne)}">Ouvrir l'app</a><a class="btn play" hidden href="${PLAY}&amp;referrer=utm_source%3Dconseils%26utm_medium%3Dbandeau%26utm_campaign%3D${campagne}">Télécharger sur Google Play</a></div></div>`;
 
 // Grille « Ce que fait l'app » : rubrique Conseils et Qui sommes-nous
 const grille = (campagne) => `<section class="grille"><h2>Ce que fait l'app Mongazon360</h2><div>${THEMES.map(t =>
@@ -186,8 +182,7 @@ function encadreProduits(cles, produits, campagne) {
 }
 
 // Photo d'article (en-tête « image » et « image_alt ») : public/images/conseils, 1200 × 800 px, sans métadonnées
-// Option « bandeau » : version du bandeau, pour comparer les 2 versions sur les visuels
-export function articlePage(a, autres, produits = {}, { bandeau: version } = {}) {
+export function articlePage(a, autres, produits = {}) {
   const path = `/conseils/${a.slug}`;
   const image = a.image ? { src: a.image, largeur: 1200, hauteur: 800 } : IMAGE_SITE;
   const jsonLd = { "@context": "https://schema.org", "@graph": [
@@ -205,7 +200,7 @@ export function articlePage(a, autres, produits = {}, { bandeau: version } = {})
   const themes = themesArticle(a);
   const body = `<div class="crumb"><a href="/">Accueil</a> › <a href="/conseils">Conseils gazon</a></div>
 <article><h1>${esc(a.title)}</h1><div class="meta">${SAISONS[a.saison] || ""} · Mis à jour le ${frDate(a.maj || a.date)} · Par <a href="/a-propos">l'équipe Mongazon360</a></div>
-${bandeau(a.slug, version)}${a.image ? `<img class="hero" src="${esc(a.image)}" alt="${esc(a.image_alt)}" width="1200" height="800" fetchpriority="high" />` : ""}
+${bandeau(a.slug)}${a.image ? `<img class="hero" src="${esc(a.image)}" alt="${esc(a.image_alt)}" width="1200" height="800" fetchpriority="high" />` : ""}
 ${avecEncarts(a.html, themes, a.slug)}</article>${encadreProduits(a.produits ? a.produits.split(",").map(x => x.trim()) : [], produits, a.slug)}${encart(themes[2], "fin", a.slug, true)}${lies}`;
   return page({ title: `${a.title} — Mongazon360®`, description: a.description, path, ogType: "article", jsonLd, body, campagne: a.slug, image });
 }

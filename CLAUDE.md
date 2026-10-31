@@ -55,7 +55,7 @@
   Photo d'article facultative (en-tête `image` et `image_alt`, fichier dans `public/images/conseils`, 1200 × 800, sans
   métadonnées) ; « À lire aussi » = les articles les plus liés entre eux. Page « Qui sommes-nous » : `content/a-propos.md`,
   générée par `scripts/seo-build.mjs` (règle dans `vercel.json`).
-- L'app dans les pages Conseils (chantier du 22/11, décisions de Jordan des 28 et 30/10/2026) : catalogue unique
+- L'app dans les pages Conseils (chantier du 22/11, décisions de Jordan des 28, 30 et 31/10/2026) : catalogue unique
   `src/lib/argumentsApp.json` (fonctions en prod seulement, textes en « vous », jamais de promesse fausse) ; dans chaque
   article, un bandeau sous le titre qui ne cache pas le texte, 3 encarts (après « En bref », au milieu, à la fin) et un
   bouton fixe sur téléphone ; grille « Ce que fait l'app » sur la rubrique et Qui sommes-nous ; thèmes choisis par
