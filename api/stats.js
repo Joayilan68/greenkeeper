@@ -11,7 +11,7 @@
 //   GET|POST /api/stats?type=publications → lots de comm Facebook et Instagram (Pilotage → Réseaux)
 
 // Emails admin — exclus de TOUTES les stats (règle "admins exclus de tout")
-const { verifiedUserId, ADMIN_EMAILS } = require("./auth.cjs");
+const { verifiedUserId, compteExclu, ADMIN_EMAILS } = require("./auth.cjs");
 
 const { createClerkClient } = require("@clerk/backend");
 const { createClient }      = require("@supabase/supabase-js");
@@ -275,8 +275,8 @@ async function handleUsers(req, res) {
   try {
     // ✅ Pagination explicite + parsing format multi-version Clerk
     // Toutes les sources en parallèle (la page attendait auparavant chaque requête l'une après l'autre)
-    const [allUsersRaw, dauByDay, geo, diagRows, siteVisits, funnel, devices, sourceVisits, bob, notifs, presence] = await Promise.all([
-      fetchAllClerkUsers(), fetchDauByDay(), fetchGeoPoints(), fetchDiagnosticsRows(), fetchSiteVisits(), fetchFunnel(), fetchDevices(), fetchSourceVisits(), fetchBobUsage(), fetchNotifStats(), fetchPresence(),
+    const [allUsersRaw, dauByDay, geo, diagRows, siteVisits, parcoursBrut, devices, sourceVisits, bob, notifs, presence] = await Promise.all([
+      fetchAllClerkUsers(), fetchDauByDay(), fetchGeoPoints(), fetchDiagnosticsRows(), fetchSiteVisits(), fetchParcours(), fetchDevices(), fetchSourceVisits(), fetchBobUsage(), fetchNotifStats(), fetchPresence(),
     ]);
 
     // Exclure les comptes admin de TOUTES les stats (règle "admins exclus de tout")
@@ -347,6 +347,7 @@ async function handleUsers(req, res) {
     const acquisition = acquisitionStats(sourceVisits, allUsers);
     const relances = statsRelances(allUsers);
     const retention = presence && retentionCohortes(allUsers, presence);
+    const parcours = parcoursAcquisition(parcoursBrut, presence, new Set(allUsersRaw.filter(u => !compteExclu(u)).map(u => u.id)));
 
     res.json({
       success: true,
@@ -364,7 +365,7 @@ async function handleUsers(req, res) {
       geo,
       diagnostics,
       siteVisits,
-      funnel,
+      parcours,
       devices,
       acquisition,
       bob,
@@ -622,45 +623,81 @@ async function fetchGeoPoints() {
   }
 }
 
-// ── Helper : entonnoir de conversion (vue funnel_events_by_day, 30 jours) ─────
-// Compteurs par étape (accueil visiteur, essai, clic inscription, inscription) et deux taux :
-// visite → inscription, et diagnostic d'essai → clic inscription.
-async function fetchFunnel() {
-  const empty = {
-    landing_view: 0, cta_click: 0, auth_screen_view: 0, signup_completed: 0,
-    anon_diag_started: 0, anon_diag_result: 0, signup_from_teaser: 0,
-    rateGlobal: null, rateEssaiClic: null, visites: {},
-  };
+// ── Helper : parcours d'acquisition (Pilotage → Activité, carte « Parcours d'acquisition ») ──────────────────────────
+// Lignes brutes des 60 derniers jours : visites des visiteurs non connectés (site_visits), entrées dans l'app, lectures
+// d'articles et abonnements payants (funnel_events) ; calcul dans parcoursAcquisition.
+async function fetchParcours() {
   try {
-    if (!SB_URL || !SB_KEY) return empty;
-    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-    const r = await fetch(
-      `${SB_URL}/rest/v1/funnel_events_by_day?day=gte.${since}`,
-      { headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` } }
-    );
-    if (!r.ok) return empty;
-    const rows = await r.json();
-    const c = {
-      landing_view: 0, cta_click: 0, auth_screen_view: 0, signup_completed: 0,
-      anon_diag_started: 0, anon_diag_result: 0, signup_from_teaser: 0,
+    const sb = createClient(SB_URL, SB_KEY);
+    const depuis = new Date(Date.now() - 61 * 864e5).toISOString();
+    const lire = async (requete) => {
+      const lignes = [];
+      for (let de = 0; ; de += 1000) {
+        const { data, error } = await requete().range(de, de + 999);
+        if (error) throw new Error(error.message);
+        lignes.push(...data);
+        if (data.length < 1000) return lignes;
+      }
     };
-    (rows || []).forEach(x => { if (c[x.step] !== undefined) c[x.step] += parseInt(x.count) || 0; });
-    const pct = (a, b) => (b > 0 ? Math.round((a / b) * 1000) / 10 : null);
-    // Visiteurs distincts par étape sur 30 jours (identifiant de visite tiré au hasard, sans compte : src/lib/funnel.js)
-    const rv = await fetch(`${SB_URL}/rest/v1/funnel_visites_30j?select=step,visites`,
-      { headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` } });
-    const visites = rv.ok ? Object.fromEntries((await rv.json()).map(x => [x.step, x.visites])) : {};
-    return {
-      ...c,
-      visites,
-      rateGlobal:    pct(c.signup_completed, c.landing_view), // visite → inscrit (global)
-      // diagnostic d'essai → clic inscription
-      rateEssaiClic: pct(c.signup_from_teaser, c.anon_diag_started),
-    };
+    const [visites, evenements] = await Promise.all([
+      lire(() => sb.from("site_visits").select("path, source, created_at").eq("signed_in", false).gte("created_at", depuis).order("created_at")),
+      lire(() => sb.from("funnel_events").select("step, path, meta, visite, created_at")
+        .in("step", ["page_view", "conseils_vue", "premium_souscrit"]).gte("created_at", depuis).order("created_at")),
+    ]);
+    return { visites, evenements };
   } catch (e) {
-    console.warn("stats-users funnel:", e.message);
-    return empty;
+    console.warn("stats-users parcours:", e.message);
+    return null;
   }
+}
+
+// Parcours d'acquisition des 30 derniers jours (aujourd'hui compris, heure de Paris), comparé aux 30 jours d'avant, avec les
+// définitions du point KPI du lundi (CLAUDE.md « Mesure de la refonte ») : visites des visiteurs non connectés (1 par appareil
+// et par jour) → entrées dans l'app (essai du diagnostic, création de compte, démo avant le 1/11) → inscriptions (premier jour
+// d'un compte dans daily_active_users, admins et comptes de test exclus) → abonnements Premium payants (premium_souscrit).
+// Une mesure née pendant la période précédente n'a pas de comparaison (« avant » vide).
+const ENTREES_APP = ["/essai", "/signup", "/demo"];
+const MESURE_DEPUIS = { entrees: "2026-10-09", niveau: "2026-10-09", premium: "2026-10-31", articles: "2026-10-31" };
+function parcoursAcquisition(brut, presence, comptes) {
+  if (!brut || !presence) return null;
+  const jour = (t) => new Date(t).toLocaleDateString("fr-CA", { timeZone: "Europe/Paris" });
+  const debut = jour(Date.now() - 29 * 864e5), debutAvant = jour(Date.now() - 59 * 864e5);
+  const periode = (j) => (j >= debut ? "n" : j >= debutAvant ? "avant" : null);
+  const compteur = (mesure) => ({ n: 0, avant: mesure && MESURE_DEPUIS[mesure] > debutAvant ? null : 0, depuis: mesure ? MESURE_DEPUIS[mesure] : null });
+  const ajouter = (c, p) => { if (p === "n") c.n++; else if (p === "avant" && c.avant !== null) c.avant++; };
+
+  const visites = { ...compteur(null), conseils: 0, accueil: 0, autres: 0, sources: {} };
+  for (const v of brut.visites) {
+    const p = periode(jour(v.created_at));
+    ajouter(visites, p);
+    if (p !== "n") continue;
+    if (v.path?.startsWith("/conseils")) visites.conseils++; else if (v.path === "/") visites.accueil++; else visites.autres++;
+    const source = v.source || "direct";
+    visites.sources[source] = (visites.sources[source] || 0) + 1;
+  }
+
+  const entrees = compteur("entrees"), niveau = compteur("niveau"), premium = { ...compteur("premium"), offre: 0 };
+  const lectures = new Map(), entreesParVisite = new Map();
+  for (const e of brut.evenements) {
+    const j = jour(e.created_at), p = periode(j);
+    if (e.step === "page_view" && e.meta?.niveau === "visiteur" && ENTREES_APP.includes(e.path)) {
+      ajouter(entrees, p);
+      if (e.visite && !entreesParVisite.has(e.visite)) entreesParVisite.set(e.visite, e.created_at);
+    }
+    if (e.step === "page_view" && e.path === "/subscribe") ajouter(niveau, p);
+    if (e.step === "premium_souscrit") { ajouter(premium, p); if (p === "n" && e.meta?.offre) premium.offre++; }
+    if (e.step === "conseils_vue" && p === "n" && e.visite && !lectures.has(e.visite)) lectures.set(e.visite, e.created_at);
+  }
+  // Articles qui mènent à l'app : visite qui lit un article puis entre dans l'app (même identifiant de visite)
+  const articles = { lecteurs: lectures.size, versApp: [...lectures].filter(([v, t]) => entreesParVisite.get(v) >= t).length, depuis: MESURE_DEPUIS.articles };
+
+  const premiers = new Map();
+  for (const r of presence) if (!premiers.has(r.user_id) || r.day < premiers.get(r.user_id)) premiers.set(r.user_id, r.day);
+  const inscriptions = compteur(null);
+  for (const [id, j] of premiers) if (comptes.has(id)) ajouter(inscriptions, periode(j));
+
+  return { debut, visites: { ...visites, sources: Object.entries(visites.sources).sort((a, b) => b[1] - a[1]).slice(0, 5) },
+    entrees, inscriptions, premium, niveau, articles };
 }
 
 // ── Lecture complète d'une table par pages de 1 000 lignes (plafond d'une requête Supabase) ──

@@ -727,61 +727,64 @@ export default function Pilotage() {
                 </div>
               </div>
             )}
-            {users?.funnel && (
-              <div style={card()}>
-                <div style={cardTitle}>
-                  <span>🎯 Parcours d'acquisition — 30 j</span>
-                  <span style={{ fontSize:11, color:"#81c784" }}>
-                    {users.funnel.rateGlobal != null ? `${users.funnel.rateGlobal}% visite→inscrit` : "en attente"}
-                  </span>
-                </div>
-                {(() => {
-                  const f = users.funnel;
-                  const premium = revenue?.totalPremium ?? null;
-                  const steps = [
-                    { label:"Visite de l'accueil",   icon:"👀", color:"#4FC3F7", val: f.landing_view || 0,       note:null },
-                    { label:"Diagnostic lancé",      icon:"🔬", color:"#66BB6A", val: f.anon_diag_started || 0,  note:"essai" },
-                    { label:"Clic inscription",      icon:"✍️", color:"#43A047", val: f.signup_from_teaser || 0, note:null },
-                    { label:"Inscription validée",   icon:"✅", color:"#2E7D32", val: f.signup_completed || 0,   note:null },
-                    { label:"Premium payant activé", icon:"💳", color:"#F9A825", val: premium ?? 0, missing: premium == null, note:"total" },
-                  ];
-                  const max = Math.max(1, ...steps.map(s => s.val));
-                  return steps.map((s) => (
-                    <div key={s.label} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:7 }}>
-                      <div style={{ width:150, fontSize:11.5, color:"#cfe8d4", fontWeight:600 }}>
-                        {s.icon} {s.label}{s.note ? <span style={{ color:"#4a7c5c", fontWeight:500 }}> · {s.note}</span> : null}
-                      </div>
-                      <div style={{ flex:1, background:"rgba(255,255,255,0.06)", borderRadius:8, height:22, overflow:"hidden" }}>
-                        <div style={{ width:`${Math.max(4, (s.val / max) * 100)}%`, height:"100%", background:s.color, borderRadius:8 }} />
-                      </div>
-                      <div style={{ width:32, textAlign:"right", fontSize:13, fontWeight:800, color:"#e8f5e9" }}>{s.missing ? "—" : s.val}</div>
-                    </div>
-                  ));
-                })()}
-                {users.funnel.visites && Object.keys(users.funnel.visites).length > 0 && (() => {
-                  const v = users.funnel.visites;
-                  return (
-                    <div style={{ fontSize:11.5, color:"#cfe8d4", marginTop:8, lineHeight:1.6 }}>
-                      👥 Visiteurs distincts (30 j) : accueil {v.landing_view || 0} · diagnostic d'essai {v.anon_diag_started || 0} · écran de compte {v.auth_screen_view || 0} · inscription {v.signup_completed || 0}
-                      {v.landing_view ? <> · <b>{Math.round(((v.signup_completed || 0) / v.landing_view) * 1000) / 10} % des visiteurs de l'accueil s'inscrivent</b></> : null}
-                    </div>
-                  );
-                })()}
-                <div style={{ display:"flex", gap:8, marginTop:12 }}>
-                  <div style={{ flex:1, background:"rgba(76,175,80,0.1)", border:"1px solid rgba(102,187,106,0.25)", borderRadius:10, padding:"8px 10px", textAlign:"center" }}>
-                    <div style={{ fontSize:10.5, color:"#81c784" }}>Visite → inscription</div>
-                    <div style={{ fontSize:18, fontWeight:800, color:"#8BE28F" }}>{users.funnel.rateGlobal != null ? `${users.funnel.rateGlobal}%` : "—"}</div>
+            {users?.parcours && (() => {
+              // Parcours d'acquisition : 30 derniers jours comparés aux 30 d'avant, mêmes définitions que le point KPI du lundi
+              const p = users.parcours;
+              const taux = (a, b) => (b > 0 ? `${Math.round((a / b) * 1000) / 10} %` : "—");
+              const ecart = (c) => {
+                if (c.avant == null) return <span style={{ color:"#4a7c5c" }}>{c.depuis ? `mesuré depuis le ${new Date(c.depuis).toLocaleDateString("fr-FR", { day:"numeric", month:"numeric" })}` : ""}</span>;
+                const d = c.n - c.avant;
+                return <span style={{ color: d > 0 ? "#8BE28F" : d < 0 ? "#ef9a9a" : "#81c784" }}>{d > 0 ? `▲ +${d}` : d < 0 ? `▼ ${d}` : "="} <span style={{ color:"#4a7c5c" }}>({c.avant} avant)</span></span>;
+              };
+              const etapes = [
+                { label:"Visites", note:"visiteurs non connectés", icon:"👀", color:"#4FC3F7", c:p.visites },
+                { label:"Entrées dans l'app", note:"essai, création de compte", icon:"🚪", color:"#66BB6A", c:p.entrees },
+                { label:"Inscriptions", note:"nouveaux comptes", icon:"✅", color:"#2E7D32", c:p.inscriptions },
+                { label:"Abonnements Premium", note:"payants", icon:"💳", color:"#F9A825", c:p.premium },
+              ];
+              const max = Math.max(1, ...etapes.map(e => e.c.n));
+              return (
+                <div style={card()}>
+                  <div style={cardTitle}>
+                    <span>🎯 Parcours d'acquisition — 30 j</span>
+                    <span style={{ fontSize:11, color:"#81c784" }}>{taux(p.inscriptions.n, p.visites.n)} visite → inscription</span>
                   </div>
-                  <div style={{ flex:1, background:"rgba(249,168,37,0.1)", border:"1px solid rgba(249,168,37,0.28)", borderRadius:10, padding:"8px 10px", textAlign:"center" }}>
-                    <div style={{ fontSize:10.5, color:"#f0d68a" }}>Essai → clic inscription</div>
-                    <div style={{ fontSize:18, fontWeight:800, color:"#f9a825" }}>{users.funnel.rateEssaiClic != null ? `${users.funnel.rateEssaiClic}%` : "—"}</div>
+                  {etapes.map(e => (
+                    <div key={e.label} style={{ marginBottom:9 }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                        <div style={{ width:150, fontSize:11.5, color:"#cfe8d4", fontWeight:600 }}>{e.icon} {e.label}<span style={{ color:"#4a7c5c", fontWeight:500 }}> · {e.note}</span></div>
+                        <div style={{ flex:1, background:"rgba(255,255,255,0.06)", borderRadius:8, height:20, overflow:"hidden" }}>
+                          <div style={{ width:`${Math.max(3, (e.c.n / max) * 100)}%`, height:"100%", background:e.color, borderRadius:8 }} />
+                        </div>
+                        <div style={{ width:36, textAlign:"right", fontSize:13, fontWeight:800, color:"#e8f5e9" }}>{e.c.n}</div>
+                      </div>
+                      <div style={{ fontSize:10.5, textAlign:"right", marginTop:2 }}>{ecart(e.c)}</div>
+                    </div>
+                  ))}
+                  <div style={{ fontSize:11.5, color:"#cfe8d4", lineHeight:1.6, marginTop:4 }}>
+                    Visites : articles Conseils {p.visites.conseils} · accueil {p.visites.accueil} · autres pages {p.visites.autres}<br />
+                    Sources : {p.visites.sources.map(([s, n]) => `${s} ${n}`).join(" · ") || "—"}
+                  </div>
+                  <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:8, marginTop:12 }}>
+                    {[["Visite → entrée", taux(p.entrees.n, p.visites.n)], ["Entrée → inscription", taux(p.inscriptions.n, p.entrees.n)], ["Visite → inscription", taux(p.inscriptions.n, p.visites.n), "objectif 3 %"]].map(([t, v, o]) => (
+                      <div key={t} style={{ background:"rgba(76,175,80,0.1)", border:"1px solid rgba(102,187,106,0.25)", borderRadius:10, padding:"8px 6px", textAlign:"center" }}>
+                        <div style={{ fontSize:10, color:"#81c784" }}>{t}</div>
+                        <div style={{ fontSize:17, fontWeight:800, color:"#8BE28F" }}>{v}</div>
+                        {o && <div style={{ fontSize:9.5, color:"#4a7c5c" }}>{o}</div>}
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ fontSize:11.5, color:"#cfe8d4", lineHeight:1.7, marginTop:10 }}>
+                    📖 Articles qui mènent à l'app : {p.articles.versApp} sur {p.articles.lecteurs} visite{p.articles.lecteurs > 1 ? "s" : ""} avec un article lu ({taux(p.articles.versApp, p.articles.lecteurs)}, mesuré depuis le 31/10)<br />
+                    🧭 Vues de « Choisir son niveau » : {p.niveau.n} {p.niveau.avant != null && <span style={{ color:"#4a7c5c" }}>({p.niveau.avant} avant)</span>}<br />
+                    💳 Abonnés Premium payants actifs aujourd'hui : {revenue?.totalPremium ?? "—"}{p.premium.offre > 0 && ` · ${p.premium.offre} pris avec l'offre de saison (30 j)`}
+                  </div>
+                  <div style={{ fontSize:10, color:"#4a7c5c", marginTop:8, lineHeight:1.5 }}>
+                    30 derniers jours (depuis le {new Date(p.debut).toLocaleDateString("fr-FR")}) comparés aux 30 jours d'avant, mêmes calculs que le point KPI du lundi. Visites : 1 par appareil et par jour, comptes connectés exclus. Entrées : ouverture de l'essai du diagnostic ou de la création de compte (démo avant le 1/11). Inscriptions : premier jour d'utilisation d'un compte, admins et comptes de test exclus. Abonnements : souscriptions payantes de la période (mesurées depuis le 31/10).
                   </div>
                 </div>
-                <div style={{ fontSize:10, color:"#4a7c5c", marginTop:8, lineHeight:1.5 }}>
-                  « Essai → clic inscription » = part des diagnostics d'essai suivis d'un clic sur « Créer mon compte ». « Premium payant » = abonnés actifs actuels (Stripe). Visiteurs distincts : une visite = un onglet ouvert, comptée une fois quel que soit le nombre de pages vues.
-                </div>
-              </div>
-            )}
+              );
+            })()}
             {users?.weeks && (
               <div style={card()}>
                 <div style={cardTitle}><span>📈 Inscriptions — 8 semaines</span></div>
