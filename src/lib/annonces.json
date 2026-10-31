@@ -1,0 +1,15 @@
+{
+  "_source": "Annonces aux utilisateurs : notification unique par compte, le matin (moteur api/notificationEngine.cjs, tâche du matin api/send.js), aux comptes qui acceptent les conseils (notification, ou email sinon). Envoyée entre « debut » et « fin » inclus, aux comptes créés avant « comptesAvant » ; « corpsGratuit » pour un compte sans Premium pendant l'offre de saison ({prixOffre} et {finOffre} : src/lib/offreSaison.json), « corps » sinon. Retirer une annonce passée.",
+  "annonces": [
+    {
+      "id": "refonte-2026",
+      "debut": "2026-11-03",
+      "fin": "2026-11-08",
+      "comptesAvant": "2026-10-31",
+      "titre": "🌿 Mongazon360 fait peau neuve",
+      "corps": "Ta journée en un coup d'œil sur l'accueil, ton score et tes progrès dans Mon gazon : découvre la nouvelle version.",
+      "corpsGratuit": "Ta journée en un coup d'œil sur l'accueil, tes progrès dans Mon gazon. Et Premium 1 an à {prixOffre} la 1re année, jusqu'au {finOffre}.",
+      "url": "/"
+    }
+  ]
+}

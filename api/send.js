@@ -197,9 +197,9 @@ module.exports = async function handler(req, res) {
         process.env.VAPID_PRIVATE_KEY
       );
 
-      const { decideNotification, appendNotifLog, conseilDuJour } = require("./notificationEngine.cjs");
+      const { decideNotification, appendNotifLog, conseilDuJour, annonceDuJour, annoncePour } = require("./notificationEngine.cjs");
       const { jetonOuverture } = require("./notifOpen.cjs");
-      const { clerkGuestActive } = require("./premium.cjs");
+      const { clerkGuestActive, essaiActif } = require("./premium.cjs");
       // ← nouveau : source de vérité de la phase parcours, partagée avec Today.jsx/phaseParcours()
       const { currentPhase } = require("./parcoursEngine.cjs");
 
@@ -302,6 +302,24 @@ module.exports = async function handler(req, res) {
           if (u.last_active_at) joursInactifMap[u.id] = Math.floor((Date.now() - u.last_active_at) / 86400000);
         }
       } catch (e) { console.warn("[cron] activité Clerk indisponible :", e.message); }
+
+      // Annonce aux utilisateurs du jour (src/lib/annonces.json), le matin : texte de chaque compte créé avant l'annonce, avec
+      // l'offre de saison pour un compte sans Premium ; le moteur la propose une seule fois (niveau 4)
+      const annonce = slot === "matin" ? annonceDuJour(today) : null;
+      const annonceParCompte = {};
+      if (annonce) {
+        try {
+          const { OFFRE, offreEnCours } = require("./offreSaison.cjs");
+          const o = offreEnCours();
+          const offre = o && { prix: `${String(OFFRE.prixOffre).replace(".", ",")} €`, fin: o.finLabel };
+          for (const u of await getClerkUsers()) {
+            const pm = u.public_metadata || {};
+            const premium = pm.isSubscribed === true || ["active", "trialing"].includes(pm.subscriptionStatus)
+              || clerkGuestActive(pm) || essaiActif(u.created_at);
+            annonceParCompte[u.id] = annoncePour(annonce, { creeLe: u.created_at, premium, offre });
+          }
+        } catch (e) { await require("./alerting.cjs").reportServerError("Tâche planifiée — annonce aux utilisateurs", e); }
+      }
 
       // Ligue d'hiver : défi et quiz de la semaine déjà faits ou non, et astuces tirées des quiz passés (ligueHiver.cjs)
       const ligueHiver = require("./ligueHiver.cjs");
@@ -510,6 +528,7 @@ module.exports = async function handler(req, res) {
           parcours: parcoursState,
           joursInactif: joursInactifMap[user_id] ?? 0,
           ligue: ligueCtx?.pour(user_id) || null,
+          annonce: annonceParCompte[user_id] || null,
         });
 
         if (!decision) continue;
