@@ -237,6 +237,13 @@ export function Confidentialite() {
             <strong>Conservation :</strong> 3 ans à compter de la demande, puis suppression automatique ; si le partenariat est conclu, pendant sa durée, puis selon nos obligations légales (factures : 10 ans).<br/><br/>
             <strong>Destinataires :</strong> l'équipe Mongazon360 uniquement, avec ses prestataires techniques Supabase (base de données) et Resend (envoi des emails).
           </SubSection>
+
+          <SubSection title="5.6 Liste d'attente « Trouver un pro »">
+            Les personnes qui demandent à être prévenues de l'ouverture de « Trouver un pro » (encart « Besoin d'un pro ? » des articles Conseils ou du résultat d'un diagnostic) nous transmettent : adresse email, code postal, travaux souhaités, page d'origine et, si elles sont connectées, l'identifiant de leur compte.<br/><br/>
+            <strong>Finalités :</strong> les prévenir par email de l'ouverture du service, et compter les demandes par département et par type de travaux (chiffres globaux, sans coordonnées) pour recruter des professionnels là où ils sont attendus — Base légale : consentement (inscription volontaire, retirable à tout moment en répondant à l'email de confirmation ou en écrivant à contact@mongazon360.fr).<br/><br/>
+            <strong>Conservation :</strong> jusqu'à l'ouverture du service, et 12 mois au plus après l'inscription, puis suppression automatique.<br/><br/>
+            <strong>Destinataires :</strong> l'équipe Mongazon360 uniquement, avec ses prestataires techniques Supabase (base de données) et Resend (envoi des emails). Les coordonnées ne sont jamais transmises à un professionnel : à l'ouverture, chacun fait lui-même sa demande.
+          </SubSection>
         </Section>
 
         <Section title="6. Destinataires de vos données">

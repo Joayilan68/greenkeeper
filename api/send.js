@@ -1302,6 +1302,12 @@ module.exports = async function handler(req, res) {
   if (type === "partenaire") return require("./partenaires.cjs").handler(req, res);
 
   // ════════════════════════════════════════════════════════════════════════
+  // TROUVER UN PRO — liste d'attente (encart « Besoin d'un pro ? » des articles et du diagnostic) : api/trouverUnPro.cjs
+  // POST /api/send?type=pro-attente { email, code_postal, travaux[], source, page, campagne } — public (Bearer Clerk facultatif)
+  // ════════════════════════════════════════════════════════════════════════
+  if (type === "pro-attente") return require("./trouverUnPro.cjs").handler(req, res);
+
+  // ════════════════════════════════════════════════════════════════════════
   // CUSTOMER-PORTAL — Lien Stripe Customer Portal (mention 10 avocat)
   // POST /api/send?type=customer-portal — Bearer Clerk obligatoire
   // ════════════════════════════════════════════════════════════════════════

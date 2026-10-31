@@ -1,0 +1,18 @@
+{
+  "ouverture": "au printemps 2027",
+  "articles": {
+    "creer-pelouse": ["creation"],
+    "gazon-en-plaques": ["creation"],
+    "renover-pelouse": ["regarnissage", "scarification"],
+    "regarnir-gazon-automne": ["regarnissage"],
+    "quand-semer-gazon": ["creation", "regarnissage"],
+    "semer-gazon-novembre": ["creation", "regarnissage"],
+    "semer-gazon-printemps": ["creation", "regarnissage"],
+    "scarifier-pelouse": ["scarification"],
+    "aerer-pelouse-carottage": ["scarification"],
+    "mousse-pelouse": ["scarification", "traitements"],
+    "arrosage-automatique-pelouse": ["arrosage"],
+    "robot-tondeuse-reglages-entretien": ["robot"],
+    "hiverner-tondeuse-robot-arrosage": ["robot", "arrosage"]
+  }
+}

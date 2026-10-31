@@ -168,6 +168,13 @@
   (« répondre » va à l'entreprise) et accusé de réception (réponse promise sous 2 jours ouvrés, avec conditions et tarifs).
 - Modèle : aucune gratuité ; fournisseur de leads payant au contact, puis commission au contrat signé ; tarifs envoyés avec la
   réponse, jamais sur la page ni dans le dépôt public (grille validée par Jordan le 31/10/2026). « Trouver un pro » annoncé aux pros pour le printemps 2027, pour tous les comptes.
+- Liste d'attente « Trouver un pro » (go de Jordan du 31/10/2026, prod le 22/11 avec le chantier) : encart « Besoin d'un pro ? »
+  dans les articles listés dans `src/lib/trouverUnPro.json` (travaux de l'article cochés ; date d'ouverture annoncée) et sous le
+  résultat du diagnostic d'un compte connecté qui trouve des problèmes (`src/components/BesoinPro.jsx`, travaux cochés d'après
+  les problèmes) ; `POST /api/send?type=pro-attente` (`api/trouverUnPro.cjs`) : table `pros_attente` (serveur uniquement, RLS
+  sans politique, une ligne par email, département calculé ; 12 mois au plus : politique de confidentialité 5.6) et email de
+  confirmation. Coordonnées jamais transmises à un pro : à l'ouverture, chacun fait sa demande dans l'app. Synthèse par
+  département avec les demandes des pros : Pilotage → Activité (« Trouver un pro »).
 - Recrutement : publications de Jordan dans ses groupes de pros (lien suivi `utm_campaign=groupe-<nom>`), puis petite pub
   Facebook vers la page s'il y a moins de 3 demandes en une semaine. Pas de démarchage ni de réponse par message privé.
 

@@ -204,8 +204,9 @@ export function articlePage(a, autres, produits = {}) {
   const body = `<div class="crumb"><a href="/">Accueil</a> › <a href="/conseils">Conseils gazon</a></div>
 <article><h1>${esc(a.title)}</h1><div class="meta">${SAISONS[a.saison] || ""} · Mis à jour le ${frDate(a.maj || a.date)} · Par <a href="/a-propos">l'équipe Mongazon360</a></div>
 ${bandeau(a.slug)}${a.image ? `<img class="hero" src="${esc(a.image)}" alt="${esc(a.image_alt)}" width="1200" height="800" fetchpriority="high" />` : ""}
-${avecEncarts(a.html, themes, a.slug)}</article>${encadreProduits(a.produits ? a.produits.split(",").map(x => x.trim()) : [], produits, a.slug)}${encart(themes[2], "fin", a.slug, true)}${lies}`;
-  return page({ title: `${a.title} — Mongazon360®`, description: a.description, path, ogType: "article", jsonLd, body, campagne: a.slug, image });
+${avecEncarts(a.html, themes, a.slug)}</article>${encartPro(a.slug)}${encadreProduits(a.produits ? a.produits.split(",").map(x => x.trim()) : [], produits, a.slug)}${encart(themes[2], "fin", a.slug, true)}${lies}`;
+  return page({ title: `${a.title} — Mongazon360®`, description: a.description, path, ogType: "article", jsonLd, body, campagne: a.slug, image,
+    style: TROUVER_UN_PRO.articles[a.slug] ? CSS_PRO : "" });
 }
 
 // Page « Qui sommes-nous » (content/a-propos.md) : qui édite Mongazon360 et d'où viennent ses conseils
@@ -308,4 +309,45 @@ ${champ("telephone", "Téléphone *", 'type="tel" required minlength="10" maxlen
 ${scriptPartenaires()}`;
   return page({ title: "Paysagistes, jardiniers : recevez des demandes de travaux — Mongazon360®", description,
     path: "/partenaires", ogType: "website", jsonLd, body, style: CSS_PARTENAIRES, pro: true });
+}
+
+// ── « Besoin d'un pro ? » : liste d'attente de « Trouver un pro » (go de Jordan du 31/10/2026) ─────────────────────────
+// Dans les articles listés dans src/lib/trouverUnPro.json (travaux de l'article cochés) : email, code postal et travaux
+// → /api/send?type=pro-attente (api/trouverUnPro.cjs) ; source = origine de la visite, campagne = utm_campaign.
+const TROUVER_UN_PRO = JSON.parse(readFileSync(new URL("../src/lib/trouverUnPro.json", import.meta.url), "utf8"));
+const CSS_PRO = `
+[hidden]{display:none!important}.pro{margin:28px 0;padding:18px;border-radius:16px;background:#fffdf5;border:1px solid #ecd9a8;border-left:5px solid #f9a825}
+.pro strong{display:block;font-size:18px;line-height:1.35;color:#5d4300}.pro p{margin:6px 0 12px;font-size:15px;color:#4a4636}
+.pro-champs{display:grid;grid-template-columns:2fr 1fr;gap:10px}.pro-champs input{font:inherit;font-size:16px;padding:10px 12px;border:1px solid #d9cfa8;border-radius:10px;width:100%;background:#fff;color:#1f2d24}
+.pro-travaux{display:flex;flex-wrap:wrap;gap:6px 18px;margin:10px 0 12px}.pro-travaux label{display:flex;align-items:center;gap:7px;font-size:14px;color:#3b3a2e}
+.pro-travaux input{width:18px;height:18px;margin:0}.pro .piege{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.pro button{border:0;cursor:pointer;font-size:15px;padding:11px 18px}.pro button:disabled{opacity:.6}.pro .pro-etat{margin:8px 0 0;font-size:14px;color:#b3261e}
+.pro .pro-etat:empty{display:none}.pro small{display:block;margin-top:10px;font-size:12px;line-height:1.5;color:#6b6754}.pro small a{color:#6b6754}
+.pro .pro-merci{margin:8px 0 0;font-weight:700;color:#2e7d32}@media(max-width:520px){.pro-champs{grid-template-columns:1fr}}`;
+
+function encartPro(slug) {
+  const travaux = TROUVER_UN_PRO.articles[slug];
+  if (!travaux) return "";
+  return `<aside class="pro" data-page="conseils/${slug}"><strong>🧑‍🌾 Pas le temps ou pas l'envie de le faire vous-même ?</strong>
+<p>« Trouver un pro » ouvre ${TROUVER_UN_PRO.ouverture} dans Mongazon360 : un paysagiste ou un jardinier de votre secteur pour ces travaux. Laissez votre email, on vous prévient à l'ouverture.</p>
+<form><div class="pro-champs"><input type="email" name="email" placeholder="Votre email" aria-label="Votre email" required maxlength="120" autocomplete="email" />
+<input name="code_postal" placeholder="Code postal" aria-label="Code postal" required inputmode="numeric" maxlength="5" pattern="[0-9]{5}" autocomplete="postal-code" /></div>
+<div class="pro-travaux">${travaux.map(t => `<label><input type="checkbox" name="travaux" value="${t}" checked />${esc(SERVICES_PARTENAIRES[t])}</label>`).join("")}</div>
+<label class="piege" aria-hidden="true">Ne pas remplir<input name="piege" tabindex="-1" autocomplete="off" /></label>
+<button class="btn" type="submit">Être prévenu</button><p class="pro-etat" role="status" aria-live="polite"></p>
+<small>Une confirmation maintenant, puis un email à l'ouverture, rien d'autre. Vos coordonnées ne sont jamais transmises à un pro sans votre demande. <a href="/confidentialite">Confidentialité</a></small></form>
+<p class="pro-merci" hidden>✅ C'est noté : on vous prévient dès l'ouverture de « Trouver un pro ».</p></aside>
+<script>(function(){
+var a=document.querySelector(".pro"),f=a.querySelector("form"),etat=a.querySelector(".pro-etat"),b=f.querySelector("button"),ouvert=Date.now();
+var p=new URLSearchParams(location.search),cap=null;try{cap=JSON.parse(sessionStorage.getItem("mg360_utm_capture"));}catch(e){}
+f.addEventListener("submit",function(ev){ev.preventDefault();var d=new FormData(f);
+var corps={email:String(d.get("email")||"").trim(),code_postal:String(d.get("code_postal")||"").trim(),travaux:d.getAll("travaux"),piege:String(d.get("piege")||""),
+duree:Date.now()-ouvert,source:String((cap&&cap.source)||p.get("utm_source")||"direct").slice(0,40),page:a.getAttribute("data-page"),campagne:p.get("utm_campaign")||null};
+if(!corps.travaux.length){etat.textContent="Cochez au moins un type de travaux.";return;}
+b.disabled=true;etat.textContent="Envoi en cours…";
+fetch("/api/send?type=pro-attente",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(corps)})
+.then(function(r){return r.json().catch(function(){return {};}).then(function(j){if(!r.ok||!j.ok)throw new Error(j.error||"");});})
+.then(function(){f.hidden=true;a.querySelector(".pro-merci").hidden=false;})
+.catch(function(e){b.disabled=false;etat.textContent=e.message||"L'inscription n'a pas abouti. Réessayez dans un instant.";});
+});})();</script>`;
 }

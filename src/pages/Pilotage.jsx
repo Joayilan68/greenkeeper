@@ -9,6 +9,7 @@ import PremiumOffertsCard from "../components/PremiumOffertsCard";
 import CodesCreateursCard from "../components/CodesCreateursCard";
 import PublicationsCard from "../components/PublicationsCard";
 import DemandesEquipementsCard from "../components/DemandesEquipementsCard";
+import TrouverUnProCard from "../components/TrouverUnProCard";
 import { CHARGES_ACTIVES, CHARGES_PREVUES, STRIPE_FEES, URSSAF_RATE, montant } from "../lib/charges";
 import LigueHiverCard from "../components/LigueHiverCard";
 import Agrandir from "../components/Agrandir";
@@ -889,6 +890,7 @@ export default function Pilotage() {
               <div style={{ textAlign:"center", color:"#81c784", fontSize:12, padding:16 }}>🔄 Chargement données Clerk...</div>
             )}
             <DemandesEquipementsCard getToken={getToken} />
+            <TrouverUnProCard getToken={getToken} />
           </>
         )}
 

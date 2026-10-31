@@ -240,6 +240,10 @@ si une fonction n'existe pas, dis simplement que ce n'est pas encore possible) :
   envoyée seulement si l'utilisateur valide. Autres marques et caméras : pas encore disponibles ; avec Premium, un
   équipement absent de la liste se signale en bas de « Mes équipements » (« Ton équipement n'est pas dans la liste ? »,
   envoi anonyme) : les plus demandés seront connectés en priorité.
+- « Besoin d'un pro ? » (sous le résultat d'un diagnostic qui trouve des problèmes, et dans les articles Conseils des gros
+  travaux : création, gazon en plaques, semis, scarification, arrosage automatique, robot) : liste d'attente de « Trouver un
+  pro », qui ouvre au printemps 2027 (un paysagiste ou un jardinier de son secteur) ; l'utilisateur laisse son email, son code
+  postal et ses travaux, et il est prévenu à l'ouverture. Avant l'ouverture, aucun pro n'est proposé ni recommandé.
 - Parcours guidés « Création de gazon » et « Regarnissage » : fenêtre de semis selon la température du sol, étapes
   et arrosages jour par jour.
 - Notifications (ou emails) de conseils, jusqu'à 2 par jour ; alertes gel et canicule ; travaux d'hiver (feuilles,

@@ -13,6 +13,7 @@ import AvecPremium from "../components/AvecPremium";
 import ConfianceDiagnostic, { PhotoAReprendre } from "../components/ConfianceDiagnostic";
 import { PropositionSuivi, ComparaisonSuivi, TravauxSuivi } from "../components/SuiviDiagnostic";
 import ProposerNotifications from "../components/ProposerNotifications";
+import BesoinPro from "../components/BesoinPro";
 import { suiviAProposer, comparaisonSuivi, travauxDuDernier } from "../lib/suiviDiagnostic";
 import { useParcours } from "../lib/useParcours";
 import { moisCalendrier, zoneClimatique } from "../lib/planEntretien";
@@ -23,6 +24,15 @@ const SEV_COLORS = {
   elevee:   { bg:"rgba(244,67,54,0.15)",    border:"rgba(244,67,54,0.4)",   text:"#ef9a9a", badge:"#c62828" },
   critique: { bg:"rgba(183,28,28,0.25)",    border:"rgba(229,57,53,0.6)",   text:"#ef9a9a", badge:"#b71c1c" },
 };
+
+// Problèmes détectés → travaux (parcours Regarnissage, travaux cochés dans « Besoin d'un pro ? »)
+const MOTIFS_TRAVAUX = [
+  ["regarnissage", /sol.?nu|clairsem|d[ée]garn|trou|pelad|mort|densit/i],
+  ["scarification", /mousse|feutr/i],
+  ["traitements", /maladi|champignon|fusari|rouille|fil.?rouge|o[ïi]dium|vers|larve|ravageur|insecte|tipule|hanneton/i],
+];
+const travauxDetectes = (problemes = []) =>
+  MOTIFS_TRAVAUX.filter(([, motif]) => problemes.some(p => motif.test(`${p.id} ${p.nom}`))).map(([travaux]) => travaux);
 
 const ETAT_COLORS = {
   excellent: "#43a047", bon: "#66bb6a", moyen: "#ffa726",
@@ -540,7 +550,7 @@ export default function Diagnostic() {
           )}
 
           {/* Gazon clairsemé ou sol nu détecté → parcours Regarnissage (la page Parcours vérifie la fenêtre de semis) */}
-          {!aUnParcoursActif && analysis.problemes?.some(p => /sol.?nu|clairsem|d[ée]garn|trou|pelad|mort|densit/i.test(`${p.id} ${p.nom}`)) && (() => {
+          {!aUnParcoursActif && travauxDetectes(analysis.problemes).includes("regarnissage") && (() => {
             const enSaison = moisCalendrier("regarnissage", zoneClimatique(profile), profile, profile?.sol).includes(new Date().getMonth() + 1);
             return (
               <div style={{ ...card(), background:"rgba(67,160,71,0.12)", border:"1px solid rgba(102,187,106,0.4)" }}>
@@ -578,6 +588,8 @@ export default function Diagnostic() {
               ))}
             </div>
           )}
+
+          {analysis.problemes?.length > 0 && <BesoinPro key={result.id} travauxDetectes={travauxDetectes(analysis.problemes)} />}
 
           <ProposerNotifications titre="Bob te prévient au bon moment"
             texte="Active les notifications pour recevoir ses conseils même app fermée : tonte, arrosage, gel." />

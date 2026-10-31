@@ -788,3 +788,10 @@ du premier onglet).
   travaux ; prévenu à l'ouverture au printemps 2027) dans l'app et dans les articles où un pro a du sens, sur STA puis
   en prod le 22/11 avec le chantier. Demande de test du formulaire partenaires : effacement demandé par Jordan, en
   attente de sa confirmation dans Supabase.
+- 31/10/2026 — Liste d'attente « Besoin d'un pro ? » sur STA (go de Jordan, proposition 2) : encart dans 13 articles où
+  un pro a du sens (création, plaques, semis, scarification, aération, mousse, arrosage automatique, robot ; liste dans
+  src/lib/trouverUnPro.json) et sous le résultat du diagnostic d'un compte connecté qui trouve des problèmes ; email,
+  code postal et travaux enregistrés dans la table pros_attente (créée sur les deux projets Supabase, colonne
+  département aussi ajoutée à partenaires_demandes), email de confirmation, prévenu à l'ouverture au printemps 2027 ;
+  carte « Trouver un pro » dans Pilotage → Activité (particuliers et pros par département) ; politique de
+  confidentialité 5.6 ; Bob informé. Prod le 22/11 avec le chantier. Recette décembre n° 66.

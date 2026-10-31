@@ -135,4 +135,4 @@ async function handler(req, res) {
   }
 }
 
-module.exports = { handler, verifier, SERVICES };
+module.exports = { handler, verifier, envoyerEmail, SERVICES };
