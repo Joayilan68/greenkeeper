@@ -237,6 +237,9 @@
   webhook Stripe depuis la mise en prod de la refonte ; avant : chiffre de Pilotage → Finances). En plus : vues de « Choisir
   son niveau », abonnements annuels pris avec l'offre, et articles qui mènent à l'app (`conseils_vue`, écrit par les pages
   Conseils avec l'identifiant de visite de l'app : lecture d'un article puis entrée dans l'app au cours de la même visite).
+- Pilotage → Activité, carte « Parcours d'acquisition » (refaite le 31/10/2026, constat de Jordan) : les 4 indicateurs sur les
+  30 derniers jours comparés aux 30 d'avant, mêmes définitions que le point du lundi (`parcoursAcquisition`, `api/stats.js`),
+  taux entre étapes (objectif visite → inscription : 3 %), articles qui mènent à l'app, vues de « Choisir son niveau ».
 - Point chaque lundi matin (tâche programmée « Point KPI du lundi ») pour Jordan, noté dans `docs/suivi/journal.md`.
 - Gel du 31/10 au 21/11/2026 inclus : en prod, aucun changement visible des utilisateurs hors correctifs (les articles
   Conseils, les lots de comm et les mesures invisibles continuent ; les évolutions restent sur STA).

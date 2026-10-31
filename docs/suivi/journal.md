@@ -795,3 +795,14 @@ du premier onglet).
   département aussi ajoutée à partenaires_demandes), email de confirmation, prévenu à l'ouverture au printemps 2027 ;
   carte « Trouver un pro » dans Pilotage → Activité (particuliers et pros par département) ; politique de
   confidentialité 5.6 ; Bob informé. Prod le 22/11 avec le chantier. Recette décembre n° 66.
+- 31/10/2026 — Jordan confirme l'ouverture de « Trouver un pro » au printemps 2027 (encart, page partenaires, emails).
+- 31/10/2026 — Constat de Jordan (capture de Pilotage) : la carte « Parcours d'acquisition » n'est plus adaptée ni
+  juste. Analyse : elle suivait le parcours d'avant la refonte (départ à l'accueil seul alors que 62 % des 407 visites
+  des 30 jours viennent des articles ; clics sur « Créer mon compte » comptés à chaque toucher, d'où « Essai → clic
+  inscription » à 120 % ; visiteurs distincts mesurés depuis le jour même mais présentés sur 30 jours, d'où « 33,3 % des
+  visiteurs s'inscrivent » ; signal d'inscription du navigateur (5) au lieu des comptes vraiment créés (6) ; abonnés
+  actifs (stock) mélangés aux 30 jours). Carte refaite et mise en prod (main f9bb690, visible seulement dans Pilotage) :
+  visites → entrées dans l'app → inscriptions → abonnements Premium, 30 jours comparés aux 30 d'avant, mêmes définitions
+  que le point KPI du lundi ; au 31/10 : 407 visites, 53 entrées (13 %), 6 inscriptions (1,5 % des visites, objectif 3
+  %), 0 abonnement. Encarts, liste d'attente et articles lus dans l'app ajoutés après la mise en prod du 22/11. Recette
+  « Déjà en prod » n° 72 ; CLAUDE.md.
