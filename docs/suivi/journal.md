@@ -741,3 +741,6 @@ du premier onglet).
   ignore le texte tout prêt et ne garde que le lien ; WhatsApp garde le message). Correctif sur STA : en touchant
   Facebook, le message est copié avant l'ouverture de Facebook, à coller dans la publication, comme pour Instagram ;
   paramètre « quote » ignoré retiré. Recette décembre n° 63. Passage en prod comme correctif proposé à Jordan.
+- 31/10/2026 — Correctif du partage Facebook passé en prod au go de Jordan (« Maintenant ») : main passé de fe41e62 à
+  e923e97 (même changement que sur STA), main fusionné dans Staging. Recette : ligne passée dans « Déjà en prod
+  (exceptions) » (n° 69), décembre renuméroté (63 lignes).
