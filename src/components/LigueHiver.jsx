@@ -12,6 +12,7 @@ import { useGreenPoints } from "../lib/useGreenPoints";
 import { useProfile } from "../lib/useProfile";
 import { carteQuiz } from "../lib/cartesPartage";
 import { trackFunnel } from "../lib/funnel";
+import { useMonCode } from "../lib/useMonCode";
 
 const clair = "#F1F8F2", vert = "#a5d6a7", doux = "#81c784";
 const plein = { border:"none", borderRadius:12, padding:"11px 16px", fontSize:13, fontWeight:800, cursor:"pointer",
@@ -24,8 +25,10 @@ const semaineDu = (n) => { const { debut, fin } = datesSemaine(n); return `du ${
 
 // Partage du quiz ou de son résultat (Partager du téléphone, avec l'image du résultat quand le téléphone sait la partager ;
 // sinon lien copié) : message à afficher, ou null si annulé ou impossible
-async function partagerQuiz({ texte = LIGUE.partage.texte, image = null } = {}) {
-  const { url } = LIGUE.partage;
+// Avec le code de parrainage : l'ami qui s'inscrit par ce lien a 1 mois de Premium offert
+async function partagerQuiz({ texte = LIGUE.partage.texte, image = null, code = null } = {}) {
+  const url = code ? `${LIGUE.partage.url}&p=${code}` : LIGUE.partage.url;
+  if (code) texte = `${texte} 🎁 Avec mon code ${code}, 1 mois de Premium offert.`;
   if (navigator.share) {
     try {
       await navigator.share(image ? { files: [image], text: `${texte} ${url}` } : { title: "Quiz gazon Mongazon360", text: texte, url });
@@ -92,7 +95,8 @@ function CarteDefi({ n, fait, onFait }) {
     try { await onFait(); if (info) setMsg(info); } catch (e) { setMsg(`⚠️ ${e.message}`); }
     finally { setEnvoi(false); }
   };
-  const partager = async () => { const info = await partagerQuiz(); if (info) valider(info); };
+  const parrain = useMonCode(!fait && !!d.partage);
+  const partager = async () => { const info = await partagerQuiz({ code: parrain?.code }); if (info) valider(info); };
   return (
     <div style={card()}>
       <div style={cardTitle}><span>🎯 Défi de la semaine</span><span style={{ color: fait ? "#66bb6a" : "#f9a825" }}>{fait ? "✅ Fait" : `+${LIGUE.points.defi} pts`}</span></div>
@@ -127,6 +131,7 @@ function CarteQuiz({ n, resultat, onDemarrer, onRepondre }) {
   const enCours = !!resultat && resultat.restant > 0;
   const corrige = !!resultat && !enCours;
   const complet = quiz.every((_, i) => Number.isInteger(choix[i]));
+  const parrain = useMonCode(corrige);
 
   const demarrer = async () => {
     setEnvoi(true); setMsg("");
@@ -162,16 +167,16 @@ function CarteQuiz({ n, resultat, onDemarrer, onRepondre }) {
     let actif = true;
     const fichier = (contenu) => new File([contenu], "quiz-gazon-mongazon360.jpg", { type: "image/jpeg" });
     if (typeof File === "undefined" || !navigator.canShare?.({ files: [fichier("")] })) return undefined;
-    carteQuiz({ bonnes: resultat.bonnes, total: quiz.length, semaine: n, theme, duree })
+    carteQuiz({ bonnes: resultat.bonnes, total: quiz.length, semaine: n, theme, duree, code: parrain?.code })
       .then(blob => { if (actif) setImage(fichier(blob)); }).catch(() => {});
     return () => { actif = false; };
-  }, [corrige]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [corrige, parrain?.code]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Partage du résultat (jamais des réponses : une seule tentative par semaine)
   const partager = async () => {
     trackFunnel("partage_quiz", { canal: image ? "image" : "texte", semaine: n, bonnes: resultat.bonnes });
     const texte = LIGUE.partage.resultat.replaceAll("{bonnes}", resultat.bonnes).replaceAll("{total}", quiz.length).replaceAll("{duree}", duree);
-    const info = await partagerQuiz({ texte, image });
+    const info = await partagerQuiz({ texte, image, code: parrain?.code });
     if (info) setMsg(info);
   };
   return (

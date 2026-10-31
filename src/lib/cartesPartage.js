@@ -81,8 +81,11 @@ async function carte(dessinerContenu, invitation) {
   return new Promise((ok, ko) => toile.toBlob(b => (b ? ok(b) : ko(new Error("carte vide"))), "image/jpeg", 0.9));
 }
 
+// Invitation du bas de la carte : avec le code de parrainage, l'offre de bienvenue (1 mois de Premium offert)
+const offre = (code, sinon) => (code ? `Code ${code} : 1 mois de Premium offert sur` : sinon);
+
 // Score santé de la pelouse : jauge, score sur 100 et libellé
-export function carteScore({ score, label }) {
+export function carteScore({ score, label, code }) {
   const valeur = Math.max(0, Math.min(100, Math.round(score)));
   const couleur = couleurScore(valeur);
   return carte((ctx) => {
@@ -105,11 +108,11 @@ export function carteScore({ score, label }) {
     ecrire(ctx, String(valeur), cx, cy + 62, { taille: 190, couleur: BLANC });
     ecrire(ctx, "/100", cx, cy + 128, { taille: 48, poids: 700, couleur: VERT_CLAIR });
     ecrire(ctx, label, cx, cy + 250, { taille: 72, couleur, largeurMax: 560 });
-  }, ["Et la vôtre ?", "Diagnostic photo gratuit sur", "mongazon360.fr"]);
+  }, ["Et la vôtre ?", offre(code, "Diagnostic photo gratuit sur"), "mongazon360.fr"]);
 }
 
 // Résultat du quiz de la semaine (ligue d'hiver) : bonnes réponses, une pastille par question ; jamais les réponses
-export function carteQuiz({ bonnes, total, semaine, theme, duree }) {
+export function carteQuiz({ bonnes, total, semaine, theme, duree, code }) {
   const message = bonnes === total ? "Sans faute !" : bonnes === total - 1 ? "Presque parfait !" : "Défi relevé !";
   return carte((ctx) => {
     ecrire(ctx, `LIGUE D'HIVER · SEMAINE ${semaine}`, 72, 190, { taille: 40, couleur: GIVRE, largeurMax: 936 });
@@ -140,5 +143,5 @@ export function carteQuiz({ bonnes, total, semaine, theme, duree }) {
       }
     }
     ecrire(ctx, message, 540, 868, { taille: 66, couleur: bonnes === total ? "#66bb6a" : "#fdd835" });
-  }, ["Et toi ?", `Quiz gratuit : ${total} questions en ${duree} sur`, "mongazon360.fr"]);
+  }, ["Et toi ?", offre(code, `Quiz gratuit : ${total} questions en ${duree} sur`), "mongazon360.fr"]);
 }

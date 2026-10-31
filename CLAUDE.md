@@ -155,8 +155,9 @@
   diagnostic, la création de compte et la connexion).
 - Parrainage et codes créateurs : `api/parrainage.cjs` (tables `codes` et `parrainages`, serveur uniquement), conditions
   dans les CGV (article 7 ter) ; filleul 1 mois offert, parrain 1 mois par filleul actif (tâche du matin) ; codes
-  créateurs et commissions dans Pilotage → Finances. Lien : `https://mongazon360.fr/?p=CODE`.
-
+  créateurs et commissions dans Pilotage → Finances. Lien : `https://mongazon360.fr/?p=CODE`. Le code de l'utilisateur
+  accompagne ses partages du score et du quiz (lien, texte et image ; `src/lib/useMonCode.js`, décision de Jordan du
+  31/10/2026).
 ## Équipements connectés
 - Table `equipements` (serveur uniquement, RLS sans politique) via `api/objets.js` ; logique et connecteurs dans
   `api/equipements.cjs`. Clés d'accès des utilisateurs chiffrées (AES-256-GCM) avec la variable Vercel

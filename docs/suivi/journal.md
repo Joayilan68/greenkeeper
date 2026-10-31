@@ -752,3 +752,10 @@ du premier onglet).
   (beaucoup d'affichages sur la chaux, positions 40 à 78) : chaux et mousse, pH de la pelouse, fusariose, tondre en
   hiver, pelouse en décembre. 6) Image du score partagée par le menu de partage du téléphone (src/lib/carteScore.js),
   sur STA, prod le 22/11 avec le chantier ; partages comptés (partage_score). Recette décembre n° 63 ; CLAUDE.md.
+- 31/10/2026 — Visibilité, suite des décisions de Jordan (propositions 3, 4, 7 et 8). 3) Une vidéo courte (Reel) du quiz
+  du dimanche sur Facebook et Instagram, publiée par Jordan, en test sur 3 semaines (1, 8 et 15/11 ; vidéos 1080 × 1920
+  de 15 s, sans la réponse), bilan des vues le 23/11. 4) Fiche Google Play à jour : captures de la nouvelle version et
+  description revue, préparées le 4/11, mises en ligne par Jordan. 7) Partage du résultat du quiz en image (« J'ai eu
+  x/3… », jamais les réponses), sur STA, prod le 22/11 avec le partage du score ; cartes réunies dans
+  src/lib/cartesPartage.js. 8) Code de parrainage dans les partages du score et du quiz (src/lib/useMonCode.js), sur
+  STA, prod en décembre avec le parrainage. Recette décembre n° 64 et 65 ; CLAUDE.md.

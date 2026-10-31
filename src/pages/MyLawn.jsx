@@ -21,6 +21,7 @@ import EvolutionScore from "../components/EvolutionScore";
 import HistoriqueActions from "../components/HistoriqueActions";
 import AvecPremium from "../components/AvecPremium";
 import { carteScore } from "../lib/cartesPartage";
+import { useMonCode } from "../lib/useMonCode";
 import { trackFunnel } from "../lib/funnel";
 
 // ── Calcul complétude profil ──────────────────────────────────────────────────
@@ -53,9 +54,10 @@ function PartageScore({ score, label }) {
   const [copie, setCopie] = useState("");
   const [image, setImage] = useState(null); // carte du score prête, si le téléphone sait partager une image
   const [apercu, setApercu] = useState("");
-  const appUrl         = "https://mongazon360.fr";
+  const parrain        = useMonCode(); // code de parrainage : 1 mois de Premium offert à l'ami qui s'inscrit avec
+  const appUrl         = parrain?.lien || "https://mongazon360.fr";
   const emoji          = score >= 85 ? "🏆" : score >= 70 ? "😊" : score >= 55 ? "😐" : score >= 40 ? "😟" : "😰";
-  const message        = `${emoji} Mon gazon a un score santé de ${score}/100 sur Mongazon360® !\n🌿 "${label}"\n\nSuivez votre gazon en temps réel :\n${appUrl}`;
+  const message        = `${emoji} Mon gazon a un score santé de ${score}/100 sur Mongazon360® !\n🌿 "${label}"\n\nSuivez votre gazon en temps réel${parrain ? `, avec 1 mois de Premium offert grâce à mon code ${parrain.code}` : ""} :\n${appUrl}`;
   const messageEncoded = encodeURIComponent(message);
   const urlEncoded     = encodeURIComponent(appUrl);
   // Facebook et Instagram n'acceptent pas de texte tout prêt (Facebook ne garde que le lien) : le message est copié
@@ -68,14 +70,14 @@ function PartageScore({ score, label }) {
     let actif = true, adresse = "";
     const fichier = (contenu) => new File([contenu], "score-gazon-mongazon360.jpg", { type: "image/jpeg" });
     if (typeof File === "undefined" || !navigator.canShare?.({ files: [fichier("")] })) return;
-    carteScore({ score, label }).then(blob => {
+    carteScore({ score, label, code: parrain?.code }).then(blob => {
       if (!actif) return;
       adresse = URL.createObjectURL(blob);
       setImage(fichier(blob));
       setApercu(adresse);
     }).catch(() => {});
     return () => { actif = false; if (adresse) URL.revokeObjectURL(adresse); };
-  }, [score, label]);
+  }, [score, label, parrain?.code]);
 
   const partagerImage = () => {
     trackFunnel("partage_score", { canal: "image" });
