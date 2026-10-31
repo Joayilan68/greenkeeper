@@ -721,3 +721,6 @@ du premier onglet).
   CLAUDE.md, recette « Déjà en prod » n° 68. Déjà prévu pour informer : carte dans l'app, email de l'offre d'hiver le
   1/11 (comptes qui acceptent les offres), publication du 13/11 ; notifications de la ligue d'hiver chaque semaine (quiz
   le dimanche, défi à partir du mercredi).
+- 31/10/2026 — Page de paiement vérifiée en prod par Jordan (sans payer) : 2,99 € par mois et 24,99 € par an, produit
+  « Mongazon360 Premium » ; aucune alerte de paiement depuis la mise en prod. Tous les contrôles de la mise en prod de
+  la refonte sont faits.
