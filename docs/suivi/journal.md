@@ -816,3 +816,9 @@ du premier onglet).
   email « ❄️ Premium 1 an à 12,99 € — jusqu'au 25/02 » reçu, défi et quiz de la semaine 1 faits (3/3), tuile « Compte à
   rebours du printemps » correcte ; notification du matin « Premières gelées » (la notification du quiz, moins
   prioritaire, n'est pas envoyée le même matin). Recette « Déjà en prod » n° 36, 37 et 38 passées à OK, n° 65 en partie.
+- 01/11/2026 — Série, décisions de Jordan : calculée par le serveur (la série gardée dans le navigateur se perdait au
+  nettoyage des données et faussait les chiffres) et quotidienne toute l'année (plus de « Série protégée » de novembre à
+  janvier : un jour manqué la remet à zéro, même en hiver). Fait sur STA : fonction compter_jour_serie() et colonne
+  streaks.dernier_jour sur les deux projets Supabase, useStreak réécrit, tuile, Mes progrès et Classement sans
+  protection d'hiver ; politique streaks en lecture seule sur STA (à faire sur la PROD avec la mise en prod de l'app).
+  Recette décembre n° 67. Mise en prod : à décider par Jordan (correctif maintenant ou le 22/11).

@@ -158,6 +158,12 @@
   créateurs et commissions dans Pilotage → Finances. Lien : `https://mongazon360.fr/?p=CODE`. Le code de l'utilisateur
   accompagne ses partages du score et du quiz (lien, texte et image ; `src/lib/useMonCode.js`, décision de Jordan du
   31/10/2026).
+## Série
+- Décision de Jordan du 1/11/2026 : la série compte les jours d'utilisation consécutifs, calculés par la base
+  (`compter_jour_serie()`, date de Paris, colonne `streaks.dernier_jour`), la même sur tous les appareils, jamais gardée dans le
+  navigateur ; comptée à l'ouverture de l'Accueil ou d'Aujourd'hui (`src/lib/useStreak.js`) ; quotidienne toute l'année, sans
+  protection d'hiver : un jour manqué la remet à zéro. L'app lit seulement sa ligne `streaks` ; seule la fonction l'écrit.
+
 ## Paysagistes partenaires
 - Décision de Jordan du 31/10/2026 (prod le jour même, exception au gel) : page « Devenir partenaire » `/partenaires`, pour les
   pros, avec un lien « Paysagistes, jardiniers : devenez partenaire » en bas des pages du site (pages statiques et accueil
