@@ -18,7 +18,7 @@ export default function MesProgres() {
   const { isPaid = false } = useSubscription() || {};
   const { classementActif } = useSaison();
   const { total: gpTotal, palier, prochainPalier, progressPalier, historique: gpHistorique } = useGreenPoints();
-  const { actuel: streak, enDanger, modeHiver } = useStreak();
+  const { actuel: streak, enDanger } = useStreak();
   const {
     ligueActuelle, position, totalJoueurs, pointsSemaine,
     enZonePromotion, enZoneRetrogradation, joursRestants, messageClassement,
@@ -34,13 +34,13 @@ export default function MesProgres() {
 
       {/* ── SÉRIE ── */}
       <div data-tuile="mongazon-serie" style={{ display:"flex", alignItems:"center", gap:10 }}>
-        <span style={{ fontSize:20 }}>{modeHiver ? "🛡️" : enDanger ? "⚠️" : "🔥"}</span>
+        <span style={{ fontSize:20 }}>{enDanger ? "⚠️" : "🔥"}</span>
         <div style={{ flex:1, minWidth:0 }}>
-          <div style={{ fontWeight:700, fontSize:13, color: enDanger ? "#ef9a9a" : modeHiver ? "#90caf9" : "#a5d6a7" }}>
-            {streak > 0 ? `Série de ${streak} jour${streak > 1 ? "s" : ""}${modeHiver ? ", protégée" : ""}` : "Pas encore de série"}
+          <div style={{ fontWeight:700, fontSize:13, color: enDanger ? "#ef9a9a" : "#a5d6a7" }}>
+            {streak > 0 ? `Série de ${streak} jour${streak > 1 ? "s" : ""}` : "Pas encore de série"}
           </div>
-          <div style={{ fontSize:11, color: enDanger ? "#f57c00" : modeHiver ? "#64b5f6" : "#66BB6A", marginTop:1 }}>
-            {modeHiver ? "1 connexion par semaine suffit cet hiver" : enDanger ? "Ouvre l'app aujourd'hui pour garder ta série !" : streak > 0 ? "Continue comme ça !" : "Ouvre l'app chaque jour pour la lancer."}
+          <div style={{ fontSize:11, color: enDanger ? "#f57c00" : "#66BB6A", marginTop:1 }}>
+            {enDanger ? "Ouvre l'app aujourd'hui pour garder ta série !" : streak > 0 ? "Ouvre l'app chaque jour pour la garder, même l'hiver." : "Ouvre l'app chaque jour pour la lancer."}
           </div>
         </div>
       </div>

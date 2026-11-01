@@ -56,7 +56,7 @@ export default function Classement() {
               <div style={{ fontSize:52, marginBottom:12 }}>❄️</div>
               <div style={{ fontSize:18, fontWeight:800, color:"#a5d6a7", marginBottom:8 }}>Classement en pause</div>
               <div style={{ fontSize:13, color:"#81c784", lineHeight:1.6 }}>
-                Le classement reprend en février. Ton streak de {streak} jours est protégé !
+                Le classement reprend en février. Ta série : {streak} jour{streak > 1 ? "s" : ""}, à garder en ouvrant l'app chaque jour.
               </div>
             </div>
           </div>

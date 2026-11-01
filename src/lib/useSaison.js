@@ -94,9 +94,6 @@ export function useSaison() {
     joursAvantRetour,
     joursAvantFin,
 
-    // Streak : en hiver 1x/semaine suffit, en actif 1x/jour
-    streakFrequenceHeures: isHivernal || isTransition ? 168 : 24,
-
     // Intensité de la gamification (0 à 1)
     intensiteGamification: isActif ? 1 : isTransition ? 0.5 : 0.2,
   };
