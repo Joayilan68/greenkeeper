@@ -812,3 +812,7 @@ du premier onglet).
   d'ouvrir le menu de partage, avec la phrase « … le message est copié, il suffit de le coller » sous les boutons (défi
   et quiz) ; en prod (main f36d9d7), et dans la version du 22/11 (partage de l'image du résultat). Recette « Déjà en
   prod » n° 73 ; CLAUDE.md.
+- 01/11/2026 — Départ de la ligue d'hiver et de l'offre d'hiver, vérifié par Jordan sur son téléphone vers 7 h 50 :
+  email « ❄️ Premium 1 an à 12,99 € — jusqu'au 25/02 » reçu, défi et quiz de la semaine 1 faits (3/3), tuile « Compte à
+  rebours du printemps » correcte ; notification du matin « Premières gelées » (la notification du quiz, moins
+  prioritaire, n'est pas envoyée le même matin). Recette « Déjà en prod » n° 36, 37 et 38 passées à OK, n° 65 en partie.
