@@ -219,7 +219,7 @@ module.exports = async function handler(req, res) {
           streak: {
             actuel:             getData(streakRes)?.actuel || 0,
             record:             getData(streakRes)?.record || 0,
-            derniere_connexion: getData(streakRes)?.derniere_connexion || null,
+            dernier_jour:       getData(streakRes)?.dernier_jour || null,
           },
         },
 

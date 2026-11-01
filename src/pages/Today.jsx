@@ -237,7 +237,7 @@ export default function Today() {
 
   const { mois } = useSaison();
   const { gagnerPoints, total: gpTotal, palier } = useGreenPoints();
-  const { actuel: streak, enDanger, message: streakMsg, enregistrerConnexion } = useStreak();
+  const { enregistrerConnexion } = useStreak();
   const [toastPoints, setToastPoints] = useState(null);
 
   useEffect(() => {

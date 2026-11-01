@@ -39,7 +39,7 @@ export default function Dashboard() {
 
   // ── Série et GreenPoints (résumé ; détail et classement dans Mon gazon → Mes progrès) ──────────────
   const { total: gpTotal, palier, gagnerPoints } = useGreenPoints();
-  const { actuel: streak, enDanger, modeHiver, enregistrerConnexion } = useStreak();
+  const { actuel: streak, enDanger, enregistrerConnexion } = useStreak();
   // Connexion du jour (série et GreenPoints) : comptée dès l'accueil, une fois par jour au plus, comme dans Aujourd'hui
   useEffect(() => {
     enregistrerConnexion();
@@ -362,10 +362,10 @@ export default function Dashboard() {
         {/* ── SÉRIE ET GREENPOINTS (résumé ; classement et badges dans Mon gazon) ──────────────── */}
         <div data-tuile="accueil-progres" role="button" onClick={() => navigate("/my-lawn#progres")} style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:12, cursor:"pointer" }}>
           <div style={{ ...card(), marginBottom:0, padding:"10px 12px", display:"flex", alignItems:"center", gap:10 }}>
-            <span style={{ fontSize:22 }}>{modeHiver ? "🛡️" : enDanger ? "⚠️" : "🔥"}</span>
+            <span style={{ fontSize:22 }}>{enDanger ? "⚠️" : "🔥"}</span>
             <div>
               <div style={{ fontSize:15, fontWeight:800, color: enDanger ? "#ef9a9a" : "#a5d6a7" }}>{streak} jour{streak > 1 ? "s" : ""}</div>
-              <div style={{ fontSize:10, color:"#81c784" }}>{modeHiver ? "Série protégée" : enDanger ? "Série en danger" : "Série"}</div>
+              <div style={{ fontSize:10, color:"#81c784" }}>{enDanger ? "Série en danger" : "Série"}</div>
             </div>
           </div>
           <div style={{ ...card(), marginBottom:0, padding:"10px 12px", display:"flex", alignItems:"center", gap:10 }}>
