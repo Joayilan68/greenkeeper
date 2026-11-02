@@ -830,3 +830,9 @@ du premier onglet).
   documentation seule plus construits (testé : 18 cas, schéma officiel de vercel.json). Demandé à Jordan : conservation
   des préversions ramenée à 1 semaine dans Vercel, production gardée 1 mois pour le retour arrière. Offre Pro inutile.
   CLAUDE.md (Contraintes).
+- 02/11/2026 — Point KPI du lundi (semaine du 26/10 au 1/11, PROD) : 208 visites (moyenne d'octobre : 96 par semaine),
+  29 entrées dans l'app (16), 3 inscriptions (1,4), 0 abonnement ; taux stables (14 % des visites entrent dans l'app,
+  1,4 % s'inscrivent ; objectif 3 %) ; 56 visites venues des réponses de Jordan dans les groupes Facebook (pic de 53
+  visites le 28/10). 1er jour de la nouvelle version (1/11) : 20 visites, 3 entrées, 0 inscription. Articles → app
+  depuis le 31/10 : 2 lecteurs sur 69. Page /partenaires : aucune vue ni demande (appel aux pros pas encore publié ;
+  mesure vérifiée sur la page en ligne).
