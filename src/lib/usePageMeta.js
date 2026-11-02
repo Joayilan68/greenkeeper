@@ -1,7 +1,8 @@
 // src/lib/usePageMeta.js
 // Met à jour titre, description, adresse canonique et indexation à chaque changement de page
 // dans l'app (navigation sans rechargement). Même source que les pages pré-générées au build
-// (scripts/seo-build.mjs) : src/lib/seoPages.json. Pages privées : non indexables.
+// (scripts/seo-build.mjs) : src/lib/seoPages.json. Pages privées : non indexables. Conseils lus dans l'app (/lire) : non
+// indexables, adresse canonique = page web /conseils (titre de l'article posé par src/pages/ConseilsApp.jsx).
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import pages from "./seoPages.json";
@@ -17,7 +18,8 @@ export function usePageMeta() {
   const { pathname } = useLocation();
   useEffect(() => {
     const page = pages.find(p => p.path === pathname) || { ...pages[0], noindex: true };
-    const url  = SITE + (page.path === "/" ? "" : page.path);
+    const lecture = pathname.match(/^\/lire(?:\/([a-z0-9-]+))?\/?$/);
+    const url  = lecture ? `${SITE}/conseils${lecture[1] ? `/${lecture[1]}` : ""}` : SITE + (page.path === "/" ? "" : page.path);
     document.title = page.title;
     setMeta('meta[name="description"]', "content", page.description);
     setMeta('meta[name="robots"]', "content", page.noindex ? "noindex, follow" : "index, follow");

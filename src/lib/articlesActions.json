@@ -1,0 +1,18 @@
+{
+  "_source": "Article à lire pour chaque action du plan d'entretien (« Lire l'article » d'Aujourd'hui, chantier du 22/11, demande de Jordan du 30/10/2026) : articles de content/conseils, eux-mêmes tirés de la base de connaissances ; « mois » = article propre à certains mois (numéro du mois). Chaque article est vérifié au build (scripts/seo-build.mjs).",
+  "actions": {
+    "tonte": { "article": "hauteur-tonte-gazon", "mois": { "3": "premiere-tonte-printemps", "4": "premiere-tonte-printemps", "10": "derniere-tonte-pelouse", "11": "derniere-tonte-pelouse" } },
+    "arrosage": { "article": "combien-arroser-pelouse" },
+    "engrais_starter": { "article": "engrais-gazon-printemps" },
+    "engrais_ete": { "article": "engrais-gazon" },
+    "engrais_automne": { "article": "engrais-gazon-automne" },
+    "engrais_hiver": { "article": "preparer-gazon-hiver" },
+    "verticut": { "article": "scarifier-pelouse" },
+    "aeration": { "article": "aerer-pelouse-carottage" },
+    "scarification": { "article": "scarifier-pelouse" },
+    "desherbage": { "article": "desherber-pelouse-sans-chimie" },
+    "antimousse": { "article": "mousse-pelouse" },
+    "biostimulant": { "article": "biostimulant-gazon" },
+    "regarnissage": { "article": "regarnir-gazon-automne", "mois": { "3": "semer-gazon-printemps", "4": "semer-gazon-printemps", "5": "semer-gazon-printemps" } }
+  }
+}

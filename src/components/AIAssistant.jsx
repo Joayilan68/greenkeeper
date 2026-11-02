@@ -127,6 +127,13 @@ export default function AIAssistant() {
   const [messages, setMessages] = useState([WELCOME_MESSAGE]);
   const [quota, setQuota]       = useState(null); // { remaining, limit, period } | { unlimited }
 
+  // Ouverture demandée par une autre page (encart « Bob répond » d'un article lu dans l'app : src/pages/ConseilsApp.jsx)
+  useEffect(() => {
+    const ouvrir = () => setOpen(true);
+    window.addEventListener("mg360:ouvrir-bob", ouvrir);
+    return () => window.removeEventListener("mg360:ouvrir-bob", ouvrir);
+  }, []);
+
   // Conversation gardée sur l'appareil (par compte)
   useEffect(() => {
     if (!storeKey) return;

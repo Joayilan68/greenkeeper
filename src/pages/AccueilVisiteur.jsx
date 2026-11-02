@@ -11,6 +11,7 @@ import { RESEAUX } from "../lib/reseaux";
 import { getWMO } from "../lib/lawn";
 import NIVEAUX from "../lib/niveaux.json";
 import CONSEILS_BOB from "../lib/conseilsBob.json";
+import ARGUMENTS from "../lib/argumentsApp.json";
 import BarreVisiteur from "../components/BarreVisiteur";
 
 const G = {
@@ -24,6 +25,9 @@ const G = {
   accent: "#66BB6A",
 };
 const carte = { background:G.card, border:G.border, borderRadius:18, padding:16, marginBottom:14 };
+// « Ce que fait l'app » : thèmes du catalogue en cours, sauf la météo (déjà en tête de cette page)
+const aujourdhui = new Date().toLocaleDateString("fr-CA", { timeZone: "Europe/Paris" });
+const THEMES_APP = ARGUMENTS.themes.filter(t => t.cible !== "/" && (!t.fin || t.fin >= aujourdhui));
 const boutonVert = { background:"linear-gradient(135deg,#43A047,#2E7D32)", color:"#fff", border:"none", borderRadius:12, fontWeight:800, cursor:"pointer", fontFamily:"inherit" };
 
 // Commune choisie par le visiteur, gardée sur cet appareil pour sa prochaine visite (simple confort)
@@ -205,13 +209,28 @@ export default function AccueilVisiteur() {
           </div>
         </div>
 
-        {/* ── Conseils de saison (rubrique statique /conseils) ── */}
+        {/* ── Conseils de saison, lus dans l'app (/lire) ── */}
         <div data-tuile="visiteur-articles" style={{ ...carte, display:"flex", flexDirection:"column", gap:4 }}>
           <div style={{ fontSize:15, fontWeight:800, marginBottom:4 }}>Conseils {NOM_SAISON[saison]}</div>
           {articles.map(a => (
-            <a key={a.slug} href={`/conseils/${a.slug}`} style={{ fontSize:14, lineHeight:1.45, color:G.muted, textDecoration:"none", padding:"8px 0", borderBottom:"1px solid rgba(255,255,255,0.06)" }}>{a.title}</a>
+            <a key={a.slug} href={`/lire/${a.slug}`} onClick={(e) => { e.preventDefault(); navigate(`/lire/${a.slug}`); }} style={{ fontSize:14, lineHeight:1.45, color:G.muted, textDecoration:"none", padding:"8px 0", borderBottom:"1px solid rgba(255,255,255,0.06)" }}>{a.title}</a>
           ))}
-          <a href="/conseils" style={{ fontSize:13, fontWeight:800, color:G.accent, textDecoration:"none", paddingTop:8 }}>Tous les conseils gazon →</a>
+          <a href="/lire" onClick={(e) => { e.preventDefault(); navigate("/lire"); }} style={{ fontSize:13, fontWeight:800, color:G.accent, textDecoration:"none", paddingTop:8 }}>Tous les conseils gazon →</a>
+        </div>
+
+        {/* ── Ce que fait l'app : catalogue unique des arguments, aussi sur les pages Conseils (src/lib/argumentsApp.json) ── */}
+        <div style={carte}>
+          <div style={{ fontSize:15, fontWeight:800, marginBottom:10 }}>Ce que fait l'app</div>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+            {THEMES_APP.map(t => (
+              <button key={t.id} data-tuile={`visiteur-app-${t.id}`} onClick={() => navigate(t.cible)} style={{ display:"flex", flexDirection:"column", alignItems:"flex-start", justifyContent:"flex-start", textAlign:"left", background:"rgba(255,255,255,0.04)",
+                border:"1px solid rgba(165,214,167,0.14)", borderRadius:12, padding:10, color:G.text, cursor:"pointer", fontFamily:"inherit" }}>
+                <span aria-hidden="true" style={{ fontSize:20 }}>{t.icone}</span>
+                <span style={{ display:"block", fontSize:13, fontWeight:800, marginTop:4 }}>{t.court}</span>
+                <span style={{ display:"block", fontSize:12, color:G.soft, lineHeight:1.4, marginTop:2 }}>{t.ligne}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* ── Compte gratuit ── */}

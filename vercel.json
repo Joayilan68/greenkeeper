@@ -74,6 +74,24 @@
       ]
     },
     {
+      "source": "/lire",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
+        }
+      ]
+    },
+    {
+      "source": "/lire/:slug",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
+        }
+      ]
+    },
+    {
       "source": "/index.html",
       "headers": [
         {

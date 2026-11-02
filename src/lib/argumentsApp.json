@@ -1,5 +1,5 @@
 {
-  "_source": "Catalogue unique des arguments de l'app (chantier « l'app sur toutes les pages », décision de Jordan du 28/10/2026) : encarts, bandeau et grille des pages Conseils (scripts/conseils-template.mjs). Seulement des fonctions en prod (niveaux.json de main), textes en « vous » comme les articles, jamais de promesse fausse ni de règle qui contredise la base de connaissances. Thèmes d'un article : en-tête « app » facultatif (ids séparés par des virgules), sinon mots-clés cherchés dans l'adresse, le titre et la description ; « fin » = dernier jour d'affichage.",
+  "_source": "Catalogue unique des arguments de l'app (chantier « l'app sur toutes les pages », décision de Jordan du 28/10/2026) : encarts, bandeau et grille des pages Conseils (scripts/conseils-template.mjs). Seulement des fonctions en prod (niveaux.json de main), textes en « vous » comme les articles, jamais de promesse fausse ni de règle qui contredise la base de connaissances. Thèmes d'un article : en-tête « app » facultatif (ids séparés par des virgules), sinon mots-clés cherchés dans l'adresse, le titre et la description ; « fin » = dernier jour d'affichage ; « appli » = page de l'app ouverte depuis l'encart par un compte connecté qui lit un article dans l'app (« bob » ouvre Bob).",
   "themes": [
     {
       "id": "diagnostic",
@@ -10,6 +10,7 @@
       "texte": "Prenez votre gazon en photo : Bob repère mousse, carences et maladies, et vous dit quoi faire. Le premier diagnostic est offert, sans créer de compte.",
       "bouton": "Essayer le diagnostic gratuit",
       "cible": "/essai",
+      "appli": "/diagnostic",
       "motsCles": ["maladie", "champignon", "tache", "jaune", "mousse", "vers blancs", "vers-blancs", "renover", "oiseau"]
     },
     {
@@ -21,6 +22,7 @@
       "texte": "Avec un compte gratuit, l'app vous dit chaque jour quoi faire sur votre pelouse (tonte, arrosage, engrais), selon votre région et votre météo. Avec Premium, tout votre plan de l'année en PDF.",
       "bouton": "Créer mon compte gratuit",
       "cible": "/signup",
+      "appli": "/today",
       "motsCles": ["calendrier", "entretien", "quand", "preparer"]
     },
     {
@@ -32,6 +34,7 @@
       "texte": "Pluie, gel, canicule : l'app suit la météo de votre commune et vous dit s'il faut arroser, tondre ou attendre.",
       "bouton": "Voir la météo de ma commune",
       "cible": "/",
+      "appli": "/today",
       "motsCles": ["arros", "pluie", "canicule", "secheresse", "gel", "detrempee", "flaque", "chaleur"]
     },
     {
@@ -43,6 +46,7 @@
       "texte": "Avec Premium, connectez votre robot tondeuse ou votre programmateur d'arrosage : l'app vous propose de mettre le robot au repos quand il pleut ou gèle, et de suspendre l'arrosage quand la pluie suffit. Rien n'est envoyé sans votre accord.",
       "bouton": "Essayer 7 jours offerts",
       "cible": "/signup",
+      "appli": "/equipements",
       "motsCles": ["robot", "tondeuse", "arrosage-automatique", "arrosage automatique", "programmateur", "hiverner", "tonte", "tondre", "mulching"]
     },
     {
@@ -54,6 +58,7 @@
       "texte": "Le parcours semis ou regarnissage vous indique la bonne période pour semer, puis les étapes et les arrosages, jour après jour.",
       "bouton": "Créer mon compte gratuit",
       "cible": "/signup",
+      "appli": "/parcours",
       "motsCles": ["semer", "semis", "regarnir", "creer", "plaque", "quel-gazon", "pousse"]
     },
     {
@@ -65,6 +70,7 @@
       "texte": "Bob, l'assistant de l'app, répond à vos questions sur votre pelouse : 3 questions par mois avec un compte gratuit, 20 par jour avec Premium.",
       "bouton": "Poser ma question à Bob",
       "cible": "/signup",
+      "appli": "bob",
       "motsCles": ["taupe", "fourmi", "ombre", "calcaire", "chaul", "naturelle", "sans-chimie"]
     },
     {
@@ -76,6 +82,7 @@
       "texte": "Tonte, engrais, scarification : notez vos actions en un geste et retrouvez l'historique de votre pelouse, saison après saison.",
       "bouton": "Créer mon compte gratuit",
       "cible": "/signup",
+      "appli": "/my-lawn",
       "motsCles": ["scarif", "aerer", "carottage", "derniere", "premiere"]
     },
     {
@@ -87,6 +94,7 @@
       "texte": "Le kit de saison de l'app liste les produits utiles en ce moment, avec les quantités pour votre surface.",
       "bouton": "Voir mon kit de saison",
       "cible": "/signup",
+      "appli": "/products",
       "motsCles": ["engrais", "biostimulant", "anti-mousse", "desherb", "sulfate"]
     },
     {
@@ -98,6 +106,7 @@
       "texte": "Notez vos achats : l'app les additionne sur l'année et vous dit combien il vous reste sur le budget que vous vous êtes fixé.",
       "bouton": "Créer mon compte gratuit",
       "cible": "/signup",
+      "appli": "/products",
       "motsCles": ["plaques", "creer", "renover", "quel-gazon", "choisir"]
     },
     {
@@ -109,6 +118,7 @@
       "texte": "Jusqu'au 30 janvier, un quiz et un défi gazon chaque semaine, gratuits. Le participant le plus assidu gagne 1 an de Premium.",
       "bouton": "Participer gratuitement",
       "cible": "/signup",
+      "appli": "/classement",
       "mention": {
         "texte": "Règlement : CGU, article 6 g",
         "lien": "/cgu"

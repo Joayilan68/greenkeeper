@@ -836,3 +836,12 @@ du premier onglet).
   visites le 28/10). 1er jour de la nouvelle version (1/11) : 20 visites, 3 entrées, 0 inscription. Articles → app
   depuis le 31/10 : 2 lecteurs sur 69. Page /partenaires : aucune vue ni demande (appel aux pros pas encore publié ;
   mesure vérifiée sur la page en ligne).
+- 02/11/2026 — Chantier « l'app sur toutes les pages », suite (demandes de Jordan des 29 et 30/10) : Conseils en mode app
+  sur STA. Les articles se lisent dans l'app, avec la barre du bas (liste de saison d'abord, article avec ses 3 encarts aux
+  mêmes places que sur le site, « À lire aussi », liens entre articles gardés dans l'app), contenu chargé à la demande ;
+  pages /lire non indexées, pages web /conseils inchangées (vérifiées à l'octet près). Ouverts dans l'app : onglet Conseils
+  de la barre visiteur, articles de l'accueil visiteur, nouvelle carte « Le conseil de la semaine » de l'accueil connecté
+  (article de la saison qui change chaque lundi, ou le dernier sorti avec « Nouveau »), « Lire l'article » sous chaque
+  action d'Aujourd'hui (article choisi par action et par mois) et articles liés de la ligue ; grille « Ce que fait l'app »
+  (catalogue unique) sur l'accueil visiteur. Mesure : page_view des pages /lire avec le niveau (visiteur, gratuit,
+  Premium), tuiles des encarts. Banc : 31 contrôles au vert. Recette décembre n° 68 (« Règle de travail » devient n° 69).

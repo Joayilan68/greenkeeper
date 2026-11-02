@@ -61,6 +61,15 @@
   bouton fixe sur téléphone ; grille « Ce que fait l'app » sur la rubrique et Qui sommes-nous ; thèmes choisis par
   l'en-tête `app` de l'article, sinon par mots-clés ; liens balisés `encart=<thème>-<position>`, enregistré avec la
   page_view de l'app (`src/lib/mesure.js`).
+- Conseils en mode app (chantier du 22/11, demandes de Jordan des 29 et 30/10/2026) : liste et lecture des articles dans
+  l'app, avec la barre du bas (`/lire`, `/lire/<slug>` : `src/pages/ConseilsApp.jsx`, chargée à la demande) ; contenu écrit
+  au build dans `dist/conseils-app` (`scripts/seo-build.mjs`) ; encarts aux mêmes places que sur le site (visiteur : textes du
+  catalogue, lien `encart=lire-<thème>-<position>` ; compte connecté : page `appli` du thème) ; pages non indexées
+  (`X-Robots-Tag` de `vercel.json`, canonique vers la page web : `usePageMeta`). Ouverts dans l'app : onglet Conseils de la
+  barre visiteur, articles de l'accueil visiteur, carte « Le conseil de la semaine » de l'accueil connecté
+  (`src/components/ConseilSemaine.jsx`), « Lire l'article » des actions d'Aujourd'hui (`src/lib/articlesActions.json`,
+  vérifié au build) et articles liés de la ligue ; grille « Ce que fait l'app » aussi sur l'accueil visiteur. Pages web
+  /conseils inchangées (Google, Pinterest, Facebook).
 - Bob : ses consignes listent les fonctions réelles de l'app ; toute nouvelle fonction doit y être ajoutée.
 - Search Console et Pinterest : ne pas retirer les balises `google-site-verification` et `p:domain_verify` de
   `index.html` (site revendiqué).

@@ -23,6 +23,20 @@ import { useGreenPoints } from "../lib/useGreenPoints";
 import { useStreak } from "../lib/useStreak";
 import { getConseilApresAction } from "../lib/useRecommandations";
 import { useSaison } from "../lib/useSaison";
+import { articleDeLAction } from "../lib/conseilsApp";
+
+// « Lire l'article » d'une action (src/lib/articlesActions.json), lu dans l'app (chantier du 22/11, demande de Jordan du 30/10)
+function LireArticle({ actionId, month }) {
+  const navigate = useNavigate();
+  const slug = articleDeLAction(actionId, month);
+  if (!slug) return null;
+  return (
+    <button data-tuile="aujourdhui-lire-article" onClick={() => navigate(`/lire/${slug}`)} style={{ alignSelf:"flex-start", background:"none",
+      border:"none", padding:"4px 2px 0", color:"#a5d6a7", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}>
+      📖 Lire l'article
+    </button>
+  );
+}
 
 // Mapping action.id → clé amazonProducts.js
 const ACTION_TO_AMAZON = {
@@ -698,6 +712,7 @@ export default function Today() {
                         {isFlashing ? "✓ Fait !" : "Faire →"}
                       </button>
                     </div>
+                    <LireArticle actionId={action.id} month={month} />
                     {/* Amazon masqué pour désherbage manuel (pas de chimique) */}
                     {amazonKey && profile && !isManuel && (
                       <div style={{ marginTop:4 }}>
@@ -748,6 +763,7 @@ export default function Today() {
                     {explication && (
                       <div style={{ fontSize:11, color:"#a5d6a7", lineHeight:1.45 }}>{explication.charAt(0).toUpperCase() + explication.slice(1)}</div>
                     )}
+                    <LireArticle actionId={action.id} month={month} />
                     {/* ── Bouton Amazon inline si l'action a un produit ── */}
                     {amazonKey && profile && status !== "done_today" && (
                       <ProductCard actionKey={amazonKey} profile={profile} compact />

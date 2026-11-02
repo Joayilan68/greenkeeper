@@ -1,5 +1,5 @@
 // src/App.jsx
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { SignedIn, SignedOut, RedirectToSignIn, useUser, useAuth } from "@clerk/clerk-react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Analytics } from "@vercel/analytics/react";
@@ -24,6 +24,8 @@ import Printemps from "./pages/Printemps";
 import Equipements from "./pages/Equipements";
 import PlanAnnuel from "./pages/PlanAnnuel";
 import { MentionsLegales, Confidentialite, CGU, CGV, Cookies } from "./pages/Legal";
+// Conseils en mode app : chargés à la demande (pas de poids en plus au premier chargement)
+const ConseilsApp = lazy(() => import("./pages/ConseilsApp"));
 import Layout from "./components/Layout";
 import { WeatherProvider } from "./lib/WeatherContext";
 import { usePilotage }     from "./lib/usePilotage";
@@ -235,6 +237,8 @@ function AppRoutes() {
       <Route path="/pilotage"          element={<AdminRoute><Layout><Pilotage /></Layout></AdminRoute>} />
 
       <Route path="/"                  element={<><SignedIn><Layout><Dashboard /></Layout></SignedIn><SignedOut><AccueilVisiteur /></SignedOut></>} />
+      <Route path="/lire"              element={<Suspense fallback={null}><SignedIn><Layout><ConseilsApp /></Layout></SignedIn><SignedOut><ConseilsApp visiteur /></SignedOut></Suspense>} />
+      <Route path="/lire/:slug"        element={<Suspense fallback={null}><SignedIn><Layout><ConseilsApp /></Layout></SignedIn><SignedOut><ConseilsApp visiteur /></SignedOut></Suspense>} />
       <Route path="/diagnostic"        element={<PrivateRoute><Layout><Diagnostic /></Layout></PrivateRoute>} />
       <Route path="/my-lawn"           element={<PrivateRoute><Layout><MyLawn /></Layout></PrivateRoute>} />
       <Route path="/parcours"          element={<PrivateRoute><Layout><Parcours /></Layout></PrivateRoute>} />

@@ -20,8 +20,13 @@ const plein = { border:"none", borderRadius:12, padding:"11px 16px", fontSize:13
 const leger = { border:"1px solid rgba(165,214,167,0.3)", borderRadius:12, padding:"10px 14px", fontSize:13, fontWeight:700, cursor:"pointer",
   background:"rgba(255,255,255,0.06)", color:"#e8f5e9", textDecoration:"none", display:"inline-block" };
 const givre = { ...card(), background:"linear-gradient(135deg,rgba(100,181,246,0.14),rgba(13,43,26,0.55))", border:"1px solid rgba(144,202,249,0.3)" };
-const article = (slug) => `/conseils/${slug}`;
 const semaineDu = (n) => { const { debut, fin } = datesSemaine(n); return `du ${dateLongue(debut)} au ${dateLongue(fin)}`; };
+
+// Article lié (défi, explication du quiz), lu dans l'app (Conseils en mode app, chantier du 22/11)
+function LienArticle({ slug, style, children }) {
+  const navigate = useNavigate();
+  return <a href={`/lire/${slug}`} onClick={(e) => { e.preventDefault(); navigate(`/lire/${slug}`); }} style={style}>{children}</a>;
+}
 
 // Partage du quiz ou de son résultat (Partager du téléphone, avec l'image du résultat quand le téléphone sait la partager ;
 // sinon lien copié) : message à afficher, ou null si annulé ou impossible
@@ -85,7 +90,7 @@ function Question({ q, i, choisi, corrige, onChoix }) {
       </div>
       {corrige && (
         <div style={{ fontSize:12, color:vert, marginTop:6, lineHeight:1.5 }}>
-          {q.explication} <a href={article(q.article)} style={{ color:"#90caf9" }}>Lire l'article</a>
+          {q.explication} <LienArticle slug={q.article} style={{ color:"#90caf9" }}>Lire l'article</LienArticle>
         </div>
       )}
     </div>
@@ -110,7 +115,7 @@ function CarteDefi({ n, fait, onFait }) {
       <div style={{ fontSize:15, fontWeight:800, color:clair, marginBottom:6 }}>{d.titre}</div>
       <div style={{ fontSize:13, color:vert, lineHeight:1.55, marginBottom:12 }}>{d.texte}</div>
       <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
-        {d.article && <a href={article(d.article)} style={leger}>📖 Lire l'article</a>}
+        {d.article && <LienArticle slug={d.article} style={leger}>📖 Lire l'article</LienArticle>}
         {d.lien && <button onClick={() => navigate(d.lien)} style={leger}>Ouvrir</button>}
         {!fait && (d.partage
           ? <button onClick={partager} disabled={envoi} style={plein}>📤 Partager le quiz</button>

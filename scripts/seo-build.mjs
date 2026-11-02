@@ -5,9 +5,11 @@
 //    page « Qui sommes-nous » (content/a-propos.md → dist/a-propos/index.html) et page « Devenir partenaire » des
 //    professionnels (dist/partenaires/index.html).
 // 3. dist/sitemap.xml, dist/conseils.json et dist/produits.json (articles et catalogue Amazon lus par Bob).
+// 4. Conseils en mode app : dist/conseils-app/index.json (liste) et dist/conseils-app/<slug>.json (article découpé aux
+//    places des encarts, thèmes de l'app, « À lire aussi »), chargés à la demande par src/pages/ConseilsApp.jsx.
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from "node:fs";
 import { marked } from "marked";
-import { articlePage, indexPage, aProposPage, IDS_APP, partenairesPage } from "./conseils-template.mjs";
+import { articlePage, indexPage, aProposPage, IDS_APP, partenairesPage, themesArticle, decouper } from "./conseils-template.mjs";
 import AMAZON_PRODUCTS from "../src/lib/amazonProducts.js";
 
 const SITE  = "https://mongazon360.fr";
@@ -88,11 +90,26 @@ writeFileSync("dist/conseils.json", JSON.stringify(articles.map(({ slug, title, 
 // « À lire aussi » : les articles les plus liés à celui-ci (liens dans un sens ou dans l'autre), puis ceux de la même saison
 const liens = new Map(articles.map(a => [a.slug, new Set([...a.html.matchAll(/href="\/conseils\/([a-z0-9-]+)"/g)].map(m => m[1]))]));
 const proximite = (a, o) => (liens.get(a.slug).has(o.slug) ? 2 : 0) + (liens.get(o.slug).has(a.slug) ? 2 : 0) + (o.saison === a.saison ? 1 : 0);
+// Conseils en mode app : fiche de chaque article (liste) et article complet, sans les encarts des pages web (l'app place
+// les siens aux mêmes endroits, selon les thèmes de l'article)
+mkdirSync("dist/conseils-app", { recursive: true });
+const fiche = (a) => ({ slug: a.slug, title: a.title, description: a.description, saison: a.saison, date: a.date,
+  maj: a.maj || a.date, image: a.image || null, image_alt: a.image_alt || null });
+writeFileSync("dist/conseils-app/index.json", JSON.stringify(articles.map(fiche)));
 for (const a of articles) {
   const autres = articles.filter(o => o.slug !== a.slug)
     .sort((x, y) => proximite(a, y) - proximite(a, x) || (y.maj || y.date).localeCompare(x.maj || x.date)).slice(0, 3);
   mkdirSync(`dist/conseils/${a.slug}`, { recursive: true });
   writeFileSync(`dist/conseils/${a.slug}/index.html`, articlePage(a, autres, produits));
+  writeFileSync(`dist/conseils-app/${a.slug}.json`, JSON.stringify({ ...fiche(a), parties: decouper(a.html),
+    themes: themesArticle(a).map(t => t.id), autres: autres.map(({ slug, title, description, date }) => ({ slug, title, description, date })) }));
+}
+
+// « Lire l'article » des actions d'Aujourd'hui : chaque article cité doit exister
+const slugs = new Set(articles.map(a => a.slug));
+const ARTICLES_ACTIONS = JSON.parse(readFileSync("src/lib/articlesActions.json", "utf8")).actions;
+for (const [action, r] of Object.entries(ARTICLES_ACTIONS)) for (const s of [r.article, ...Object.values(r.mois || {})]) {
+  if (!slugs.has(s)) throw new Error(`[seo] src/lib/articlesActions.json : article inconnu « ${s} » (action ${action})`);
 }
 
 mkdirSync("dist/a-propos", { recursive: true });

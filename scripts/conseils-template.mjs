@@ -160,15 +160,20 @@ export function themesArticle(a) {
   return choisis.slice(0, 3);
 }
 
-// Encarts dans l'article : après le bloc « En bref », avant l'intertitre du milieu ; le 3e suit l'article
-function avecEncarts(html, [haut, milieu], campagne) {
+// Places des encarts dans un article (pages web et lecture dans l'app) : après le bloc « En bref », puis avant
+// l'intertitre du milieu s'il y a au moins 2 intertitres ; le 3e encart suit l'article
+export function decouper(html) {
   const bref = html.search(/<blockquote>\s*<p><strong>En bref<\/strong>/);
   const apresBref = bref >= 0 ? html.indexOf("</blockquote>", bref) + "</blockquote>".length : html.indexOf("</p>") + 4;
   const h2 = [...html.matchAll(/<h2[ >]/g)].map(m => m.index).filter(i => i > apresBref);
   const centre = h2.length >= 2 ? h2[Math.floor(h2.length / 2)] : -1;
-  let out = html.slice(0, apresBref) + encart(haut, "haut", campagne);
-  out += centre > 0 ? html.slice(apresBref, centre) + encart(milieu, "milieu", campagne) + html.slice(centre) : html.slice(apresBref);
-  return out;
+  return centre > 0 ? [html.slice(0, apresBref), html.slice(apresBref, centre), html.slice(centre)]
+    : [html.slice(0, apresBref), html.slice(apresBref)];
+}
+
+function avecEncarts(html, [haut, milieu], campagne) {
+  const [debut, suite, fin] = decouper(html);
+  return debut + encart(haut, "haut", campagne) + suite + (fin === undefined ? "" : encart(milieu, "milieu", campagne) + fin);
 }
 
 // Encadré « Le matériel conseillé » : catégories du catalogue listées dans l'en-tête de l'article
