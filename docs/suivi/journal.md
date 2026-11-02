@@ -822,3 +822,11 @@ du premier onglet).
   streaks.dernier_jour sur les deux projets Supabase, useStreak réécrit, tuile, Mes progrès et Classement sans
   protection d'hiver ; politique streaks en lecture seule sur STA (à faire sur la PROD avec la mise en prod de l'app).
   Recette décembre n° 67. Mise en prod : à décider par Jordan (correctif maintenant ou le 22/11).
+- 02/11/2026 — Alerte de Vercel : stockage des déploiements à 100 % des 10 Go de l'offre gratuite (au-delà, Vercel
+  supprime les anciens déploiements non protégés et peut bloquer les nouveaux, dont les visuels des lots de comm poussés
+  sur `main`). Cause : environ 22 Mo par déploiement, gardés 30 jours, pour chaque envoi sur `main`, sur Staging (en 30
+  jours, 146 commits sur 259 ne touchaient que la documentation) et sur la branche de travail de Claude (mêmes envois que
+  Staging). Correctif en prod (main f36f94c, invisible des utilisateurs) : branches claude/… plus déployées, envois de
+  documentation seule plus construits (testé : 18 cas, schéma officiel de vercel.json). Demandé à Jordan : conservation
+  des préversions ramenée à 1 semaine dans Vercel, production gardée 1 mois pour le retour arrière. Offre Pro inutile.
+  CLAUDE.md (Contraintes).

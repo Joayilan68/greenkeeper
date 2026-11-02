@@ -258,6 +258,11 @@
 
 ## Contraintes
 - Vercel Hobby : 12 fonctions maximum dans `api/` — pas de nouvel endpoint sans en libérer un.
+- Vercel Hobby : 10 Go de stockage des déploiements (plafond atteint le 2/11/2026 ; au-delà, nouveaux déploiements bloqués).
+  `vercel.json` : les branches `claude/…` ne sont pas déployées (`git.deploymentEnabled`) et un envoi qui ne touche que
+  `docs/`, `CLAUDE.md` ou `.github/` n'est pas construit (`ignoreCommand`, comparé au dernier déploiement réussi de la
+  branche). Conservation réglée dans Vercel par Jordan (projet → Settings → Deployment Retention Policy) : préversions
+  1 semaine, production 1 mois (retour arrière).
 - Tâches planifiées : `GET /api/send` réservé aux tâches de Vercel (en-tête `Authorization: Bearer CRON_SECRET`, variable
   Vercel Sensitive, Production et Preview, saisie par Jordan ; refus d'une tâche de Vercel signalé dans Pilotage → Bugs) ;
   `POST /api/send?type=publications` réservé à la tâche pg_cron (secret Supabase Vault `tache_publications`, lu par la
