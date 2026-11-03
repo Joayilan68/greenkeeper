@@ -845,3 +845,9 @@ du premier onglet).
   action d'Aujourd'hui (article choisi par action et par mois) et articles liés de la ligue ; grille « Ce que fait l'app »
   (catalogue unique) sur l'accueil visiteur. Mesure : page_view des pages /lire avec le niveau (visiteur, gratuit,
   Premium), tuiles des encarts. Banc : 31 contrôles au vert. Recette décembre n° 68 (« Règle de travail » devient n° 69).
+- 03/11/2026 — Constat de Jordan (capture de Pilotage) : la carte « Position moyenne sur Google — par mois » reste sur
+  octobre alors qu'on est en novembre. Cause : seuls les chiffres définitifs de la Search Console étaient lus, avec 2 à
+  3 jours de retard (dernier jour disponible le 3/11 : 31/10), alors que les chiffres frais du 1er et du 2/11 existaient.
+  Correctif en prod (main 18451e6, visible seulement dans Pilotage) : chiffres frais compris, le mois en cours apparaît
+  dès ses premiers jours, provisoire ; mois passés inchangés (septembre 9,4, octobre 17,7). Au 3/11 : novembre 15,3
+  (provisoire, 1 265 affichages, 12 clics). Rappel des points ouverts de Jordan déplacé au soir, à sa demande.
