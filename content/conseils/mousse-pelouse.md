@@ -75,7 +75,7 @@ Il n'existe pas de produit miracle « naturel » aussi rapide que le sulfate de 
 
 ### La chaux tue-t-elle la mousse ?
 
-Non : elle corrige l'acidité du sol qui favorise la mousse, sans la détruire. Elle n'est utile que si le pH est inférieur à 6 (voir [chauler sa pelouse](/conseils/chaulage-ph-pelouse)).
+Non : elle corrige l'acidité du sol qui favorise la mousse, sans la détruire. Elle n'est utile que si le pH est inférieur à 6 (voir [la chaux contre la mousse](/conseils/chaux-mousse-gazon) et [chauler sa pelouse](/conseils/chaulage-ph-pelouse)).
 
 ### Quand traiter la mousse dans la pelouse ?
 

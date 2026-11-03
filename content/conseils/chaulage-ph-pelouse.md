@@ -1,9 +1,9 @@
 ---
-title: Chauler sa pelouse : quand, comment et quelle dose de chaux
-description: Mousse, gazon pâle ? Mesurez le pH : sous 6, chaulez à l'automne. Quand chauler, quelle chaux, quelle dose par m² et comment l'épandre sans brûler le gazon.
+title: Chaux pour pelouse : quelle chaux, quand et quelle dose ?
+description: Chaux sur le gazon : mesurez d'abord le pH. Sous 6, quelle chaux choisir, quand l'épandre, combien par m² et comment, sans brûler l'herbe.
 saison: automne
 date: 2026-09-25
-maj: 2026-10-10
+maj: 2026-11-03
 produits: chaulage
 ---
 
@@ -87,7 +87,7 @@ Un sol argileux demande plus de chaux qu'un sol sableux pour le même résultat.
 
 ## Chaux et mousse : le chaulage suffit-il ?
 
-La chaux ne tue pas la mousse : elle corrige l'acidité qui la favorise. Chauler traite donc une cause de la mousse, mais pas les autres : ombre, sol tassé, tonte trop rase, gazon affamé. Pour un résultat durable, combinez chaulage, [aération](/conseils/aerer-pelouse-carottage), bonne hauteur de tonte et engrais adaptés (voir [mousse dans la pelouse](/conseils/mousse-pelouse) et [préparer son gazon pour l'hiver](/conseils/preparer-gazon-hiver)).
+La chaux ne tue pas la mousse : elle corrige l'acidité qui la favorise (voir [la chaux contre la mousse](/conseils/chaux-mousse-gazon)). Chauler traite donc une cause de la mousse, mais pas les autres : ombre, sol tassé, tonte trop rase, gazon affamé. Pour un résultat durable, combinez chaulage, [aération](/conseils/aerer-pelouse-carottage), bonne hauteur de tonte et engrais adaptés (voir [mousse dans la pelouse](/conseils/mousse-pelouse) et [préparer son gazon pour l'hiver](/conseils/preparer-gazon-hiver)).
 
 ## Questions fréquentes
 
