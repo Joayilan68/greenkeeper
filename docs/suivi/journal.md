@@ -864,3 +864,6 @@ du premier onglet).
   réponse ; après la réponse, invitation à créer un compte) et une carte du quiz sous le résultat du diagnostic d'essai.
   Fait sur STA (banc : 21 contrôles) ; prod en exception au gel après le test de Jordan. Recette décembre n° 69
   (« Règle de travail » devient n° 70), CLAUDE.md (Ligue d'hiver).
+- 03/11/2026 — Pages Conseils de la STA : la variable Vercel VITE_SUPABASE_URL des préversions finit par un saut de ligne,
+  ce qui cassait les scripts des pages statiques de la STA (mesure des visites, question de la semaine). La prod n'est pas
+  touchée (variable propre). Valeurs nettoyées au build (scripts/conseils-template.mjs) ; rien à changer dans Vercel.

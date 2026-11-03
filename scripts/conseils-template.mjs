@@ -58,8 +58,10 @@ const PLAY = "https://play.google.com/store/apps/details?id=fr.mongazon360.app";
 //    (sessionStorage « mg360_visite ») : relie la lecture d'un article à l'entrée dans l'app au cours de la même visite ;
 // 3. visite comptée dans site_visits (1 par appareil et par jour, clé partagée avec l'app, comptes
 //    connectés et robots exclus) si l'URL et la clé publique Supabase sont fournies au build.
-const SUPABASE_URL  = process.env.VITE_SUPABASE_URL || "";
-const SUPABASE_ANON = process.env.VITE_SUPABASE_ANON_KEY || "";
+// Valeurs nettoyées : un saut de ligne en fin de variable Vercel (constaté le 3/11/2026 sur les préversions) casserait les
+// scripts des pages
+const SUPABASE_URL  = (process.env.VITE_SUPABASE_URL || "").trim();
+const SUPABASE_ANON = (process.env.VITE_SUPABASE_ANON_KEY || "").trim();
 if (!SUPABASE_URL || !SUPABASE_ANON) console.warn("[seo] Supabase non configuré : visites des pages Conseils non comptées");
 
 const suivi = (campagne) => `<script>(function(){try{
