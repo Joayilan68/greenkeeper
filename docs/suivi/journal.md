@@ -851,3 +851,16 @@ du premier onglet).
   Correctif en prod (main 18451e6, visible seulement dans Pilotage) : chiffres frais compris, le mois en cours apparaît
   dès ses premiers jours, provisoire ; mois passés inchangés (septembre 9,4, octobre 17,7). Au 3/11 : novembre 15,3
   (provisoire, 1 265 affichages, 12 clics). Rappel des points ouverts de Jordan déplacé au soir, à sa demande.
+- 03/11/2026 — Article d'hiver du mardi en prod (main ad12f16) : « La chaux contre la mousse du gazon : efficace ou pas ? »
+  (sujet n° 1, confirmé par la Search Console : dizaines de recherches « chaux mousse » en positions 35 à 78), épingle
+  Pinterest ; « Chauler sa pelouse » renommé « Chaux pour pelouse : quelle chaux, quand et quelle dose ? » ; catalogue de
+  la page « Réponses de groupe » régénéré (47 articles). Demandes d'accès API : relances prêtes données à Jordan ; réponses
+  attendues. Premium offerts des 3 testeurs Google Play : fin le 30/11, retrait automatique le 1/12 confirmé par Jordan
+  (vérification programmée le 1/12) ; mail de remerciement avec l'offre d'hiver validé par Jordan, à envoyer par lui vers
+  le 23/11 (texte dans sa liste d'actions).
+- 03/11/2026 — Quiz pour les visiteurs (question de Jordan : les faire participer, hors réseaux sociaux ; constat : 3
+  comptes ont joué la semaine 1, soit tous les comptes actifs, mais 9 visiteurs sur 10 arrivent sur un article où le quiz
+  n'apparaît pas). Validé par Jordan : la question de la semaine dans chaque article (question 1 et ses 3 choix, jamais la
+  réponse ; après la réponse, invitation à créer un compte) et une carte du quiz sous le résultat du diagnostic d'essai.
+  Fait sur STA (banc : 21 contrôles) ; prod en exception au gel après le test de Jordan. Recette décembre n° 69
+  (« Règle de travail » devient n° 70), CLAUDE.md (Ligue d'hiver).

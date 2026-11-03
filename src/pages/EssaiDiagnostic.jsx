@@ -6,6 +6,7 @@ import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAnonId, setAnonPending } from "../lib/anonId";
 import { trackFunnel } from "../lib/funnel";
+import { periodeLigue } from "../lib/ligueHiver";
 import BarreVisiteur from "../components/BarreVisiteur";
 import ConfianceDiagnostic, { PhotoAReprendre } from "../components/ConfianceDiagnostic";
 
@@ -249,6 +250,20 @@ export default function EssaiDiagnostic() {
         </div>
 
         <div style={{ fontSize:11.5, color:G.faint, textAlign:"center" }}>Puis l'app reste gratuite — tu ne perds rien.</div>
+
+        {/* Quiz d'hiver pendant la ligue (décision de Jordan du 3/11/2026 : faire jouer les visiteurs) */}
+        {periodeLigue()?.statut === "en_cours" && (
+          <div data-tuile="essai-quiz-hiver" style={{ background:G.card, border:G.border, borderRadius:14, padding:16, marginTop:14 }}>
+            <div style={{ fontWeight:800, fontSize:14, color:G.text, marginBottom:4 }}>🧠 Et cette semaine : le quiz d'hiver</div>
+            <div style={{ fontSize:12.5, color:G.soft, lineHeight:1.55, marginBottom:12 }}>
+              3 questions en 1 minute et un défi, gratuits avec ton compte. Le plus assidu de l'hiver gagne 1 an de Premium.
+            </div>
+            <button onClick={() => goSignup("quiz")} style={{ ...btnPrimary, width:"auto", padding:"11px 18px", fontSize:13.5 }}>Créer mon compte et jouer</button>
+            <div style={{ fontSize:11, marginTop:10 }}>
+              <button onClick={() => navigate("/cgu")} style={{ background:"none", border:"none", padding:0, color:G.faint, textDecoration:"underline", cursor:"pointer", fontSize:11, fontFamily:"inherit" }}>Règlement : CGU, article 6 g</button>
+            </div>
+          </div>
+        )}
       </Shell>
     );
   }

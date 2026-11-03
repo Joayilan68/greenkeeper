@@ -3,6 +3,7 @@
 import { readFileSync } from "node:fs";
 import { ROBOT_UA } from "../src/lib/platform.js";
 import { RESEAUX } from "../src/lib/reseaux.js";
+import { blocQuiz, CSS_QUIZ } from "./quizArticle.mjs";
 const SITE = "https://mongazon360.fr";
 const ARGUMENTS = JSON.parse(readFileSync(new URL("../src/lib/argumentsApp.json", import.meta.url), "utf8"));
 export const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
@@ -133,7 +134,8 @@ ${body.includes('class="btn play"') ? SCRIPT_PLAY : ""}${suivi(campagne)}`}
 `;
 }
 
-const encart = (t, position, campagne, fin = false) => `<aside class="app${fin ? " fin" : ""}"><span class="ico" aria-hidden="true">${t.icone}</span><div>
+// avantQuiz : encart caché pendant la ligue d'hiver, quand la question de la semaine prend sa place (scripts/quizArticle.mjs)
+const encart = (t, position, campagne, fin = false, avantQuiz = false) => `<aside class="app${fin ? " fin" : ""}"${avantQuiz ? " data-avant-quiz" : ""}><span class="ico" aria-hidden="true">${t.icone}</span><div>
 <strong>${esc(t.titre)}</strong><p>${esc(t.texte)}</p><a class="btn" href="${lien(t.cible, `${t.id}-${position}`, campagne)}">${esc(t.bouton)}</a>${
   t.mention ? `<small><a href="${esc(t.mention.lien)}">${esc(t.mention.texte)}</a></small>` : ""}</div></aside>`;
 
@@ -157,6 +159,9 @@ export function themesArticle(a) {
   const reste = THEMES.filter(t => !choisis.includes(t));
   let h = [...a.slug].reduce((n, c) => (n * 31 + c.charCodeAt(0)) >>> 0, 7);
   while (choisis.length < 3 && reste.length) { choisis.push(reste.splice(h % reste.length, 1)[0]); h = Math.floor(h / 7); }
+  // Le quiz d'hiver en 1er (place après « En bref ») : la question de la semaine le remplace pendant la ligue
+  const quiz = choisis.findIndex(t => t.id === "quiz");
+  if (quiz > 0) choisis.unshift(choisis.splice(quiz, 1)[0]);
   return choisis.slice(0, 3);
 }
 
@@ -173,7 +178,8 @@ export function decouper(html) {
 
 function avecEncarts(html, [haut, milieu], campagne) {
   const [debut, suite, fin] = decouper(html);
-  return debut + encart(haut, "haut", campagne) + suite + (fin === undefined ? "" : encart(milieu, "milieu", campagne) + fin);
+  const quiz = blocQuiz({ lienJouer: lien("/signup", "quiz-question", campagne), url: SUPABASE_URL, anon: SUPABASE_ANON, page: campagne });
+  return debut + encart(haut, "haut", campagne, false, true) + quiz + suite + (fin === undefined ? "" : encart(milieu, "milieu", campagne) + fin);
 }
 
 // Encadré « Le matériel conseillé » : catégories du catalogue listées dans l'en-tête de l'article
@@ -211,7 +217,7 @@ export function articlePage(a, autres, produits = {}) {
 ${bandeau(a.slug)}${a.image ? `<img class="hero" src="${esc(a.image)}" alt="${esc(a.image_alt)}" width="1200" height="800" fetchpriority="high" />` : ""}
 ${avecEncarts(a.html, themes, a.slug)}</article>${encartPro(a.slug)}${encadreProduits(a.produits ? a.produits.split(",").map(x => x.trim()) : [], produits, a.slug)}${encart(themes[2], "fin", a.slug, true)}${lies}`;
   return page({ title: `${a.title} — Mongazon360®`, description: a.description, path, ogType: "article", jsonLd, body, campagne: a.slug, image,
-    style: TROUVER_UN_PRO.articles[a.slug] ? CSS_PRO : "" });
+    style: CSS_QUIZ + (TROUVER_UN_PRO.articles[a.slug] ? CSS_PRO : "") });
 }
 
 // Page « Qui sommes-nous » (content/a-propos.md) : qui édite Mongazon360 et d'où viennent ses conseils
