@@ -77,6 +77,7 @@ const TUTOIEMENT = [
   [mot("Mesurez votre hauteur réelle"), "Mesure ta hauteur réelle"],
   [mot("surveillez-la"), "surveille-la"],
   [mot("retirez"), "retire"],
+  [mot("corrigez"), "corrige"],
   [mot("soulevez"), "soulève"],
   [mot("regardez"), "regarde"],
   [mot("ne marchez pas"), "ne marche pas"],
