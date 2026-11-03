@@ -28,15 +28,17 @@ async function jeton(portee = LECTURE) {
 
 // Position moyenne, clics et affichages de toutes nos pages, par mois, sur les 16 derniers mois (limite de la
 // Search Console). La position du mois est la moyenne des positions quotidiennes pondérée par les affichages,
-// comme le calcule la Search Console ; les 2 derniers jours, encore incomplets, sont exclus.
+// comme le calcule la Search Console. Chiffres frais compris (dataState « all ») : les chiffres définitifs ont 2 à 3 jours
+// de retard, et le mois en cours n'apparaissait pas avant le 3 ou le 4 (constat de Jordan du 3/11/2026) ; il apparaît
+// maintenant dès ses premiers jours, provisoire.
 async function positionsParMois() {
   const token = await jeton();
   const jour = (d) => d.toISOString().slice(0, 10);
-  const fin = new Date(Date.now() - 2 * 86400000);
+  const fin = new Date();
   const debut = new Date(Date.UTC(fin.getUTCFullYear(), fin.getUTCMonth() - 15, 1));
   const res = await fetch(`https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(SITE)}/searchAnalytics/query`, {
     method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ startDate: jour(debut), endDate: jour(fin), dimensions: ["date"], rowLimit: 1000 }) });
+    body: JSON.stringify({ startDate: jour(debut), endDate: jour(fin), dimensions: ["date"], rowLimit: 1000, dataState: "all" }) });
   if (!res.ok) throw new Error(`[gsc] lecture refusée (${res.status})`);
   const parMois = {};
   for (const { keys: [date], clicks, impressions, position } of (await res.json()).rows ?? []) {
