@@ -883,4 +883,5 @@ du premier onglet).
   et par utilisateur, 2 000 par heure pour l'app). Proposé à Jordan : passer aux webhooks avant la mise en prod de Netatmo
   (une connexion faite avant le réglage du webhook est à refaire), dans api/objets.js sans nouvelle fonction Vercel, avec la
   lecture actuelle en secours ; test avec une vraie station. Leur guide donne partnerships@netatmo.com pour l'usage
-  commercial de l'API Météo (messages précédents envoyés à contact-api@, sans réponse) : ajouté aux relances de Jordan.
+  commercial de l'API Météo (messages précédents envoyés à contact-api@, sans réponse) : message envoyé par Jordan le 4/11,
+  réponse attendue avant le 30/11.
