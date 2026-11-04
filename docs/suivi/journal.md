@@ -867,3 +867,12 @@ du premier onglet).
 - 03/11/2026 — Pages Conseils de la STA : la variable Vercel VITE_SUPABASE_URL des préversions finit par un saut de ligne,
   ce qui cassait les scripts des pages statiques de la STA (mesure des visites, question de la semaine). La prod n'est pas
   touchée (variable propre). Valeurs nettoyées au build (scripts/conseils-template.mjs) ; rien à changer dans Vercel.
+- 04/11/2026 — Fiche Google Play à jour (décision de Jordan du 31/10, proposition 4) : 8 captures 1080 × 1920 de la version
+  en prod, sans métadonnées, chacune avec sa légende dans un bandeau vert (Aujourd'hui, diagnostic photo, Mon gazon, Bob,
+  ligue d'hiver, Conseils, équipements connectés, accueil) : écrans de l'app rendus avec le code de main et des données
+  d'exemple (comme dans l'app Android), page Conseils prise sur mongazon360.fr en visiteur. Textes prêts : nom (« Mongazon360 :
+  gazon et pelouse »), description courte et longue (gazon, pelouse, tonte, arrosage, engrais, mousse, robot tondeuse ;
+  seulement des fonctions en prod, d'après niveaux.json). « Choisir son niveau » remplacé par l'accueil, et ni prix ni offre
+  d'hiver dans la fiche : l'app Android ne propose pas l'achat de Premium, et Google Play interdit de renvoyer depuis la fiche
+  vers un paiement hors Google Play ; à revoir avec le paiement Google Play. Mise en ligne par Jordan (sa liste d'actions,
+  pour le 8/11) ; en février, capture et paragraphe de la ligue d'hiver à retirer.
