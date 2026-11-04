@@ -876,3 +876,11 @@ du premier onglet).
   d'hiver dans la fiche : l'app Android ne propose pas l'achat de Premium, et Google Play interdit de renvoyer depuis la fiche
   vers un paiement hors Google Play ; à revoir avec le paiement Google Play. Mise en ligne par Jordan (sa liste d'actions,
   pour le 8/11) ; en février, capture et paragraphe de la ligue d'hiver à retirer.
+- 04/11/2026 — Email de l'équipe API de Netatmo (transmis par Jordan) : webhooks disponibles, stations météo comprises
+  (read_station), et baisse des limites de lecture prévue le 1/03/2027 pour les apps qui interrogent l'API (chiffres
+  annoncés plus tard ; rien ne change d'ici là). Pas d'impact aujourd'hui : la station Netatmo est sur STA seulement
+  (accord écrit attendu) et l'app lit une station au plus toutes les 10 minutes (limites actuelles : 500 requêtes par heure
+  et par utilisateur, 2 000 par heure pour l'app). Proposé à Jordan : passer aux webhooks avant la mise en prod de Netatmo
+  (une connexion faite avant le réglage du webhook est à refaire), dans api/objets.js sans nouvelle fonction Vercel, avec la
+  lecture actuelle en secours ; test avec une vraie station. Leur guide donne partnerships@netatmo.com pour l'usage
+  commercial de l'API Météo (messages précédents envoyés à contact-api@, sans réponse) : ajouté aux relances de Jordan.
