@@ -884,4 +884,5 @@ du premier onglet).
   (une connexion faite avant le réglage du webhook est à refaire), dans api/objets.js sans nouvelle fonction Vercel, avec la
   lecture actuelle en secours ; test avec une vraie station. Leur guide donne partnerships@netatmo.com pour l'usage
   commercial de l'API Météo (messages précédents envoyés à contact-api@, sans réponse) : message envoyé par Jordan le 4/11,
-  réponse attendue avant le 30/11.
+  réponse attendue avant le 30/11. Décision de Jordan : webhooks seulement après l'accord de Netatmo (pas de travail
+  inutile), alors faits avant la mise en prod de la station.
