@@ -886,3 +886,6 @@ du premier onglet).
   commercial de l'API Météo (messages précédents envoyés à contact-api@, sans réponse) : message envoyé par Jordan le 4/11,
   réponse attendue avant le 30/11. Décision de Jordan : webhooks seulement après l'accord de Netatmo (pas de travail
   inutile), alors faits avant la mise en prod de la station.
+- 05/11/2026 — Publication automatique contrôlée sur la PROD : les 3 premières publications du lot du 1/11 (dimanche 8 h,
+  lundi et mercredi 16 h 30) sont publiées sur Facebook et Instagram à l'heure prévue, toutes avec un lien d'article, sans
+  erreur : pas de limite de liens de Meta au-delà de 2 par mois. Celle du vendredi 6/11 est validée, en attente.
