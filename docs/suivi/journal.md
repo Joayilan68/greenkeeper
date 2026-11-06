@@ -889,3 +889,10 @@ du premier onglet).
 - 05/11/2026 — Publication automatique contrôlée sur la PROD : les 3 premières publications du lot du 1/11 (dimanche 8 h,
   lundi et mercredi 16 h 30) sont publiées sur Facebook et Instagram à l'heure prévue, toutes avec un lien d'article, sans
   erreur : pas de limite de liens de Meta au-delà de 2 par mois. Celle du vendredi 6/11 est validée, en attente.
+- 06/11/2026 — Visites, question de Jordan (des robots dans les visites ?). Vérifié sur 21 jours : les visites venues de
+  Google concordent avec les clics de la Search Console (132 pour 128), mais des robots passaient le filtre : fichiers
+  techniques (/ads.txt, /app-ads.txt, /sitemap.xml, servis par l'app) et pages légales ouvertes en arrivant (surtout la
+  politique de confidentialité, sur ordinateur, souvent la nuit) ; rafales de visites à la minute des publications Facebook
+  (doute, gardées). Décision de Jordan : ces pages ne comptent plus (prod, main 2b0ff6a, fusionné dans Staging) et
+  l'historique est nettoyé dans la base PROD (85 lignes depuis le 9/9, effacées par Jordan dans Supabase : 445 visites
+  sur 30 jours au lieu de 480) ; pas de mesure « article lu ». CLAUDE.md (Mesure de la refonte).
