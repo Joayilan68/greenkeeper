@@ -1,9 +1,9 @@
 ---
-title: Chaux pour pelouse : quelle chaux, quand et quelle dose ?
-description: Chaux sur le gazon : mesurez d'abord le pH. Sous 6, quelle chaux choisir, quand l'épandre, combien par m² et comment, sans brûler l'herbe.
+title: Chaux pour pelouse et sol acide : quelle chaux, quand et quelle dose ?
+description: Sol acide ? Mesurez le pH de votre pelouse : sous 6, quelle chaux choisir, quand l'épandre, combien par m² et comment, sans brûler l'herbe.
 saison: automne
 date: 2026-09-25
-maj: 2026-11-03
+maj: 2026-11-06
 produits: chaulage
 ---
 

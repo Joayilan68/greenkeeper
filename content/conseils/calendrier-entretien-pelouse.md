@@ -97,7 +97,7 @@ Le sol est encore chaud, les pluies reviennent : le gazon répare vite tout ce q
 
 ## Décembre : repos
 
-Ni tonte ni engrais azoté. On ramasse les dernières feuilles et on évite de marcher sur le gazon gelé.
+Ni tonte ni engrais azoté. On ramasse les dernières feuilles et on évite de marcher sur le gazon gelé. Le détail : [que faire sur la pelouse en décembre](/conseils/pelouse-en-decembre).
 
 ## Adapter le calendrier à votre région
 
