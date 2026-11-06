@@ -157,7 +157,8 @@
 
 ## Mesure de la refonte (décisions de Jordan du 28/10/2026)
 - 4 indicateurs, en volume et en taux, avant (2/10→31/10) et après le 1/11 : visites (visiteurs non connectés, 1 par appareil
-  et par jour, `site_visits`) → entrées dans l'app (diagnostic d'essai, création de compte, démo avant le 1/11 : `page_view`
+  et par jour, `site_visits`, sans les fichiers techniques ni les pages légales ouvertes en arrivant : robots, retirés aussi de
+  l'historique le 6/11/2026) → entrées dans l'app (diagnostic d'essai, création de compte, démo avant le 1/11 : `page_view`
   des visiteurs dans `funnel_events`, mesuré depuis le 9/10) → inscriptions gratuites (premier jour d'un compte dans
   `daily_active_users`, admins exclus) → abonnements Premium payants (`premium_souscrit`, écrit dans `funnel_events` par le
   webhook Stripe depuis la mise en prod de la refonte ; avant : chiffre de Pilotage → Finances). En plus : vues de « Choisir
