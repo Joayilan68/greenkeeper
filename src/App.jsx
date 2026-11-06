@@ -1,7 +1,7 @@
 // src/App.jsx
 import { useEffect, lazy, Suspense } from "react";
 import { SignedIn, SignedOut, RedirectToSignIn, useUser, useAuth } from "@clerk/clerk-react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Analytics } from "@vercel/analytics/react";
 import Dashboard from "./pages/Dashboard";
 import Diagnostic from "./pages/Diagnostic";
@@ -67,8 +67,12 @@ async function pingPresence(userId) {
 // Écrit directement en base via la clé anon (pas d'endpoint → reste sous le
 // plafond des 12 fonctions Vercel). Garde localStorage = 1 visite/jour/appareil.
 // Compte TOUS les visiteurs, y compris non connectés (landing) → vraie "visite".
+// Pas de visite sur un fichier technique (/ads.txt, /app-ads.txt… servis par l'app au lieu d'une erreur) ni sur une page
+// légale ouverte en arrivant (vérifications automatiques de Google Play, Meta…) : robots relevés le 6/11/2026 ; la visite
+// est comptée sur la page suivante du site, s'il y en a une.
+const PAGES_NON_COMPTEES = /\.[a-z0-9]+$|^\/(confidentialite|cookies|cgu|cgv|mentions-legales)\/?$/i;
 function pingVisit() {
-  if (isRobot()) return;
+  if (isRobot() || PAGES_NON_COMPTEES.test(location.pathname)) return;
   try {
     const today = new Date().toLocaleDateString("fr-CA"); // YYYY-MM-DD
     const key   = `mg360_visit_${today}`;
@@ -103,11 +107,12 @@ function AppWithWeather({ children }) {
   // dans "Actifs aujourd'hui" → on ne les compte pas deux fois.
   const { user: visitUser, isLoaded: visitLoaded } = useUser();
   const { getToken } = useAuth();
+  const { pathname: pageVisite } = useLocation();
   useEffect(() => {
     if (!visitLoaded) return; // attendre Clerk pour connaître l'état de connexion
     if (visitUser) return;    // connecté → c'est un "actif", pas un prospect
-    pingVisit();              // visiteur anonyme = prospect arrivé sur la landing
-  }, [visitLoaded, visitUser]);
+    pingVisit();              // visiteur anonyme = prospect (1 visite par jour : les pages suivantes ne recomptent pas)
+  }, [visitLoaded, visitUser, pageVisite]);
 
   // Suivi d'entonnoir : bas de tunnel — l'inscription vient d'aboutir.
   // On détecte un compte "tout neuf" (créé il y a < 10 min) une seule fois.
