@@ -896,3 +896,9 @@ du premier onglet).
   (doute, gardées). Décision de Jordan : ces pages ne comptent plus (prod, main 2b0ff6a, fusionné dans Staging) et
   l'historique est nettoyé dans la base PROD (85 lignes depuis le 9/9, effacées par Jordan dans Supabase : 445 visites
   sur 30 jours au lieu de 480) ; pas de mesure « article lu ». CLAUDE.md (Mesure de la refonte).
+- 06/11/2026 — Article d'hiver du vendredi en prod (main f3aa15b) : « Pelouse en décembre : que faire, que ne pas faire ? »
+  (repos du gazon, gestes utiles, erreurs à éviter, signes à surveiller, questions fréquentes ; tout tiré de la base),
+  épingle Pinterest, lien depuis le calendrier d'entretien. Sujets 2 à 4 de la liste déjà traités par des articles existants
+  (pH et sol acide dans « Chaux pour pelouse », fusariose, tonte en hiver) : « Chaux pour pelouse » vise aussi les
+  recherches « sol acide » et « pH pelouse » (titre et description). Catalogue de la page « Réponses de groupe » régénéré
+  (48 articles ; « notez » ajouté au tutoiement).
