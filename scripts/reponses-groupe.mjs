@@ -78,6 +78,7 @@ const TUTOIEMENT = [
   [mot("surveillez-la"), "surveille-la"],
   [mot("retirez"), "retire"],
   [mot("corrigez"), "corrige"],
+  [mot("notez"), "note"],
   [mot("soulevez"), "soulève"],
   [mot("regardez"), "regarde"],
   [mot("ne marchez pas"), "ne marche pas"],
