@@ -3,6 +3,7 @@
 import { readFileSync } from "node:fs";
 import { ROBOT_UA } from "../src/lib/platform.js";
 import { RESEAUX } from "../src/lib/reseaux.js";
+import { blocQuiz, CSS_QUIZ } from "./quizArticle.mjs";
 const SITE = "https://mongazon360.fr";
 export const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 
@@ -39,8 +40,10 @@ const essai = (campagne) => `/essai?utm_source=conseils&amp;utm_medium=article&a
 //    (sessionStorage « mg360_visite ») : relie la lecture d'un article à l'entrée dans l'app au cours de la même visite ;
 // 3. visite comptée dans site_visits (1 par appareil et par jour, clé partagée avec l'app, comptes
 //    connectés et robots exclus) si l'URL et la clé publique Supabase sont fournies au build.
-const SUPABASE_URL  = process.env.VITE_SUPABASE_URL || "";
-const SUPABASE_ANON = process.env.VITE_SUPABASE_ANON_KEY || "";
+// Valeurs nettoyées : un saut de ligne en fin de variable Vercel (constaté le 3/11/2026 sur les préversions) casserait les
+// scripts des pages
+const SUPABASE_URL  = (process.env.VITE_SUPABASE_URL || "").trim();
+const SUPABASE_ANON = (process.env.VITE_SUPABASE_ANON_KEY || "").trim();
 if (!SUPABASE_URL || !SUPABASE_ANON) console.warn("[seo] Supabase non configuré : visites des pages Conseils non comptées");
 
 const suivi = (campagne) => `<script>(function(){try{
@@ -126,6 +129,15 @@ function encadreProduits(cles, produits, campagne) {
 <small>Liens partenaires Amazon : en tant que Partenaire Amazon, Mongazon360® perçoit une commission sur les achats éligibles, sans surcoût pour vous. Prix indicatifs.</small></div>`;
 }
 
+// La question de la semaine du quiz d'hiver juste après « En bref » (scripts/quizArticle.mjs), avec le lien de création
+// de compte balisé encart=quiz-question
+function avecQuiz(html, campagne) {
+  const bref = html.search(/<blockquote>\s*<p><strong>En bref<\/strong>/);
+  const apres = bref >= 0 ? html.indexOf("</blockquote>", bref) + "</blockquote>".length : html.indexOf("</p>") + 4;
+  const jouer = `/signup?encart=quiz-question&amp;utm_source=conseils&amp;utm_medium=article&amp;utm_campaign=${campagne}`;
+  return html.slice(0, apres) + blocQuiz({ lienJouer: jouer, url: SUPABASE_URL, anon: SUPABASE_ANON, page: campagne }) + html.slice(apres);
+}
+
 // Photo d'article (en-tête « image » et « image_alt ») : public/images/conseils, 1200 × 800 px, sans métadonnées
 export function articlePage(a, autres, produits = {}) {
   const path = `/conseils/${a.slug}`;
@@ -145,8 +157,9 @@ export function articlePage(a, autres, produits = {}) {
   const body = `<div class="crumb"><a href="/">Accueil</a> › <a href="/conseils">Conseils gazon</a></div>
 <article><h1>${esc(a.title)}</h1><div class="meta">${SAISONS[a.saison] || ""} · Mis à jour le ${frDate(a.maj || a.date)} · Par <a href="/a-propos">l'équipe Mongazon360</a></div>
 ${a.image ? `<img class="hero" src="${esc(a.image)}" alt="${esc(a.image_alt)}" width="1200" height="800" fetchpriority="high" />` : ""}
-${a.html}</article>${encadreProduits(a.produits ? a.produits.split(",").map(x => x.trim()) : [], produits, a.slug)}${cta(a.slug)}${lies}`;
-  return page({ title: `${a.title} — Mongazon360®`, description: a.description, path, ogType: "article", jsonLd, body, campagne: a.slug, image });
+${avecQuiz(a.html, a.slug)}</article>${encadreProduits(a.produits ? a.produits.split(",").map(x => x.trim()) : [], produits, a.slug)}${cta(a.slug)}${lies}`;
+  return page({ title: `${a.title} — Mongazon360®`, description: a.description, path, ogType: "article", jsonLd, body, campagne: a.slug, image,
+    style: CSS_QUIZ });
 }
 
 // Page « Qui sommes-nous » (content/a-propos.md) : qui édite Mongazon360 et d'où viennent ses conseils

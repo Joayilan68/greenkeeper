@@ -113,6 +113,11 @@
   devant compte gratuit, puis compte le plus ancien ; gagnant désigné au plus tard le 7/02 et prévenu par email au plus
   tard le 10/02 ; comptes de test et admins exclus (`compteExclu`, `api/auth.cjs`). Suivi et plus assidus : Pilotage → Activité. Remise :
   Premium offert 12 mois (Pilotage → Finances), ou, s'il est déjà abonné, coupon Stripe à 100 % sur ses 12 prochains mois.
+- Quiz pour les visiteurs (décision de Jordan du 3/11/2026) : dans chaque article Conseils, après « En bref », la question 1
+  du quiz de la semaine et ses 3 choix, jamais la réponse ni l'explication dans la page (`scripts/quizArticle.mjs`, semaine
+  calculée dans la page) ; après la réponse, invitation à créer un compte (lien `encart=quiz-question`, réponse comptée dans
+  `funnel_events`, étape `quiz_question`) ; l'encart après « En bref » lui laisse sa place pendant la ligue. Carte « Et cette
+  semaine : le quiz d'hiver » sous le résultat du diagnostic d'essai. En prod le 7/11/2026 (exception, après le test de Jordan sur STA).
 
 ## Offres et Premium offerts
 - Premium offert (famille, bêta…) : règle unique `api/premium.cjs` (date de fin incluse, vide = à vie), gestion
