@@ -939,3 +939,7 @@ du premier onglet).
   « IA » vérifiés dans le code de la prod. Recette « Déjà en prod » : n° 48 à 65, 67 et 68 cochés OK ; restent n° 66
   (premier abonnement payant), 72 (carte du lundi), 74 (série, le lendemain) et 75 (première réponse d'un visiteur).
   Nouvelle fiche Google Play approuvée par Google et publiée par Jordan (publication gérée activée).
+- 07/11/2026 — Carte « Parcours d'acquisition » de Pilotage (n° 72) : capture de Jordan identique au recalcul dans la base
+  PROD (466 visites dont 339 sur les articles, 60 entrées dans l'app, 3 inscriptions hors comptes admins et de test, 0
+  abonnement ; 0,6 % visite → inscription pour un objectif de 3 %). Recette « Déjà en prod » : tous les tests de Jordan
+  sont faits ; restent n° 66, 74 et 75, à constater dans les faits.
