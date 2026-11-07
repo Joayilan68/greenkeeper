@@ -130,6 +130,13 @@
   diagnostic d'essai, articles de saison ; barre visiteur Accueil, Conseils, Diagnostic, Compte (aussi sur l'essai du
   diagnostic, la création de compte et la connexion).
 
+## Série
+- Décision de Jordan du 1/11/2026 : la série compte les jours d'utilisation consécutifs, calculés par la base
+  (`compter_jour_serie()`, date de Paris, colonne `streaks.dernier_jour`), la même sur tous les appareils, jamais gardée dans le
+  navigateur ; comptée à l'ouverture de l'Accueil ou d'Aujourd'hui (`src/lib/useStreak.js`) ; quotidienne toute l'année, sans
+  protection d'hiver : un jour manqué la remet à zéro. L'app lit seulement sa ligne `streaks` ; seule la fonction l'écrit.
+  En prod le 7/11/2026 (correctif, go de Jordan du 7/11).
+
 ## Équipements connectés
 - Table `equipements` (serveur uniquement, RLS sans politique) via `api/objets.js` ; logique et connecteurs dans
   `api/equipements.cjs`. Clés d'accès des utilisateurs chiffrées (AES-256-GCM) avec la variable Vercel
