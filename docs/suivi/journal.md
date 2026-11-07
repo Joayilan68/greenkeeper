@@ -964,3 +964,13 @@ du premier onglet).
   d'usage commercial : leur équipe y travaille, délai plus long que d'habitude (beaucoup de demandes), nouvelles « dès que
   possible », sans date. Pas de relance avant le 18/11 (deux semaines après) ; relance prête pour Jordan (sortie de début
   décembre, autorisation demandée avant le 1/12). Le connecteur reste sur STA (pas de mise en prod sans l'autorisation écrite).
+- 07/11/2026 — Langues étrangères (question de Jordan : allemand, anglais, néerlandais et flamand) : faisable ; plan
+  détaillé préparé pour Jordan (doc privée « Mongazon360 en néerlandais, allemand et anglais : plan »). Cible de l'anglais
+  choisie par Jordan : les anglophones qui vivent en Europe (pas le Royaume-Uni). Ordre proposé : anglais, pays
+  francophones voisins (sans traduction), néerlandais (Flandre et Pays-Bas, une seule traduction), allemand ; rien dans le
+  code avant la prod de décembre ; préparation sur STA en janvier et février, décision au bilan du 15/02, mise en ligne fin
+  février ou début mars, allemand mi-avril ou fin août. Constats : tout le texte est écrit en français dans le code
+  (environ 37 000 mots hors articles) ; météo et recherche de commune déjà valables partout ; une commune hors de France est
+  déjà acceptée et reçoit la zone française qui lui correspond sur la carte (Bruxelles → Nord, mais Montréal → Ouest) ;
+  mongazon360.com appartient déjà à Mongazon360 (redirigé vers le .fr) ; paiement par carte seulement. Décisions de Jordan
+  attendues avant le 15/12 (go pour janvier, pays, adresse, ton, budget, date de l'allemand).
