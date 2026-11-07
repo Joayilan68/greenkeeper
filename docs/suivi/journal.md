@@ -960,3 +960,7 @@ du premier onglet).
   emails (8 sur 136 depuis le 23/10), aucun plantage depuis le 26/10, règlement de la ligue, textes sans « IA ») ; restent
   18 lignes (écrans à regarder par Jordan, ou faits à constater : 1er abonnement, série, quiz des visiteurs, notifications de
   la ligue). Constat principal : aucune notification de la ligue en semaine 1, corrigé le soir même (n° 76).
+- 07/11/2026 — Mammotion : nouvelle réponse d'attente du support (Fay, mercredi 4/11) à la demande d'autorisation écrite
+  d'usage commercial : leur équipe y travaille, délai plus long que d'habitude (beaucoup de demandes), nouvelles « dès que
+  possible », sans date. Pas de relance avant le 18/11 (deux semaines après) ; relance prête pour Jordan (sortie de début
+  décembre, autorisation demandée avant le 1/12). Le connecteur reste sur STA (pas de mise en prod sans l'autorisation écrite).
