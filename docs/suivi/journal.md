@@ -954,3 +954,9 @@ du premier onglet).
   semaine passe avant toute autre notification du matin, gel compris (l'alerte part alors le soir), le défi avant les
   conseils de saison. Correctif en prod le 7/11 au soir (main 7757db4), fusionné dans Staging ; bancs au vert (17 + 14).
   Recette « Déjà en prod » : n° 39 KO (constat), n° 76 (correctif) à constater le dimanche 8/11.
+- 07/11/2026 — Recette « Déjà en prod » : 22 anciennes lignes vérifiées par Claude dans la base PROD, en ligne et dans le code
+  de la prod et cochées OK (démarrage J+1 à J+6 sans message après un retour, mesures des pages et tuiles, 48 articles et 48
+  épingles en ligne, réglages de référencement, liens des réseaux, source Pinterest, Bob, lots et publications, clics des
+  emails (8 sur 136 depuis le 23/10), aucun plantage depuis le 26/10, règlement de la ligue, textes sans « IA ») ; restent
+  18 lignes (écrans à regarder par Jordan, ou faits à constater : 1er abonnement, série, quiz des visiteurs, notifications de
+  la ligue). Constat principal : aucune notification de la ligue en semaine 1, corrigé le soir même (n° 76).
