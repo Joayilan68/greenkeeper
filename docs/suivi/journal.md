@@ -974,3 +974,8 @@ du premier onglet).
   déjà acceptée et reçoit la zone française qui lui correspond sur la carte (Bruxelles → Nord, mais Montréal → Ouest) ;
   mongazon360.com appartient déjà à Mongazon360 (redirigé vers le .fr) ; paiement par carte seulement. Décisions de Jordan
   attendues avant le 15/12 (go pour janvier, pays, adresse, ton, budget, date de l'allemand).
+- 07/11/2026 — Langues étrangères, décisions de Jordan : go pour janvier (fondations et anglais sur STA, rien de visible en
+  prod avant son go) ; pays couverts : France, Belgique, Luxembourg, Suisse, Pays-Bas, Irlande, puis Allemagne et Autriche
+  (ni Royaume-Uni ni Europe du Sud). Restent à décider : adresse mongazon360.com, ton en néerlandais et en allemand, budget
+  de relecture et de pub, date de l'allemand ; question TVA au comptable. Proposition de zones pour la base de
+  connaissances à soumettre à Jordan mi-décembre, avant tout code.
