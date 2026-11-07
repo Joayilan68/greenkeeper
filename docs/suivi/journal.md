@@ -926,7 +926,7 @@ du premier onglet).
   couverture lues par Meta sur mongazon360.fr) ; statut « traitement » tant que Meta traite la vidéo (fin au passage
   suivant) ; « Tester la connexion Meta » essaie aussi la vidéo du prochain Reel sans rien publier. Base PROD et STA :
   colonnes video et instagram_conteneur, statut « traitement » (migration publications_reels). Banc au vert : 26
-  contrôles (Meta et base simulés). Vidéo du 15/11 (semaine 3) en ligne et ajoutée au lot du 15/11 à 11 h (à valider) ;
+  contrôles (Meta et base simulés). Vidéo du 15/11 (semaine 3) en ligne et ajoutée au lot du 15/11 à 9 h (à valider ; heure choisie par Jordan le 7/11) ;
   celle du 8/11 est programmée par Jordan dans Meta Business Suite à 9 h (heure de Paris ; 11 h le 1/11, à noter pour
   le bilan du 23/11). Tâche du samedi mise à jour (vidéo dans le lot si
   Jordan continue après le bilan du 23/11 ; vidéos retirées du dépôt après leur publication, pour le stockage de Vercel).
