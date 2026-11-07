@@ -390,7 +390,7 @@ async function handlePublications(req, res) {
   try {
     if (req.method === "POST") {
       try {
-        if (req.body?.action === "tester") return res.json({ success: true, compte: await R.testerMeta(), publications: await R.listePublications(sb) });
+        if (req.body?.action === "tester") return res.json({ success: true, compte: await R.testerMeta(sb), publications: await R.listePublications(sb) });
         await R.actionPublication(sb, req.body || {});
       } catch (e) { if (e.code) throw e; return res.status(400).json({ success: false, error: e.message }); }
     }

@@ -66,7 +66,11 @@
 - Publication automatique des lots (`api/reseaux.cjs`, go prod de Jordan du 18/10/2026) : lot inséré dans la table
   `publications` de la PROD (serveur uniquement, RLS sans politique ; colonne `heure` = heure de Paris), visuels JPEG poussés
   sur `main` dans `public/images/reseaux/<lot>/` (lus par Meta sur mongazon360.fr, retirés 3 semaines après) ; Jordan valide
-  dans Pilotage → Réseaux. Publication à l'heure prévue par `POST /api/send?type=publications`, appelé toutes les 15 min par
+  dans Pilotage → Réseaux. Vidéo (demande de Jordan du 7/11/2026) : colonne `video` (MP4 1080 × 1920 au format des Reels de
+  Meta, dans le même dossier, retiré le samedi qui suit sa publication pour le stockage de Vercel), `visuel` = couverture ;
+  publiée en Reel sur Facebook et Instagram ; pendant le traitement de la vidéo par Meta, statut `traitement`, publication
+  terminée à un passage suivant. « Tester la connexion Meta » essaie aussi la vidéo du prochain Reel (brouillon Facebook
+  supprimé, conteneur Instagram jamais publié). Publication à l'heure prévue par `POST /api/send?type=publications`, appelé toutes les 15 min par
   pg_cron (Supabase PROD, tâche `mongazon360-publications-reseaux`, extension pg_net), tâches planifiées de Vercel en
   secours ; jour passé : plus publiée ; une publication n'est jamais publiée deux fois (statut `en_cours`). Graph API v26.0.
   Clé dans la variable Vercel `META_PAGE_TOKEN` (Sensitive, Production et Preview) : jeton sans expiration de l'utilisateur système
