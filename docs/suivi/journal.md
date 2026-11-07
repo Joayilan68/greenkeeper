@@ -930,3 +930,6 @@ du premier onglet).
   celle du 8/11 est programmée par Jordan dans Meta Business Suite à 9 h (heure de Paris ; 11 h le 1/11, à noter pour
   le bilan du 23/11). Tâche du samedi mise à jour (vidéo dans le lot si
   Jordan continue après le bilan du 23/11 ; vidéos retirées du dépôt après leur publication, pour le stockage de Vercel).
+- 07/11/2026 — Tests de Jordan en prod sur son téléphone : partage du score et partage du quiz sur Facebook, message
+  copié puis collé dans la publication : OK (recette « Déjà en prod », n° 69 et 73). Rappel : Facebook n'accepte aucun
+  texte rempli par une appli, le message se colle à la main (le partage en image du 22/11 montrera le score sans collage).
