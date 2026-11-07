@@ -907,9 +907,9 @@ du premier onglet).
   dans « Jardinier à votre service » (« Jardinier paysagiste » refuse les nouveaux membres) ; relances API envoyées à Davis,
   Segway Navimow et Hunter ; Hunter (Hydrawise) répond seulement par son chat (lundi-vendredi, 17 h-minuit, heure de
   Paris ; message prêt) ; Mammotion : relance si leur dernier mail est celui du 30/10 ; 2 épingles Pinterest importées ;
-  demandes d'indexation faites ; statut de professionnel déclaré dans la Play Console (reste : « s'applique à l'app » dans
-  Contenu de l'application ; avant le paiement Google Play, compte et profil de paiement au nom de l'entreprise qui vend
-  Premium) ; fiche Google Play renvoyée avec les étapes détaillées (menu « Accroître le nombre d'utilisateurs »).
+  demandes d'indexation faites ; statut de professionnel déclaré dans la Play Console, pour le compte et pour l'app (en
+  cours d'examen chez Google ; avant le paiement Google Play, compte et profil de paiement au nom de l'entreprise qui vend
+  Premium) ; nouvelle fiche Google Play (nom, descriptions, 8 captures) envoyée pour examen par Jordan.
 - 07/11/2026 — Série en prod (correctif, go de Jordan) : main 197062b (code de la STA du 1/11, banc de l'app rejoué : 13
   contrôles) et a32bcbd (CLAUDE.md) ; base PROD verrouillée comme la STA (politique streaks_lecture : l'app lit sa ligne,
   seule compter_jour_serie() l'écrit ; migration serie_lecture_seule_app). Les séries d'avant reprennent depuis
