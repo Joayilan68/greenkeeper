@@ -921,3 +921,11 @@ du premier onglet).
   16:9 pour une publication) ; elle se publie par « Créer un reel ». Vidéos des 8 et 15/11 refaites au format exigé par
   Meta pour les Reels (aussi par l'API : H.264 4:2:0 BT.709 sans images B, AAC 48 kHz, moov en tête, sans liste
   d'édition). Demande de Jordan : publication automatique des vidéos sur Facebook et Instagram (en préparation, cible 15/11).
+- 07/11/2026 — Publication automatique des vidéos (Reels) sur Facebook et Instagram, demande de Jordan (prod, main 2f0e427) :
+  une publication avec une vidéo (colonne video, visuel = couverture) part en Reel sur la page et sur Instagram (vidéo et
+  couverture lues par Meta sur mongazon360.fr) ; statut « traitement » tant que Meta traite la vidéo (fin au passage
+  suivant) ; « Tester la connexion Meta » essaie aussi la vidéo du prochain Reel sans rien publier. Base PROD et STA :
+  colonnes video et instagram_conteneur, statut « traitement » (migration publications_reels). Banc au vert : 26
+  contrôles (Meta et base simulés). Vidéo du 15/11 (semaine 3) en ligne et ajoutée au lot du 15/11 à 11 h (à valider) ;
+  celle du 8/11 est programmée par Jordan dans Meta Business Suite. Tâche du samedi mise à jour (vidéo dans le lot si
+  Jordan continue après le bilan du 23/11 ; vidéos retirées du dépôt après leur publication, pour le stockage de Vercel).

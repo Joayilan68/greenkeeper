@@ -1,7 +1,8 @@
 // src/components/PublicationsCard.jsx
 // Pilotage → Réseaux : lots de comm Facebook et Instagram préparés chaque samedi (api/reseaux.cjs).
 // Jordan valide ou refuse chaque publication ; une publication validée part le jour et à l'heure prévus (heure de Paris) ;
-// jour passé : plus d'action possible. Test de la connexion Meta sans rien publier.
+// jour passé : plus d'action possible. Vidéo : publiée en Reel, couverture en aperçu. Test de la connexion Meta (et de la
+// vidéo du prochain Reel) sans rien publier.
 import { useState, useEffect } from "react";
 import { card, cardTitle } from "../lib/styles";
 
@@ -10,11 +11,12 @@ const vert = { ...small, background:"linear-gradient(135deg,#43a047,#2e7d32)", c
 const gris = { ...small, background:"rgba(255,255,255,0.08)", color:"#c8e6c9" };
 const STATUTS = {
   a_valider: { label:"À valider", color:"#f9a825" }, validee: { label:"Validée", color:"#90caf9" }, en_cours: { label:"En cours", color:"#90caf9" },
+  traitement: { label:"Vidéo en traitement", color:"#90caf9" },
   publiee: { label:"Publiée", color:"#66bb6a" }, refusee: { label:"Refusée", color:"#9e9e9e" }, erreur: { label:"Erreur", color:"#ef9a9a" },
 };
 const jour = (d) => new Date(`${d}T12:00:00`).toLocaleDateString("fr-FR", { weekday:"short", day:"numeric", month:"short" });
 const heure = (t) => { const [h, m] = t.split(":"); return `${+h} h${m === "00" ? "" : ` ${m}`}`; };
-// Visuel servi par le site lui-même (aperçu aussi visible sur STA)
+// Visuel et vidéo servis par le site lui-même (aperçu aussi visible sur STA)
 const apercu = (url) => url.replace(/^https:\/\/mongazon360\.fr(?=\/)/, "");
 
 export default function PublicationsCard({ getToken }) {
@@ -49,7 +51,10 @@ export default function PublicationsCard({ getToken }) {
 
   const tester = async () => {
     const d = await call({ action:"tester" });
-    if (d) setMsg(`✅ Connexion Meta valide : page ${d.compte.page}${d.compte.instagram ? ` et Instagram @${d.compte.instagram}` : ", mais aucun compte Instagram professionnel relié"}. Rien n'a été publié.`);
+    if (!d) return;
+    const v = d.compte.video;
+    setMsg(`✅ Connexion Meta valide : page ${d.compte.page}${d.compte.instagram ? ` et Instagram @${d.compte.instagram}` : ", mais aucun compte Instagram professionnel relié"}.${v
+      ? ` Vidéo « ${v.titre} » (${jour(v.jour)}) acceptée par Facebook${d.compte.instagram ? (v.instagram ? " et Instagram" : ", Instagram la traite encore") : ""}.` : ""} Rien n'a été publié.`);
   };
 
   const aujourdhui = new Date().toLocaleDateString("sv-SE", { timeZone:"Europe/Paris" });
@@ -85,6 +90,7 @@ export default function PublicationsCard({ getToken }) {
                       <span style={{ fontSize:11, fontWeight:700, color:s.color, whiteSpace:"nowrap" }}>{s.label}</span>
                     </div>
                     <div style={{ fontSize:13, fontWeight:700, color:"#e8f5e9" }}>{p.titre}</div>
+                    {p.video && <a href={apercu(p.video)} target="_blank" rel="noopener noreferrer" style={{ fontSize:11, color:"#a5d6a7" }}>🎬 Vidéo (Reel) : voir</a>}
                     {p.erreur && <div style={{ fontSize:11, color:"#ef9a9a" }}>⚠️ {p.erreur}</div>}
                     <details>
                       <summary style={{ fontSize:11, color:"#a5d6a7", cursor:"pointer" }}>Voir les textes</summary>
