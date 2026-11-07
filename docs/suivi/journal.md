@@ -949,3 +949,8 @@ du premier onglet).
   gratuit utilisé), puis « Diagnostiquer ma pelouse » et « Créer mon compte gratuit » ; mesure anon_diag_exemple. Sur STA le
   7/11, banc au vert (12 contrôles), prod le 22/11 avec le chantier (recette décembre n° 68). Brief quotidien « Prometheus »
   arrêté à la demande de Jordan (tâche désactivée).
+- 07/11/2026 — Ligue d'hiver : aucune notification de la ligue partie en semaine 1 (niveau 5 : chaque matin, un conseil de
+  saison, ou pour 14 comptes l'alerte gel, prenait le seul créneau) ; 2 participants. Décision de Jordan : le quiz de la
+  semaine passe avant toute autre notification du matin, gel compris (l'alerte part alors le soir), le défi avant les
+  conseils de saison. Correctif en prod le 7/11 au soir (main 7757db4), fusionné dans Staging ; bancs au vert (17 + 14).
+  Recette « Déjà en prod » : n° 39 KO (constat), n° 76 (correctif) à constater le dimanche 8/11.

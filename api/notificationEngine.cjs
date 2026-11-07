@@ -11,8 +11,9 @@
 // de maladie, astuces de saison, anti-fatigue selon les jours sans visite.
 // Travaux d'hiver : feuilles, dernière tonte, purge de l'arrosage, pH (automne, onglet pH de la base), révision et 1re tonte
 // aux dates de la zone climatique (src/lib/zonesGazon.json, comme le compte à rebours du printemps).
-// Ligue d'hiver (api/ligueHiver.cjs) : quiz du dimanche et défi de la semaine au niveau 5, astuces « Le savais-tu ? » tirées
-// des quiz passés au niveau 6 — même rythme (une notification le matin au plus).
+// Ligue d'hiver (api/ligueHiver.cjs) : quiz de la semaine avant toute autre notification du matin, alerte urgente comprise,
+// défi de la semaine avant les conseils de saison (décision de Jordan du 7/11/2026), astuces « Le savais-tu ? » tirées des
+// quiz passés au niveau 6 — même rythme (une notification le matin au plus).
 // Annonces aux utilisateurs (src/lib/annonces.json) : une seule fois par compte, au niveau 4.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -323,26 +324,31 @@ function checkGamification(gami) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// NIVEAU 5 bis — Ligue d'hiver : quiz du dimanche tant qu'il n'est pas fait (dimanche, sinon les jours suivants), défi
-// de la semaine à partir du mercredi s'il n'est pas fait ; chacun une fois par semaine au plus. Matin.
+// Ligue d'hiver : quiz de la semaine tant qu'il n'est pas fait (dimanche, sinon les jours suivants), défi de la semaine à
+// partir du mercredi s'il n'est pas fait ; chacun une fois par semaine au plus, le matin. Décision de Jordan du 7/11/2026
+// (en niveau 5, ils ne partaient jamais : un conseil de saison ou une alerte gel prenait le créneau chaque matin) : le
+// quiz passe avant toute autre notification du matin, alerte urgente comprise (elle part alors au créneau du soir), sans
+// anti-fatigue ; le défi passe avant les conseils de saison (niveau 3), après les alertes urgentes et le parcours.
 // ─────────────────────────────────────────────────────────────────────────────
-function checkLigueHiver(ligue, today, notifLog) {
-  if (!ligue?.semaine) return null;
-  const h = (notifLog && Array.isArray(notifLog.history)) ? notifLog.history : [];
-  const envoyee = (type) => h.some(x => x.type === type && x.date >= ligue.debutSemaine);
+const ligueEnvoyee = (ligue, notifLog, type) =>
+  (Array.isArray(notifLog?.history) ? notifLog.history : []).some(x => x.type === type && x.date >= ligue.debutSemaine);
+
+function checkLigueQuiz(ligue, notifLog) {
+  if (!ligue?.semaine || ligue.quiz || ligueEnvoyee(ligue, notifLog, "ligue_quiz")) return null;
   const { programme: p, points } = ligue;
-  if (!ligue.quiz && !envoyee("ligue_quiz")) {
-    return { priority: 5, type: "ligue_quiz", url: "/classement",
-      title: `🧠 Quiz du dimanche : ${p.theme.toLowerCase()}`,
-      body: `${p.quiz[0].q} 3 questions, 1 minute : réponds dans l'onglet Quiz (${points.quiz} GreenPoints).` };
-  }
+  return { priority: 2, type: "ligue_quiz", url: "/classement",
+    title: `🧠 Quiz du dimanche : ${p.theme.toLowerCase()}`,
+    body: `${p.quiz[0].q} 3 questions, 1 minute : réponds dans l'onglet Quiz (${points.quiz} GreenPoints).` };
+}
+
+function checkLigueDefi(ligue, today, notifLog) {
+  if (!ligue?.semaine || ligue.defi || ligueEnvoyee(ligue, notifLog, "ligue_defi")) return null;
   const jour = new Date(Date.parse(today || new Date().toISOString().slice(0, 10))).getUTCDay();
-  if (jour >= 3 && !ligue.defi && !envoyee("ligue_defi")) {
-    return { priority: 5, type: "ligue_defi", url: "/classement",
-      title: `🎯 Défi de la semaine : ${p.defi.titre.charAt(0).toLowerCase()}${p.defi.titre.slice(1)}`,
-      body: `${p.defi.texte} ${points.defi} GreenPoints.` };
-  }
-  return null;
+  if (jour < 3) return null;
+  const { programme: p, points } = ligue;
+  return { priority: 3, type: "ligue_defi", url: "/classement",
+    title: `🎯 Défi de la semaine : ${p.defi.titre.charAt(0).toLowerCase()}${p.defi.titre.slice(1)}`,
+    body: `${p.defi.texte} ${points.defi} GreenPoints.` };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -503,6 +509,12 @@ function decideNotification(ctx) {
 
   const sent = sentTodayInfo(notifLog, today);
 
+  // ── Ligue d'hiver : le quiz de la semaine passe avant toute autre notification du matin (voir checkLigueQuiz) ──────
+  if (slot === "matin" && !sent.slots.includes("matin")) {
+    const quiz = checkLigueQuiz(ligue, notifLog);
+    if (quiz) return finalize(quiz, "matin");
+  }
+
   // ── Type de gazon : synthétique (pas de tonte, d'engrais ni d'arrosage) et bermuda en
   //    dormance hivernale (nov-mars : brun normal, aucune intervention) ─────────────────
   const synth   = isGazonSynth(profile);
@@ -554,6 +566,7 @@ function decideNotification(ctx) {
   if (fatigue === 2 && recentNonUrgent) return null;
 
   const candidates = [
+    ...(fatigue ? [] : [checkLigueDefi(ligue, today, notifLog)]), // 3 (défi de la ligue d'hiver, avant les autres niveaux 3)
     checkEntretienDu(profile, reminderPrefs, history, month, weather, today), // 3 (N08)
     checkMaladie(weather, profile, month, notifLog, today),   // 3 bis
     checkAnnonce(annonce, notifLog),                  // 4 (annonce aux utilisateurs, une seule fois)
@@ -561,7 +574,6 @@ function decideNotification(ctx) {
     checkTravauxHiver(profile, weather, month, notifLog, today), // 4 (travaux d'hiver)
     checkConseilMeteo(weather, profile, month),       // 4
     ...(fatigue ? [] : [
-      checkLigueHiver(ligue, today, notifLog),        // 5 (ligue d'hiver, avant la série)
       checkGamification(gami),                        // 5
       checkEducatif(today, month, ligue?.astuces),    // 6 (toujours dispo = filet ultime)
     ]),
