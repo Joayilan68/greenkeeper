@@ -2,6 +2,9 @@
 // Parcours PUBLIC « valeur d'abord » : un visiteur non connecté fait un
 // diagnostic gratuit, voit son score + un aperçu, puis s'inscrit pour débloquer
 // l'analyse complète (rattachée à son compte). Aucune inscription en amont.
+// Sans photo sous la main, il peut voir un exemple (décision de Jordan du 7/11/2026 : en hiver, les visiteurs ouvraient la
+// page sans prendre de photo) : notre pelouse et sa vraie analyse par Bob (src/lib/diagnosticExemple.json), en entier, sans
+// appel au serveur ni diagnostic gratuit utilisé ; mesuré dans funnel_events (étape anon_diag_exemple).
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAnonId, setAnonPending } from "../lib/anonId";
@@ -9,6 +12,7 @@ import { trackFunnel } from "../lib/funnel";
 import { periodeLigue } from "../lib/ligueHiver";
 import BarreVisiteur from "../components/BarreVisiteur";
 import ConfianceDiagnostic, { PhotoAReprendre } from "../components/ConfianceDiagnostic";
+import EXEMPLE from "../lib/diagnosticExemple.json";
 
 const G = {
   bg:     "linear-gradient(165deg,#0F2F1F 0%,#164a2b 45%,#0d2519 100%)",
@@ -51,9 +55,22 @@ const btnGhost = { background:"rgba(255,255,255,0.08)", border:"1px solid rgba(1
   color:"#e8f5e9", borderRadius:12, padding:"13px 18px", fontSize:14, fontWeight:700, cursor:"pointer",
   width:"100%", fontFamily:"inherit" };
 
+// Score Santé d'un diagnostic (résultat de l'essai et exemple)
+function CarteScore({ a }) {
+  const etatColor = ETAT_COLORS[a.etat_general] || G.muted;
+  return (
+    <div style={{ background:"linear-gradient(135deg,rgba(27,94,32,0.45),rgba(13,43,26,0.6))", border:`1px solid ${etatColor}55`, borderRadius:18, padding:22, textAlign:"center", marginBottom:14 }}>
+      <div style={{ fontSize:50, marginBottom:6 }}>{a.emoji}</div>
+      <div style={{ fontSize:38, fontWeight:900, color:etatColor, lineHeight:1 }}>{a.score_visuel}<span style={{ fontSize:18 }}>/100</span></div>
+      <div style={{ fontSize:14, fontWeight:800, color:etatColor, marginTop:4, textTransform:"capitalize" }}>{a.etat_general}</div>
+      <div style={{ fontSize:13, color:G.soft, lineHeight:1.6, fontStyle:"italic", marginTop:10 }}>« {a.resume} »</div>
+    </div>
+  );
+}
+
 export default function EssaiDiagnostic() {
   const navigate = useNavigate();
-  const [view, setView]       = useState("home");   // home | camera | reprendre | result | wall
+  const [view, setView]       = useState("home");   // home | exemple | camera | reprendre | result | wall
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState("");
   const [preview, setPreview] = useState(null);
@@ -79,6 +96,7 @@ export default function EssaiDiagnostic() {
     } catch (e) { setError(e.message || "Erreur lors du traitement de la photo"); }
   };
   const onInput = (e) => { handleFile(e.target.files[0]); e.target.value = ""; };
+  const voirExemple = () => { trackFunnel("anon_diag_exemple"); setView("exemple"); window.scrollTo(0, 0); };
 
   const analyze = async () => {
     if (!imageB64) return;
@@ -155,6 +173,7 @@ export default function EssaiDiagnostic() {
         <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
           <button onClick={() => fileRef.current.click()} style={btnPrimary}>📷 Prendre une photo</button>
           <button onClick={() => galleryRef.current.click()} style={btnGhost}>🖼️ Choisir depuis la galerie</button>
+          <button onClick={voirExemple} style={{ ...btnGhost, background:"none", borderStyle:"dashed" }}>👀 Essayer avec une photo d'exemple</button>
         </div>
       </div>
 
@@ -163,6 +182,41 @@ export default function EssaiDiagnostic() {
       </div>
     </Shell>
   );
+
+  // ── EXEMPLE : notre pelouse, analysée par Bob ──
+  if (view === "exemple") {
+    const a = EXEMPLE.analysis;
+    return (
+      <Shell>
+        {hidden}
+        <div style={{ fontSize:13, fontWeight:800, color:G.muted, textAlign:"center", marginBottom:10 }}>📋 Exemple : notre pelouse, analysée par Bob</div>
+        <div style={{ borderRadius:16, overflow:"hidden", marginBottom:14 }}>
+          <img src={EXEMPLE.photo} alt="Exemple : pelouse clairsemée photographiée pour le diagnostic" style={{ width:"100%", maxHeight:220, objectFit:"cover", display:"block" }} />
+        </div>
+        <CarteScore a={a} />
+        <ConfianceDiagnostic analysis={a} />
+        <div style={{ background:G.card, border:G.border, borderRadius:14, padding:16, marginBottom:14 }}>
+          <div style={{ fontWeight:800, fontSize:13.5, color:G.muted, marginBottom:8 }}>⚠️ {a.problemes.length} problèmes repérés, et quoi faire</div>
+          {a.problemes.map(p => (
+            <div key={p.nom} style={{ background:"rgba(255,152,0,0.12)", border:"1px solid rgba(255,152,0,0.3)", borderRadius:10, padding:"10px 12px", marginBottom:7 }}>
+              <div style={{ fontWeight:700, fontSize:13, color:"#ffcc80" }}>{p.nom}</div>
+              <div style={{ fontSize:12, color:G.soft, marginTop:3, lineHeight:1.5 }}>{p.description}</div>
+              <div style={{ fontSize:12.5, color:G.text, marginTop:6, lineHeight:1.5 }}>👉 {p.solution}</div>
+            </div>
+          ))}
+          {a.points_positifs?.length > 0 && <div style={{ fontSize:12, color:G.soft, marginTop:8, lineHeight:1.5 }}>✅ {a.points_positifs.join(" · ")}</div>}
+        </div>
+        <div style={{ fontSize:13, color:G.soft, lineHeight:1.55, textAlign:"center", marginBottom:14 }}>
+          À toi : prends ta pelouse en photo, ton <b style={{ color:G.muted }}>Score Santé</b> s'affiche tout de suite. L'analyse complète, avec les solutions de Bob, arrive avec ton compte gratuit (<b style={{ color:G.muted }}>+ 7 jours de Premium offerts</b>).
+        </div>
+        <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+          <button onClick={() => fileRef.current.click()} style={btnPrimary}>📷 Diagnostiquer ma pelouse</button>
+          <button onClick={() => galleryRef.current.click()} style={btnGhost}>🖼️ Choisir une photo de ma pelouse</button>
+          <button onClick={() => goSignup("exemple")} style={{ background:"none", border:"none", color:G.muted, fontSize:13, fontWeight:700, textDecoration:"underline", cursor:"pointer", fontFamily:"inherit", padding:6 }}>Créer mon compte gratuit →</button>
+        </div>
+      </Shell>
+    );
+  }
 
   // ── PREVIEW ──
   if (view === "camera") return (
@@ -201,18 +255,12 @@ export default function EssaiDiagnostic() {
   // ── RÉSULTAT TEASÉ ──
   if (view === "result" && result) {
     const a = result.analysis;
-    const etatColor = ETAT_COLORS[a.etat_general] || G.muted;
     const nbProb = a.problemes?.length || 0;
     return (
       <Shell>
         {hidden}
         {/* Score : MONTRÉ en entier */}
-        <div style={{ background:"linear-gradient(135deg,rgba(27,94,32,0.45),rgba(13,43,26,0.6))", border:`1px solid ${etatColor}55`, borderRadius:18, padding:22, textAlign:"center", marginBottom:14 }}>
-          <div style={{ fontSize:50, marginBottom:6 }}>{a.emoji}</div>
-          <div style={{ fontSize:38, fontWeight:900, color:etatColor, lineHeight:1 }}>{a.score_visuel}<span style={{ fontSize:18 }}>/100</span></div>
-          <div style={{ fontSize:14, fontWeight:800, color:etatColor, marginTop:4, textTransform:"capitalize" }}>{a.etat_general}</div>
-          <div style={{ fontSize:13, color:G.soft, lineHeight:1.6, fontStyle:"italic", marginTop:10 }}>« {a.resume} »</div>
-        </div>
+        <CarteScore a={a} />
 
         <ConfianceDiagnostic analysis={a} />
 

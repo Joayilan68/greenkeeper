@@ -169,7 +169,8 @@
   inclus dans Premium, plus vendu à l'unité (plans déjà achetés gardés : `publicMetadata.plansAnnuels`).
   Accueil visiteur (`src/pages/AccueilVisiteur.jsx`, remplace la présentation et la démo, `/demo` redirigée vers `/`) :
   météo du jour de sa commune, conseil de Bob du jour (`src/lib/conseilsBob.json`, partagé avec les notifications),
-  diagnostic d'essai, articles de saison ; barre visiteur Accueil, Conseils, Diagnostic, Compte (aussi sur l'essai du
+  diagnostic d'essai (avec une photo d'exemple : notre pelouse et sa vraie analyse par Bob, `src/lib/diagnosticExemple.json`,
+  sans diagnostic gratuit utilisé, étape `anon_diag_exemple` ; décision de Jordan du 7/11/2026, prod le 22/11), articles de saison ; barre visiteur Accueil, Conseils, Diagnostic, Compte (aussi sur l'essai du
   diagnostic, la création de compte et la connexion).
 - Parrainage et codes créateurs : `api/parrainage.cjs` (tables `codes` et `parrainages`, serveur uniquement), conditions
   dans les CGV (article 7 ter) ; filleul 1 mois offert, parrain 1 mois par filleul actif (tâche du matin) ; codes

@@ -943,3 +943,9 @@ du premier onglet).
   PROD (466 visites dont 339 sur les articles, 60 entrées dans l'app, 3 inscriptions hors comptes admins et de test, 0
   abonnement ; 0,6 % visite → inscription pour un objectif de 3 %). Recette « Déjà en prod » : tous les tests de Jordan
   sont faits ; restent n° 66, 74 et 75, à constater dans les faits.
+- 07/11/2026 — Diagnostic d'essai : aucun essai depuis le 28/10 (31 ouvertures de /essai, 0 photo analysée ; page vérifiée
+  en prod sur téléphone et ordinateur avec une analyse simulée : elle marche). Décision de Jordan : bouton « Essayer avec une
+  photo d'exemple » (notre pelouse et sa vraie analyse par Bob, faite le 7/11 sur la STA ; affichée en entier, sans diagnostic
+  gratuit utilisé), puis « Diagnostiquer ma pelouse » et « Créer mon compte gratuit » ; mesure anon_diag_exemple. Sur STA le
+  7/11, banc au vert (12 contrôles), prod le 22/11 avec le chantier (recette décembre n° 68). Brief quotidien « Prometheus »
+  arrêté à la demande de Jordan (tâche désactivée).
