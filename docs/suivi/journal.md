@@ -902,3 +902,22 @@ du premier onglet).
   (pH et sol acide dans « Chaux pour pelouse », fusariose, tonte en hiver) : « Chaux pour pelouse » vise aussi les
   recherches « sol acide » et « pH pelouse » (titre et description). Catalogue de la page « Réponses de groupe » régénéré
   (48 articles ; « notez » ajouté au tutoiement).
+- 07/11/2026 — Points ouverts traités avec Jordan : conservation des déploiements Vercel réglée (préversions 1 semaine,
+  production 30 jours) ; demande de test des partenaires supprimée par Jordan (table vide) ; appel aux paysagistes publié
+  dans « Jardinier à votre service » (« Jardinier paysagiste » refuse les nouveaux membres) ; relances API envoyées à Davis,
+  Segway Navimow et Hunter ; Hunter (Hydrawise) répond seulement par son chat (lundi-vendredi, 17 h-minuit, heure de
+  Paris ; message prêt) ; Mammotion : relance si leur dernier mail est celui du 30/10 ; 2 épingles Pinterest importées ;
+  demandes d'indexation faites ; statut de professionnel déclaré dans la Play Console (reste : « s'applique à l'app » dans
+  Contenu de l'application ; avant le paiement Google Play, compte et profil de paiement au nom de l'entreprise qui vend
+  Premium) ; fiche Google Play renvoyée avec les étapes détaillées (menu « Accroître le nombre d'utilisateurs »).
+- 07/11/2026 — Série en prod (correctif, go de Jordan) : main 197062b (code de la STA du 1/11, banc de l'app rejoué : 13
+  contrôles) et a32bcbd (CLAUDE.md) ; base PROD verrouillée comme la STA (politique streaks_lecture : l'app lit sa ligne,
+  seule compter_jour_serie() l'écrit ; migration serie_lecture_seule_app). Les séries d'avant reprennent depuis
+  l'horodatage de l'ancienne version (veille → +1, sinon 1 ; plus de protection d'hiver). Recette : n° 74 de « Déjà en prod ».
+- 07/11/2026 — Quiz d'hiver pour les visiteurs en prod (exception, test de Jordan sur STA OK) : main 1fe00d5 (question de
+  la semaine après « En bref » dans les 48 articles, carte sous le diagnostic d'essai ; banc rejoué sur la version de prod :
+  21 contrôles) ; en ligne vérifié. Recette : n° 75 de « Déjà en prod » ; n° 70 et 71 cochés OK (vérifiés le 31/10).
+- 07/11/2026 — Vidéo du quiz du dimanche : Instagram refusait la vidéo dans « Créer une publication » (proportions de 4:5 à
+  16:9 pour une publication) ; elle se publie par « Créer un reel ». Vidéos des 8 et 15/11 refaites au format exigé par
+  Meta pour les Reels (aussi par l'API : H.264 4:2:0 BT.709 sans images B, AAC 48 kHz, moov en tête, sans liste
+  d'édition). Demande de Jordan : publication automatique des vidéos sur Facebook et Instagram (en préparation, cible 15/11).
