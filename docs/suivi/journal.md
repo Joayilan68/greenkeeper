@@ -933,3 +933,9 @@ du premier onglet).
 - 07/11/2026 — Tests de Jordan en prod sur son téléphone : partage du score et partage du quiz sur Facebook, message
   copié puis collé dans la publication : OK (recette « Déjà en prod », n° 69 et 73). Rappel : Facebook n'accepte aucun
   texte rempli par une appli, le message se colle à la main (le partage en image du 22/11 montrera le score sans collage).
+- 07/11/2026 — Recette de ce qui est parti en prod le 31/10 : Jordan a fait le tour de l'app en prod (« refonte OK ») et
+  vérifié l'offre d'hiver (accueil, « Choisir son niveau », réponse de Bob) ; vérifiés dans la base PROD : articles qui
+  mènent à l'app (2 visites article → app) et annonce « peau neuve » (13 comptes prévenus, aucun en double) ; textes sans
+  « IA » vérifiés dans le code de la prod. Recette « Déjà en prod » : n° 48 à 65, 67 et 68 cochés OK ; restent n° 66
+  (premier abonnement payant), 72 (carte du lundi), 74 (série, le lendemain) et 75 (première réponse d'un visiteur).
+  Nouvelle fiche Google Play approuvée par Google et publiée par Jordan (publication gérée activée).
