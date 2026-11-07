@@ -110,8 +110,9 @@
   citée dans le règlement (CGU 6 g), l'annonce et la notification du quiz.
 - Défi 50 GreenPoints, quiz 30 (aussi pendant la pause d'hiver) ; badge « Gardien de l'hiver 2026-2027 » à 10 semaines
   complètes (défi et quiz). Notifications au même rythme (une le matin au plus) : quiz (dimanche, sinon les jours suivants)
-  et défi (à partir du mercredi), chacun une fois par semaine s'il n'est pas fait ; astuces « Le savais-tu ? » tirées des
-  quiz passés.
+  et défi (à partir du mercredi), chacun une fois par semaine s'il n'est pas fait ; le quiz passe avant toute autre
+  notification du matin, alerte urgente comprise (elle part alors le soir), et le défi avant les conseils de saison
+  (décision de Jordan du 7/11/2026 : sinon ils ne partaient jamais) ; astuces « Le savais-tu ? » tirées des quiz passés.
 - Dotation (règlement : CGU, article 6 g) : 1 an de Premium au plus de points d'assiduité (1 par défi, 1 par quiz) le
   30/01/2027 à 23 h 59 ; égalité (décision de Jordan du 20/10) : accès Premium (abonnement, essai ou Premium offert)
   devant compte gratuit, puis compte le plus ancien ; gagnant désigné au plus tard le 7/02 et prévenu par email au plus
