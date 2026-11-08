@@ -979,3 +979,11 @@ du premier onglet).
   (ni Royaume-Uni ni Europe du Sud). Restent à décider : adresse mongazon360.com, ton en néerlandais et en allemand, budget
   de relecture et de pub, date de l'allemand ; question TVA au comptable. Proposition de zones pour la base de
   connaissances à soumettre à Jordan mi-décembre, avant tout code.
+- 08/11/2026 — Ligue d'hiver, contrôle du correctif des notifications (main 7757db4) : le matin, 17 comptes ont reçu en
+  premier la notification du quiz de la semaine 2 (12 par email, 5 en push), aucune autre notification du matin, aucune
+  erreur ; 13 des 14 comptes qui avaient eu l'alerte gel entre le 1er et le 7/11 l'ont reçue (le 14e n'a rien reçu ce
+  matin, sans doute une relance d'inactivité : un seul message par jour) ; 2 quiz de la semaine 2 faits dans la matinée,
+  dont un probablement celui de Jordan. Alerte gel du soir contrôlée à 17 h 45.
+- 08/11/2026 — Quiz des visiteurs (articles Conseils) : 1re réponse d'un visiteur le 7/11 à 18 h 56 (article « Feuilles
+  mortes », ce n'était pas Jordan). Décision de Jordan : pas d'affichage des réponses des visiteurs dans Pilotage (chiffres
+  lus dans la base pour les points si besoin).
