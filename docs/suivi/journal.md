@@ -987,3 +987,7 @@ du premier onglet).
 - 08/11/2026 — Quiz des visiteurs (articles Conseils) : 1re réponse d'un visiteur le 7/11 à 18 h 56 (article « Feuilles
   mortes », ce n'était pas Jordan). Décision de Jordan : pas d'affichage des réponses des visiteurs dans Pilotage (chiffres
   lus dans la base pour les points si besoin).
+- 08/11/2026 — Ligue d'hiver, contrôle du soir : l'alerte gel est partie au créneau du soir à 3 comptes (1 email, 2 push),
+  tous servis le matin par le quiz ; 1 notification de parcours (arrosage) ; aucune erreur. Conforme à la décision du 7/11
+  (le quiz passe avant l'alerte gel, qui part alors le soir). Recette « Déjà en prod » n° 76 : dimanche conforme, reste le
+  défi du mercredi 11/11 au matin (contrôle à 9 h 30) avant de cocher les n° 76 et 39.
