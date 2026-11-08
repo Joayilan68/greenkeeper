@@ -9,6 +9,7 @@ import { card, cardTitle } from "../lib/styles";
 const small = { border:"none", borderRadius:8, padding:"7px 10px", fontSize:12, fontWeight:700, cursor:"pointer" };
 const vert = { ...small, background:"linear-gradient(135deg,#43a047,#2e7d32)", color:"#fff" };
 const gris = { ...small, background:"rgba(255,255,255,0.08)", color:"#c8e6c9" };
+const styleMsg = (m) => ({ fontSize:12, color: m.startsWith("✅") ? "#a5d6a7" : "#ef9a9a", lineHeight:1.5 });
 const STATUTS = {
   a_valider: { label:"À valider", color:"#f9a825" }, validee: { label:"Validée", color:"#90caf9" }, en_cours: { label:"En cours", color:"#90caf9" },
   traitement: { label:"Vidéo en traitement", color:"#90caf9" },
@@ -24,9 +25,10 @@ export default function PublicationsCard({ getToken }) {
   const [compte, setCompte] = useState(null);
   const [busy, setBusy]     = useState(false);
   const [msg, setMsg]       = useState("");
+  const [duTest, setDuTest] = useState(false); // attente et résultat du test de connexion, affichés sous son bouton
 
   async function call(body) {
-    setBusy(true); setMsg("");
+    setBusy(true); setMsg(""); setDuTest(body?.action === "tester");
     try {
       const token = await getToken();
       const res   = await fetch("/api/stats?type=publications", {
@@ -67,7 +69,7 @@ export default function PublicationsCard({ getToken }) {
       <div style={{ fontSize:11, color:"#81c784", lineHeight:1.6, marginBottom:8 }}>
         Chaque samedi, le lot de la semaine suivante arrive ici. Une publication validée part toute seule le jour et à l'heure prévus sur la page Facebook et le compte Instagram de Mongazon360.
       </div>
-      {msg && <div style={{ fontSize:12, color: msg.startsWith("✅") ? "#a5d6a7" : "#ef9a9a", marginBottom:8, lineHeight:1.5 }}>{msg}</div>}
+      {msg && !duTest && <div style={{ ...styleMsg(msg), marginBottom:8 }}>{msg}</div>}
       {pubs && !pubs.length && <div style={{ fontSize:12, color:"#a5d6a7", marginBottom:8 }}>Aucune publication pour l'instant : le prochain lot arrive samedi.</div>}
 
       {lots.map(lot => {
@@ -117,9 +119,10 @@ export default function PublicationsCard({ getToken }) {
       })}
 
       <div style={{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap", marginTop:4 }}>
-        <button onClick={tester} disabled={busy} style={gris}>{busy ? "…" : "Tester la connexion Meta"}</button>
+        <button onClick={tester} disabled={busy} style={gris}>{busy && duTest ? "Test en cours (jusqu'à 1 minute)…" : "Tester la connexion Meta"}</button>
         {compte && <span style={{ fontSize:11, color:"#81c784" }}>Page {compte.page}{compte.instagram ? ` · @${compte.instagram}` : ""}</span>}
       </div>
+      {msg && duTest && <div style={{ ...styleMsg(msg), marginTop:8 }}>{msg}</div>}
     </div>
   );
 }
