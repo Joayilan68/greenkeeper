@@ -1013,5 +1013,5 @@ du premier onglet).
   Préparation de la pub le 25/01/2027 (tâche programmée) ; règle « Recrutement » de CLAUDE.md mise à jour.
 - 09/11/2026 — Correction du point KPI du jour : l'inscription comptée le 7/11 n'apparaît pas dans Pilotage → Activité
   (« Nouveaux inscrits ») ; probablement le compte de test gratuit de Jordan (tests du 7/11), exclu par Pilotage : semaine du
-  2 au 8/11 = 0 vraie inscription (à confirmer par Jordan). Ses chiffres de Pilotage (30 jours) : 487 visiteurs (Google 240,
+  2 au 8/11 = 0 vraie inscription (confirmé par Jordan : son compte de test). Ses chiffres de Pilotage (30 jours) : 487 visiteurs (Google 240,
   direct 156, Facebook 144), 3 inscrits (Google 1, direct 2), aucun venu de Facebook ni d'une campagne d'article.
