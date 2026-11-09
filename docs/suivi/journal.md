@@ -1004,3 +1004,7 @@ du premier onglet).
   lu un article, aucune n'est entrée dans l'app (mesure vérifiée : identifiants de visite présents) ; 2 vues de « Choisir
   son niveau » ; vidéo du quiz : 5 visites ; quiz des visiteurs : 2 réponses. Action : retours de Jordan sur les visuels
   du chantier du 22/11 (encarts des articles, Conseils en mode app, photo d'exemple), qui vise le passage articles → app.
+- 09/11/2026 — Annonce « Mongazon360 fait peau neuve » (3 au 8/11) : 13 comptes prévenus une seule fois (10 par email, 3 par
+  notification), 2 clics sur les emails, 1 retour dans l'app dans les 2 jours (2 comptes actifs aux mêmes jours la semaine
+  d'avant : pas d'effet visible, petits nombres), aucune erreur. Annonce retirée de src/lib/annonces.json (main d1df102,
+  fusionné dans Staging ; liste vide, mécanisme gardé). Recette « Déjà en prod » n° 68 complétée.
