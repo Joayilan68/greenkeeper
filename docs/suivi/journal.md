@@ -994,5 +994,7 @@ du premier onglet).
 - 09/11/2026 — Segway Navimow : réponse d'attente de l'équipe marketing à la proposition de partenariat de Jordan
   « Mongazon360 LAB × Segway Navimow — Robotic Mower Field Testing Partnership » (tests de robots tondeuses sur le
   terrain) : proposition transmise à l'équipe concernée, délais longs, ils recontacteront Jordan si une occasion se
-  présente. Jordan avait arrêté ce projet de partenariat faute de réponse : rien à répondre. Sans lien avec la demande
-  d'accès à l'API Navimow (relance au support le 7/11), toujours sans réponse.
+  présente. Projet « Mongazon360 LAB » : obtenir des produits de marques pour les tester et en faire la communication sur
+  les réseaux de Mongazon360 ; arrêté par Jordan faute de réponse. Rien à répondre ni à relancer : si une marque propose
+  quelque chose, on s'adaptera. Sans lien avec la demande d'accès à l'API Navimow (relance au support le 7/11), toujours
+  sans réponse.
