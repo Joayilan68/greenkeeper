@@ -991,3 +991,8 @@ du premier onglet).
   tous servis le matin par le quiz ; 1 notification de parcours (arrosage) ; aucune erreur. Conforme à la décision du 7/11
   (le quiz passe avant l'alerte gel, qui part alors le soir). Recette « Déjà en prod » n° 76 : dimanche conforme, reste le
   défi du mercredi 11/11 au matin (contrôle à 9 h 30) avant de cocher les n° 76 et 39.
+- 09/11/2026 — Segway Navimow : réponse d'attente de l'équipe marketing (« Mongazon360 LAB × Segway Navimow — Robotic Mower
+  Field Testing Partnership ») : proposition transmise à l'équipe concernée, délais longs, ils recontacteront Jordan si une
+  occasion se présente. Rien sur les identifiants d'application de l'API (question posée au support le 7/11). Rien à
+  répondre ; aucun connecteur Navimow n'était prévu avant début 2027. Proposé à Jordan : sans réponse du support au 7/12,
+  Navimow mis de côté.
