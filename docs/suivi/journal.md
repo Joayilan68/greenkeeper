@@ -1008,3 +1008,6 @@ du premier onglet).
   notification), 2 clics sur les emails, 1 retour dans l'app dans les 2 jours (2 comptes actifs aux mêmes jours la semaine
   d'avant : pas d'effet visible, petits nombres), aucune erreur. Annonce retirée de src/lib/annonces.json (main d1df102,
   fusionné dans Staging ; liste vide, mécanisme gardé). Recette « Déjà en prod » n° 68 complétée.
+- 09/11/2026 — Paysagistes partenaires, décision de Jordan : la petite pub Facebook vers la page « Devenir partenaire » part
+  en février 2027, un mois avant la reprise des entretiens (pas le 14/11). Point du 9/11 : 0 demande, 11 vues de la page.
+  Préparation de la pub le 25/01/2027 (tâche programmée) ; règle « Recrutement » de CLAUDE.md mise à jour.

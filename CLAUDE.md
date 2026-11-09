@@ -204,7 +204,8 @@
   confirmation. Coordonnées jamais transmises à un pro : à l'ouverture, chacun fait sa demande dans l'app. Synthèse par
   département avec les demandes des pros : Pilotage → Activité (« Trouver un pro »).
 - Recrutement : publications de Jordan dans ses groupes de pros (lien suivi `utm_campaign=groupe-<nom>`), puis petite pub
-  Facebook vers la page s'il y a moins de 3 demandes en une semaine. Pas de démarchage ni de réponse par message privé.
+  Facebook vers la page en février 2027, un mois avant la reprise des entretiens (décision de Jordan du 9/11/2026). Pas de
+  démarchage ni de réponse par message privé.
 
 ## Équipements connectés
 - Table `equipements` (serveur uniquement, RLS sans politique) via `api/objets.js` ; logique et connecteurs dans
