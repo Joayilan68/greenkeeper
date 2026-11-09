@@ -998,3 +998,9 @@ du premier onglet).
   les réseaux de Mongazon360 ; arrêté par Jordan faute de réponse. Rien à répondre ni à relancer : si une marque propose
   quelque chose, on s'adaptera. Sans lien avec la demande d'accès à l'API Navimow (relance au support le 7/11), toujours
   sans réponse.
+- 09/11/2026 — Point KPI du lundi (semaine du 2 au 8/11) : 136 visites (moyenne avant 87 par semaine, +57 % ; 74 % sur
+  les articles ; Google 63, Facebook 33), 8 entrées dans l'app (16 par semaine avant, dont 5 par l'ancienne démo ; 2 essais
+  du diagnostic), 1 inscription (1,4 avant), 0 abonnement ; visites → inscriptions 0,7 % (objectif 3 %) ; 104 visites ont
+  lu un article, aucune n'est entrée dans l'app (mesure vérifiée : identifiants de visite présents) ; 2 vues de « Choisir
+  son niveau » ; vidéo du quiz : 5 visites ; quiz des visiteurs : 2 réponses. Action : retours de Jordan sur les visuels
+  du chantier du 22/11 (encarts des articles, Conseils en mode app, photo d'exemple), qui vise le passage articles → app.
