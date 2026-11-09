@@ -1015,3 +1015,8 @@ du premier onglet).
   (« Nouveaux inscrits ») ; probablement le compte de test gratuit de Jordan (tests du 7/11), exclu par Pilotage : semaine du
   2 au 8/11 = 0 vraie inscription (confirmé par Jordan : son compte de test). Ses chiffres de Pilotage (30 jours) : 487 visiteurs (Google 240,
   direct 156, Facebook 144), 3 inscrits (Google 1, direct 2), aucun venu de Facebook ni d'une campagne d'article.
+- 09/11/2026 — Retours de Jordan sur les visuels du chantier du 22/11 : encarts des pages du site « top ». Rappel : un
+  lecteur venu de Google, Facebook ou Pinterest arrive sur la page du site (référencement), seul celui qui est déjà dans
+  l'app lit l'article dans l'app. Décision de Jordan pour la lecture dans l'app : 3 encarts pour un visiteur (inchangé),
+  1 seul pour un compte connecté, à la fin de l'article, qui ouvre la fonction du thème principal. Fait sur STA
+  (src/pages/ConseilsApp.jsx) ; banc rejoué : 31 contrôles au vert ; CLAUDE.md et recette décembre n° 67 à jour.

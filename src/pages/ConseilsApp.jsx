@@ -1,9 +1,10 @@
 // src/pages/ConseilsApp.jsx
 // Conseils en mode app (chantier du 22/11 ; demandes de Jordan des 29 et 30/10/2026) : liste des articles (de saison
 // d'abord) et lecture d'un article dans l'app, avec la barre du bas (visiteur : BarreVisiteur ; compte connecté : Layout).
-// Contenu chargé à la demande (src/lib/conseilsApp.js). Encarts de l'app aux mêmes places que sur les pages web : pour un
-// visiteur, les textes des pages Conseils (lien balisé « encart=lire-<thème>-<position> ») ; pour un compte connecté, la
-// fonction de l'app correspondante (« appli » de src/lib/argumentsApp.json). Pages non indexées (vercel.json et
+// Contenu chargé à la demande (src/lib/conseilsApp.js). Encarts de l'app : pour un visiteur, les 3 des pages web, aux mêmes
+// places et avec leurs textes (lien balisé « encart=lire-<thème>-<position> ») ; pour un compte connecté, un seul, à la fin
+// de l'article (décision de Jordan du 9/11), qui ouvre la fonction du thème principal (« appli » de
+// src/lib/argumentsApp.json). Pages non indexées (vercel.json et
 // usePageMeta : adresse canonique = page web /conseils de l'article).
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -146,6 +147,7 @@ function Article({ slug, visiteur }) {
   const jour = jourParis();
   const themes = a.themes.filter(id => THEMES[id] && (!THEMES[id].fin || THEMES[id].fin >= jour));
   const [debut, suite, fin] = a.parties;
+  const themeFin = visiteur ? themes[2] : themes[0]; // compte connecté : un seul encart, le thème principal de l'article
   const texte = (html) => <div className="lecture" onClick={clic} dangerouslySetInnerHTML={{ __html: html }} />;
   return (
     <article>
@@ -156,11 +158,11 @@ function Article({ slug, visiteur }) {
       {a.image && <img src={a.image} alt={a.image_alt || ""} width="1200" height="800"
         style={{ width: "100%", height: "auto", borderRadius: 14, margin: "0 0 12px" }} />}
       {texte(debut)}
-      {themes[0] && <Encart id={themes[0]} position="haut" visiteur={visiteur} />}
+      {visiteur && themes[0] && <Encart id={themes[0]} position="haut" visiteur />}
       {texte(suite)}
-      {fin !== undefined && themes[1] && <Encart id={themes[1]} position="milieu" visiteur={visiteur} />}
+      {visiteur && fin !== undefined && themes[1] && <Encart id={themes[1]} position="milieu" visiteur />}
       {fin !== undefined && texte(fin)}
-      {themes[2] && <Encart id={themes[2]} position="fin" visiteur={visiteur} />}
+      {themeFin && <Encart id={themeFin} position="fin" visiteur={visiteur} />}
       {a.autres.length > 0 && (
         <>
           <div style={titrePartie}>À lire aussi</div>
