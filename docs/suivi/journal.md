@@ -1070,3 +1070,10 @@ du premier onglet).
   sauvegarde, aucune ligne perdue), puis l'app (main f0b9497 ; en plus : nouvel essai après une erreur de réseau, score du
   classement envoyé seulement une fois les points lus). Bancs : base 18/18 dans la prod (tout annulé à la fin), app 32/32 ;
   aucune erreur après la mise en ligne. Fusion de main dans Staging. Recette « Déjà en prod » n° 77.
+- 10/11/2026 — Décision de Jordan : relecture des textes légaux par un avocat retirée (roadmap et onglet « Officialisation »),
+  priorité à leur mise à jour par nous. Roadmap mise à jour à sa demande : ligue d'hiver terminée, influenceurs reportés
+  (décision du 28/10), RC Pro reportée (décision du 19/10), lead gen local en cours (ouverture au printemps 2027), point
+  Google le 25/11, achat réel de test du Premium annuel en cours (action de Jordan, plan annuel inclus), nouvelle ligne
+  « Textes légaux de l'app ». Écarts trouvés dans les textes en prod : sources de GreenPoints des CGU (article e), durée de
+  l'historique des messages (politique 5.3), chiffres jamais mesurés dans l'encart Premium du diagnostic ; correctif prêt
+  (branche locale), en attente du go de Jordan.
