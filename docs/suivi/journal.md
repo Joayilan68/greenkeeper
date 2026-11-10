@@ -1046,3 +1046,5 @@ du premier onglet).
   une même réponse copiée deux fois le même jour dans le même groupe n'est notée qu'une fois). 2) GreenPoints enregistrés
   un par un dans la base, comme la série (sur STA cette semaine, puis prod). Indexation de « Pelouse en décembre » à
   demander par Jordan (lien direct dans sa page d'actions).
+- 10/11/2026 — Mammotion : nouvelle réponse d'attente du support (Allen) : demande d'autorisation écrite en cours de
+  traitement, nouvelles dès que possible. Rien à répondre ; relance du 18/11 maintenue si rien n'arrive sur le fond.
