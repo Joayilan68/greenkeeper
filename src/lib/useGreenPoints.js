@@ -109,7 +109,7 @@ async function syncToSupabase(userId, state) {
       {
         user_id:    userId,
         total:      state.total,
-        historique: state.historique.slice(-200),
+        historique: state.historique, // historique complet, jamais tronqué (données des utilisateurs)
         recompenses: state.recompenses_obtenues,
         updated_at: new Date().toISOString(),
       },
@@ -173,7 +173,7 @@ export function useGreenPoints() {
     const newState = {
       ...current,
       total:      current.total + regle.points,
-      historique: [...current.historique, nouvelleEntree].slice(-200),
+      historique: [...current.historique, nouvelleEntree],
       derniere_action: { ...current.derniere_action, [action]: maintenant() },
     };
     saveLocal(newState);
