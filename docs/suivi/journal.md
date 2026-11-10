@@ -1020,3 +1020,11 @@ du premier onglet).
   l'app lit l'article dans l'app. Décision de Jordan pour la lecture dans l'app : 3 encarts pour un visiteur (inchangé),
   1 seul pour un compte connecté, à la fin de l'article, qui ouvre la fonction du thème principal. Fait sur STA
   (src/pages/ConseilsApp.jsx) ; banc rejoué : 31 contrôles au vert ; CLAUDE.md et recette décembre n° 67 à jour.
+- 10/11/2026 — Constats de Jordan. 1) Série : son compte affiche 4 jours (comptés depuis le 7/11). Pour les utilisateurs, la
+  série a bien repris l'historique (séries de la base identiques aux jours d'utilisation de daily_active_users, vérifié
+  compte par compte). Son compte (admin) n'a pas d'historique dans daily_active_users (admins exclus) et l'ancienne version
+  n'avait pas enregistré sa série dans la base (record 4, aucun palier) ; son historique de GreenPoints a aussi un trou du
+  18/10 au 6/11 : pas de recalcul possible, valeur à remettre à la main sur son compte d'après le chiffre qu'il avait avant
+  le 7/11. 2) Pilotage → Bugs : l'alerte « Promesse rejetée » du 7/11 y était, fondue dans la même erreur du 19/10 (×2) ;
+  correctif en prod (main e32b53a, Pilotage seulement, fusionné dans Staging) : « Nouveau » ou « Revenu cette semaine » sur
+  un problème vu dans les 7 derniers jours, et dates des dernières occurrences.
