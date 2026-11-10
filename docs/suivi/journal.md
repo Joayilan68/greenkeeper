@@ -1077,3 +1077,7 @@ du premier onglet).
   « Textes légaux de l'app ». Écarts trouvés dans les textes en prod : sources de GreenPoints des CGU (article e), durée de
   l'historique des messages (politique 5.3), chiffres jamais mesurés dans l'encart Premium du diagnostic ; correctif prêt
   (branche locale), en attente du go de Jordan.
+- 10/11/2026 — Achat réel de test du Premium annuel : compte de test créé en prod par Jordan le 10/11 (hors admin, à exclure
+  du point KPI du lundi : inscription et abonnement de test). L'essai de 7 jours n'empêche pas l'achat (page « Choisir son
+  niveau » ouverte pendant l'essai, paiement immédiat sans essai chez Stripe) ; achat à faire dans le navigateur, pas dans
+  l'app Android (paiement par carte masqué, règle Google Play).
