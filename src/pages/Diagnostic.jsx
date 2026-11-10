@@ -358,10 +358,8 @@ export default function Diagnostic() {
             <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:16 }}>
               {[
                 "🦠 Détection maladies, carences et zones mortes",
-                "⚡ Résultat en moins de 10 secondes",
-                "📈 +15 pts de score en moyenne après action",
+                "⚡ Résultat en quelques secondes",
                 "💰 Économisez sur les produits inutiles",
-                "🏆 +100 GreenPoints + profil complété à 100%",
               ].map(f => (
                 <div key={f} style={{ fontSize:12, color:"#81c784", textAlign:"left" }}>✓ {f}</div>
               ))}

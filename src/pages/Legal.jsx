@@ -148,7 +148,7 @@ export function MentionsLegales() {
 export function Confidentialite() {
   return (
     <div>
-      <PageHeader emoji="🔒" title="Politique de confidentialité" subtitle="Mise à jour : 26 octobre 2026" />
+      <PageHeader emoji="🔒" title="Politique de confidentialité" subtitle="Mise à jour : 10 novembre 2026" />
       <div style={scroll}>
 
         <Section title="1. Préambule">
@@ -218,7 +218,7 @@ export function Confidentialite() {
             • <strong>Données de prospection commerciale :</strong> 3 ans à compter du dernier contact<br/>
             • <strong>Logs techniques :</strong> 1 an<br/>
             • <strong>Ligue d'hiver :</strong> défis faits et réponses au quiz jusqu'au 31 juillet qui suit la fin de la saison, puis suppression automatique<br/>
-            • <strong>Historique des messages envoyés</strong> (et de leur ouverture ou clic) : les 14 derniers jours, effacé au fil des nouveaux envois, et au plus tard avec le compte<br/>
+            • <strong>Historique des messages envoyés</strong> (et de leur ouverture ou clic) : tant que le compte existe, puis supprimé avec lui<br/>
             • <strong>Photos de diagnostic :</strong> 90 jours, puis suppression automatique (le résultat de l'analyse reste attaché au compte)<br/>
             • <strong>Parrainage :</strong> tant que le compte est actif (supprimé avec le compte)<br/>
             • <strong>Équipements connectés :</strong> jusqu'à leur déconnexion ou la suppression du compte ; seule la dernière mesure est conservée (chaque relevé remplace le précédent)<br/>
@@ -341,7 +341,7 @@ export function CGU() {
   const navigate = useNavigate();
   return (
     <div>
-      <PageHeader emoji="📜" title="Conditions Générales d'Utilisation" subtitle="Mise à jour : 26 octobre 2026" />
+      <PageHeader emoji="📜" title="Conditions Générales d'Utilisation" subtitle="Mise à jour : 10 novembre 2026" />
       <div style={scroll}>
 
         <div style={{ ...card(), background:"rgba(33,150,243,0.06)", border:"1px solid rgba(33,150,243,0.2)" }}>
@@ -417,13 +417,12 @@ export function CGU() {
 
           <SubSection title="e. GreenScore">
             L'Application attribue à chaque Utilisateur un score dénommé <strong>« GreenScore »</strong>, reflétant son engagement dans l'entretien de son gazon. Le GreenScore repose sur l'accumulation de GreenPoints attribués pour les actions suivantes :<br/><br/>
-            • actions d'entretien enregistrées dans l'Application (tonte, arrosage, engrais, désherbage, aération, scarification, traitement anti-mousse/fongicide, regarnissage/semis), chaque action étant assortie d'un nombre de points et d'un délai minimum entre deux enregistrements (cooldown) ;<br/>
-            • complétion du profil gazon (200 points, attribués une seule fois) ;<br/>
-            • diagnostic photo par IA (100 points, cooldown de 7 jours — fonctionnalité réservée aux titulaires d'un Compte Premium) ;<br/>
-            • partage social de l'état de son jardin (75 points, cooldown de 7 jours) ;<br/>
+            • connexion à l'Application (10 points, une fois par jour) ;<br/>
+            • actions d'entretien enregistrées dans l'Application (tonte, arrosage, engrais, désherbage, aération, scarification, traitement anti-mousse/fongicide, regarnissage/semis, biostimulant, verticut), chaque action étant assortie d'un nombre de points, d'un nombre maximal par période et d'un délai minimum entre deux enregistrements ;<br/>
+            • étapes d'un parcours de semis ou de regarnissage (sol préparé, semis) ;<br/>
             • Ligue d'hiver : défi de la semaine (50 points) et quiz de la semaine (30 points), une fois par semaine chacun (article 6 g).<br/><br/>
-            Les GreenPoints totaux s'accumulent indéfiniment et ne sont pas remis à zéro.<br/><br/>
-            L'Utilisateur est informé que certaines sources de points sont réservées aux titulaires d'un Compte Premium (diagnostic photo). En conséquence, un Utilisateur disposant d'un Compte Free ne pourra pas accéder à l'ensemble des sources de points, indépendamment de la qualité de son entretien.<br/><br/>
+            De novembre à janvier, pendant le repos du gazon, seules la connexion du jour et la Ligue d'hiver rapportent des GreenPoints.<br/><br/>
+            Chaque GreenPoint est enregistré une seule fois sur le compte de l'Utilisateur, quel que soit l'appareil utilisé. Les GreenPoints totaux s'accumulent indéfiniment et ne sont pas remis à zéro.<br/><br/>
             Le GreenScore ne constitue pas une évaluation de la personne de l'Utilisateur. Il vise exclusivement à animer l'engagement dans l'entretien du gazon et ne produit aucun effet juridique ni aucune décision à l'égard de l'Utilisateur.
           </SubSection>
 
@@ -547,7 +546,7 @@ export function CGV() {
   const navigate = useNavigate();
   return (
     <div>
-      <PageHeader emoji="💳" title="Conditions Générales de Vente" subtitle="Mise à jour : 26 octobre 2026" />
+      <PageHeader emoji="💳" title="Conditions Générales de Vente" subtitle="Mise à jour : 31 octobre 2026" />
       <div style={scroll}>
 
         <div style={{ ...card(), background:"rgba(33,150,243,0.06)", border:"1px solid rgba(33,150,243,0.2)" }}>
@@ -713,7 +712,7 @@ export function CGV() {
 export function Cookies() {
   return (
     <div>
-      <PageHeader emoji="🍪" title="Politique de cookies" subtitle="Mise à jour : 26 octobre 2026" />
+      <PageHeader emoji="🍪" title="Politique de cookies" subtitle="Mise à jour : 31 octobre 2026" />
       <div style={scroll}>
 
         <Section title="Qu'est-ce qu'un cookie ?">
