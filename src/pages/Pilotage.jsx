@@ -1228,10 +1228,16 @@ export default function Pilotage() {
                     </div>
                     <div style={{ fontSize:11, color:"#e8f5e9", lineHeight:1.5, wordBreak:"break-word" }}>{p.message}</div>
                     <div style={{ fontSize:9, color:"#81c784", marginTop:4 }}>
+                      {p.count7 > 0 && (
+                        <span style={{ color:"#ffcc80", fontWeight:800 }}>
+                          {Date.now() - new Date(p.firstSeen).getTime() < 7 * 864e5 ? "🆕 Nouveau cette semaine" : `🔁 Revenu cette semaine (×${p.count7})`} ·{" "}
+                        </span>
+                      )}
                       Dernière : {new Date(p.lastSeen).toLocaleString("fr-FR")} · Première : {new Date(p.firstSeen).toLocaleDateString("fr-FR")}{p.emailed ? " · 📧 alerté" : ""}
                     </div>
                     {open && (
                       <div style={{ marginTop:8, paddingTop:8, borderTop:"1px solid rgba(255,255,255,0.1)" }}>
+                        {p.dates?.length > 1 && <div style={{ fontSize:9, color:"#81c784" }}>Dates : {p.dates.map(d => new Date(d).toLocaleString("fr-FR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" })).join(" · ")}{p.count > p.dates.length ? " …" : ""}</div>}
                         {p.lastPath && <div style={{ fontSize:9, color:"#81c784" }}>Page : {p.lastPath}</div>}
                         {p.lastUserAgent && <div style={{ fontSize:9, color:"#81c784", wordBreak:"break-all" }}>Appareil : {p.lastUserAgent}</div>}
                         {p.lastDetails && Object.entries(p.lastDetails).map(([key, v]) => (

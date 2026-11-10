@@ -940,10 +940,11 @@ async function handleErrors(req, res) {
       if (!g) {
         g = { fingerprint: r.fingerprint, kind: r.kind, message: r.message, severity: r.severity, source: r.source,
               count: 0, count7: 0, users: new Set(), firstSeen: r.created_at, lastSeen: r.created_at,
-              lastPath: r.path, lastUserAgent: r.user_agent, lastDetails: r.details, emailed: false };
+              lastPath: r.path, lastUserAgent: r.user_agent, lastDetails: r.details, emailed: false, dates: [] };
         groups.set(r.fingerprint, g);
       }
       g.count++;
+      if (g.dates.length < 5) g.dates.push(r.created_at); // dernières occurrences, de la plus récente à la plus ancienne
       if (new Date(r.created_at).getTime() >= d7) g.count7++;
       if (r.user_id) g.users.add(r.user_id);
       if (r.emailed) g.emailed = true;
