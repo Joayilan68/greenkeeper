@@ -1097,3 +1097,8 @@ du premier onglet).
   aucune écriture directe dans la table) ; les 2 comptes actifs du jour ont leur connexion du jour. Achat de test pas
   encore fait : le compte de test a ouvert « Choisir son niveau » 3 fois depuis l'app Android installée (15 h 35), où le
   paiement par carte est masqué (règle Google Play) ; rappel à Jordan : achat depuis un navigateur.
+- 10/11/2026 — Demande de Jordan : essai de vidéo explicative avec Bob et sa voix (« Mousse : chaux ou sulfate de fer ? »,
+  45 s, texte tiré de l'article « La chaux contre la mousse »). Page privée « Voix de Bob » (texte à lire en grand pendant
+  l'enregistrement, envoi du fichier) ; montage automatique prêt (voix nettoyée, blancs réduits, sous-titres calés mot à mot,
+  Bob animé au rythme de la voix, photo de notre pelouse, format des Reels), testé avec une voix de synthèse jamais publiée.
+  Rien ne sera publié sans l'accord de Jordan.
