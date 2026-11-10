@@ -615,10 +615,8 @@ function appendNotifLog(notifLog, entry) {
   const history = Array.isArray(base.history) ? base.history.slice() : [];
   // Conserve tous les champs fournis (date, priority, type, slot, et channel si présent)
   history.push({ ...entry });
-  // borne : ne garder que les 14 derniers jours
-  const cutoff = new Date(Date.now() - 14 * 86400000).toISOString().slice(0, 10);
-  const pruned = history.filter(h => h.date >= cutoff);
-  return { history: pruned, ignored_streak: base.ignored_streak || 0 };
+  // Historique complet, jamais tronqué : chaque message envoyé reste tracé (règles et mesures filtrent par date)
+  return { history, ignored_streak: base.ignored_streak || 0 };
 }
 
 module.exports = { decideNotification, appendNotifLog, conseilDuJour, annonceDuJour, annoncePour, INTERVALLES, LABELS };
