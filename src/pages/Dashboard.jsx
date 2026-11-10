@@ -39,7 +39,7 @@ export default function Dashboard() {
   const { activer: activerNotifications, isSupported, showPushBanner, error: pushError, loading: pushLoading } = useActiverNotifications();
 
   // ── Série et GreenPoints (résumé ; détail et classement dans Mon gazon → Mes progrès) ──────────────
-  const { total: gpTotal, palier, gagnerPoints } = useGreenPoints();
+  const { total: gpTotal, palier, charge: gpCharge, gagnerPoints } = useGreenPoints();
   const { actuel: streak, enDanger, enregistrerConnexion } = useStreak();
   // Connexion du jour (série et GreenPoints) : comptée dès l'accueil, une fois par jour au plus, comme dans Aujourd'hui
   useEffect(() => {
@@ -370,10 +370,10 @@ export default function Dashboard() {
             </div>
           </div>
           <div style={{ ...card(), marginBottom:0, padding:"10px 12px", display:"flex", alignItems:"center", gap:10 }}>
-            <span style={{ fontSize:22 }}>{palier?.icone || "🌿"}</span>
+            <span style={{ fontSize:22 }}>{gpCharge ? palier.icone : "🌿"}</span>
             <div>
-              <div style={{ fontSize:15, fontWeight:800, color:"#a5d6a7" }}>{gpTotal.toLocaleString("fr-FR")} pts</div>
-              <div style={{ fontSize:10, color:"#81c784" }}>GreenPoints{palier?.label ? ` · ${palier.label}` : ""}</div>
+              <div style={{ fontSize:15, fontWeight:800, color:"#a5d6a7" }}>{gpCharge ? gpTotal.toLocaleString("fr-FR") : "…"} pts</div>
+              <div style={{ fontSize:10, color:"#81c784" }}>GreenPoints{gpCharge ? ` · ${palier.label}` : ""}</div>
             </div>
           </div>
         </div>

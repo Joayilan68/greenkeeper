@@ -250,7 +250,7 @@ export default function Today() {
   const zone  = zoneClimatique(profile);
 
   const { mois } = useSaison();
-  const { gagnerPoints, total: gpTotal, palier } = useGreenPoints();
+  const { gagnerPoints, total: gpTotal, charge: gpCharge } = useGreenPoints();
   const { enregistrerConnexion } = useStreak();
   const [toastPoints, setToastPoints] = useState(null);
 
@@ -427,10 +427,9 @@ export default function Today() {
     addEntry(action.label);
     setJustLogged(p => [...p, action.id]);
     setTimeout(() => setJustLogged(p => p.filter(x => x !== action.id)), 1500);
-    const res     = gagnerPoints(action.gp);
     const consKey = CONSEILS_MAP[action.id];
     const conseil = consKey ? getConseilApresAction(consKey, mois, profile, score) : null;
-    afficherToast(res, conseil);
+    gagnerPoints(action.gp).then(res => afficherToast(res, conseil));
   };
 
   return (
@@ -652,7 +651,7 @@ export default function Today() {
           <div style={cardTitle}>
             <span>✅ Journaliser</span>
             <span style={{ fontSize:11, color:"#66BB6A", background:"rgba(102,187,106,0.15)", borderRadius:20, padding:"2px 8px" }}>
-              🌿 {gpTotal.toLocaleString("fr-FR")} pts
+              🌿 {gpCharge ? gpTotal.toLocaleString("fr-FR") : "…"} pts
             </span>
           </div>
 
