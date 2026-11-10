@@ -3,6 +3,7 @@ title: Pelouse en décembre : que faire, que ne pas faire ?
 description: En décembre, le gazon se repose : ni tonte, ni engrais, ni semis. Les gestes utiles du mois, les erreurs qui abîment la pelouse en hiver et les signes à surveiller.
 saison: hiver
 date: 2026-11-06
+maj: 2026-11-10
 ---
 
 En décembre, la pelouse est au repos. Dès que la terre passe sous 5 °C, l'herbe ne pousse plus : elle attend le printemps. Ce n'est donc pas le moment de la soigner à tout prix, mais plutôt de **la laisser tranquille**, de faire quelques gestes simples et de préparer la suite. Voici ce qu'il faut faire en décembre, et surtout ce qu'il vaut mieux éviter.
@@ -40,6 +41,8 @@ Décembre est un bon mois pour observer sa pelouse :
 - là où **l'eau stagne** après la pluie, le sol est tassé ou mal drainé : notez la zone, elle sera à aérer au printemps ;
 - là où **la mousse** s'étend, l'anti-mousse au sulfate de fer attendra mars-avril ;
 - là où **le gazon est clairsemé**, prévoyez de regarnir au printemps, quand la fenêtre de semis de votre région s'ouvre.
+
+Et pour la suite de l'hiver, voir [la pelouse en janvier](/conseils/pelouse-en-janvier).
 
 ## Ce qu'il ne faut pas faire en décembre
 

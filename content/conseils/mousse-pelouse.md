@@ -3,7 +3,7 @@ title: Mousse dans la pelouse : que faire ? Causes et traitement
 description: Mousse dans le gazon ? Traitez au sulfate de fer en mars-avril ou en septembre, retirez-la, regarnissez, puis corrigez la cause : sol acide, tassé, ombre.
 saison: automne
 date: 2026-09-25
-maj: 2026-10-10
+maj: 2026-11-10
 produits: antiMousse, chaulage
 ---
 
@@ -80,6 +80,10 @@ Non : elle corrige l'acidité du sol qui favorise la mousse, sans la détruire. 
 ### Quand traiter la mousse dans la pelouse ?
 
 En mars-avril ou en septembre, quand la mousse est active, sur un gazon humide et hors gel. Laissez au moins 30 jours entre deux traitements.
+
+### Que faire contre la mousse en hiver ?
+
+Pas de traitement : d'octobre à février, l'anti-mousse n'est pas conseillé, il attend mars-avril (ou septembre). En hiver, ramassez les feuilles, évitez de marcher sur le gazon gelé ou détrempé, et notez les zones où la mousse s'étend pour en corriger la cause au printemps (voir [la pelouse en janvier](/conseils/pelouse-en-janvier)).
 
 ### Faut-il scarifier après un anti-mousse ?
 
