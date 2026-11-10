@@ -1048,3 +1048,6 @@ du premier onglet).
   demander par Jordan (lien direct dans sa page d'actions).
 - 10/11/2026 — Mammotion : nouvelle réponse d'attente du support (Allen) : demande d'autorisation écrite en cours de
   traitement, nouvelles dès que possible. Rien à répondre ; relance du 18/11 maintenue si rien n'arrive sur le fond.
+- 10/11/2026 — Article « Pelouse en janvier » publié (épingle Pinterest et ligne d'import envoyées à Jordan, page « Réponses
+  de groupe » à jour : 49 articles). Indexation de « Pelouse en décembre » demandée par Jordan dans la Search Console ;
+  celle de « Pelouse en janvier » reste à demander (lien dans sa page d'actions).
