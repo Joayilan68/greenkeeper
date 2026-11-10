@@ -1051,3 +1051,9 @@ du premier onglet).
 - 10/11/2026 — Article « Pelouse en janvier » publié (épingle Pinterest et ligne d'import envoyées à Jordan, page « Réponses
   de groupe » à jour : 49 articles). Indexation de « Pelouse en décembre » demandée par Jordan dans la Search Console ;
   celle de « Pelouse en janvier » reste à demander (lien dans sa page d'actions).
+- 10/11/2026 — GreenPoints enregistrés un par un dans la base, sur STA (go de Jordan du 10/11) : migration
+  greenpoints_un_par_un appliquée à la base STA (journal greenpoints_events, fonctions gagner_greenpoints et
+  reprendre_greenpoints, ligne greenpoints en lecture seule pour l'app ; 8 comptes, 220 gains repris, totaux identiques).
+  Bancs : base 18/18, app 28/28. Prod (correctif) après le test de Jordan sur STA : même migration sur la base PROD
+  (53 comptes, 1 750 gains ; solde « Points plus anciens » pour les 3 comptes dont l'historique avait été coupé : 570, 520
+  et 70 points), juste avant l'envoi sur main ; les gains faits entre les deux restent dans le navigateur et sont repris.
