@@ -1090,3 +1090,10 @@ du premier onglet).
   nouveautés du 22/11. Faite sur STA : carte « Nouveautés » du 22/11 (conseils lus dans l'app, partages en image, « Besoin
   d'un pro ? », textes légaux avec les liens), à la place de la carte « peau neuve » du 31/10, aux comptes créés avant le
   22/11, 30 jours au plus ; banc 12/12 ; part en prod avec le chantier du 22/11 (recette décembre n° 70).
+- 10/11/2026 — Contrôle du soir des GreenPoints en base (prod, lecture seule) : conforme. Depuis le passage (12 h 30),
+  1 gain enregistré par l'app (connexion du jour du compte de test, 15 h 24) et 21 refus normaux (déjà gagné aujourd'hui,
+  pause d'hiver), aucune reprise de points du navigateur ; 54 comptes, et pour chacun total = somme du journal = somme de
+  l'historique ; aucune erreur (error_events, journaux d'appels Supabase : 22 appels de gain et 14 lectures, tous réussis,
+  aucune écriture directe dans la table) ; les 2 comptes actifs du jour ont leur connexion du jour. Achat de test pas
+  encore fait : le compte de test a ouvert « Choisir son niveau » 3 fois depuis l'app Android installée (15 h 35), où le
+  paiement par carte est masqué (règle Google Play) ; rappel à Jordan : achat depuis un navigateur.
