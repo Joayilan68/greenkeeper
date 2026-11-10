@@ -1028,3 +1028,9 @@ du premier onglet).
   le 7/11. 2) Pilotage → Bugs : l'alerte « Promesse rejetée » du 7/11 y était, fondue dans la même erreur du 19/10 (×2) ;
   correctif en prod (main e32b53a, Pilotage seulement, fusionné dans Staging) : « Nouveau » ou « Revenu cette semaine » sur
   un problème vu dans les 7 derniers jours, et dates des dernières occurrences.
+- 10/11/2026 — Point des stats : 136 visiteurs la semaine du 2/11 (trajectoire : 90), record de 193 la semaine du 26/10 ;
+  347 visites en 15 jours (×2,3), 78 % sur les articles (Google 147, Facebook 110 dont 70 par les groupes) ; Google 133 clics
+  en 15 jours, position 16,7 ; 47 articles sur 48 indexés (« Pelouse en décembre » pas encore) ; 3 vraies inscriptions,
+  0 Premium ; 174 lecteurs d'articles, 2 entrés dans l'app. Priorités jusqu'au 25/11 : chantier du 22/11 (articles → app),
+  retouches Google (engrais d'automne, quand tondre), groupes Facebook avec les réponses notées dans la page. Section
+  « Point du 10/11 » ajoutée au document « Bilan des stats ».
