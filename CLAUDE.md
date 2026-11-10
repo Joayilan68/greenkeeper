@@ -32,6 +32,14 @@
 - Avant toute suppression, vérifier qu'il n'existe aucune dépendance (imports, routes, appels d'API,
   vercel.json, robots.txt ; en base : clés étrangères, vues, fonctions, triggers, cron).
 
+## Données des utilisateurs
+- Décision de Jordan du 10/11/2026 : aucune donnée d'un utilisateur ne doit être perdue ; tout est listé et tracé. Aucun
+  historique tronqué ni écrasé (GreenPoints, notifications, actions, ligue…) ; seules les durées de conservation de la
+  politique de confidentialité s'appliquent (purges prévues et documentées). Correctif du 10/11 : historiques des
+  GreenPoints (coupés à 200 lignes) et des notifications (14 jours) gardés en entier. Reste un risque : un téléphone
+  peut encore écraser l'historique des GreenPoints écrit par un autre appareil (correction proposée à Jordan : chaque
+  GreenPoint enregistré une fois pour toutes dans la base, comme la série).
+
 ## Monitoring des erreurs
 - Toute erreur est stockée dans `error_events` (serveur uniquement) et alertée par email via `api/alerting.cjs`
   (dédoublonnage 6 h, 20 emails/h max) ; consultation : Pilotage → Bugs.

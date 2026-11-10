@@ -1034,3 +1034,10 @@ du premier onglet).
   0 Premium ; 174 lecteurs d'articles, 2 entrés dans l'app. Priorités jusqu'au 25/11 : chantier du 22/11 (articles → app),
   retouches Google (engrais d'automne, quand tondre), groupes Facebook avec les réponses notées dans la page. Section
   « Point du 10/11 » ajoutée au document « Bilan des stats ».
+- 10/11/2026 — Décision de Jordan : son compte reste tel quel (série à 4) ; aucune donnée des utilisateurs ne doit être
+  perdue, tout doit être listé et tracé. Contrôle fait : l'historique des GreenPoints était coupé aux 200 dernières lignes
+  (3 comptes avaient déjà perdu des lignes anciennes, totaux justes) et celui des notifications aux 14 derniers jours.
+  Correctif en prod (main 5e03c40, fusionné dans Staging) : les deux gardés en entier. Reste à corriger : un téléphone peut
+  écraser l'historique des GreenPoints d'un autre appareil (proposition : chaque GreenPoint enregistré dans la base).
+  Règle « Données des utilisateurs » ajoutée à CLAUDE.md. Jordan publie régulièrement dans les groupes sans les noter dans
+  la page « Réponses de groupe ».
