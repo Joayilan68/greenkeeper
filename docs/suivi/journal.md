@@ -1041,3 +1041,8 @@ du premier onglet).
   écraser l'historique des GreenPoints d'un autre appareil (proposition : chaque GreenPoint enregistré dans la base).
   Règle « Données des utilisateurs » ajoutée à CLAUDE.md. Jordan publie régulièrement dans les groupes sans les noter dans
   la page « Réponses de groupe ».
+- 10/11/2026 — Go de Jordan : 1) « Copier » note la réponse comme publiée dans la page « Réponses de groupe » (fait :
+  page republiée, version 4 ; bouton « C'est publié » retiré ; « Retirer » dans l'historique si elle n'est pas publiée ;
+  une même réponse copiée deux fois le même jour dans le même groupe n'est notée qu'une fois). 2) GreenPoints enregistrés
+  un par un dans la base, comme la série (sur STA cette semaine, puis prod). Indexation de « Pelouse en décembre » à
+  demander par Jordan (lien direct dans sa page d'actions).
