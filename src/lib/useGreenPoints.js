@@ -76,10 +76,15 @@ export function useGreenPoints() {
     return () => abonnes.delete(setEtat);
   }, [isSignedIn, userId]);
 
-  // Gain d'une action, accordé ou refusé par la base (raison : hiver, plafond_atteint, non_fait, action_inconnue)
+  // Gain d'une action, accordé ou refusé par la base (raison : hiver, plafond_atteint, non_fait, action_inconnue). Erreur de
+  // réseau : un nouvel essai 2 s plus tard (un gain déjà enregistré est refusé par les règles, jamais compté deux fois)
   const gagnerPoints = useCallback(async (action) => {
     if (!isSignedIn || !userId) return { succes: false, points: 0 };
-    const { data, error } = await supabase.rpc("gagner_greenpoints", { p_action: action });
+    let { data, error } = await supabase.rpc("gagner_greenpoints", { p_action: action });
+    if (error) {
+      await new Promise(r => setTimeout(r, 2000));
+      ({ data, error } = await supabase.rpc("gagner_greenpoints", { p_action: action }));
+    }
     if (error || !data) return { succes: false, raison: "erreur", points: 0 };
     if (data.succes) {
       gains++;
@@ -98,5 +103,6 @@ export function useGreenPoints() {
   const prochainPalier = getProchaingPalier(total);
   const progressPalier = prochainPalier ? Math.round(((total - palier.min) / (prochainPalier.min - palier.min)) * 100) : 100;
 
-  return { charge: !!ligne, total, historique: ligne?.historique || VIDE, palier, prochainPalier, progressPalier, gagnerPoints };
+  // historique : null tant que la ligne n'est pas lue (le classement attend les points pour envoyer son score)
+  return { charge: !!ligne, total, historique: ligne ? ligne.historique : null, palier, prochainPalier, progressPalier, gagnerPoints };
 }

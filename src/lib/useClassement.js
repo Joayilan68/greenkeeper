@@ -146,7 +146,7 @@ async function syncToSupabase(userId, state) {
 // ════════════════════════════════════════════════════════════════════════════
 // HOOK PRINCIPAL
 // ════════════════════════════════════════════════════════════════════════════
-export function useClassement(gpHistorique = [], profile = null, isPaid = false, diagnostics = null) {
+export function useClassement(gpHistorique = null, profile = null, isPaid = false, diagnostics = null) {
   const { userId, isSignedIn } = useAuth();
   const { classementActif } = useSaison();
   const [state, setState] = useState(() => readCache() || defaultState());
@@ -207,7 +207,8 @@ export function useClassement(gpHistorique = [], profile = null, isPaid = false,
 
   // ── 2. CALCULS RÉACTIFS (côté client, instantané) ────────────────────────
   const debutMois = debutMoisActuel();
-  const gpDuMois  = gpHistorique.filter(h => h.date >= debutMois).reduce((s, h) => s + (h.points || 0), 0);
+  const gpCharges = gpHistorique !== null; // GreenPoints lus dans la base (useGreenPoints)
+  const gpDuMois  = (gpHistorique || []).filter(h => h.date >= debutMois).reduce((s, h) => s + (h.points || 0), 0);
   // ✅ Recalcul dynamique — 100% pur, sans dépendre de profileCompletion stocké
   // profileCompletion en cache/Supabase peut être périmé → on recalcule toujours
   const completion = (() => {
@@ -244,7 +245,7 @@ export function useClassement(gpHistorique = [], profile = null, isPaid = false,
   // Le score_mensuel_final est utilisé par la fonction pg_cron du 1er du mois
   // pour calculer les promotions/relégations. Il doit donc rester à jour.
   useEffect(() => {
-    if (!loaded || !userId) return;
+    if (!loaded || !userId || !gpCharges) return; // score incomplet tant que les GreenPoints ne sont pas lus
     if (scoreUser === lastSyncedScore.current) return;
 
     const timer = setTimeout(() => {
@@ -255,7 +256,7 @@ export function useClassement(gpHistorique = [], profile = null, isPaid = false,
     }, 1500); // debounce 1.5s pour éviter spam d'écritures
 
     return () => clearTimeout(timer);
-  }, [scoreUser, loaded, userId]); // eslint-disable-line
+  }, [scoreUser, loaded, userId, gpCharges]); // eslint-disable-line
 
   // ── 4. ENREGISTRER CONNEXION DU JOUR ─────────────────────────────────────
   const enregistrerConnexionJour = useCallback(() => {
