@@ -1057,3 +1057,10 @@ du premier onglet).
   Bancs : base 18/18, app 28/28. Prod (correctif) après le test de Jordan sur STA : même migration sur la base PROD
   (53 comptes, 1 750 gains ; solde « Points plus anciens » pour les 3 comptes dont l'historique avait été coupé : 570, 520
   et 70 points), juste avant l'envoi sur main ; les gains faits entre les deux restent dans le navigateur et sont repris.
+- 10/11/2026 — Test de Jordan sur STA des GreenPoints en base : tout est OK (890 partout au lieu de 810 : défi +50 et quiz
+  +30, faits à 12 h 11, 3 bonnes réponses sur 3). Constat en analysant le test : dans la prod, 17 comptes ont des points
+  identiques à la milliseconde, copiés par l'ancienne version d'un compte à l'autre sur un même appareil (les points du
+  navigateur n'étaient liés à aucun compte) : presque tous des comptes de test de Jordan (0 ou 1 jour d'utilisation), plus
+  2 comptes utilisés sur un même téléphone. Rien supprimé (aucune donnée perdue) ; la nouvelle version ne copie plus rien
+  et la reprise du navigateur ignore les points déjà en base pour un autre compte (correction appliquée à la base STA,
+  banc 18/18).

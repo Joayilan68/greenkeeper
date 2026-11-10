@@ -42,9 +42,10 @@
   `greenpoints_regles()`, seule source ; plafond par période de Paris, délai, pause d'hiver de novembre à janvier, défi et
   quiz de la ligue réellement faits), qui l'écrit dans le journal `greenpoints_events` (serveur uniquement, une ligne par
   gain, jamais modifiée) et dans la ligne `greenpoints` du compte (total, historique), en lecture seule pour l'app
-  (`src/lib/useGreenPoints.js`). Points restés dans le navigateur repris une fois et vérifiés (`reprendre_greenpoints`) ;
-  historiques coupés à 200 lignes : points manquants gardés en un solde « Points plus anciens ». Toute règle changée =
-  migration sur les deux projets. Journal compris dans l'export et la suppression des données (`api/rgpd-data.js`).
+  (`src/lib/useGreenPoints.js`). Points restés dans le navigateur repris une fois et vérifiés (`reprendre_greenpoints`),
+  jamais ceux d'un autre compte (l'ancienne version copiait les points du navigateur dans chaque compte connecté sur le même
+  appareil : copies du passé gardées, rien supprimé) ; historiques coupés à 200 lignes : points manquants gardés en un
+  solde « Points plus anciens ». Toute règle changée = migration sur les deux projets. Journal compris dans l'export et la suppression des données (`api/rgpd-data.js`).
 
 ## Monitoring des erreurs
 - Toute erreur est stockée dans `error_events` (serveur uniquement) et alertée par email via `api/alerting.cjs`
