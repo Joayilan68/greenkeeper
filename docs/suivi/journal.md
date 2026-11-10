@@ -1081,3 +1081,8 @@ du premier onglet).
   du point KPI du lundi : inscription et abonnement de test). L'essai de 7 jours n'empêche pas l'achat (page « Choisir son
   niveau » ouverte pendant l'essai, paiement immédiat sans essai chez Stripe) ; achat à faire dans le navigateur, pas dans
   l'app Android (paiement par carte masqué, règle Google Play).
+- 10/11/2026 — Textes légaux en prod (correctif, go de Jordan du 10/11 ; main f534947, fusionné dans Staging) : CGU article e
+  (vraies sources de GreenPoints, pause d'hiver), politique 5.3 (historique des messages gardé tant que le compte existe),
+  encart Premium du diagnostic sans chiffres jamais mesurés ; CGU et politique datées du 10/11. Dates de STA alignées sur la
+  prod (CGV et cookies du 31/10). Recette « Déjà en prod » n° 78. Reste à vérifier : mentions légales, cookies, CGV et
+  cases à cocher de l'inscription.
