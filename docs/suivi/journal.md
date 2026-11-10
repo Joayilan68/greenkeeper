@@ -1064,3 +1064,9 @@ du premier onglet).
   2 comptes utilisés sur un même téléphone. Rien supprimé (aucune donnée perdue) ; la nouvelle version ne copie plus rien
   et la reprise du navigateur ignore les points déjà en base pour un autre compte (correction appliquée à la base STA,
   banc 18/18).
+- 10/11/2026 — GreenPoints en base : en prod (correctif, go de Jordan du 10/11 après son test sur STA). Sauvegarde de la
+  table avant (greenpoints_sauvegarde_20261110, à supprimer le 24/11), migration greenpoints_un_par_un sur la base PROD
+  (53 comptes, 1 750 gains repris, soldes « Points plus anciens » de 570, 520 et 70 points ; totaux identiques à la
+  sauvegarde, aucune ligne perdue), puis l'app (main f0b9497 ; en plus : nouvel essai après une erreur de réseau, score du
+  classement envoyé seulement une fois les points lus). Bancs : base 18/18 dans la prod (tout annulé à la fin), app 32/32 ;
+  aucune erreur après la mise en ligne. Fusion de main dans Staging. Recette « Déjà en prod » n° 77.
