@@ -8,8 +8,7 @@
 //
 // CASCADE DE SUPPRESSION :
 //   1. Photos Cloudinary (folder mg360-diagnostics/<user_id>)
-//   2. Toutes les tables Supabase : profiles, histories, greenpoints, streaks,
-//      diagnostics, reminders, user_consents, user_access, push_subscriptions
+//   2. Toutes les tables Supabase du compte (liste supabaseTables ci-dessous)
 //   3. Compte Clerk (DELETE /v1/users/{user_id})
 //
 // SÉCURITÉ : jeton Clerk (Bearer) à signature vérifiée — api/auth.cjs
@@ -158,6 +157,7 @@ module.exports = async function handler(req, res) {
         profileRes,
         historyRes,
         greenRes,
+        greenJournalRes,
         streakRes,
         diagsRes,
         remindersRes,
@@ -173,6 +173,7 @@ module.exports = async function handler(req, res) {
         supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle(),
         supabase.from("histories").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
         supabase.from("greenpoints").select("*").eq("user_id", userId).maybeSingle(),
+        supabase.from("greenpoints_events").select("action, points, label, date_ms, source, cree_le").eq("user_id", userId).order("date_ms"),
         supabase.from("streaks").select("*").eq("user_id", userId).maybeSingle(),
         supabase.from("diagnostics").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
         supabase.from("reminders").select("*").eq("user_id", userId).maybeSingle(),
@@ -210,6 +211,7 @@ module.exports = async function handler(req, res) {
           greenpoints: {
             total:       getData(greenRes)?.total || 0,
             historique:  getData(greenRes)?.historique || [],
+            journal:     getData(greenJournalRes) || [], // chaque gain enregistré par la base (depuis le 10/11/2026)
             recompenses: getData(greenRes)?.recompenses || [],
           },
           streak: {
@@ -259,6 +261,7 @@ module.exports = async function handler(req, res) {
         "histories",
         "diagnostics",
         "greenpoints",
+        "greenpoints_events",  // ajout 10/11 — journal des GreenPoints gagnés
         "streaks",
         "reminders",
         "user_consents",

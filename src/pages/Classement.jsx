@@ -18,7 +18,7 @@ export default function Classement() {
   const { profile } = useProfile();
   const { diagnostics } = useDiagnostics();
   const { isPaid = false } = useSubscription() || {};
-  const { historique, total: gpTotal } = useGreenPoints();
+  const { historique } = useGreenPoints();
   const { actuel: streak } = useStreak();
   const { classementActif, label: saisonLabel, emoji: saisonEmoji } = useSaison();
 

@@ -17,7 +17,7 @@ export default function MesProgres() {
   const { profile } = useProfile();
   const { isPaid = false } = useSubscription() || {};
   const { classementActif } = useSaison();
-  const { total: gpTotal, palier, prochainPalier, progressPalier, historique: gpHistorique } = useGreenPoints();
+  const { total: gpTotal, charge: gpCharge, palier, prochainPalier, progressPalier, historique: gpHistorique } = useGreenPoints();
   const { actuel: streak, enDanger } = useStreak();
   const {
     ligueActuelle, position, totalJoueurs, pointsSemaine,
@@ -51,13 +51,13 @@ export default function MesProgres() {
       <div data-tuile="mongazon-greenpoints">
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:8 }}>
           <span style={{ fontSize:13, fontWeight:700, color:"#a5d6a7" }}>
-            🌿 {gpTotal.toLocaleString("fr-FR")} <span style={{ fontSize:11, fontWeight:600, color:"#81c784" }}>GreenPoints</span>
+            🌿 {gpCharge ? gpTotal.toLocaleString("fr-FR") : "…"} <span style={{ fontSize:11, fontWeight:600, color:"#81c784" }}>GreenPoints</span>
           </span>
-          <span style={{ background: palier?.couleur || "#2e7d32", color:"white", borderRadius:20, padding:"2px 10px", fontSize:11, fontWeight:600, whiteSpace:"nowrap" }}>
-            {palier?.icone} {palier?.label}
-          </span>
+          {gpCharge && <span style={{ background: palier.couleur, color:"white", borderRadius:20, padding:"2px 10px", fontSize:11, fontWeight:600, whiteSpace:"nowrap" }}>
+            {palier.icone} {palier.label}
+          </span>}
         </div>
-        {prochainPalier && (
+        {gpCharge && prochainPalier && (
           <div style={{ marginTop:6 }}>
             <div style={{ background:"rgba(255,255,255,0.1)", borderRadius:8, height:5, overflow:"hidden" }}>
               <div style={{ width:`${progressPalier}%`, height:"100%", background:"linear-gradient(90deg,#43a047,#a5d6a7)", borderRadius:8, transition:"width 0.8s" }}/>
