@@ -1086,3 +1086,7 @@ du premier onglet).
   encart Premium du diagnostic sans chiffres jamais mesurés ; CGU et politique datées du 10/11. Dates de STA alignées sur la
   prod (CGV et cookies du 31/10). Recette « Déjà en prod » n° 78. Reste à vérifier : mentions légales, cookies, CGV et
   cases à cocher de l'inscription.
+- 10/11/2026 — Demande de Jordan : ligne des CGU et de la politique de confidentialité mises à jour le 10/11 dans les
+  nouveautés du 22/11. Faite sur STA : carte « Nouveautés » du 22/11 (conseils lus dans l'app, partages en image, « Besoin
+  d'un pro ? », textes légaux avec les liens), à la place de la carte « peau neuve » du 31/10, aux comptes créés avant le
+  22/11, 30 jours au plus ; banc 12/12 ; part en prod avec le chantier du 22/11 (recette décembre n° 70).

@@ -298,6 +298,10 @@
   fait peau neuve » du 3 au 8/11, aux comptes créés avant le 31/10 qui acceptent les conseils (notification, sinon
   email), avec l'offre de saison pour un compte sans Premium. Annonces dans `src/lib/annonces.json` (moteur des
   notifications, niveau 4, une seule fois par compte) ; une annonce passée est retirée du fichier.
+- Carte « Nouveautés » de l'accueil (`src/components/CarteNouveautes.jsx`) : version de la mise en prod du 22/11/2026
+  (conseils lus dans l'app, partages en image, « Besoin d'un pro ? », et ligne des CGU et de la politique de
+  confidentialité mises à jour le 10/11 : demande de Jordan du 10/11), aux comptes créés avant le 22/11, jusqu'à ce qu'ils
+  la ferment, 30 jours au plus ; elle remplace la carte « Mongazon360 fait peau neuve » du 31/10.
 
 ## Contraintes
 - Vercel Hobby : 12 fonctions maximum dans `api/` — pas de nouvel endpoint sans en libérer un.

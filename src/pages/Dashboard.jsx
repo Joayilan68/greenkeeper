@@ -146,8 +146,8 @@ export default function Dashboard() {
 
       <div style={scroll}>
 
-        {/* ── NOUVEAUTÉS DE LA REFONTE (comptes créés avant la nouvelle version) ── */}
-        <CarteNouveautes isPaid={isPaid} />
+        {/* ── NOUVEAUTÉS DU 22/11 (comptes créés avant cette mise en prod) ── */}
+        <CarteNouveautes />
 
         {/* ── NOTIF PUSH ────────────────────────────────────────────────────── */}
         {isSupported && showPushBanner && (
