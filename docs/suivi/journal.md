@@ -1102,3 +1102,9 @@ du premier onglet).
   l'enregistrement, envoi du fichier) ; montage automatique prêt (voix nettoyée, blancs réduits, sous-titres calés mot à mot,
   Bob animé au rythme de la voix, photo de notre pelouse, format des Reels), testé avec une voix de synthèse jamais publiée.
   Rien ne sera publié sans l'accord de Jordan.
+- 11/11/2026 — Contrôle du défi de la ligue (base PROD, lecture seule) : conforme. Aucun compte n'avait droit au défi ce
+  matin : les 3 comptes actifs qui acceptent les notifications avaient fait le défi et le quiz le 8/11 (astuce reçue à la
+  place), les 3 autres comptes actifs n'acceptent pas les notifications, et les comptes sans visite depuis 7 jours ou plus en
+  sont exclus (anti-fatigue). Simulation du moteur de prod : défi envoyé le mercredi avant le conseil de saison, rien sinon.
+  GreenPoints : défi et quiz de la semaine 2 comptés une seule fois (50 et 30), totaux exacts ; aucune erreur depuis 7 h.
+  Recette « Déjà en prod » n° 76 et n° 39 : OK. Achat de test du Premium annuel : pas encore fait.
