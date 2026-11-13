@@ -122,6 +122,15 @@
   Saisie par Jordan : jamais dans la conversation ni dans le dépôt ; contrôle dans Pilotage → Services. App Meta
   « Mongazon360 Publications » (administrateurs : Jordan et Ayfer), à garder publiée : sinon les publications ne sont
   visibles que par ses administrateurs.
+- Vidéos explicatives avec Bob (décision de Jordan du 11/11/2026, test de 4 semaines, bilan le 14/12) : le mercredi à
+  16 h 30, à la place de la publication image du lot (18/11 mousse, 25/11 feuilles mortes, 2/12 pelouse gelée, 9/12 tondre
+  en hiver). Texte de 6 phrases (environ 45 s, en « tu », tiré de l'article et de la base) et description des images de
+  chaque scène dans la collection `textes` de la page privée « Voix de Bob » (claude.ai), le samedi d'avant avec le lot ;
+  Jordan s'enregistre (appli Enregistreur vocal, pas un message vocal) et envoie le fichier dans la conversation au plus
+  tard le lundi soir, sinon la publication image part. Montage : `scripts/video-bob/monter.sh` (voix nettoyée, blancs
+  réduits, sous-titres calés mot à mot, Bob animé, photo de notre pelouse, format des Reels) ; vidéo et couverture poussées
+  comme les visuels des lots, ligne du mercredi mise à jour (video, visuel, lien suivi `utm_medium=reel&utm_campaign=video-<sujet>`,
+  statut « à valider ») : rien ne part sans la validation de Jordan dans Pilotage → Réseaux.
 - Réponses dans les groupes Facebook (décision de Jordan du 31/10/2026) : Jordan publie lui-même, avec sa page privée
   « Réponses de groupe » (claude.ai) : réponse en « tu » tirée du « En bref » de l'article qui répond le mieux, lien
   suivi `?utm_source=facebook&utm_medium=groupe&utm_campaign=groupe-<nom du groupe>` (Pilotage → Activité, par
