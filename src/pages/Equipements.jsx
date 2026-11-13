@@ -61,7 +61,7 @@ const A_VENIR = [
 ];
 const TYPES_DEMANDE = [["robot", "Robot tondeuse"], ["arrosage", "Arrosage"], ["station", "Station météo"], ["capteur", "Capteur de sol"], ["autre", "Autre"]];
 const NOMS_STATION = { netatmo:"Netatmo", ecowitt:"Ecowitt", davis:"Davis" };
-const NOMS_ROBOT = { husqvarna:"Husqvarna Automower", gardena:"Gardena SILENO", mammotion:"Mammotion" };
+const NOMS_ROBOT = { husqvarna:"Husqvarna Automower", gardena:"Gardena SILENO" };
 const lien = { background:"none", border:"none", padding:0, color:"#81c784", fontSize:11, cursor:"pointer", textDecoration:"underline" };
 const explication = { fontSize:11, color:"#81c784", lineHeight:1.6, margin:"0 0 10px" };
 const note = { fontSize:10, color:"#4a7c5c", lineHeight:1.5, marginTop:10 };
@@ -71,11 +71,10 @@ const NOTES_STATION = {
   ecowitt: "Clés chiffrées, supprimables sur ecowitt.net.",
   davis: "Clés chiffrées, régénérables sur weatherlink.com.",
 };
-const MARQUES_ROBOT = [["husqvarna", "Husqvarna Automower"], ["gardena", "Gardena SILENO"], ["mammotion", "Mammotion"], ["autre", "Autre marque"]];
+const MARQUES_ROBOT = [["husqvarna", "Husqvarna Automower"], ["gardena", "Gardena SILENO"], ["autre", "Autre marque"]];
 const NOTES_ROBOT = {
   husqvarna: "Tu te connectes sur le site du groupe Husqvarna : Mongazon360 ne voit jamais ton mot de passe.",
   gardena: "Tu te connectes sur le site du groupe Husqvarna : Mongazon360 ne voit jamais ton mot de passe ; si ton arrosage Gardena est sur le même compte, il est connecté en même temps.",
-  mammotion: "Identifiants chiffrés ; les réinitialiser sur developer.mammotion.com coupe l'accès.",
 };
 const MARQUES_ARROSAGE = [["gardena", "Gardena"], ["rachio", "Rachio"], ["autre", "Autre marque"]];
 const AUTRE_MARQUE = "Ta marque n'est pas encore connectable : indique-la avec ton modèle tout en bas de cette page, dans « Ton équipement n'est pas dans la liste ? ». Nous ajoutons en priorité les marques les plus demandées.";
@@ -97,8 +96,8 @@ function ChoixMarque({ question, marques, choix, onChoix }) {
   );
 }
 
-// Mes équipements (depuis Mon Gazon) : station météo Netatmo, Ecowitt ou Davis, robot
-// Husqvarna, Gardena ou Mammotion et arrosage Gardena ou Rachio connectés ; équipement non listé à signaler ; caméras à venir
+// Mes équipements (depuis Mon Gazon) : station météo Netatmo, Ecowitt ou Davis, robot Husqvarna ou Gardena
+// et arrosage Gardena ou Rachio connectés ; équipement non listé à signaler ; caméras à venir
 export default function Equipements() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
@@ -111,7 +110,6 @@ export default function Equipements() {
   const [stationsDavis, setStationsDavis] = useState(null);
   const [demande, setDemande] = useState({ type:"robot", marque:"", modele:"" });
   const [demandeEnvoyee, setDemandeEnvoyee] = useState(false);
-  const [idsMammotion, setIdsMammotion] = useState({ clientId:"", clientSecret:"" });
   const retourHq = RETOURS_HUSQVARNA[params.get("husqvarna")] || RETOURS_GARDENA[params.get("gardena")]
     || RETOURS_GARDENA_ROBOT[params.get("gardena_robot")] || RETOURS_NETATMO[params.get("netatmo")];
   const [cleRachio, setCleRachio] = useState("");
@@ -158,10 +156,6 @@ export default function Equipements() {
   };
   const envoyerDemande = async () => {
     if (await action({ action:"demande_equipement", ...demande })) setDemandeEnvoyee(true);
-  };
-  const connecterMammotion = async () => {
-    if (!await action({ action:"mammotion", ...idsMammotion })) return;
-    setIdsMammotion({ clientId:"", clientSecret:"" }); charger();
   };
 
   // Robot ou arrosage connecté : déclaré aussi dans le profil (rappels et conseils adaptés à l'équipement)
@@ -355,18 +349,14 @@ export default function Equipements() {
                 {eqRobot.nom} · {NOMS_ROBOT[eqRobot.marque]} · {eqRobot.statut === "erreur" ? `⚠️ ${eqRobot.erreur}` : "✓ connecté"}
               </div>
               <div style={{ fontSize:11, color:"#a5d6a7", lineHeight:1.6, marginBottom:10 }}>
-                {eqRobot.marque === "mammotion"
-                  ? "Dans « Aujourd'hui », l'app te propose de le faire rentrer à sa base quand la tonte est déconseillée (pluie, gel, vent, semis en cours, hors saison) ou de reprendre une tonte en pause : rien n'est envoyé au robot sans ta validation."
-                  : "Dans « Aujourd'hui », l'app te propose de mettre ton robot au repos (pluie, gel, vent, semis en cours, hors saison) ou de relancer son planning : rien n'est envoyé au robot sans ta validation."}
+                Dans « Aujourd'hui », l'app te propose de mettre ton robot au repos (pluie, gel, vent, semis en cours, hors saison) ou de relancer son planning : rien n'est envoyé au robot sans ta validation.
               </div>
-              {eqRobot.statut === "erreur" && (eqRobot.marque === "mammotion" ? (
-                <div style={{ fontSize:11, color:"#81c784", lineHeight:1.6, marginBottom:10 }}>Si tes identifiants ont été réinitialisés, déconnecte le robot puis reconnecte-le avec les nouveaux.</div>
-              ) : (
+              {eqRobot.statut === "erreur" && (
                 <button onClick={() => connexion(eqRobot.marque === "gardena" ? "gardena_robot" : "husqvarna")} disabled={envoi} style={{ ...bouton, marginBottom:10 }}>Reconnecter mon robot</button>
-              ))}
+              )}
               <div>
                 <button onClick={() => retirer(eqRobot.id)} disabled={envoi} style={lien}>
-                  Déconnecter le robot (l'accès est {eqRobot.marque === "mammotion" ? "effacé" : "révoqué"})
+                  Déconnecter le robot (l'accès est révoqué)
                 </button>
               </div>
             </>
@@ -386,25 +376,6 @@ export default function Equipements() {
                 <>
                   <div style={explication}>Robot SILENO relié à l'application GARDENA smart system : tu te connectes sur le site du groupe Husqvarna, puis tu reviens ici.</div>
                   <button onClick={() => connexion("gardena_robot")} disabled={envoi} style={bouton}>{envoi ? "Ouverture…" : "Connecter mon robot Gardena"}</button>
-                </>
-              )}
-              {marqueRobot === "mammotion" && (
-                <>
-                  <div style={explication}>
-                    Entièrement pris en charge : LUBA 3 AWD (liste complète à venir chez Mammotion). Modèles sortis avant 2025 : non pris en charge.<br/>
-                    1. Sur <a href="https://developer.mammotion.com" target="_blank" rel="noopener noreferrer" style={{ color:"#a5d6a7" }}>developer.mammotion.com</a>, connecte-toi avec ton compte Mammotion et touche « Create Credentials » : note le <strong>client_id</strong> et le <strong>client_secret</strong>, affichés une seule fois.<br/>
-                    2. Colle-les ci-dessous.
-                  </div>
-                  <label style={{ fontSize:11, color:"#81c784" }}>client_id
-                    <input value={idsMammotion.clientId} onChange={e => setIdsMammotion({ ...idsMammotion, clientId: e.target.value })} autoComplete="off" style={champ} />
-                  </label>
-                  <div style={{ height:8 }} />
-                  <label style={{ fontSize:11, color:"#81c784" }}>client_secret
-                    <input value={idsMammotion.clientSecret} onChange={e => setIdsMammotion({ ...idsMammotion, clientSecret: e.target.value })} autoComplete="off" style={champ} />
-                  </label>
-                  <button onClick={connecterMammotion} disabled={envoi || !idsMammotion.clientId || !idsMammotion.clientSecret} style={{ ...bouton, marginTop:12, opacity: idsMammotion.clientId && idsMammotion.clientSecret ? 1 : 0.5 }}>
-                    {envoi ? "Connexion…" : "Connecter mon robot Mammotion"}
-                  </button>
                 </>
               )}
               {marqueRobot === "autre" && <div style={explication}>{AUTRE_MARQUE}</div>}

@@ -1122,3 +1122,9 @@ du premier onglet).
   produits et services sont réservés à l'usage personnel et résidentiel. Le robot Mammotion ne part pas en prod (CLAUDE.md
   mis à jour) ; fichier de suivi mis à jour à la demande de Jordan (lignes 350 et 362) ; relance du 18/11 annulée (action
   close). Le connecteur reste sur STA en attendant la décision de Jordan (le retirer avant la mise en prod de décembre).
+- 13/11/2026 — Mammotion retiré de la STA (go de Jordan du 13/11, après le refus d'usage commercial) : connecteur du
+  serveur, liste des marques de robot de « Mes équipements », consignes et contexte de Bob, politique de confidentialité
+  (équipements connectés). Aucune donnée concernée : aucun robot connecté ni demande dans les deux bases, pas de changement
+  de schéma. Recette décembre : n° 32 et 33 retirés (numéros des autres tests inchangés), n° 35 et 58 mis à jour.
+  Contrôles : build, comportement du robot identique pour Husqvarna et Gardena (372 960 comparaisons avant/après), banc
+  serveur 8/8 (action « mammotion » refusée, connexions Husqvarna, Gardena, Netatmo et Davis intactes).

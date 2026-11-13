@@ -8,9 +8,8 @@
 //   POST { action: "davis_stations", apiKey, apiSecret }          → stations du compte WeatherLink (Davis)
 //   POST { action: "davis", apiKey, apiSecret, station, nom }     → connexion de la station Davis (clés chiffrées)
 //   POST { action: "husqvarna" }              → adresse de connexion au compte Husqvarna
-//   POST { action: "mammotion", clientId, clientSecret }          → connexion du robot Mammotion (identifiants chiffrés)
 //   POST { action: "robot", commande, niveau } → commande validée par l'utilisateur (repos_journee, repos_long, reprendre ;
-//                                               hauteur avec niveau 1-9 pour un Automower ; rentrer, reprendre pour un Mammotion)
+//                                               hauteur avec niveau 1-9 pour un Automower)
 //   POST { action: "gardena" }                → adresse de connexion au compte Husqvarna Group pour l'arrosage Gardena
 //   POST { action: "gardena_robot" }          → idem pour le robot Gardena SILENO
 //   POST { action: "rachio_programmateurs", apiKey } → programmateurs du compte Rachio
@@ -109,7 +108,7 @@ async function retourConnexion(req, res, supabase) {
 // Connexions et commandes réservées à Premium (niveaux.json : station, robot, arrosage et capteurs connectés) : abonnement,
 // essai de 7 jours, Premium offert ou admin ; la liste, la déconnexion et la demande d'un équipement restent ouvertes à tous
 const ACTIONS_PREMIUM = new Set(["stations", "ajouter", "netatmo", "davis_stations", "davis", "husqvarna", "gardena", "gardena_robot",
-  "mammotion", "rachio_programmateurs", "rachio", "arrosage", "robot"]);
+  "rachio_programmateurs", "rachio", "arrosage", "robot"]);
 async function accesPremium(req, userId) {
   const u = await getAuthUser(req);
   if (!u) return false;
@@ -135,8 +134,7 @@ module.exports = async function handler(req, res) {
       return res.json({ equipements: data || [], station, robot, arrosage });
     }
 
-    const { action, applicationKey, apiKey, apiSecret, mac, station, nom, id, commande, programmateur, zone, minutes, niveau,
-      clientId, clientSecret } = req.body || {};
+    const { action, applicationKey, apiKey, apiSecret, mac, station, nom, id, commande, programmateur, zone, minutes, niveau } = req.body || {};
     const cles = { applicationKey: String(applicationKey || "").trim(), apiKey: String(apiKey || "").trim() };
     if (ACTIONS_PREMIUM.has(action) && !await accesPremium(req, userId))
       return res.status(403).json({ error: "Les équipements connectés sont inclus dans Premium." });
@@ -195,22 +193,6 @@ module.exports = async function handler(req, res) {
       if (!["station", "robot", "arrosage", "capteur", "autre"].includes(genre) || !marqueNette) return res.status(400).json({ error: "Type et marque requis" });
       const { error } = await supabase.from("equipements_demandes")
         .insert({ type: genre, marque: marqueNette, modele: String(modele || "").trim().slice(0, 80) || null });
-      if (error) throw error;
-      return res.json({ ok: true });
-    }
-
-    if (action === "mammotion") {
-      let jeton, robots;
-      try {
-        jeton = await E.jetonMammotion({ clientId: String(clientId || "").trim(), clientSecret: String(clientSecret || "").trim() });
-        robots = await E.robotsMammotion(jeton.access);
-      } catch (e) { return res.status(400).json({ error: e.message }); }
-      if (!robots.length) return res.status(400).json({ error: "Aucun robot sur ce compte Mammotion (l'accès ne couvre que les modèles sortis depuis 2025)" });
-      const robot = robots[0]; // un robot par compte dans l'app pour l'instant
-      const { error } = await supabase.from("equipements").upsert({
-        user_id: userId, type: "robot", marque: "mammotion", appareil: robot.id, nom: robot.nom.slice(0, 60),
-        secret: E.chiffrer(jeton), statut: "connecte", erreur: null, mesures: robot, mesures_at: new Date().toISOString(),
-      }, { onConflict: "user_id,type" });
       if (error) throw error;
       return res.json({ ok: true });
     }
