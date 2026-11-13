@@ -3,6 +3,7 @@ title: Pelouse en janvier : que faire, et comment préparer le printemps ?
 description: En janvier, le gazon dort : pas de tonte, d'engrais ni de semis. Les gestes utiles, les erreurs à éviter et ce qui reprend en février-mars selon votre région.
 saison: hiver
 date: 2026-11-10
+maj: 2026-11-13
 ---
 
 Janvier est le cœur de l'hiver : la pelouse est en plein repos et il n'y a **aucun travail du gazon à faire, dans aucune région**. Le mois sert à la protéger des erreurs qui l'abîment, et à préparer un printemps qui commence plus tôt qu'on ne le croit : dès février dans le Sud, en mars partout ailleurs.
@@ -66,7 +67,7 @@ Le premier geste de l'année est **l'engrais de printemps**, en février-mars se
 | Semis et regarnissage | Mars-avril | Mars-avril | Mars-avril |
 | Désherbage | Avril | Avril | Avril |
 
-Dans chaque région, le bon jour dépend ensuite de la météo et de la température du sol (voir [la première tonte](/conseils/premiere-tonte-printemps), [scarifier sa pelouse](/conseils/scarifier-pelouse) et [semer au printemps](/conseils/semer-gazon-printemps)).
+Dans chaque région, le bon jour dépend ensuite de la météo et de la température du sol (voir [la première tonte](/conseils/premiere-tonte-printemps), [scarifier sa pelouse](/conseils/scarifier-pelouse) et [semer au printemps](/conseils/semer-gazon-printemps)). Le mois suivant, en détail : [pelouse en février](/conseils/pelouse-en-fevrier).
 
 ## Questions fréquentes
 
