@@ -1108,3 +1108,13 @@ du premier onglet).
   sont exclus (anti-fatigue). Simulation du moteur de prod : défi envoyé le mercredi avant le conseil de saison, rien sinon.
   GreenPoints : défi et quiz de la semaine 2 comptés une seule fois (50 et 30), totaux exacts ; aucune erreur depuis 7 h.
   Recette « Déjà en prod » n° 76 et n° 39 : OK. Achat de test du Premium annuel : pas encore fait.
+- 13/11/2026 — Article d'hiver du vendredi en prod (main 17d2e63) : « Pelouse en février : que faire, et peut-on déjà
+  tondre ? » (recherches « tondre en février », « peut on tondre en février », « quand tondre la pelouse après l'hiver » ;
+  sujet 8 de la liste, les sujets 2 à 4 et 6 étant couverts par des articles existants) : gestes du mois, tableau par région
+  (premier engrais, révision de la tondeuse, première tonte, semis ; règles complémentaires, matrice des zones et fenêtres de
+  semis de la base), erreurs à éviter, questions fréquentes ; épingle Pinterest ; lien depuis « Pelouse en janvier » (maj).
+  Catalogue de la page « Réponses de groupe » régénéré (50 articles).
+- 13/11/2026 — Décision de Jordan (11/11) : test de 4 vidéos explicatives avec Bob et sa voix, une par semaine, le mercredi
+  à 16 h 30 à la place de la publication image : 18/11 « Mousse : chaux ou sulfate de fer ? », 25/11 « Feuilles mortes »,
+  2/12 « Pelouse gelée », 9/12 « Tondre en hiver » ; texte sur la page « Voix de Bob » le samedi d'avant, voix de Jordan
+  au plus tard le lundi soir, sinon la publication image part ; lien suivi utm_campaign=video-<sujet> ; bilan le 14/12.
