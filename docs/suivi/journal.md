@@ -1118,3 +1118,7 @@ du premier onglet).
   à 16 h 30 à la place de la publication image : 18/11 « Mousse : chaux ou sulfate de fer ? », 25/11 « Feuilles mortes »,
   2/12 « Pelouse gelée », 9/12 « Tondre en hiver » ; texte sur la page « Voix de Bob » le samedi d'avant, voix de Jordan
   au plus tard le lundi soir, sinon la publication image part ; lien suivi utm_campaign=video-<sujet> ; bilan le 14/12.
+- 13/11/2026 — Mammotion : réponse définitive à la demande d'autorisation écrite d'usage commercial (29/10) : refus, leurs
+  produits et services sont réservés à l'usage personnel et résidentiel. Le robot Mammotion ne part pas en prod (CLAUDE.md
+  mis à jour) ; fichier de suivi mis à jour à la demande de Jordan (lignes 350 et 362) ; relance du 18/11 annulée (action
+  close). Le connecteur reste sur STA en attendant la décision de Jordan (le retirer avant la mise en prod de décembre).
