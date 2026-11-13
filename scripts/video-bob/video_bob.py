@@ -436,7 +436,7 @@ def ondes(a):
 ff = subprocess.Popen(["/usr/bin/ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}",
                        "-r", str(IPS), "-i", "-", "-i", brut_wav, "-shortest",
                        "-vf", "scale=out_color_matrix=bt709:out_range=tv,format=yuv420p",
-                       "-c:v", "libx264", "-preset", "medium", "-crf", "21", "-profile:v", "high", "-level:v", "4.0",
+                       "-c:v", "libx264", "-preset", "slow", "-crf", "26", "-profile:v", "high", "-level:v", "4.0",
                        "-bf", "0", "-g", str(2 * IPS), "-colorspace", "bt709", "-color_primaries", "bt709",
                        "-color_trc", "bt709", "-color_range", "tv",
                        "-c:a", "aac", "-ar", "48000", "-ac", "2", "-b:a", "160k",
