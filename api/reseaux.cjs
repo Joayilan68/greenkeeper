@@ -9,12 +9,15 @@
 // Vidéo (colonne video, demande de Jordan du 7/11/2026) : publiée en Reel sur Facebook et Instagram, le visuel servant de
 // couverture. Meta traite la vidéo avant de la publier : la publication l'attend au plus ATTENTE_REEL_MS, puis passe au
 // statut « traitement » et se termine à un passage suivant de la tâche (toutes les 15 min).
+// Voix de synthèse (colonne ia, vidéos de Bob depuis le 18/11/2026) : Meta demande que la vidéo soit déclarée, elle porte
+// alors l'étiquette « Infos sur l'IA » sur Facebook et Instagram (is_ai_generated).
 
 const META = "https://graph.facebook.com/v26.0";
 const ENVOI_VIDEO = "https://rupload.facebook.com/video-upload/v26.0";
 const IMAGE_TEST = "https://mongazon360.fr/images/conseils/regarnissage-avant-apres.jpg";
 const ATTENTE_REEL_MS = 30000;
 const pause = (ms) => new Promise(r => setTimeout(r, ms));
+const etiquetteIA = (pub) => (pub.ia ? { is_ai_generated: "true" } : {});
 const jourParis = (ms = Date.now()) => new Date(ms).toLocaleDateString("sv-SE", { timeZone: "Europe/Paris" });
 const heureParis = (ms = Date.now()) => new Date(ms).toLocaleTimeString("sv-SE", { timeZone: "Europe/Paris" });
 
@@ -85,7 +88,7 @@ async function reelFacebook(compte, pub, etat = "PUBLISHED") {
   });
   const d = await r.json().catch(() => ({}));
   if (!r.ok || !d.success) throw new Error(`Meta : vidéo refusée par Facebook (${d.debug_info?.message || d.error?.message || `erreur ${r.status}`})`);
-  await appelMeta(`${compte.pageId}/video_reels`, { video_id, upload_phase: "finish", video_state: etat, description: pub.texte_facebook }, "POST", compte.jeton);
+  await appelMeta(`${compte.pageId}/video_reels`, { video_id, upload_phase: "finish", video_state: etat, description: pub.texte_facebook, ...etiquetteIA(pub) }, "POST", compte.jeton);
   return video_id;
 }
 
@@ -102,7 +105,7 @@ async function verifierReelFacebook(compte, videoId) {
 async function conteneurReel(compte, pub) {
   if (!compte.instagramId) throw new Error("Aucun compte Instagram professionnel relié à la page Facebook");
   const { id } = await appelMeta(`${compte.instagramId}/media`, { media_type: "REELS", video_url: pub.video, cover_url: pub.visuel,
-    caption: pub.texte_instagram, share_to_feed: "true" }, "POST", compte.jeton);
+    caption: pub.texte_instagram, share_to_feed: "true", ...etiquetteIA(pub) }, "POST", compte.jeton);
   return id;
 }
 
@@ -226,7 +229,7 @@ async function testerMeta(supabase) {
   const photo = await appelMeta(`${compte.pageId}/photos`, { url: IMAGE_TEST, caption: "Test de connexion Mongazon360", published: "false" }, "POST", compte.jeton);
   await appelMeta(photo.id, {}, "DELETE", compte.jeton).catch(() => {});
   if (compte.instagramId) await conteneurInstagram(compte, IMAGE_TEST, "Test de connexion Mongazon360");
-  const { data: reel, error } = await supabase.from("publications").select("titre, date_publication, video, visuel, texte_facebook, texte_instagram")
+  const { data: reel, error } = await supabase.from("publications").select("titre, date_publication, video, visuel, texte_facebook, texte_instagram, ia")
     .not("video", "is", null).in("statut", ["a_valider", "validee"]).gte("date_publication", jourParis())
     .order("date_publication").order("heure").limit(1).maybeSingle();
   if (error) throw error;
