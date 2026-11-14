@@ -1,6 +1,7 @@
 #!/bin/bash
 # Montage d'une vidéo explicative avec Bob (règle « Vidéos explicatives avec Bob » de CLAUDE.md) :
-#   scripts/video-bob/monter.sh <enregistrement de Jordan> <texte.json> <sortie.mp4> [mois de publication 1..12]
+#   scripts/video-bob/monter.sh <voix> <texte.json> <sortie.mp4> [mois de publication 1..12]
+# voix = le fichier voix.wav de voix.sh (voix de synthèse « A »), ou un enregistrement.
 # texte.json = document « textes » de la page « Voix de Bob » (outil ArtifactData, action get, out_dir).
 # Installe au premier passage, hors du dépôt, l'environnement de reconnaissance vocale (faster-whisper, modèle « small »).
 set -euo pipefail

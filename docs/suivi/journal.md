@@ -1128,3 +1128,15 @@ du premier onglet).
   de schéma. Recette décembre : n° 32 et 33 retirés (numéros des autres tests inchangés), n° 35 et 58 mis à jour.
   Contrôles : build, comportement du robot identique pour Husqvarna et Gardena (372 960 comparaisons avant/après), banc
   serveur 8/8 (action « mammotion » refusée, connexions Husqvarna, Gardena, Netatmo et Davis intactes).
+- 14/11/2026 — Vidéos de Bob : décision de Jordan, voix de synthèse « A » (« Voix A validée. Go », après l'écoute de 5 voix
+  françaises plus naturelles que la première voix d'essai). Jordan ne s'enregistre plus : la vidéo est faite le samedi avec
+  le lot (moteur Kyutai TTS, voix donnée par un volontaire et libre de droits ; outils scripts/video-bob/voix.sh). Vidéo
+  « Mousse : chaux ou sulfate de fer ? » du mercredi 18/11 montée (42 s), envoyée à Jordan, en ligne, ligne du 18/11 « à
+  valider » (elle remplace la publication image). Étiquette « Infos sur l'IA » : Meta demande de déclarer une voix de
+  synthèse réaliste ; colonne `ia` ajoutée à `publications` (deux bases) et déclaration envoyée à Facebook et à Instagram à
+  la publication (api/reseaux.cjs, en prod le 14/11 : côté serveur, invisible dans l'app, banc 33/33) ; mention « Voix de
+  synthèse (Kyutai TTS) » à la fin du texte. À faire par Jordan : valider la vidéo, puis « Tester la connexion Meta »
+  (dimanche 15/11 après 9 h ou lundi) pour vérifier que Meta accepte la déclaration.
+- 14/11/2026 — Lot de comm du 22 au 28/11 préparé (à valider) : quiz de la ligue semaine 4, « Pelouse terne en hiver :
+  normal ? », « Feuilles mortes : ramasse-les vite », « En décembre, laisse ta pelouse tranquille ». Les réponses du quiz
+  de la semaine (maladies du gazon) ne figurent dans aucune publication de la semaine.

@@ -1,8 +1,10 @@
 # Vidéo explicative avec Bob (1080 x 1920, 30 i/s) au format des Reels de Meta : H.264 High 4.0, 4:2:0 BT.709, sans images B,
-# AAC 48 kHz, moov en tête, sans liste d'édition. Voix : l'enregistrement de Jordan, nettoyé, blancs entre les phrases réduits ;
-# sous-titres calés mot à mot sur sa voix (mots reconnus par transcrire.py, alignés sur le texte) ; Bob « parle » au rythme de la voix.
+# AAC 48 kHz, moov en tête, sans liste d'édition. Voix : la voix de synthèse de voix.sh, gardée telle quelle (document avec
+# voix « synthese »), ou un enregistrement, nettoyé ; blancs entre les phrases réduits ; sous-titres calés mot à mot sur la
+# voix (mots reconnus par transcrire.py, alignés sur le texte) ; Bob « parle » au rythme de la voix.
 # Texte : document « textes » de la page « Voix de Bob » (tiré de l'article et de la base de connaissances) : titre, accroche
-# (couverture, facultative), scenes [{n, texte, visuel}] ; visuel = éléments de la carte de la scène, de haut en bas :
+# (couverture, facultative), voix, scenes [{n, texte, dit?, visuel}] ; dit = ce que la voix de synthèse prononce quand il
+# diffère du texte affiché (« pé hache », nombres en lettres) ; visuel = éléments de la carte de la scène, de haut en bas :
 #   {"type": "sourcil", "texte"}                                   étiquette en capitales
 #   {"type": "titre", "texte", "taille"?, "ancre"?}                  grand texte blanc
 #   {"type": "ligne", "signe": "oui"|"non", "texte", "taille"?, "ancre"?}   ✓ vert ou ✗ rouge devant le texte
@@ -82,7 +84,9 @@ def lire_pcm(chemin, filtres=None):
     cmd = ["/usr/bin/ffmpeg", "-v", "error", "-i", chemin] + (["-af", filtres] if filtres else []) + ["-ac", "1", "-ar", str(SR), "-f", "f32le", "-"]
     return np.frombuffer(subprocess.run(cmd, capture_output=True, check=True).stdout, dtype=np.float32).copy()
 
-brut = lire_pcm(voix_src, "highpass=f=80,afftdn=nf=-28,acompressor=threshold=-21dB:ratio=2.5:attack=8:release=120")
+# Enregistrement : souffle et écarts de volume corrigés ; voix de synthèse (texte["voix"] == "synthese") : déjà propre, gardée telle quelle
+brut = lire_pcm(voix_src, None if texte.get("voix") == "synthese" else
+                "highpass=f=80,afftdn=nf=-28,acompressor=threshold=-21dB:ratio=2.5:attack=8:release=120")
 AVANT, APRES, BLANC_SCENE, DEBUT, FIN = 0.15, 0.28, 0.30, 0.35, 2.2
 morceaux, scenes, curseur = [np.zeros(int(DEBUT * SR), np.float32)], [], DEBUT
 for k in range(len(texte["scenes"])):
