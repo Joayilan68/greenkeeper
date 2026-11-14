@@ -69,8 +69,10 @@
   dans Pilotage → Réseaux. Vidéo (demande de Jordan du 7/11/2026) : colonne `video` (MP4 1080 × 1920 au format des Reels de
   Meta, dans le même dossier, retiré le samedi qui suit sa publication pour le stockage de Vercel), `visuel` = couverture ;
   publiée en Reel sur Facebook et Instagram ; pendant le traitement de la vidéo par Meta, statut `traitement`, publication
-  terminée à un passage suivant. « Tester la connexion Meta » essaie aussi la vidéo du prochain Reel (brouillon Facebook
-  supprimé, conteneur Instagram jamais publié). Publication à l'heure prévue par `POST /api/send?type=publications`, appelé toutes les 15 min par
+  terminée à un passage suivant. Vidéo à voix de synthèse (go de Jordan du 14/11/2026) : colonne `ia` à vrai, la vidéo est
+  alors déclarée à Meta à la publication (`is_ai_generated`) et porte l'étiquette « Infos sur l'IA », demandée par Meta pour
+  une voix de synthèse réaliste ; mention « Voix de synthèse » à la fin du texte. « Tester la connexion Meta » essaie aussi
+  la vidéo du prochain Reel (brouillon Facebook supprimé, conteneur Instagram jamais publié). Publication à l'heure prévue par `POST /api/send?type=publications`, appelé toutes les 15 min par
   pg_cron (Supabase PROD, tâche `mongazon360-publications-reseaux`, extension pg_net), tâches planifiées de Vercel en
   secours ; jour passé : plus publiée ; une publication n'est jamais publiée deux fois (statut `en_cours`). Graph API v26.0.
   Clé dans la variable Vercel `META_PAGE_TOKEN` (Sensitive, Production et Preview) : jeton sans expiration de l'utilisateur système
