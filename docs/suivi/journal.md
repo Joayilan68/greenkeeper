@@ -1140,3 +1140,8 @@ du premier onglet).
 - 14/11/2026 — Lot de comm du 22 au 28/11 préparé (à valider) : quiz de la ligue semaine 4, « Pelouse terne en hiver :
   normal ? », « Feuilles mortes : ramasse-les vite », « En décembre, laisse ta pelouse tranquille ». Les réponses du quiz
   de la semaine (maladies du gazon) ne figurent dans aucune publication de la semaine.
+- 14/11/2026 (soir) — Vidéo de Bob du 18/11 validée par Jordan dans Pilotage → Réseaux. Deuxième vidéo à voix de synthèse
+  faite dans la foulée avec les outils du dépôt : « Feuilles mortes : pourquoi les ramasser vite » (42 s, texte sur la page
+  « Voix de Bob »), en ligne, ligne du mercredi 25/11 du lot mise à jour (vidéo, ia, « à valider ») ; elle remplace la
+  publication image « Feuilles mortes ». Page « Voix de Bob » : plus d'enregistrement demandé. Tâche du samedi mise à
+  jour (vidéos des 2/12 et 9/12 faites le samedi avec le lot). Recette « Déjà en prod » : test n° 79 (étiquette IA).
