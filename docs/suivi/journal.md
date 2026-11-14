@@ -1145,3 +1145,6 @@ du premier onglet).
   « Voix de Bob »), en ligne, ligne du mercredi 25/11 du lot mise à jour (vidéo, ia, « à valider ») ; elle remplace la
   publication image « Feuilles mortes ». Page « Voix de Bob » : plus d'enregistrement demandé. Tâche du samedi mise à
   jour (vidéos des 2/12 et 9/12 faites le samedi avec le lot). Recette « Déjà en prod » : test n° 79 (étiquette IA).
+- 14/11/2026 (soir) — Lot du 22 au 28/11, retours de Jordan dans Pilotage → Réseaux : quiz du dimanche, vidéo « Feuilles
+  mortes » du 25/11 et « En décembre, laisse ta pelouse tranquille » validés ; « Pelouse terne en hiver : normal ? » du
+  lundi 23/11 refusée (raison à lui demander), remplacée par « Dernière tonte de l'année : c'est maintenant » (à valider).
