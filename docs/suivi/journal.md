@@ -1156,3 +1156,7 @@ du premier onglet).
   samedi. Lot du 22 au 28/11 : Jordan a validé « Dernière tonte de l'année » pour le lundi 23/11 ; « Pelouse terne en
   hiver » reste refusée. Contrôle du 15/11 : quiz en image publié à 8 h, vidéo du quiz publiée seule à 9 h 15 sur Facebook
   et Instagram, sans erreur.
+- 15/11/2026 — Retours de Jordan : vidéo « Feuilles mortes » (avec de vraies feuilles) validée dans Pilotage → Réseaux, et
+  « Tester la connexion Meta » réussi : Facebook et Instagram acceptent la déclaration « Infos sur l'IA » de la vidéo du
+  18/11 (aucune erreur dans error_events). Toutes les publications jusqu'au 27/11 sont validées. Reste à voir l'étiquette
+  sur le Reel publié le mercredi 18/11 (contrôle prévu à 17 h 10, recette « Déjà en prod » n° 79).
