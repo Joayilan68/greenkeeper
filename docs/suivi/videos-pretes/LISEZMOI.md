@@ -1,7 +1,5 @@
 # Vidéos de Bob prêtes en avance
 
-État au 15/11/2026 : textes et décors prêts, vidéos en cours de montage (fichiers ajoutés ici dès qu'ils sont prêts).
-
 Vidéos montées avant leur lot (go de Jordan du 15/11/2026 : « Go la suite »), gardées ici, hors du site, pour ne pas peser
 sur le stockage de Vercel. Le samedi du lot (tâche « Lot de comm du samedi ») : déplacer la vidéo et sa couverture dans
 `public/images/reseaux/<lot>/` sur `main` avec les visuels du lot (`git mv`, mêmes noms), attendre qu'elles répondent en
@@ -49,7 +47,8 @@ L'app t'alerte dès qu'une nuit de gel s'annonce (lien en bio).
 Fichiers : `2026-12-06/3-video-tondre-en-hiver.mp4` et `2026-12-06/3-video-tondre-en-hiver-couverture.jpg` (texte `tondre-en-hiver`).
 Titre de la ligne : « Vidéo de Bob : faut-il encore tondre en hiver ? ».
 La vidéo et ses textes ne donnent aucune réponse du quiz de la semaine 6 de la ligue (ni « 5 °C », ni « la pelouse pâlit :
-c'est normal ») : ne pas en ajouter.
+c'est normal ») : ne pas en ajouter. La voix dit « passer la tondeuse » : le moteur de voix articule mal le verbe « tondre »
+(12 prises sur 12), à éviter dans le texte dit des prochaines vidéos (« tondeuse » et « tonte » passent bien).
 
 Texte Facebook :
 

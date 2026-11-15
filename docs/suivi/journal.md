@@ -1160,3 +1160,10 @@ du premier onglet).
   « Tester la connexion Meta » réussi : Facebook et Instagram acceptent la déclaration « Infos sur l'IA » de la vidéo du
   18/11 (aucune erreur dans error_events). Toutes les publications jusqu'au 27/11 sont validées. Reste à voir l'étiquette
   sur le Reel publié le mercredi 18/11 (contrôle prévu à 17 h 10, recette « Déjà en prod » n° 79).
+- 15/11/2026 — « Go la suite » de Jordan : les deux dernières vidéos du test sont montées en avance avec la voix A et lui
+  sont envoyées : « Pelouse gelée : on n'y marche pas » (2/12, approuvée : « Top ») et « Tondre en hiver : faut-il encore
+  tondre ? » (9/12). Photos du sujet (givre, pelouse d'hiver : domaine public, docs/suivi/photos-libres.md) ; Bob reste
+  devant la pelouse, sur un sol sombre, puisque ces vidéos disent de ne pas y marcher ni tondre (option bob_devant). Elles
+  ne sont pas encore sur le site (stockage de Vercel) : gardées dans docs/suivi/videos-pretes avec leurs textes, à mettre
+  en ligne par la tâche du samedi avec leur lot (21/11 et 28/11), puis à valider dans Pilotage → Réseaux. Le moteur de voix
+  articule mal le verbe « tondre » : la première phrase dit « passer la tondeuse ».
