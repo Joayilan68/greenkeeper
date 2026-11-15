@@ -136,7 +136,9 @@
   champ `dit` d'une scène = ce qui est prononcé quand il diffère du texte affiché : pH, nombres). Montage :
   `scripts/video-bob/monter.sh` (blancs réduits, sous-titres calés mot à mot, Bob animé, format des Reels ; en bas de
   l'image, notre pelouse ou la photo qui montre le sujet : champ `decor` du texte, `scripts/video-bob/decors`, demande de
-  Jordan du 14/11/2026) ; vidéo et couverture poussées comme les visuels des lots, ligne du mercredi : `video`, `visuel`, `ia` à vrai
+  Jordan du 14/11/2026 ; Bob devant la pelouse, pas dessus, quand la vidéo dit de ne pas y marcher : champ `bob_devant`) ;
+  vidéo et couverture poussées comme les visuels des lots (une vidéo montée en avance attend dans
+  `docs/suivi/videos-pretes`, hors du site), ligne du mercredi : `video`, `visuel`, `ia` à vrai
   (étiquette « Infos sur l'IA » de Meta), lien suivi `utm_medium=reel&utm_campaign=video-<sujet>`, « 🎙️ Voix de synthèse
   (Kyutai TTS). » à la fin du texte (licence du moteur), statut « à valider » : rien ne part sans la validation de Jordan
   dans Pilotage → Réseaux.
