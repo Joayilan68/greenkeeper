@@ -4,8 +4,9 @@
 # voix (mots reconnus par transcrire.py, alignés sur le texte) ; Bob « parle » au rythme de la voix.
 # Texte : document « textes » de la page « Voix de Bob » (tiré de l'article et de la base de connaissances) : titre, accroche
 # (couverture, facultative), voix, decor (facultatif : photo du bas de l'image qui montre le sujet, decors/<nom>.jpg ; sinon
-# notre pelouse), scenes [{n, texte, dit?, visuel}] ; dit = ce que la voix de synthèse prononce quand il diffère du texte
-# affiché (« pé hache », nombres en lettres) ; visuel = éléments de la carte de la scène, de haut en bas :
+# notre pelouse), bob_devant (facultatif : Bob reste devant la pelouse, sur un sol sombre, quand la vidéo dit de ne pas y
+# marcher ni tondre), scenes [{n, texte, dit?, visuel}] ; dit = ce que la voix de synthèse prononce quand il diffère du
+# texte affiché (« pé hache », nombres en lettres) ; visuel = éléments de la carte de la scène, de haut en bas :
 #   {"type": "sourcil", "texte"}                                   étiquette en capitales
 #   {"type": "titre", "texte", "taille"?, "ancre"?}                  grand texte blanc
 #   {"type": "ligne", "signe": "oui"|"non", "texte", "taille"?, "ancre"?}   ✓ vert ou ✗ rouge devant le texte
@@ -412,6 +413,14 @@ fond = fond.convert("RGBA")
 pelouse = Image.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "decors", texte["decor"] + ".jpg")
                      if texte.get("decor") else DEPOT + "public/gazon-apres.jpg").convert("RGB")
 Y_PELOUSE = 1440
+# Bob devant le décor (texte["bob_devant"]) : un sol sombre au premier plan, pour ne pas le montrer avec sa tondeuse sur une
+# pelouse où la vidéo dit de ne pas marcher ni tondre (gel, hiver, semis)
+SOL = None
+if texte.get("bob_devant"):
+    SOL = calque(W, 270)
+    ds = ImageDraw.Draw(SOL)
+    for y in range(270):
+        ds.line([(0, y), (W, y)], fill=(*(int(a + (b - a) * y / 270) for a, b in zip((46, 52, 46), (22, 27, 23))), int(255 * min(1, y / 70))))
 
 def bande_pelouse(zoom):
     l, h = W, H - Y_PELOUSE
@@ -453,6 +462,8 @@ for i in range(n_img):
     t = i / IPS
     img = fond.copy()
     img.alpha_composite(bande_pelouse(1.0 + 0.05 * t / DUREE), (0, Y_PELOUSE))
+    if SOL:
+        img.alpha_composite(SOL, (0, H - SOL.height))
     k = next(n for n, s in enumerate(scenes) if t < s["fin"] or n == len(scenes) - 1)
     s = scenes[k]
     tl = t - s["debut"]
@@ -491,6 +502,8 @@ ff.wait()
 # Couverture : le titre de la vidéo, Bob et le décor
 couv = fond.copy()
 couv.alpha_composite(bande_pelouse(1.0), (0, Y_PELOUSE))
+if SOL:
+    couv.alpha_composite(SOL, (0, H - SOL.height))
 premier = next((e["texte"] for e in (texte["scenes"][0].get("visuel") or []) if e.get("type") == "sourcil"), "CONSEIL GAZON")
 couv.alpha_composite(sourcil(premier), (X, CARTE_Y))
 titre_couv = bloc_texte(re.sub(r" ([?!:;])", NB + r"\1", texte["titre"]), police(GRAS, 96), BLANC, LARGEUR, 1.12)
