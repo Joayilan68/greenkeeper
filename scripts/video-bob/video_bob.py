@@ -3,8 +3,9 @@
 # voix « synthese »), ou un enregistrement, nettoyé ; blancs entre les phrases réduits ; sous-titres calés mot à mot sur la
 # voix (mots reconnus par transcrire.py, alignés sur le texte) ; Bob « parle » au rythme de la voix.
 # Texte : document « textes » de la page « Voix de Bob » (tiré de l'article et de la base de connaissances) : titre, accroche
-# (couverture, facultative), voix, scenes [{n, texte, dit?, visuel}] ; dit = ce que la voix de synthèse prononce quand il
-# diffère du texte affiché (« pé hache », nombres en lettres) ; visuel = éléments de la carte de la scène, de haut en bas :
+# (couverture, facultative), voix, decor (facultatif : photo du bas de l'image qui montre le sujet, decors/<nom>.jpg ; sinon
+# notre pelouse), scenes [{n, texte, dit?, visuel}] ; dit = ce que la voix de synthèse prononce quand il diffère du texte
+# affiché (« pé hache », nombres en lettres) ; visuel = éléments de la carte de la scène, de haut en bas :
 #   {"type": "sourcil", "texte"}                                   étiquette en capitales
 #   {"type": "titre", "texte", "taille"?, "ancre"?}                  grand texte blanc
 #   {"type": "ligne", "signe": "oui"|"non", "texte", "taille"?, "ancre"?}   ✓ vert ou ✗ rouge devant le texte
@@ -406,7 +407,10 @@ for y in range(H):
     t = y / H
     dg.line([(0, y), (W, y)], fill=tuple(int(VERT_FONCE[i] + (VERT[i] - VERT_FONCE[i]) * t) for i in range(3)))
 fond = fond.convert("RGBA")
-pelouse = Image.open(DEPOT + "public/gazon-apres.jpg").convert("RGB")
+# Bas de l'image : notre pelouse, ou la photo qui montre le sujet (texte["decor"] : decors/<nom>.jpg, bande de 1620 x 720 ;
+# origine et licence dans docs/suivi/photos-libres.md)
+pelouse = Image.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "decors", texte["decor"] + ".jpg")
+                     if texte.get("decor") else DEPOT + "public/gazon-apres.jpg").convert("RGB")
 Y_PELOUSE = 1440
 
 def bande_pelouse(zoom):
@@ -484,7 +488,7 @@ for i in range(n_img):
 ff.stdin.close()
 ff.wait()
 
-# Couverture : le titre de la vidéo, Bob et notre pelouse
+# Couverture : le titre de la vidéo, Bob et le décor
 couv = fond.copy()
 couv.alpha_composite(bande_pelouse(1.0), (0, Y_PELOUSE))
 premier = next((e["texte"] for e in (texte["scenes"][0].get("visuel") or []) if e.get("type") == "sourcil"), "CONSEIL GAZON")

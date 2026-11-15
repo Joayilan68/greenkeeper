@@ -134,8 +134,9 @@
   synthèse « A », choisie par Jordan le 14/11/2026 parmi 5 (il ne s'enregistre plus) : `scripts/video-bob/voix.sh` (moteur
   Kyutai TTS ; voix française donnée par un volontaire, libre de droits ; 3 prises par phrase, la mieux prononcée gardée ;
   champ `dit` d'une scène = ce qui est prononcé quand il diffère du texte affiché : pH, nombres). Montage :
-  `scripts/video-bob/monter.sh` (blancs réduits, sous-titres calés mot à mot, Bob animé, photo de notre pelouse, format des
-  Reels) ; vidéo et couverture poussées comme les visuels des lots, ligne du mercredi : `video`, `visuel`, `ia` à vrai
+  `scripts/video-bob/monter.sh` (blancs réduits, sous-titres calés mot à mot, Bob animé, format des Reels ; en bas de
+  l'image, notre pelouse ou la photo qui montre le sujet : champ `decor` du texte, `scripts/video-bob/decors`, demande de
+  Jordan du 14/11/2026) ; vidéo et couverture poussées comme les visuels des lots, ligne du mercredi : `video`, `visuel`, `ia` à vrai
   (étiquette « Infos sur l'IA » de Meta), lien suivi `utm_medium=reel&utm_campaign=video-<sujet>`, « 🎙️ Voix de synthèse
   (Kyutai TTS). » à la fin du texte (licence du moteur), statut « à valider » : rien ne part sans la validation de Jordan
   dans Pilotage → Réseaux.

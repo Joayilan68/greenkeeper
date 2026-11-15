@@ -1148,3 +1148,11 @@ du premier onglet).
 - 14/11/2026 (soir) — Lot du 22 au 28/11, retours de Jordan dans Pilotage → Réseaux : quiz du dimanche, vidéo « Feuilles
   mortes » du 25/11 et « En décembre, laisse ta pelouse tranquille » validés ; « Pelouse terne en hiver : normal ? » du
   lundi 23/11 refusée (raison à lui demander), remplacée par « Dernière tonte de l'année : c'est maintenant » (à valider).
+- 15/11/2026 — Demande de Jordan (14/11 au soir) : la photo d'une publication doit montrer le sujet abordé (« l'article sur
+  les feuilles mortes doit montrer une image avec des feuilles ») ; pas de nouvelle publication à chercher. Nous n'avons
+  pas de photo de notre pelouse avec des feuilles : photo du domaine public (CC0, licence lue sur la page d'origine, notée
+  dans docs/suivi/photos-libres.md). Vidéo « Feuilles mortes » du 25/11 remontée avec de vraies feuilles en bas de l'image
+  et sur la couverture (même texte, même voix), en ligne, remise « à valider ». Règle ajoutée à CLAUDE.md et à la tâche du
+  samedi. Lot du 22 au 28/11 : Jordan a validé « Dernière tonte de l'année » pour le lundi 23/11 ; « Pelouse terne en
+  hiver » reste refusée. Contrôle du 15/11 : quiz en image publié à 8 h, vidéo du quiz publiée seule à 9 h 15 sur Facebook
+  et Instagram, sans erreur.
