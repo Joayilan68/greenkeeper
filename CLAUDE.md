@@ -102,8 +102,11 @@
 - Lots de comm (page Facebook et Instagram de Mongazon360, décisions de Jordan des 17 et 18/10/2026) : chaque samedi matin,
   la tâche programmée « Lot de comm du samedi » prépare la semaine qui commence 8 jours plus tard (du dimanche au samedi) :
   4 publications (dimanche 8 h, lundi, mercredi et vendredi 16 h 30, heure de Paris), texte Facebook avec un lien suivi
-  (`utm_source=facebook`), légende Instagram (lien en bio, hashtags), visuel 1080 × 1350 (photo de notre pelouse ou Bob, sans
-  métadonnées). Conseils tirés des articles et de la base, fonctions de l'app en prod uniquement. Bob dans les groupes
+  (`utm_source=facebook`), légende Instagram (lien en bio, hashtags), visuel 1080 × 1350 sans métadonnées, dont la photo
+  montre le sujet de la publication (demande de Jordan du 14/11/2026 : des feuilles pour les feuilles mortes, du givre pour
+  le gel…) : photo de notre pelouse quand elle convient, sinon photo du domaine public (licence CC0 vérifiée sur la page
+  d'origine et notée dans `docs/suivi/photos-libres.md`), ou Bob pour le quiz. Conseils tirés des articles et de la base,
+  fonctions de l'app en prod uniquement. Bob dans les groupes
   Facebook reste géré par Jordan. Pendant la ligue d'hiver, la publication du dimanche reprend la 1re question du quiz de la
   semaine (`src/lib/ligueHiver.json`), avec le lien vers l'app.
 - Publication automatique des lots (`api/reseaux.cjs`, go prod de Jordan du 18/10/2026) : lot inséré dans la table
