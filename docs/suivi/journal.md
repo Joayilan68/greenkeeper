@@ -1252,3 +1252,7 @@ du premier onglet).
   déclaré dans la politique de confidentialité. Sur STA : politique de confidentialité (5.3, 6.1, 7), rate_limits dans la
   suppression du compte, tâche pg_cron mongazon360-retention-anti-abus (essai à blanc : 1 ligne supprimée) ; prod le 22/11
   avec le reste (tâche pg_cron créée sur la PROD avec le texte) ; recette n° 77 et 78.
+- 16/11/2026 (soir) — Search Console : indexation redemandée par Jordan pour 9 articles retravaillés en octobre (gel,
+  entretien d'hiver, feuilles mortes, hivernage du matériel, mousse, hauteur de tonte, pelouse jaune, désherber sans
+  chimie, scarifier) ; « Première tonte de printemps » le 17/11 (quota du jour atteint, rappel programmé) ; robot tondeuse
+  et canicule en février (point des stats du 10/02/2027).
