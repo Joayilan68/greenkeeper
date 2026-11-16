@@ -8,6 +8,14 @@ const SITE = "https://mongazon360.fr";
 const ARGUMENTS = JSON.parse(readFileSync(new URL("../src/lib/argumentsApp.json", import.meta.url), "utf8"));
 export const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 
+// Typographie française du texte affiché : espace insécable avant ? ! : ; » et après «, et entre un nombre et son unité,
+// pour qu'un signe ou une unité ne passe jamais seul à la ligne sur téléphone. Les balises (adresses comprises) ne sont
+// pas touchées ; à n'appliquer qu'à du texte ou à du contenu sans script.
+const INSECABLE = "\u00a0";
+export const typo = (html) => String(html).split(/(<[^>]*>)/).map(s => s.startsWith("<") ? s : s
+  .replace(/ ([?!:;»])/g, `${INSECABLE}$1`).replace(/« /g, `«${INSECABLE}`)
+  .replace(/(\d) (°C|%|€|m²|km\/h|mm\/h|mm|cm|km|kg|L|h|g|m)(?![\wÀ-ÿ²/])/g, `$1${INSECABLE}$2`)).join("");
+
 const CSS = `
 *{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:#1f2d24;background:#f6f8f4;line-height:1.7}
 a{color:#2e7d32}header{background:#1a4731;color:#fff}.bar{max-width:760px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -138,7 +146,7 @@ ${body.includes('class="btn play"') ? SCRIPT_PLAY : ""}${suivi(campagne)}`}
 
 // avantQuiz : encart caché pendant la ligue d'hiver, quand la question de la semaine prend sa place (scripts/quizArticle.mjs)
 const encart = (t, position, campagne, fin = false, avantQuiz = false) => `<aside class="app${fin ? " fin" : ""}"${avantQuiz ? " data-avant-quiz" : ""}><span class="ico" aria-hidden="true">${t.icone}</span><div>
-<strong>${esc(t.titre)}</strong><p>${esc(t.texte)}</p><a class="btn" href="${lien(t.cible, `${t.id}-${position}`, campagne)}">${esc(t.bouton)}</a>${
+<strong>${typo(esc(t.titre))}</strong><p>${typo(esc(t.texte))}</p><a class="btn" href="${lien(t.cible, `${t.id}-${position}`, campagne)}">${esc(t.bouton)}</a>${
   t.mention ? `<small><a href="${esc(t.mention.lien)}">${esc(t.mention.texte)}</a></small>` : ""}</div></aside>`;
 
 // Bandeau sous le titre d'un article, sans cacher le texte (version validée par Jordan le 31/10/2026)
@@ -212,10 +220,10 @@ export function articlePage(a, autres, produits = {}) {
       { "@type": "ListItem", position: 2, name: "Conseils gazon", item: `${SITE}/conseils` },
       { "@type": "ListItem", position: 3, name: a.title, item: `${SITE}${path}` } ] } ] };
   const lies = autres.length ? `<h2>À lire aussi</h2><div class="cards">${autres.map(o =>
-    `<a class="card" href="/conseils/${o.slug}"><b>${esc(o.title)}</b><span>${esc(o.description)}</span></a>`).join("")}</div>` : "";
+    `<a class="card" href="/conseils/${o.slug}"><b>${typo(esc(o.title))}</b><span>${typo(esc(o.description))}</span></a>`).join("")}</div>` : "";
   const themes = themesArticle(a);
   const body = `<div class="crumb"><a href="/">Accueil</a> › <a href="/conseils">Conseils gazon</a></div>
-<article><h1>${esc(a.title)}</h1><div class="meta">${SAISONS[a.saison] || ""} · Mis à jour le ${frDate(a.maj || a.date)} · Par <a href="/a-propos">l'équipe Mongazon360</a></div>
+<article><h1>${typo(esc(a.title))}</h1><div class="meta">${SAISONS[a.saison] || ""} · Mis à jour le ${frDate(a.maj || a.date)} · Par <a href="/a-propos">l'équipe Mongazon360</a></div>
 ${bandeau(a.slug)}${a.image ? `<img class="hero" src="${esc(a.image)}" alt="${esc(a.image_alt)}" width="1200" height="800" fetchpriority="high" />` : ""}
 ${avecEncarts(a.html, themes, a.slug)}</article>${encartPro(a.slug)}${encadreProduits(a.produits ? a.produits.split(",").map(x => x.trim()) : [], produits, a.slug)}${encart(themes[2], "fin", a.slug, true)}${lies}`;
   return page({ title: `${a.title} — Mongazon360®`, description: a.description, path, ogType: "article", jsonLd, body, campagne: a.slug, image,
@@ -238,7 +246,7 @@ export function indexPage(articles) {
   const groupes = Object.entries(SAISONS).map(([k, label]) => {
     const liste = articles.filter(a => a.saison === k);
     return liste.length ? `<div class="season">${label}</div><div class="cards">${liste.map(a =>
-      `<a class="card" href="/conseils/${a.slug}"><b>${esc(a.title)}</b><span>${esc(a.description)}</span></a>`).join("")}</div>` : "";
+      `<a class="card" href="/conseils/${a.slug}"><b>${typo(esc(a.title))}</b><span>${typo(esc(a.description))}</span></a>`).join("")}</div>` : "";
   }).join("");
   const body = `<h1>Conseils gazon</h1><p>Tonte, arrosage, semis, mousse, engrais : les bons gestes au bon moment, expliqués simplement par l'équipe Mongazon360.</p>${groupes}${grille("rubrique")}`;
   return page({ title: "Conseils gazon : entretien de la pelouse saison par saison — Mongazon360®",

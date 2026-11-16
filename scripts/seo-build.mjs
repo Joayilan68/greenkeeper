@@ -9,7 +9,7 @@
 //    places des encarts, thèmes de l'app, « À lire aussi »), chargés à la demande par src/pages/ConseilsApp.jsx.
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from "node:fs";
 import { marked } from "marked";
-import { articlePage, indexPage, aProposPage, IDS_APP, partenairesPage, themesArticle, decouper } from "./conseils-template.mjs";
+import { articlePage, indexPage, aProposPage, IDS_APP, partenairesPage, themesArticle, decouper, typo } from "./conseils-template.mjs";
 import AMAZON_PRODUCTS from "../src/lib/amazonProducts.js";
 
 const SITE  = "https://mongazon360.fr";
@@ -65,7 +65,7 @@ const articles = readdirSync("content/conseils").filter(f => f.endsWith(".md")).
   const meta = Object.fromEntries(head.split("\n").map(l => [l.slice(0, l.indexOf(":")).trim(), l.slice(l.indexOf(":") + 1).trim()]));
   for (const k of ["title", "description", "saison", "date"]) if (!meta[k]) throw new Error(`[seo] ${f} : « ${k} » manquant`);
   if (meta.image && (!existsSync(`public${meta.image}`) || !meta.image_alt)) throw new Error(`[seo] ${f} : image introuvable ou sans image_alt`);
-  return { ...meta, slug: f.replace(/\.md$/, ""), html: marked.parse(md) };
+  return { ...meta, slug: f.replace(/\.md$/, ""), html: typo(marked.parse(md)) };
 }).filter(a => a.brouillon !== "oui").sort((a, b) => a.date.localeCompare(b.date));
 
 // Catalogue proposé par Bob et par les articles : fiches complètes uniquement
@@ -93,7 +93,7 @@ const proximite = (a, o) => (liens.get(a.slug).has(o.slug) ? 2 : 0) + (liens.get
 // Conseils en mode app : fiche de chaque article (liste) et article complet, sans les encarts des pages web (l'app place
 // les siens aux mêmes endroits, selon les thèmes de l'article)
 mkdirSync("dist/conseils-app", { recursive: true });
-const fiche = (a) => ({ slug: a.slug, title: a.title, description: a.description, saison: a.saison, date: a.date,
+const fiche = (a) => ({ slug: a.slug, title: typo(a.title), description: typo(a.description), saison: a.saison, date: a.date,
   maj: a.maj || a.date, image: a.image || null, image_alt: a.image_alt || null });
 writeFileSync("dist/conseils-app/index.json", JSON.stringify(articles.map(fiche)));
 for (const a of articles) {
@@ -102,7 +102,7 @@ for (const a of articles) {
   mkdirSync(`dist/conseils/${a.slug}`, { recursive: true });
   writeFileSync(`dist/conseils/${a.slug}/index.html`, articlePage(a, autres, produits));
   writeFileSync(`dist/conseils-app/${a.slug}.json`, JSON.stringify({ ...fiche(a), parties: decouper(a.html),
-    themes: themesArticle(a).map(t => t.id), autres: autres.map(({ slug, title, description, date }) => ({ slug, title, description, date })) }));
+    themes: themesArticle(a).map(t => t.id), autres: autres.map(({ slug, title, description, date }) => ({ slug, title: typo(title), description: typo(description), date })) }));
 }
 
 // « Lire l'article » des actions d'Aujourd'hui : chaque article cité doit exister
@@ -113,7 +113,7 @@ for (const [action, r] of Object.entries(ARTICLES_ACTIONS)) for (const s of [r.a
 }
 
 mkdirSync("dist/a-propos", { recursive: true });
-writeFileSync("dist/a-propos/index.html", aProposPage(marked.parse(readFileSync("content/a-propos.md", "utf8"))));
+writeFileSync("dist/a-propos/index.html", aProposPage(typo(marked.parse(readFileSync("content/a-propos.md", "utf8")))));
 mkdirSync("dist/partenaires", { recursive: true });
 writeFileSync("dist/partenaires/index.html", partenairesPage());
 

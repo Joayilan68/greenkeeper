@@ -1193,3 +1193,10 @@ du premier onglet).
   « Choisir son niveau », toutes du compte de test ; quiz des visiteurs : 3 réponses ; groupes Facebook : 7 visites ;
   page partenaires : 0 vue, 0 demande. Action : retours de Jordan sur la 2e série de visuels du chantier avant le vendredi
   20/11 (go pour la prod du 22/11, qui vise le passage articles → app).
+- 16/11/2026 — Chantier du 22/11, 2e série de visuels (toutes les pages, téléphone et ordinateur) : deux défauts vus sur les
+  captures et corrigés sur STA avant la remise. 1) Un « ? » ou un « : » passait seul à la ligne dans les titres sur
+  téléphone : espaces insécables ajoutées au build dans le texte affiché des articles, de leurs fiches et de Qui
+  sommes-nous (6 363 espaces sur 103 fichiers, rien d'autre ne change, balises de référencement intactes). 2) La carte « Le
+  conseil de la semaine » proposait « Pelouse en février » en novembre (dernier article sorti) : un article daté d'un mois
+  n'est un conseil du moment que ce mois-là (conseil de la semaine, tête de la liste, accueil visiteur ; contrôlé jour par
+  jour sur un an). Banc du mode app rejoué : 31 contrôles au vert.

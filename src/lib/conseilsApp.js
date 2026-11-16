@@ -26,23 +26,34 @@ export function saisonDe(jour) {
 export const NOMS_SAISONS = { hiver: "Hiver", printemps: "Printemps", ete: "Été", automne: "Automne" };
 export const dateLongue = (jour) => new Date(`${jour}T12:00:00`).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 
+// Article daté d'un mois (« Pelouse en février », « Semer du gazon en novembre ») : le mois est dans son adresse. Écrit en
+// avance pour le référencement, il n'est un conseil du moment que ce mois-là.
+const MOIS = ["janvier", "fevrier", "mars", "avril", "mai", "juin", "juillet", "aout", "septembre", "octobre", "novembre", "decembre"];
+export const moisDe = (slug) => MOIS.findIndex(m => slug.split("-").includes(m)) + 1 || null;
+export const duMoment = (article, jour = jourParis()) =>
+  article.saison === saisonDe(jour) && (!moisDe(article.slug) || moisDe(article.slug) === Number(jour.slice(5, 7)));
+
+// Titre lu dans /conseils.json (texte simple) : espace insécable avant ? ! : ; » et après «, pour qu'un signe ne passe
+// pas seul à la ligne (les articles et leurs fiches la reçoivent au build : typo, scripts/conseils-template.mjs)
+export const insecables = (texte) => String(texte).replace(/ ([?!:;»])/g, "\u00a0$1").replace(/« /g, "«\u00a0");
+
 // « Nouveau » : article publié depuis 7 jours au plus
 const jours = (de, a) => Math.round((Date.parse(a) - Date.parse(de)) / 864e5);
 export const estNouveau = (article, jour = jourParis()) => article.date <= jour && jours(article.date, jour) <= 7;
 
-// Liste : articles de la saison d'abord, puis les autres ; les plus récemment mis à jour d'abord
+// Liste : articles de la saison d'abord (ceux du moment en tête), puis les autres ; les plus récemment mis à jour d'abord
 export function trier(liste, jour = jourParis()) {
   const saison = saisonDe(jour);
-  return [...liste].sort((a, b) => (b.saison === saison) - (a.saison === saison) || b.maj.localeCompare(a.maj));
+  return [...liste].sort((a, b) => (b.saison === saison) - (a.saison === saison) || duMoment(b, jour) - duMoment(a, jour)
+    || b.maj.localeCompare(a.maj));
 }
 
-// Le conseil de la semaine : le dernier article sorti s'il a 7 jours au plus (badge « Nouveau »), sinon un article de la
-// saison qui change chaque lundi
+// Le conseil de la semaine, parmi les articles du moment : le dernier sorti s'il a 7 jours au plus (badge « Nouveau »),
+// sinon un article qui change chaque lundi
 export function conseilDeLaSemaine(liste, jour = jourParis()) {
-  const recent = [...liste].sort((a, b) => b.date.localeCompare(a.date)).find(a => estNouveau(a, jour));
+  const deSaison = liste.filter(a => duMoment(a, jour)).sort((a, b) => a.slug.localeCompare(b.slug));
+  const recent = [...deSaison].sort((a, b) => b.date.localeCompare(a.date)).find(a => estNouveau(a, jour));
   if (recent) return { article: recent, nouveau: true };
-  const saison = saisonDe(jour);
-  const deSaison = liste.filter(a => a.saison === saison).sort((a, b) => a.slug.localeCompare(b.slug));
   if (!deSaison.length) return null;
   const semaine = Math.floor((Date.parse(jour) / 864e5 + 3) / 7); // le 1/1/1970 était un jeudi : +3 fait changer le lundi
   return { article: deSaison[semaine % deSaison.length], nouveau: false };

@@ -8,6 +8,7 @@ import { trackFunnel, trackFunnelOncePerSession } from "../lib/funnel";
 import { codeRecu } from "../lib/codeParrainage";
 import { periodeLigue, dateLongue } from "../lib/ligueHiver";
 import { RESEAUX } from "../lib/reseaux";
+import { duMoment, insecables } from "../lib/conseilsApp";
 import { getWMO } from "../lib/lawn";
 import NIVEAUX from "../lib/niveaux.json";
 import CONSEILS_BOB from "../lib/conseilsBob.json";
@@ -63,10 +64,11 @@ export default function AccueilVisiteur() {
   // Haut d'entonnoir : le prospect (non connecté) voit l'accueil
   useEffect(() => { trackFunnelOncePerSession("landing_view"); }, []);
 
-  // Articles Conseils de la saison (les plus récents d'abord), publiés dans /conseils.json
+  // Articles Conseils du moment (ceux de la saison, sans les articles datés d'un autre mois ; les plus récents d'abord),
+  // publiés dans /conseils.json
   useEffect(() => {
     fetch("/conseils.json").then(r => r.json())
-      .then(liste => setArticles(liste.filter(a => a.saison === saison).reverse().slice(0, 3)))
+      .then(liste => setArticles(liste.filter(a => duMoment(a)).reverse().slice(0, 3)))
       .catch(() => {});
   }, [saison]);
 
@@ -213,7 +215,7 @@ export default function AccueilVisiteur() {
         <div data-tuile="visiteur-articles" style={{ ...carte, display:"flex", flexDirection:"column", gap:4 }}>
           <div style={{ fontSize:15, fontWeight:800, marginBottom:4 }}>Conseils {NOM_SAISON[saison]}</div>
           {articles.map(a => (
-            <a key={a.slug} href={`/lire/${a.slug}`} onClick={(e) => { e.preventDefault(); navigate(`/lire/${a.slug}`); }} style={{ fontSize:14, lineHeight:1.45, color:G.muted, textDecoration:"none", padding:"8px 0", borderBottom:"1px solid rgba(255,255,255,0.06)" }}>{a.title}</a>
+            <a key={a.slug} href={`/lire/${a.slug}`} onClick={(e) => { e.preventDefault(); navigate(`/lire/${a.slug}`); }} style={{ fontSize:14, lineHeight:1.45, color:G.muted, textDecoration:"none", padding:"8px 0", borderBottom:"1px solid rgba(255,255,255,0.06)" }}>{insecables(a.title)}</a>
           ))}
           <a href="/lire" onClick={(e) => { e.preventDefault(); navigate("/lire"); }} style={{ fontSize:13, fontWeight:800, color:G.accent, textDecoration:"none", paddingTop:8 }}>Tous les conseils gazon →</a>
         </div>

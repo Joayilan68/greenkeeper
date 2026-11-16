@@ -78,6 +78,9 @@
 - Rubrique « Conseils gazon » : un article = un fichier `content/conseils/<slug>.md` (en-tête title, description,
   saison, date). Les paragraphes « Mongazon360 » ne citent que des fonctions qui existent réellement dans l'app.
   La liste des articles est publiée dans `/conseils.json` : Bob (api/ai-assistant.js) y renvoie automatiquement.
+  Espaces insécables (avant ? ! : ; », après «, entre un nombre et son unité) ajoutées au build dans le texte affiché
+  (`typo`, `scripts/conseils-template.mjs` ; titres, descriptions et balises de référencement inchangés) : ne pas en saisir
+  dans les articles.
   Photo d'article facultative (en-tête `image` et `image_alt`, fichier dans `public/images/conseils`, 1200 × 800, sans
   métadonnées) ; « À lire aussi » = les articles les plus liés entre eux. Page « Qui sommes-nous » : `content/a-propos.md`,
   générée par `scripts/seo-build.mjs` (règle dans `vercel.json`).
@@ -96,7 +99,9 @@
   barre visiteur, articles de l'accueil visiteur, carte « Le conseil de la semaine » de l'accueil connecté
   (`src/components/ConseilSemaine.jsx`), « Lire l'article » des actions d'Aujourd'hui (`src/lib/articlesActions.json`,
   vérifié au build) et articles liés de la ligue ; grille « Ce que fait l'app » aussi sur l'accueil visiteur. Pages web
-  /conseils inchangées (Google, Pinterest, Facebook).
+  /conseils inchangées (Google, Pinterest, Facebook). Un article daté d'un mois (mois dans son adresse :
+  `pelouse-en-fevrier`, `semer-gazon-novembre`), écrit en avance pour le référencement, n'est un conseil du moment que ce
+  mois-là (`duMoment`, `src/lib/conseilsApp.js` : conseil de la semaine, tête de la liste, accueil visiteur).
 - Bob : ses consignes listent les fonctions réelles de l'app ; toute nouvelle fonction doit y être ajoutée.
 - Search Console et Pinterest : ne pas retirer les balises `google-site-verification` et `p:domain_verify` de
   `index.html` (site revendiqué).
