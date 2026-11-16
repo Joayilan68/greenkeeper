@@ -1215,3 +1215,7 @@ du premier onglet).
   Jordan, sans certitude ; il ne compte pas dans les inscriptions (compte supprimé). Mammotion : Jordan répond à la relance
   de leur support (intégration retirée, demande d'être prévenu si une API ou un programme partenaire ouvre) et demande un
   matériel de test (robot tondeuse ou autre appareil).
+- 16/11/2026 — Précision de Jordan pour Mammotion : la demande de matériel de test n'est pas liée à l'ouverture de leur API,
+  elle est proposée en échange d'une mise en avant du produit sur nos réseaux (publications et vidéos, à la manière d'un
+  influenceur). Si Mammotion accepte : chaque publication porte la mention « Collaboration commerciale » (loi du 9/06/2023
+  sur l'influence commerciale) et reste un avis honnête, conforme à la base de connaissances.
