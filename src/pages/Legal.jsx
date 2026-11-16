@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { card, scroll, btn } from "../lib/styles";
+import MAJ from "../lib/textesLegaux.json";
 
 // ════════════════════════════════════════════════════════════════════════════
 // DOCUMENTS JURIDIQUES MONGAZON360®
@@ -18,6 +19,10 @@ import { card, scroll, btn } from "../lib/styles";
 //   - Suppression mentions "[à confirmer avec le client]"
 //   - Page Cookies : version simple basée sur fonctionnement réel app
 // ════════════════════════════════════════════════════════════════════════════
+
+// Date de mise à jour de chaque texte : src/lib/textesLegaux.json (celle des CGV est aussi la version notée avec chaque
+// abonnement, api/create-checkout.js)
+const miseAJour = (texte) => "Mise à jour : " + new Date(MAJ[texte] + "T12:00:00").toLocaleDateString("fr-FR", { day:"numeric", month:"long", year:"numeric" });
 
 // ── Composants communs ────────────────────────────────────────────────────────
 function PageHeader({ emoji, title, subtitle }) {
@@ -67,7 +72,7 @@ function BackToSettings() {
 export function MentionsLegales() {
   return (
     <div>
-      <PageHeader emoji="📋" title="Mentions Légales" subtitle="Mise à jour : 23 septembre 2026" />
+      <PageHeader emoji="📋" title="Mentions Légales" subtitle={miseAJour("mentionsLegales")} />
       <div style={scroll}>
 
         <Section title="Identité de l'éditeur du site internet">
@@ -93,8 +98,9 @@ export function MentionsLegales() {
         <Section title="Hébergement du site internet">
           Le site internet est hébergé par :<br/><br/>
           <strong style={{ color:"#a5d6a7" }}>Vercel Inc.</strong><br/>
-          340 Pine Street, Suite 701<br/>
-          San Francisco, California 94104, USA<br/>
+          440 N Barranca Avenue #4133<br/>
+          Covina, California 91723, États-Unis<br/>
+          Téléphone : +1 559 288 7060<br/>
           Site internet : vercel.com
         </Section>
 
@@ -129,11 +135,9 @@ export function MentionsLegales() {
           Pour plus de détails, consultez notre Politique de confidentialité.
         </Section>
 
-        <Section title="Démarche téléphonique">
-          Le consommateur qui ne souhaite pas faire l'objet de prospection commerciale par voie téléphonique peut gratuitement s'inscrire sur une liste d'opposition au démarchage téléphonique :<br/><br/>
-          <a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000042155931" target="_blank" rel="noopener noreferrer" style={{ color:"#a5d6a7", textDecoration:"underline" }}>
-            Article L223-1 du Code de la consommation
-          </a>
+        <Section title="Démarchage téléphonique">
+          Mongazon360 ne demande pas leur numéro de téléphone aux utilisateurs de l'Application et ne pratique aucun démarchage téléphonique auprès des consommateurs.<br/><br/>
+          Depuis le 11 août 2026, le démarchage téléphonique d'un consommateur qui n'a pas donné son accord au préalable est interdit (article L. 223-1 du Code de la consommation).
         </Section>
 
         <BackToSettings />
@@ -148,7 +152,7 @@ export function MentionsLegales() {
 export function Confidentialite() {
   return (
     <div>
-      <PageHeader emoji="🔒" title="Politique de confidentialité" subtitle="Mise à jour : 10 novembre 2026" />
+      <PageHeader emoji="🔒" title="Politique de confidentialité" subtitle={miseAJour("confidentialite")} />
       <div style={scroll}>
 
         <Section title="1. Préambule">
@@ -259,6 +263,7 @@ export function Confidentialite() {
             • <strong>Plus Five Five Inc. (Resend)</strong> (envoi des emails transactionnels)<br/>
             • <strong>Vercel Inc.</strong> (hébergement frontend et mesure d'audience anonyme sans cookie)<br/>
             • <strong>Open-Meteo</strong> (données météorologiques)<br/>
+            • <strong>OpenStreetMap Foundation</strong> (service Nominatim : nom de votre commune à partir de votre position, uniquement si vous activez la géolocalisation ; la position est transmise sans lien avec votre compte)<br/>
             • <strong>Google LLC</strong> (authentification Google, support email)
           </SubSection>
 
@@ -341,7 +346,7 @@ export function CGU() {
   const navigate = useNavigate();
   return (
     <div>
-      <PageHeader emoji="📜" title="Conditions Générales d'Utilisation" subtitle="Mise à jour : 10 novembre 2026" />
+      <PageHeader emoji="📜" title="Conditions Générales d'Utilisation" subtitle={miseAJour("cgu")} />
       <div style={scroll}>
 
         <div style={{ ...card(), background:"rgba(33,150,243,0.06)", border:"1px solid rgba(33,150,243,0.2)" }}>
@@ -546,7 +551,7 @@ export function CGV() {
   const navigate = useNavigate();
   return (
     <div>
-      <PageHeader emoji="💳" title="Conditions Générales de Vente" subtitle="Mise à jour : 31 octobre 2026" />
+      <PageHeader emoji="💳" title="Conditions Générales de Vente" subtitle={miseAJour("cgv")} />
       <div style={scroll}>
 
         <div style={{ ...card(), background:"rgba(33,150,243,0.06)", border:"1px solid rgba(33,150,243,0.2)" }}>
@@ -574,10 +579,10 @@ export function CGV() {
             L'Utilisateur reconnaît avoir pris connaissance, avant de s'engager, du contenu du présent Contrat, lequel prévoit les informations précontractuelles obligatoires visées à l'article L. 221-5 du Code de la consommation.<br/><br/>
             L'Utilisateur accepte de recevoir un exemplaire du présent Contrat de manière électronique.<br/><br/>
             <strong style={{ color:"#a5d6a7" }}>Lorsque l'abonnement est souscrit depuis le site web ou l'application web</strong>, les étapes de la commande sont les suivantes :<br/><br/>
-            1° Depuis son espace utilisateur, sélection de l'abonnement souhaité et la durée (mensuelle ou annuelle) ;<br/>
-            2° Renseignement des informations de paiement ;<br/>
-            3° Prise de connaissance et acceptation des présentes CGU/CGV et de la politique de confidentialité ;<br/>
-            4° Confirmation de la commande en cliquant sur le bouton <strong>« 💳 S'abonner — [montant][période] »</strong>.<br/><br/>
+            1° Depuis la page « Choisir son niveau », sélection de l'abonnement Premium et de sa durée (mensuelle ou annuelle) ;<br/>
+            2° Prise de connaissance et acceptation des présentes CGV, et demande expresse de fourniture immédiate du service (cases à cocher), les CGU et la politique de confidentialité ayant été acceptées à la création du compte ;<br/>
+            3° Clic sur le bouton <strong>« 💳 S'abonner — [montant][période] »</strong>, qui ouvre la page de paiement sécurisée de Stripe ;<br/>
+            4° Saisie des informations de paiement et confirmation du paiement sur cette page.<br/><br/>
             Jusqu'à l'étape du paiement, l'Utilisateur peut modifier sa commande, notamment les éventuelles erreurs commises lors de la saisie de ses données, en retournant sur les écrans précédents. L'acceptation définitive de la commande s'effectue en confirmant le paiement.<br/><br/>
             <strong style={{ color:"#a5d6a7" }}>Lorsque l'abonnement est souscrit par l'intermédiaire de l'Apple App Store ou du Google Play Store :</strong><br/><br/>
             L'Utilisateur sélectionne l'abonnement souhaité et sa durée depuis l'Application. La souscription est finalisée par l'Utilisateur via l'interface de paiement native de la plateforme concernée (Apple In-App Purchase ou Google Play Billing). En confirmant l'achat sur cette interface, l'Utilisateur accepte les présentes CGU/CGV et la politique de confidentialité de MONGAZON360. La transaction est traitée et encaissée par la plateforme, conformément aux conditions générales propres à celle-ci. MONGAZON360 n'a pas accès aux données de paiement de l'Utilisateur dans le cadre de cette transaction.<br/><br/>
@@ -712,7 +717,7 @@ export function CGV() {
 export function Cookies() {
   return (
     <div>
-      <PageHeader emoji="🍪" title="Politique de cookies" subtitle="Mise à jour : 31 octobre 2026" />
+      <PageHeader emoji="🍪" title="Politique de cookies" subtitle={miseAJour("cookies")} />
       <div style={scroll}>
 
         <Section title="Qu'est-ce qu'un cookie ?">
@@ -732,7 +737,7 @@ export function Cookies() {
           <SubSection title="📈 Mesure d'audience anonyme (sans consentement)">
             Pour connaître la fréquentation de l'application et améliorer son fonctionnement, Mongazon360<sup style={{ fontSize:7 }}>®</sup> utilise des outils de mesure d'audience qui <strong>ne déposent aucun cookie</strong> et ne permettent pas de vous identifier :<br/><br/>
             • <strong>Vercel Web Analytics</strong> (Vercel Inc.) : statistiques agrégées de fréquentation (pages vues, page de provenance, pays, type d'appareil et de navigateur). Aucun identifiant persistant n'est stocké sur votre terminal ; les visites sont regroupées à l'aide d'une empreinte technique renouvelée chaque jour ;<br/>
-            • <strong>Compteurs internes</strong> : comptage anonyme du nombre de visites par jour, du type d'appareil (iPhone, Android ou ordinateur), de la source d'arrivée (lien suivi ou site d'origine) et des étapes du parcours d'inscription, sans lien avec votre identité. Pour compter des visiteurs distincts, un identifiant de visite tiré au hasard est gardé dans le stockage de session de votre navigateur : il relie les étapes d'une même visite, n'est rattaché à aucun compte et disparaît à la fermeture de l'onglet.<br/><br/>
+            • <strong>Compteurs internes</strong> : comptage anonyme du nombre de visites par jour, du type d'appareil (iPhone, Android ou ordinateur), de la source d'arrivée (lien suivi ou site d'origine) et des étapes du parcours d'inscription, sans lien avec votre identité. Pour ne compter qu'une visite par jour et par appareil, un simple marqueur « déjà compté aujourd'hui », sans identifiant, est gardé dans le stockage local de votre navigateur. Pour compter des visiteurs distincts, un identifiant de visite tiré au hasard est gardé dans le stockage de session de votre navigateur : il relie les étapes d'une même visite, n'est rattaché à aucun compte et disparaît à la fermeture de l'onglet.<br/><br/>
             Ces mesures sont strictement limitées à la production de statistiques anonymes pour notre propre compte et ne sont ni recoupées avec d'autres traitements, ni transmises à des tiers à d'autres fins.
           </SubSection>
 

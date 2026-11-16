@@ -581,7 +581,7 @@ export default function Settings() {
                 opacity: portalLoading ? 0.6 : 1,
               }}
             >
-              {portalLoading ? "⏳ Ouverture..." : "🔑 Gérer mon abonnement"}
+              {portalLoading ? "⏳ Ouverture..." : "🔑 Gérer ou résilier mon abonnement"}
             </button>
 
             <div style={{ fontSize:10, color:"#4a7c5c", marginTop:8, textAlign:"center", lineHeight:1.5 }}>

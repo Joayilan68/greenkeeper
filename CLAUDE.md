@@ -49,6 +49,15 @@
   `greenpoints_sauvegarde_20261110` (PROD, serveur uniquement), à supprimer le 24/11/2026. Journal compris dans l'export
   et la suppression des données (`api/rgpd-data.js`).
 
+## Textes légaux
+- Décision de Jordan du 10/11/2026 : plus de relecture par un avocat ; les textes (`src/pages/Legal.jsx` : mentions légales,
+  confidentialité, CGU, CGV, cookies) sont tenus à jour par nous et ne disent que ce que l'app fait vraiment. Une correction
+  part en prod avec le go de Jordan.
+- Date de chaque texte : `src/lib/textesLegaux.json`, à changer avec le texte. La date des CGV est la version notée avec
+  chaque abonnement : le serveur refuse le paiement sans les deux cases de « Choisir son niveau » (CGV acceptées ; fourniture
+  immédiate demandée et renonciation à la rétractation) et garde leur date dans les métadonnées Stripe de l'abonnement
+  (`cgv_acceptees_le`, `cgv_version`, `retractation_renoncee_le` : `api/create-checkout.js`).
+
 ## Monitoring des erreurs
 - Toute erreur est stockée dans `error_events` (serveur uniquement) et alertée par email via `api/alerting.cjs`
   (dédoublonnage 6 h, 20 emails/h max) ; consultation : Pilotage → Bugs.

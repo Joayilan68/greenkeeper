@@ -1167,3 +1167,19 @@ du premier onglet).
   ne sont pas encore sur le site (stockage de Vercel) : gardées dans docs/suivi/videos-pretes avec leurs textes, à mettre
   en ligne par la tâche du samedi avec leur lot (21/11 et 28/11), puis à valider dans Pilotage → Réseaux. Le moteur de voix
   articule mal le verbe « tondre » : la première phrase dit « passer la tondeuse ».
+- 16/11/2026 — Mammotion : relance automatique de leur support (« notre réponse vous a-t-elle aidé ? »), position inchangée
+  depuis le refus du 13/11 ; rien ne change dans l'app. Réponse courte proposée à Jordan (porte ouverte si une API ou un
+  programme partenaire ouvre) ; aucune demande d'utilisateur pour Mammotion dans « Équipements demandés ».
+- 16/11/2026 — Textes légaux, suite de la demande de Jordan du 10/11 (sans avocat) : mentions légales, cookies, CGV et cases
+  à cocher comparés à ce que l'app fait vraiment. Corrigé sur STA, en attente du go de Jordan pour la prod : hébergeur
+  (adresse et téléphone officiels de Vercel), démarchage téléphonique (Bloctel a disparu le 11/08/2026), étapes réelles de
+  la commande dans les CGV, OpenStreetMap ajouté à la politique de confidentialité (nom de la commune à partir de la
+  position), marqueur « déjà compté aujourd'hui » dans la politique de cookies, « Paramètres → Mes consentements » à
+  l'inscription, bouton « Gérer ou résilier mon abonnement », dates des textes en source unique
+  (src/lib/textesLegaux.json). Preuve du consentement : les deux cases de l'abonnement (CGV, renonciation à la
+  rétractation) n'étaient gardées nulle part ; le serveur les exige et garde leur date avec l'abonnement dans Stripe (banc
+  17/17). Constats à trancher par Jordan : le Meta Pixel n'a jamais fonctionné (script bloqué par la sécurité du site depuis
+  le 26/09, vérifié sur la prod : le bandeau cookies demande un accord qui ne sert à rien) ; numéro de téléphone absent des
+  mentions légales (obligatoire) ; numéro à 9 chiffres présenté comme un SIRET ; adhésion au médiateur CM2C à confirmer ;
+  préavis de résiliation des CGV (48 h, 15 jours) contraires au « résiliable à tout moment » de l'app ; pas d'email de
+  confirmation d'abonnement envoyé par nous ; rappel avant renouvellement annuel promis par les CGV, à faire avant août 2027.

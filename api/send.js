@@ -1349,7 +1349,8 @@ module.exports = async function handler(req, res) {
 
       return res.json({ url: portalSession.url });
     } catch (e) {
-      console.error("[customer-portal]", e.message);
+      // Le portail est la résiliation en ligne promise par les CGV (article 5 d) : une panne doit être connue
+      await require("./alerting.cjs").reportServerError("Abonnement — portail de gestion et de résiliation indisponible", e);
       return res.status(500).json({ error: e.message });
     }
   }

@@ -11,7 +11,20 @@ module.exports = async function handler(req, res) {
 
   try {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-    const { plan, email } = req.body;
+    const { plan, email, cgv_accepted_at, retractation_waived_at } = req.body;
+
+    // Preuve du consentement (CGV, articles 5 et 8) : les deux cases de « Choisir son niveau » (CGV acceptées ; fourniture
+    // immédiate demandée, avec renonciation au droit de rétractation) sont cochées avant le paiement. Sans elles, pas de
+    // paiement ; leur date (heure du serveur) et la version des CGV acceptées sont gardées avec l'abonnement dans Stripe.
+    if (!cgv_accepted_at || !retractation_waived_at) {
+      return res.status(400).json({ error: "Les CGV et la fourniture immédiate du service doivent être acceptées avant le paiement." });
+    }
+    const maintenant = new Date().toISOString();
+    const preuve = {
+      cgv_acceptees_le: maintenant,
+      cgv_version: require("../src/lib/textesLegaux.json").cgv,
+      retractation_renoncee_le: maintenant,
+    };
 
     // ── Extraire userId depuis le token Clerk ─────────────────────────────
     const userId = await verifiedUserId(req);
@@ -48,12 +61,14 @@ module.exports = async function handler(req, res) {
         userId: userId || "",
         plan,
         ...(offre ? { offre: `saison-${offre.nom}` } : {}),
+        ...preuve,
       },
       subscription_data: {
         metadata: {
           userId: userId || "",
           plan,
           ...(offre ? { offre: `saison-${offre.nom}` } : {}),
+          ...preuve,
         },
       },
       success_url: `${process.env.VITE_APP_URL}/subscribe/success`,

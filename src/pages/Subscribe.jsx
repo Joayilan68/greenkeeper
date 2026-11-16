@@ -83,10 +83,10 @@ export default function Subscribe() {
         body: JSON.stringify({
           plan:  selected,
           email: user?.primaryEmailAddress?.emailAddress,
-          // Traces des consentements pour conformité légale (récupérables côté serveur si besoin)
+          // Les deux cases cochées : le serveur refuse le paiement sans elles, puis garde leur date et la version des
+          // CGV avec l'abonnement dans Stripe (api/create-checkout.js)
           cgv_accepted_at:           new Date().toISOString(),
           retractation_waived_at:    new Date().toISOString(),
-          cgv_version:               "1.0",
         }),
       });
       if (!res.ok) throw new Error("Erreur serveur");
