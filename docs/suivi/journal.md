@@ -1225,3 +1225,8 @@ du premier onglet).
   (sauf contre-ordre) ; 3) textes légaux : pas de relecture, « je te fais confiance » ; ils partent le 22/11, une fois le
   réglage de Stripe choisi. À faire ensuite : email de confirmation de la résiliation (obligatoire, article L. 215-1-1 :
   date de fin et effets), dont le contenu dépend de ce réglage.
+- 16/11/2026 (soir) — Portail client de Stripe réglé par Jordan : résiliation autorisée, effet à la fin de la période de
+  facturation (conforme aux CGV 5 c-5 d et à l'email de confirmation d'abonnement, qui devient validé). Email de
+  confirmation de la résiliation préparé sur STA (article L. 215-1-1 : date de la demande, date de fin, effets ; aussi pour
+  un arrêt immédiat demandé par le client, rien après un impayé ni à la fin naturelle) : banc 39/39, recette décembre
+  n° 76 ; à valider par Jordan, puis prod le 22/11 avec les textes légaux.

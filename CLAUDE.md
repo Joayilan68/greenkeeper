@@ -67,6 +67,9 @@
 - Email de confirmation d'abonnement (décision de Jordan du 16/11/2026, article L. 221-13) : `api/confirmationAbonnement.cjs`,
   envoyé par le webhook Stripe après le paiement (récapitulatif, résiliation, confirmation de la renonciation à la
   rétractation, version des CGV, identité de l'éditeur) ; un échec est signalé dans Pilotage → Bugs, à envoyer à la main.
+  Même module, email de confirmation de la résiliation (article L. 215-1-1) : date de la demande, date de fin et effets ;
+  envoyé quand le client programme la fin de son abonnement (portail Stripe réglé par Jordan le 16/11/2026 : annulation à
+  la fin de la période de facturation), ou quand l'abonnement est arrêté tout de suite à sa demande.
 - Meta Pixel et bandeau cookies retirés (décision de Jordan du 16/11/2026, prod le 22/11) : le script était bloqué par la
   politique de sécurité du site depuis le 26/09. À remettre, réparé (`Content-Security-Policy` de `vercel.json` :
   connect.facebook.net et www.facebook.com), quand une publicité Meta mènera vers l'app ; dernier état : commit `b3754e8`.

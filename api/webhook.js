@@ -1,7 +1,7 @@
 // api/webhook.js
 // ─────────────────────────────────────────────────────────────────────────────
-// Stripe webhook — vérification signature, activation/désactivation Premium, comptage des abonnements pris, email de
-// confirmation de l'abonnement (api/confirmationAbonnement.cjs)
+// Stripe webhook — vérification signature, activation/désactivation Premium, comptage des abonnements pris, emails de
+// confirmation de l'abonnement et de sa résiliation (api/confirmationAbonnement.cjs)
 // Events : checkout.session.completed · subscription.updated · subscription.deleted
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -82,10 +82,12 @@ module.exports = async function handler(req, res) {
         if (!userId) break;
 
         const actif = ["active", "trialing"].includes(sub.status);
-        await clerk.users.updateUserMetadata(userId, {
+        const user = await clerk.users.updateUserMetadata(userId, {
           publicMetadata: { isSubscribed: actif, subscriptionStatus: sub.status },
         });
         console.log(`[Webhook] Subscription updated — user ${userId} — status ${sub.status}`);
+        const emails = require("./confirmationAbonnement.cjs");
+        if (emails.resiliationDemandee(sub, event.data.previous_attributes)) await emails.envoyerResiliation(stripe, sub, user?.firstName, false);
         break;
       }
 
@@ -95,10 +97,12 @@ module.exports = async function handler(req, res) {
         const userId = sub.metadata?.userId || await getUserIdFromCustomer(sub.customer);
         if (!userId) break;
 
-        await clerk.users.updateUserMetadata(userId, {
+        const user = await clerk.users.updateUserMetadata(userId, {
           publicMetadata: { isSubscribed: false, subscriptionStatus: "canceled" },
         });
         console.log(`[Webhook] Premium désactivé — user ${userId}`);
+        const emails = require("./confirmationAbonnement.cjs");
+        if (emails.resiliationImmediate(sub)) await emails.envoyerResiliation(stripe, sub, user?.firstName, true);
         break;
       }
 
