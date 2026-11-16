@@ -1219,3 +1219,9 @@ du premier onglet).
   elle est proposée en échange d'une mise en avant du produit sur nos réseaux (publications et vidéos, à la manière d'un
   influenceur). Si Mammotion accepte : chaque publication porte la mention « Collaboration commerciale » (loi du 9/06/2023
   sur l'influence commerciale) et reste un avis honnête, conforme à la base de connaissances.
+- 16/11/2026 (soir) — Retours de Jordan : 1) email de confirmation d'abonnement vu ; il le valide après avoir regardé les
+  réglages de résiliation du portail client de Stripe (CGV 5 c-5 d et email à aligner sur son choix) ; 2) chantier « l'app
+  dans les articles » (2e série de visuels) : « ok pour moi », pris comme son go pour la mise en prod du dimanche 22/11
+  (sauf contre-ordre) ; 3) textes légaux : pas de relecture, « je te fais confiance » ; ils partent le 22/11, une fois le
+  réglage de Stripe choisi. À faire ensuite : email de confirmation de la résiliation (obligatoire, article L. 215-1-1 :
+  date de fin et effets), dont le contenu dépend de ce réglage.
