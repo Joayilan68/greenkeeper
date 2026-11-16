@@ -1230,3 +1230,7 @@ du premier onglet).
   confirmation de la résiliation préparé sur STA (article L. 215-1-1 : date de la demande, date de fin, effets ; aussi pour
   un arrêt immédiat demandé par le client, rien après un impayé ni à la fin naturelle) : banc 39/39, recette décembre
   n° 76 ; à valider par Jordan, puis prod le 22/11 avec les textes légaux.
+- 16/11/2026 (soir) — Jordan valide l'email de confirmation de la résiliation et donne son go pour le dimanche 22/11 : chantier
+  « l'app sur toutes les pages » (visuels validés), textes légaux du 16/11, emails de confirmation d'abonnement et de
+  résiliation (portail Stripe réglé : annulation à la fin de la période de facturation), retrait du Meta Pixel et du bandeau
+  cookies. Il lui reste l'achat réel de test (recette n° 72 à 74 et 76).
