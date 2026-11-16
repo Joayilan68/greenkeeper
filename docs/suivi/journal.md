@@ -1244,11 +1244,11 @@ du premier onglet).
   à Jordan, hors du dépôt. 75 cellules mises à jour (« [MàJ 16/11/2026] ») et 6 traitements ajoutés : ligue d'hiver,
   diagnostic d'essai des visiteurs, équipements connectés, demandes des paysagistes, liste d'attente « Trouver un pro »
   (22/11), parrainage (décembre) ; Meta Pixel arrêté le 22/11 ; classement mensuel : aucun prénom montré aux autres (joueurs
-  simulés). Correctif de sécurité sur PROD et STA (migration classement_lecture_de_sa_ligne) : la table classement était
-  lisible par tous avec la clé publique (identifiants techniques, ligue, jours de connexion ; ni nom ni email) ; chacun ne
-  lit plus que sa ligne ; test en transaction annulée (77 lignes intactes) ; journaux des 24 h : aucune lecture de toutes
-  les lignes ; contrôle le 17/11 au matin. Décisions demandées à Jordan : faille du classement sans notification à la CNIL
-  (proposé) ; suppression d'un compte avec un abonnement en cours (l'abonnement Stripe n'est pas arrêté : blocage proposé) ;
-  durées manquantes (adresses IP du diagnostic d'essai 2 jours, essai non rattaché 90 jours, compteurs d'usage 1 an et
-  effacés avec le compte) ; Anthropic (Claude) à déclarer comme sous-traitant, offre Claude à vérifier. Action « fichier
-  dédié » close : c'était ce registre.
+  simulés). Action « fichier dédié » close : c'était ce registre.
+- 16/11/2026 (soir) — Réponses de Jordan sur le registre : suppression d'un compte encore abonné, rien ne change (la
+  résiliation reste à la charge du client) ; durées manquantes acceptées si alignées sur les règles existantes : essai sans
+  compte 90 jours (comme les photos), adresse IP de l'anti-abus 48 h, compteurs d'utilisation 1 an (comme les journaux
+  techniques) et supprimés avec le compte ; Claude en offre Pro, réglage d'entraînement désactivé par Jordan : Anthropic
+  déclaré dans la politique de confidentialité. Sur STA : politique de confidentialité (5.3, 6.1, 7), rate_limits dans la
+  suppression du compte, tâche pg_cron mongazon360-retention-anti-abus (essai à blanc : 1 ligne supprimée) ; prod le 22/11
+  avec le reste (tâche pg_cron créée sur la PROD avec le texte) ; recette n° 77 et 78.

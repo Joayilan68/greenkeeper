@@ -77,6 +77,12 @@
 - Registre des traitements (article 30 du RGPD) : fichier Excel de l'avocate, tenu hors du dépôt (données internes) ; V6 du
   16/11/2026 envoyée à Jordan (onglets « Registre RT » et « Suivi des modifications », ajouts notés « [MàJ JJ/MM/AAAA] »).
   À mettre à jour, avec la politique de confidentialité, à chaque nouveau traitement, sous-traitant, donnée ou durée.
+- Durées ajoutées le 16/11/2026 (décision de Jordan, alignées sur les règles existantes ; prod le 22/11) : diagnostic d'essai
+  sans compte (photo, résultat, identifiant de l'appareil) 90 jours comme les photos, adresse IP de l'anti-abus 48 h (la
+  règle ne compte que le jour même), compteurs d'utilisation (`rate_limits`) 1 an comme les journaux techniques et supprimés
+  avec le compte (`api/rgpd-data.js`) ; suppression chaque nuit par la tâche pg_cron `mongazon360-retention-anti-abus`.
+  Claude (Anthropic) est déclaré dans la politique de confidentialité (6.1 et 7) : offre Pro de Jordan, entraînement
+  désactivé le 16/11/2026 ; lectures en base limitées au nécessaire, jamais d'email ni de nom copiés.
 
 ## Monitoring des erreurs
 - Toute erreur est stockée dans `error_events` (serveur uniquement) et alertée par email via `api/alerting.cjs`

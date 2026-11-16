@@ -278,7 +278,8 @@ module.exports = async function handler(req, res) {
         "classement",          // ajout 21/08 — ligue / classement
         "daily_active_users",  // ajout 21/08 — journal d'activité
         "equipements",         // ajout 28/09 — équipements connectés et leurs clés d'accès chiffrées
-        "codes",               // ajout 05/10 — code de parrainage (ses filleuls sont détachés en cascade)
+        "rate_limits",         // ajout 16/11 — compteurs d'utilisation (Bob, diagnostics)
+        "codes",              // ajout 05/10 — code de parrainage (ses filleuls sont détachés en cascade)
         "parrainages",         // ajout 05/10 — code utilisé à l'inscription (colonne filleul_id)
       ];
 

@@ -222,9 +222,11 @@ export function Confidentialite() {
             • <strong>Données de facturation :</strong> 10 ans (obligation comptable)<br/>
             • <strong>Données de prospection commerciale :</strong> 3 ans à compter du dernier contact<br/>
             • <strong>Logs techniques :</strong> 1 an<br/>
+            • <strong>Compteurs d'utilisation</strong> (questions posées à Bob, diagnostics photo) : 1 an, et supprimés avec le compte<br/>
             • <strong>Ligue d'hiver :</strong> défis faits et réponses au quiz jusqu'au 31 juillet qui suit la fin de la saison, puis suppression automatique<br/>
             • <strong>Historique des messages envoyés</strong> (et de leur ouverture ou clic) : tant que le compte existe, puis supprimé avec lui<br/>
             • <strong>Photos de diagnostic :</strong> 90 jours, puis suppression automatique (le résultat de l'analyse reste attaché au compte)<br/>
+            • <strong>Diagnostic photo d'essai sans compte :</strong> photo, résultat et identifiant de l'appareil 90 jours, puis suppression automatique (le résultat est rattaché au compte s'il est créé) ; adresse IP, utilisée pour limiter les essais : 48 heures<br/>
             • <strong>Parrainage :</strong> tant que le compte est actif (supprimé avec le compte)<br/>
             • <strong>Équipements connectés :</strong> jusqu'à leur déconnexion ou la suppression du compte ; seule la dernière mesure est conservée (chaque relevé remplace le précédent)<br/>
             • <strong>Statistiques de mesure d'audience (anonymes) :</strong> 25 mois
@@ -264,7 +266,8 @@ export function Confidentialite() {
             • <strong>Vercel Inc.</strong> (hébergement frontend et mesure d'audience anonyme sans cookie)<br/>
             • <strong>Open-Meteo</strong> (données météorologiques)<br/>
             • <strong>OpenStreetMap Foundation</strong> (service Nominatim : nom de votre commune à partir de votre position, uniquement si vous activez la géolocalisation ; la position est transmise sans lien avec votre compte)<br/>
-            • <strong>Google LLC</strong> (authentification Google, support email)
+            • <strong>Google LLC</strong> (authentification Google, support email)<br/><br/>
+            Mongazon360 utilise aussi l'assistant d'intelligence artificielle <strong>Claude</strong> d'<strong>Anthropic, PBC</strong> (États-Unis) pour la maintenance de l'application et le calcul de ses statistiques : il peut accéder ponctuellement à la base de données, avec le réglage qui exclut l'utilisation de ces échanges pour entraîner ses modèles.
           </SubSection>
 
           <SubSection title="6.2 Tiers responsables de traitement">
@@ -284,7 +287,7 @@ export function Confidentialite() {
 
         <Section title="7. Transferts de données hors Union européenne">
           Les données personnelles des Utilisateurs sont stockées en Union européenne (Supabase, Irlande).<br/><br/>
-          Des transferts de données personnelles en dehors de l'Union européenne ne peuvent cependant être totalement exclus dans le cadre de l'utilisation de l'application, par l'intermédiaire des sous-traitants suivants notamment : <strong>Clerk Inc.</strong> (authentification), <strong>Stripe LLC</strong> (paiement), <strong>Groq Inc.</strong> (inférence IA : assistant conversationnel, analyse des photos de diagnostic, recommandations personnalisées), <strong>Cloudinary Ltd</strong> (traitement d'images), <strong>Plus Five Five, Inc./Resend</strong> (envoi d'emails), <strong>Vercel Inc.</strong> (hébergement frontend et mesure d'audience) et <strong>Google LLC/Gmail</strong> (support email). Des données personnelles pourraient alors être stockées et/ou des transferts de données pourraient intervenir en dehors de l'Union européenne, notamment aux États-Unis.<br/><br/>
+          Des transferts de données personnelles en dehors de l'Union européenne ne peuvent cependant être totalement exclus dans le cadre de l'utilisation de l'application, par l'intermédiaire des sous-traitants suivants notamment : <strong>Clerk Inc.</strong> (authentification), <strong>Stripe LLC</strong> (paiement), <strong>Groq Inc.</strong> (inférence IA : assistant conversationnel, analyse des photos de diagnostic, recommandations personnalisées), <strong>Cloudinary Ltd</strong> (traitement d'images), <strong>Plus Five Five, Inc./Resend</strong> (envoi d'emails), <strong>Vercel Inc.</strong> (hébergement frontend et mesure d'audience), <strong>Google LLC/Gmail</strong> (support email) et <strong>Anthropic, PBC</strong> (assistant d'intelligence artificielle de maintenance). Des données personnelles pourraient alors être stockées et/ou des transferts de données pourraient intervenir en dehors de l'Union européenne, notamment aux États-Unis.<br/><br/>
           De plus, <strong>Supabase Inc.</strong> est une société de droit américain. Bien que les données soient hébergées en Union européenne (Irlande), un accès distant depuis les États-Unis ou Singapour ne peut être exclu (support, maintenance).<br/><br/>
           Le responsable de traitement s'engage à ce que ces transferts soient réalisés :<br/>
           • vers des pays présentant un niveau de protection dit adéquat au sens des autorités européennes de protection des données, ou<br/>
