@@ -1183,3 +1183,13 @@ du premier onglet).
   mentions légales (obligatoire) ; numéro à 9 chiffres présenté comme un SIRET ; adhésion au médiateur CM2C à confirmer ;
   préavis de résiliation des CGV (48 h, 15 jours) contraires au « résiliable à tout moment » de l'app ; pas d'email de
   confirmation d'abonnement envoyé par nous ; rappel avant renouvellement annuel promis par les CGV, à faire avant août 2027.
+- 16/11/2026 — Point KPI du lundi (semaine du 9 au 15/11) : 118 visites (136 la semaine d'avant ; moyenne depuis le 1/11 :
+  127 par semaine, 87 avant, +47 % ; 78 % sur les articles ; Google 61, direct 18, Facebook 17, ChatGPT 2), 10 entrées dans
+  l'app (9 créations de compte ouvertes, 1 essai du diagnostic ; 5 personnes environ, dont le compte de test de Jordan du
+  10/11 ; 16 par semaine avant, dont 5 par l'ancienne démo), 0 inscription gardée (1,4 par semaine avant), 0 abonnement.
+  Un compte créé le dimanche 15/11 à 16 h 50 par un visiteur venu de ChatGPT (Android), puis supprimé depuis les
+  Paramètres 8 minutes plus tard, après un tour de l'app (Aujourd'hui, diagnostic, parcours, Mon gazon) : à demander à
+  Jordan si c'était lui. 109 visites ont lu un article, aucune n'est entrée dans l'app (2e semaine de suite) ; 3 vues de
+  « Choisir son niveau », toutes du compte de test ; quiz des visiteurs : 3 réponses ; groupes Facebook : 7 visites ;
+  page partenaires : 0 vue, 0 demande. Action : retours de Jordan sur la 2e série de visuels du chantier avant le vendredi
+  20/11 (go pour la prod du 22/11, qui vise le passage articles → app).
