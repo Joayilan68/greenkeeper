@@ -17,7 +17,6 @@ const DEFAULT_CONSENTS = {
   notifications:   false,
   marketing:       false,
   data_resale:     false,
-  cookies:         false,
   geolocation:     false,
   push_active:     false, // au moins 1 rappel avec Push actif
   email_active:    false, // au moins 1 rappel avec Email actif
@@ -70,7 +69,6 @@ export function useConsents() {
             notifications:   data.notifications   ?? false,
             marketing:       data.marketing        ?? false,
             data_resale:     data.data_resale      ?? false,
-            cookies:         data.cookies          ?? false,
             geolocation:     data.geolocation      ?? false,
             push_active:     data.push_active      ?? false,
             email_active:    data.email_active     ?? false,

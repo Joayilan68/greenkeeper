@@ -1,6 +1,7 @@
 // api/webhook.js
 // ─────────────────────────────────────────────────────────────────────────────
-// Stripe webhook — vérification signature, activation/désactivation Premium, comptage des abonnements pris
+// Stripe webhook — vérification signature, activation/désactivation Premium, comptage des abonnements pris, email de
+// confirmation de l'abonnement (api/confirmationAbonnement.cjs)
 // Events : checkout.session.completed · subscription.updated · subscription.deleted
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -65,11 +66,12 @@ module.exports = async function handler(req, res) {
         const userId  = session.metadata?.userId;
         if (!userId) break;
 
-        await clerk.users.updateUserMetadata(userId, {
+        const user = await clerk.users.updateUserMetadata(userId, {
           publicMetadata: { isSubscribed: true, subscriptionStatus: "active" },
         });
         console.log(`[Webhook] Premium activé — user ${userId}`);
         await compterAbonnement(session);
+        await require("./confirmationAbonnement.cjs").envoyerConfirmation(stripe, session, user?.firstName);
         break;
       }
 

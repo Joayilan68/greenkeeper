@@ -3,7 +3,6 @@ import { SignIn, SignUp } from "@clerk/clerk-react";
 import { appShell } from "../lib/styles";
 import { isInAppBrowser } from "../lib/inapp";
 import { trackFunnelOncePerSession } from "../lib/funnel";
-import { pixelTrack } from "../lib/metaPixel";
 import BarreVisiteur from "../components/BarreVisiteur";
 
 // mode = "signup" (création de compte, parcours d'acquisition par défaut)
@@ -11,7 +10,6 @@ import BarreVisiteur from "../components/BarreVisiteur";
 export default function Login({ mode = "signin" }) {
   useEffect(() => {
     trackFunnelOncePerSession("auth_screen_view", { mode });
-    if (mode === "signup") pixelTrack("Lead"); // signal d'intention → Meta (si pixel chargé)
   }, [mode]);
 
   // Navigateur in-app (Instagram, TikTok…) : Google/Facebook y sont bloqués par

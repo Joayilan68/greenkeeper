@@ -1200,3 +1200,14 @@ du premier onglet).
   conseil de la semaine » proposait « Pelouse en février » en novembre (dernier article sorti) : un article daté d'un mois
   n'est un conseil du moment que ce mois-là (conseil de la semaine, tête de la liste, accueil visiteur ; contrôlé jour par
   jour sur un an). Banc du mode app rejoué : 31 contrôles au vert.
+- 16/11/2026 — Réponses de Jordan sur les textes légaux : 1) Meta Pixel et bandeau cookies retirés le 22/11, remis réparés
+  avec une publicité Meta vers l'app ; 2) téléphone ajouté aux mentions légales et à l'article 2 des CGU ; 3) numéro
+  d'immatriculation laissé tel quel ; 4) adhésion au médiateur CM2C signée ; 5) préavis de résiliation : le portail Stripe ne
+  sait pas l'appliquer, CGV adaptées (mensuel sans engagement, annuel d'un an, résiliation à tout moment avec effet à la fin
+  de la période payée ; rappel L. 215-1 avant le renouvellement annuel, à construire avant le 1/08/2027) ; 6) email de
+  confirmation d'abonnement préparé (récapitulatif, résiliation, confirmation de la renonciation, banc 26/26). Tout sur STA
+  (identité de l'éditeur en source unique : src/lib/editeur.json), recette décembre n° 71 à 75 ; prod le 22/11 avec le reste,
+  ou avant si Jordan dit « go prod légal ». À vérifier par Jordan dans Stripe : portail client, annulation « à la fin de la
+  période de facturation ».
+- 16/11/2026 — Chantier du 22/11 : 2e série de visuels remise à Jordan (page privée « L'app dans les articles », n° 33 à 68,
+  tableau des 50 articles et de leurs encarts) ; ses retours jusqu'au vendredi 20/11, puis son go pour le dimanche 22/11.

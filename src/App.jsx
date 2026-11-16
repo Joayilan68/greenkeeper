@@ -38,9 +38,6 @@ import { useMesureUsage }  from "./lib/mesure";          // mesure anonyme des p
 import { deviceInfo, isRobot } from "./lib/platform";
 import { usePageMeta }     from "./lib/usePageMeta";      // titre / description / canonique par page
 import { isAnonPending, getAnonIdIfAny, setAnonPending } from "./lib/anonId"; // ✅ rattachement diagnostic anonyme
-import CookieBanner        from "./components/CookieBanner"; // ✅ consentement cookies (RGPD)
-import { getCookieConsent } from "./lib/cookieConsent";
-import { loadMetaPixel, pixelTrack } from "./lib/metaPixel"; // ✅ Meta Pixel (après consentement)
 
 // ── Emails admin — accès permanent garanti ────────────────────────────────────
 const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
@@ -99,8 +96,6 @@ function AppWithWeather({ children }) {
   useUTMInjection(); // ✅ FIX 01/06/2026 — injecte les UTM dans Clerk unsafeMetadata (first-touch)
   useEffect(() => { capturerCode(); }, []); // code de parrainage ou créateur reçu par lien (?p=CODE)
 
-  // Meta Pixel : charger dès le démarrage SI le visiteur a déjà accepté les cookies.
-  useEffect(() => { if (getCookieConsent() === "granted") loadMetaPixel(); }, []);
 
   // Compteur de visites = haut d'entonnoir : UNIQUEMENT les visiteurs NON connectés
   // (les prospects qui arrivent sur la landing). Les connectés sont déjà comptés
@@ -125,7 +120,6 @@ function AppWithWeather({ children }) {
       const isFresh = createdMs && (Date.now() - createdMs) < 10 * 60 * 1000;
       if (isFresh) {
         trackFunnel("signup_completed");
-        pixelTrack("CompleteRegistration"); // remonte l'inscription à Meta (si pixel chargé)
         localStorage.setItem(key, "1");
       }
     } catch { /* non bloquant */ }
@@ -266,7 +260,6 @@ export default function App() {
       <AppWithWeather>
         <AppRoutes />
       </AppWithWeather>
-      <CookieBanner />
       <Analytics />
     </BrowserRouter>
   );

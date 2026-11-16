@@ -57,6 +57,20 @@
   chaque abonnement : le serveur refuse le paiement sans les deux cases de « Choisir son niveau » (CGV acceptées ; fourniture
   immédiate demandée et renonciation à la rétractation) et garde leur date dans les métadonnées Stripe de l'abonnement
   (`cgv_acceptees_le`, `cgv_version`, `retractation_renoncee_le` : `api/create-checkout.js`).
+- Identité de l'éditeur (nom, forme, SIRET, adresse, email, téléphone) : source unique `src/lib/editeur.json` (textes légaux,
+  email de confirmation). Réponses de Jordan du 16/11/2026 : téléphone ajouté, numéro d'immatriculation laissé tel quel,
+  adhésion au médiateur CM2C signée.
+- Résiliation sans préavis (décision de Jordan du 16/11/2026 : le portail Stripe ne sait pas appliquer un préavis) : mensuel
+  sans engagement, annuel d'un an ; effet à la fin de la période payée (réglage « Annulations » du portail Stripe). Rappel
+  par email avant chaque renouvellement annuel (article L. 215-1, CGV 5 c) : à construire avant le 1/08/2027 (premiers
+  renouvellements annuels en novembre 2027).
+- Email de confirmation d'abonnement (décision de Jordan du 16/11/2026, article L. 221-13) : `api/confirmationAbonnement.cjs`,
+  envoyé par le webhook Stripe après le paiement (récapitulatif, résiliation, confirmation de la renonciation à la
+  rétractation, version des CGV, identité de l'éditeur) ; un échec est signalé dans Pilotage → Bugs, à envoyer à la main.
+- Meta Pixel et bandeau cookies retirés (décision de Jordan du 16/11/2026, prod le 22/11) : le script était bloqué par la
+  politique de sécurité du site depuis le 26/09. À remettre, réparé (`Content-Security-Policy` de `vercel.json` :
+  connect.facebook.net et www.facebook.com), quand une publicité Meta mènera vers l'app ; dernier état : commit `b3754e8`.
+  La colonne `user_consents.cookies` garde les choix passés.
 
 ## Monitoring des erreurs
 - Toute erreur est stockée dans `error_events` (serveur uniquement) et alertée par email via `api/alerting.cjs`
