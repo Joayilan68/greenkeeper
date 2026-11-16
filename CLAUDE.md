@@ -74,6 +74,9 @@
   politique de sécurité du site depuis le 26/09. À remettre, réparé (`Content-Security-Policy` de `vercel.json` :
   connect.facebook.net et www.facebook.com), quand une publicité Meta mènera vers l'app ; dernier état : commit `b3754e8`.
   La colonne `user_consents.cookies` garde les choix passés.
+- Registre des traitements (article 30 du RGPD) : fichier Excel de l'avocate, tenu hors du dépôt (données internes) ; V6 du
+  16/11/2026 envoyée à Jordan (onglets « Registre RT » et « Suivi des modifications », ajouts notés « [MàJ JJ/MM/AAAA] »).
+  À mettre à jour, avec la politique de confidentialité, à chaque nouveau traitement, sous-traitant, donnée ou durée.
 
 ## Monitoring des erreurs
 - Toute erreur est stockée dans `error_events` (serveur uniquement) et alertée par email via `api/alerting.cjs`
@@ -189,7 +192,10 @@
 - Indexation : à chaque mise en prod qui touche `content/conseils`, `.github/workflows/indexnow.yml` signale les articles
   modifiés à Bing par IndexNow (`scripts/indexnow.mjs`, clé publique `public/<clé>.txt`) et renvoie le plan du site à Google
   (`scripts/gsc-stats.mjs plan`, secret GitHub `GSC_SERVICE_ACCOUNT_JSON`) ; Google lit la date `maj` de l'article et décide
-  seul de l'indexation. Demande d'indexation à la main dans la Search Console en complément (une dizaine par jour).
+  seul de l'indexation. Demande d'indexation à la main dans la Search Console en complément (une dizaine par jour) :
+  adresse de l'article collée dans la barre « Inspecter n'importe quelle URL » (les liens directs vers l'outil d'inspection
+  donnent une erreur 404 chez Jordan) ; un article déjà indexé n'est redemandé que s'il a changé depuis la dernière
+  exploration de Google et qu'il est de saison.
 - Stats Google : `scripts/gsc-stats.mjs` lit la Search Console, clics et positions, ou état d'indexation des pages avec
   `index` (compte de service `mongazon360-stats`, autorisation « Complète » pour l'envoi du plan du site) ; jeton et position
   moyenne par mois dans `api/searchConsole.cjs`, aussi utilisé par Pilotage → Activité (`/api/stats?type=seo`). Sa clé est

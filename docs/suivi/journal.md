@@ -1234,3 +1234,21 @@ du premier onglet).
   « l'app sur toutes les pages » (visuels validés), textes légaux du 16/11, emails de confirmation d'abonnement et de
   résiliation (portail Stripe réglé : annulation à la fin de la période de facturation), retrait du Meta Pixel et du bandeau
   cookies. Il lui reste l'achat réel de test (recette n° 72 à 74 et 76).
+- 16/11/2026 (soir) — Search Console : indexation de « Pelouse en janvier » et « Pelouse en février » demandée par Jordan.
+  Les liens directs vers l'outil d'inspection donnent une erreur 404 chez lui : on revient aux adresses à coller dans
+  « Inspecter n'importe quelle URL » (CLAUDE.md, tâches « Articles d'hiver » et « Point des stats » mises à jour). 12 articles
+  retravaillés les 10 et 11/10 n'ont pas été relus par Google (dernière exploration du 25/09 au 5/10) : les 5 d'hiver sont
+  à demander (gel, entretien d'hiver, feuilles mortes, hivernage du matériel, mousse), les 7 de printemps et d'été au point
+  des stats du 10/02/2027. Pinterest : épingles « Pelouse en janvier » et « Pelouse en février » importées par Jordan.
+- 16/11/2026 (soir) — Registre des traitements (RGPD, article 30) de l'avocate (V5 du 24/09) vérifié face à l'app : V6 envoyée
+  à Jordan, hors du dépôt. 75 cellules mises à jour (« [MàJ 16/11/2026] ») et 6 traitements ajoutés : ligue d'hiver,
+  diagnostic d'essai des visiteurs, équipements connectés, demandes des paysagistes, liste d'attente « Trouver un pro »
+  (22/11), parrainage (décembre) ; Meta Pixel arrêté le 22/11 ; classement mensuel : aucun prénom montré aux autres (joueurs
+  simulés). Correctif de sécurité sur PROD et STA (migration classement_lecture_de_sa_ligne) : la table classement était
+  lisible par tous avec la clé publique (identifiants techniques, ligue, jours de connexion ; ni nom ni email) ; chacun ne
+  lit plus que sa ligne ; test en transaction annulée (77 lignes intactes) ; journaux des 24 h : aucune lecture de toutes
+  les lignes ; contrôle le 17/11 au matin. Décisions demandées à Jordan : faille du classement sans notification à la CNIL
+  (proposé) ; suppression d'un compte avec un abonnement en cours (l'abonnement Stripe n'est pas arrêté : blocage proposé) ;
+  durées manquantes (adresses IP du diagnostic d'essai 2 jours, essai non rattaché 90 jours, compteurs d'usage 1 an et
+  effacés avec le compte) ; Anthropic (Claude) à déclarer comme sous-traitant, offre Claude à vérifier. Action « fichier
+  dédié » close : c'était ce registre.
