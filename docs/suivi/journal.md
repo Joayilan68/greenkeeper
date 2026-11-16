@@ -1211,3 +1211,7 @@ du premier onglet).
   période de facturation ».
 - 16/11/2026 — Chantier du 22/11 : 2e série de visuels remise à Jordan (page privée « L'app dans les articles », n° 33 à 68,
   tableau des 50 articles et de leurs encarts) ; ses retours jusqu'au vendredi 20/11, puis son go pour le dimanche 22/11.
+- 16/11/2026 — Compte créé le dimanche 15/11 à 16 h 50 (venu de ChatGPT, supprimé 8 minutes plus tard) : « possiblement »
+  Jordan, sans certitude ; il ne compte pas dans les inscriptions (compte supprimé). Mammotion : Jordan répond à la relance
+  de leur support (intégration retirée, demande d'être prévenu si une API ou un programme partenaire ouvre) et demande un
+  matériel de test (robot tondeuse ou autre appareil).
