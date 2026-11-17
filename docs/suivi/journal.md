@@ -1281,3 +1281,7 @@ du premier onglet).
   compté (origine « article »). Corrections décidées (« Oui corrige ») : bouton « Voir sur Amazon › » sur chaque produit de
   l'encadré « Le matériel conseillé » (les lignes ne ressemblaient pas à des liens) et icône 📋 pour l'encart du kit de
   saison ; STA le 17/11, prod le 22/11 avec le comptage (recette n° 81).
+- 17/11/2026 — Mammotion : le support renvoie la proposition de Jordan (appareil de test contre des publications et vidéos
+  honnêtes, mention « Collaboration commerciale ») vers son équipe partenariats, « Co-operation Email » de la page contact
+  de mammotion.com (Marketing Collaboration) ; email complet préparé pour Jordan. Le connecteur reste retiré tant qu'il
+  n'y a pas d'autorisation écrite.
