@@ -1,28 +1,30 @@
 ---
-title: Combien de temps pour que le gazon pousse après un semis ?
-description: Germination en 1 à 3 semaines, première tonte vers 4 à 6 semaines, gazon dense à 2 mois : les délais du gazon semé, et ce qui accélère ou bloque la pousse.
+title: Temps de pousse du gazon : combien de jours après le semis ?
+description: Germination en 7 à 21 jours, levée jusqu'à 6 semaines, 1re tonte à 8-10 cm : les délais normaux du gazon semé, et que faire s'il ne pousse pas.
 saison: printemps
 date: 2026-10-11
+maj: 2026-11-17
 produits: regarnissage
 ---
 
-Les graines sont semées, l'arrosage est en place… et rien ne se passe. Faut-il s'inquiéter ? Le plus souvent, non : **le gazon prend son temps**, et chaque graminée a son rythme. Voici les délais normaux, de la graine au gazon dense, et ce qui peut les allonger.
+Les graines sont semées, l'arrosage est en place… et rien ne se passe. Faut-il s'inquiéter ? Le plus souvent, non : **le gazon prend son temps**, et chaque graminée a son rythme. Voici les délais normaux, de la graine au gazon dense, ce qui peut les allonger, et pourquoi un semis d'automne ralentit en novembre.
 
 > **En bref**
 > - **Germination** : 7 à 10 jours pour le ray-grass, jusqu'à 3 semaines pour les fétuques et le pâturin.
 > - **Première tonte** : quand l'herbe atteint 8 à 10 cm, en général 4 à 6 semaines après le semis.
 > - **Gazon dense** : vers 6 à 8 semaines ; on peut alors le nourrir et l'utiliser normalement, peu à peu.
 > - **La condition** : un sol à au moins 10 °C et une surface toujours humide pendant la germination.
+> - **Semis d'automne** : la pousse ralentit quand le sol passe sous 8 °C et s'arrête sous 5 °C, puis reprend au printemps.
 
-## Les étapes, de la graine au gazon
+## Les étapes de la pousse du gazon, semaine après semaine
 
 | Période | Étape | Ce qu'on voit | À faire |
 |---|---|---|---|
 | **Jour 1 à 3 semaines** | Germination | Les premiers brins, fins comme des cheveux | Surface toujours humide, aucun piétinement |
-| **3 à 6 semaines** | Levée | L'herbe pousse et couvre le sol | Arrosages espacés, première tonte à 8-10 cm |
+| **3 à 6 semaines** | Levée | L'herbe pousse et couvre le sol | Arrosages espacés, première tonte à 8-10 cm, ressemer les zones restées nues |
 | **6 à 8 semaines** | Consolidation | Le gazon se densifie | Premier engrais, retour progressif à l'entretien normal |
 
-## Combien de temps pour que les graines germent ?
+## Temps de germination du gazon : 7 à 21 jours
 
 Chaque graminée a son rythme :
 
@@ -47,7 +49,32 @@ Un mélange lève donc **en plusieurs fois** : le ray-grass d'abord, les autres 
 
 En dessous de 10 °C dans le sol, les graines ne germent pas, ou très lentement. Au-delà de 25 à 28 °C selon la région, la levée échoue. Les bonnes périodes : [quand semer le gazon](/conseils/quand-semer-gazon).
 
-## Comment accélérer la pousse du gazon ?
+## Semé en automne : pourquoi la pousse ralentit en novembre
+
+Un semis de septembre ou d'octobre profite d'un sol encore chaud. Puis le sol refroidit, et le gazon ralentit, quelle que soit la qualité du semis :
+
+| Température du sol | Ce qui se passe |
+|---|---|
+| **10 °C et plus** | Les graines germent : c'est le seuil des semis |
+| **De 8 à 10 °C** | Les graines germent mal, mais l'herbe déjà levée pousse encore |
+| **De 5 à 8 °C** | L'herbe pousse de moins en moins |
+| **Moins de 5 °C** | Plus aucune croissance jusqu'au printemps |
+
+Un gazon semé en fin de fenêtre n'a donc pas toujours le temps de s'installer avant l'hiver. Si le vôtre semble à l'arrêt :
+
+- **Ne marchez pas dessus**, encore moins quand il gèle : les jeunes pousses s'écrasent.
+- **Gardez la surface humide** pendant les 3 semaines de germination, sans détremper : une pluie suffisante remplace l'arrosage du jour. Ensuite, espacez les arrosages.
+- **Pas d'engrais** : sous 8 °C dans le sol, le gazon n'assimile pas l'azote.
+- **Pas de tonte** tant que l'herbe n'atteint pas 8 à 10 cm.
+- **Au printemps**, quand le sol atteint à nouveau 10 °C, ressemez les zones restées clairsemées (voir [regarnir le gazon](/conseils/regarnir-gazon-automne)).
+
+Vous n'avez pas encore semé ? En novembre, il est trop tard presque partout : [semer du gazon en novembre](/conseils/semer-gazon-novembre) donne les dates limites, région par région.
+
+## Et au printemps ?
+
+C'est l'inverse : le sol se réchauffe peu à peu, et tant qu'il n'a pas atteint 10 °C, semer ne sert à rien. La fenêtre s'ouvre dès la fin février dans le Sud et en Corse, mais seulement vers la mi-avril dans le Nord-Est et la fin avril dans le Nord. Une fois le sol assez chaud, les délais de germination sont les mêmes qu'en automne : voir [semer du gazon au printemps](/conseils/semer-gazon-printemps).
+
+## Comment accélérer la germination et la pousse ?
 
 - **Semer dans la fenêtre** de votre région, avec un sol entre 10 °C et le plafond régional.
 - **Préparer un lit de semences fin** et rouler après le semis : le contact graine-sol est essentiel (voir [créer une pelouse](/conseils/creer-pelouse)).
@@ -70,9 +97,21 @@ Pas pendant la germination : un pas suffit à écraser les jeunes pousses. Ensui
 
 Le ray-grass anglais peut germer en 7 à 10 jours dans de bonnes conditions. Mais un gazon utilisable demande 6 à 8 semaines.
 
-### Faut-il arroser tous les jours après un semis ?
+### Mon gazon ne pousse pas au bout de 2 semaines : est-ce normal ?
 
-Oui, pendant la germination, environ 3 semaines : la surface doit rester humide en permanence, sauf s'il pleut suffisamment. Ensuite, on espace progressivement.
+Oui, souvent. La germination dure jusqu'à 3 semaines, et davantage dans un sol frais : les fétuques et le pâturin sortent après le ray-grass. Vérifiez que la surface reste humide et que le sol est à au moins 10 °C. Ne ressemez que les zones encore nues après la levée, vers 3 à 6 semaines.
+
+### Combien de temps faut-il arroser après un semis ?
+
+Tous les jours pendant la germination, environ 3 semaines : la surface doit rester humide en permanence, sauf s'il pleut suffisamment. Ensuite, pendant la levée, on espace progressivement les arrosages.
+
+### Une forte pluie juste après le semis, c'est grave ?
+
+Une averse peut emporter des graines vers les creux. Pendant la germination, elle remplace l'arrosage du jour. Attendez la levée, puis ressemez les zones restées nues, dans la fenêtre de semis.
+
+### Le gazon pousse-t-il en hiver ?
+
+Non. Sous 5 °C dans le sol, il ne pousse plus du tout : il reste en dormance jusqu'au printemps, et la pousse reprend quand le sol atteint 8 °C.
 
 ### Quand mettre de l'engrais sur un nouveau gazon ?
 
