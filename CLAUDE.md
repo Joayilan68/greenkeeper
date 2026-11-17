@@ -211,6 +211,10 @@
   triable, export CSV) ; par article : clics, affichages et position Google, lectures (dont Google et Facebook), puis, dans la
   même visite, passages vers l'app, diagnostics d'essai et inscriptions ; installations non rattachables à un article. Mis à
   jour par le point des stats du 10 et du 25 (`scripts/tableau-articles` : requête sur la PROD en lecture seule, Search Console).
+- Encadré « Le matériel conseillé » des articles (depuis le 26/09/2026, 33 articles) : liens partenaires Amazon des catégories
+  de l'en-tête `produits` (catalogue `src/lib/amazonProducts.js`, conforme à la base de connaissances : pas de produit qu'un
+  article déconseille), mention Partenaire Amazon, `rel="sponsored"` ; clics comptés par article (étape `amazon_clic`, STA
+  depuis le 17/11/2026), colonne « Clics Amazon » du tableau de pilotage.
 - Articles (décision de Jordan du 17/11/2026, tâche « Articles d'hiver ») : le mardi, un article existant amélioré (pages vues
   mais peu cliquées dans Google d'abord, dans l'ordre des saisons) ; le vendredi, un nouvel article.
 
