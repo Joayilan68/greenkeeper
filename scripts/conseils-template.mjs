@@ -86,7 +86,7 @@ var H={apikey:A,Authorization:"Bearer "+A,"Content-Type":"application/json",Pref
 try{vis=sessionStorage.getItem("mg360_visite");if(!vis){vis=window.crypto&&crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+"-"+Math.random().toString(36).slice(2);sessionStorage.setItem("mg360_visite",vis);}
 if(!sessionStorage.getItem(L)){sessionStorage.setItem(L,"1");
 fetch(U+"/rest/v1/funnel_events",{method:"POST",headers:H,body:JSON.stringify({step:"conseils_vue",meta:{page:"${campagne}",source:String(cap.source).slice(0,40)},path:location.pathname,visite:vis})}).catch(function(){});}}catch(e){}
-document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a[data-amazon]");if(a)fetch(U+"/rest/v1/funnel_events",{method:"POST",keepalive:true,headers:H,body:JSON.stringify({step:"amazon_clic",meta:{page:"${campagne}",produit:a.getAttribute("data-amazon"),source:String(cap.source).slice(0,40)},path:location.pathname,visite:vis})}).catch(function(){});});
+document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a[data-amazon]");if(a)fetch(U+"/rest/v1/funnel_events",{method:"POST",keepalive:true,headers:H,body:JSON.stringify({step:"amazon_clic",meta:{origine:"article",page:"${campagne}",produit:a.getAttribute("data-amazon"),source:String(cap.source).slice(0,40)},path:location.pathname,visite:vis})}).catch(function(){});});
 if(localStorage.getItem(V))return;
 localStorage.setItem(V,"1");
 var ua=navigator.userAgent||"",ios=/iPhone|iPad|iPod/i.test(ua)||(/Macintosh/i.test(ua)&&navigator.maxTouchPoints>1);

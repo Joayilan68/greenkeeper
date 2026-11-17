@@ -5,6 +5,7 @@
 
 import { useMemo } from 'react';
 import AMAZON_PRODUCTS from './amazonProducts';
+import { trackFunnel } from './funnel';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS
@@ -149,7 +150,8 @@ const useAmazonProducts = (actionKey, profile) => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Enregistre un clic affilié Amazon en localStorage.
+ * Enregistre un clic affilié Amazon : compté dans funnel_events (étape amazon_clic, origine « app », catégorie du
+ * catalogue, écran dans path) et gardé en localStorage (suivi du budget de l'utilisateur).
  * Appeler depuis le onClick du bouton "Voir sur Amazon".
  *
  * @param {string} actionKey  - Clé de l'action (ex: 'engraisStarter')
@@ -157,6 +159,7 @@ const useAmazonProducts = (actionKey, profile) => {
  * @param {number} prixTotal  - Prix total affiché (quantite × prix unitaire)
  */
 export const trackAmazonClick = (actionKey, asin, prixTotal) => {
+  trackFunnel('amazon_clic', { origine: 'app', produit: actionKey });
   try {
     const clicks = JSON.parse(
       localStorage.getItem('mg360_amazon_clicks') || '[]'

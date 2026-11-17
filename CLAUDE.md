@@ -211,10 +211,14 @@
   triable, export CSV) ; par article : clics, affichages et position Google, lectures (dont Google et Facebook), puis, dans la
   même visite, passages vers l'app, diagnostics d'essai et inscriptions ; installations non rattachables à un article. Mis à
   jour par le point des stats du 10 et du 25 (`scripts/tableau-articles` : requête sur la PROD en lecture seule, Search Console).
-- Encadré « Le matériel conseillé » des articles (depuis le 26/09/2026, 33 articles) : liens partenaires Amazon des catégories
-  de l'en-tête `produits` (catalogue `src/lib/amazonProducts.js`, conforme à la base de connaissances : pas de produit qu'un
-  article déconseille), mention Partenaire Amazon, `rel="sponsored"` ; clics comptés par article (étape `amazon_clic`, STA
-  depuis le 17/11/2026), colonne « Clics Amazon » du tableau de pilotage.
+- Liens Amazon (programme Partenaires ; identifiant de suivi `mongazon360-21` : `TAG` de `src/lib/amazonProducts.js` et liens
+  permis de Bob dans `src/components/AIAssistant.jsx`, à changer aux deux endroits s'il change ; compte à réactiver par Jordan
+  dès que des clics sont enregistrés, 17/11/2026) : encadré « Le matériel conseillé » des articles (depuis le 26/09/2026,
+  33 articles : catégories de l'en-tête `produits`, conformes à la base de connaissances, pas de produit qu'un article
+  déconseille ; mention Partenaire Amazon, `rel="sponsored"`), boutons « Voir sur Amazon » de l'app, liens de Bob. Chaque clic
+  est compté (go de Jordan du 17/11/2026 : « on doit pouvoir tout mesurer » ; prod le 22/11) : étape `amazon_clic` de
+  `funnel_events`, `meta.origine` « article » (article et catégorie : colonne « Clics Amazon » du tableau de pilotage),
+  « app » (catégorie, écran) ou « bob ».
 - Articles (décision de Jordan du 17/11/2026, tâche « Articles d'hiver ») : le mardi, un article existant amélioré (pages vues
   mais peu cliquées dans Google d'abord, dans l'ordre des saisons) ; le vendredi, un nouvel article.
 

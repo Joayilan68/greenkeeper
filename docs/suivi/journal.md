@@ -1271,3 +1271,8 @@ du premier onglet).
   payante (Google Ads et crédit Microsoft Advertising) début mars 2027, seulement si les inscriptions ont monté après le 22/11,
   arrêt au-delà de 5 € par inscription, préparation le 22/02/2027 (tâche programmée). Export de la Search Console de Jordan
   (1/09 → 15/11 : 290 clics, 18 393 affichages) : confirme nos chiffres, environ 13 000 affichages par mois aujourd'hui.
+- 17/11/2026 — Réponses de Jordan : tableau de pilotage des articles ouvert sur son téléphone, complet ; go pour compter les
+  clics vers Amazon et les mettre en prod le 22/11 (« On doit pouvoir tout mesurer ») : articles (par article), et aussi
+  boutons « Voir sur Amazon » de l'app et liens de Bob, jusque-là seulement gardés dans le téléphone (STA le 17/11, recette
+  n° 79 et 80). Compte Partenaires Amazon inactif, les liens marchent toujours (sans commission) : Jordan le réactivera dès
+  que des clics seront enregistrés ; nouvel identifiant de suivi éventuel à changer dans amazonProducts.js et AIAssistant.jsx.

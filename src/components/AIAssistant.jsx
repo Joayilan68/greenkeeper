@@ -17,6 +17,7 @@ import { useWeather } from "../lib/useWeather";
 import { useSubscription } from "../lib/useSubscription";
 import { calcLawnScore } from "../lib/lawnScore";
 import { useHistory } from "../lib/useHistory";
+import { trackFunnel } from "../lib/funnel";
 
 // Questions suggérées selon la saison
 const SUGGESTIONS = {
@@ -55,7 +56,7 @@ function inline(text) {
     const lien = part.match(LIEN);
     if (!lien) return part;
     const amazon = AMAZON.test(lien[2]);
-    return <a key={i} href={lien[2]} {...(amazon ? { target:"_blank", rel:"sponsored noopener noreferrer" } : {})}
+    return <a key={i} href={lien[2]} {...(amazon ? { target:"_blank", rel:"sponsored noopener noreferrer", onClick: () => trackFunnel("amazon_clic", { origine:"bob" }) } : {})}
       style={{ color:"#a5d6a7", fontWeight:700 }}>{lien[1]}</a>;
   });
 }
