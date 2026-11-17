@@ -1261,3 +1261,13 @@ du premier onglet).
   (herbe sous une première neige, photo CC0 notée dans photos-libres.md ; main 3f23937, ancien visuel retiré), repassée
   « à valider » dans Pilotage → Réseaux ; contrôle de la vidéo de Bob du 18/11 et validation du lot du 29/11 le 21/11 : OK.
 - 17/11/2026 — Test de Jordan sur STA du quiz de la ligue d'hiver de la semaine 5 (en prod le dimanche 29/11) : OK.
+- 17/11/2026 — Analyse SEO d'une autre IA (synthèse en 8 points) relue avec Jordan ; ses décisions : 1) tâche « Articles
+  d'hiver » : le mardi, un article existant amélioré (titre et description d'abord : temps de pousse du gazon, quand tondre ;
+  chaux pas avant décembre), le vendredi, un nouvel article ; 2) tableau de pilotage par article : page privée « Articles
+  Conseils : pilotage » (claude.ai), mise à jour par le point des stats du 10 et du 25 (`scripts/tableau-articles`) ; du 1er
+  au 15/11 : 116 clics Google, 248 lectures d'articles, 4 passages vers l'app, 0 diagnostic d'essai, 0 inscription ; 3) liens
+  Amazon dans les articles qui parlent de produits : déjà en place dans 33 articles sur 50 (encadré « Le matériel conseillé »,
+  liens partenaires et mention Amazon, depuis le 26/09) ; reste à compter leurs clics par article ; 4) test de publicité
+  payante (Google Ads et crédit Microsoft Advertising) début mars 2027, seulement si les inscriptions ont monté après le 22/11,
+  arrêt au-delà de 5 € par inscription, préparation le 22/02/2027 (tâche programmée). Export de la Search Console de Jordan
+  (1/09 → 15/11 : 290 clics, 18 393 affichages) : confirme nos chiffres, environ 13 000 affichages par mois aujourd'hui.

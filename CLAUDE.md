@@ -207,6 +207,12 @@
   moyenne par mois dans `api/searchConsole.cjs`, aussi utilisé par Pilotage → Activité (`/api/stats?type=seo`). Sa clé est
   dans la variable `GSC_SERVICE_ACCOUNT_JSON` (Vercel Production et Preview, secret GitHub, environnement cloud de Claude),
   jamais dans le dépôt ni affichée. Sert au point des stats tous les 15 jours et au choix des articles à améliorer.
+- Tableau de pilotage des articles (go de Jordan du 17/11/2026) : page privée « Articles Conseils : pilotage » (claude.ai,
+  triable, export CSV) ; par article : clics, affichages et position Google, lectures (dont Google et Facebook), puis, dans la
+  même visite, passages vers l'app, diagnostics d'essai et inscriptions ; installations non rattachables à un article. Mis à
+  jour par le point des stats du 10 et du 25 (`scripts/tableau-articles` : requête sur la PROD en lecture seule, Search Console).
+- Articles (décision de Jordan du 17/11/2026, tâche « Articles d'hiver ») : le mardi, un article existant amélioré (pages vues
+  mais peu cliquées dans Google d'abord, dans l'ordre des saisons) ; le vendredi, un nouvel article.
 
 ## Ligue d'hiver
 - Décision de Jordan du 19/10/2026 : du dimanche 1er novembre 2026 au samedi 30 janvier 2027, 13 semaines du dimanche au
