@@ -215,7 +215,8 @@
   permis de Bob dans `src/components/AIAssistant.jsx`, à changer aux deux endroits s'il change ; compte à réactiver par Jordan
   dès que des clics sont enregistrés, 17/11/2026) : encadré « Le matériel conseillé » des articles (depuis le 26/09/2026,
   33 articles : catégories de l'en-tête `produits`, conformes à la base de connaissances, pas de produit qu'un article
-  déconseille ; mention Partenaire Amazon, `rel="sponsored"`), boutons « Voir sur Amazon » de l'app, liens de Bob. Chaque clic
+  déconseille ; bouton « Voir sur Amazon › » sur chaque produit ; mention Partenaire Amazon, `rel="sponsored"` ; l'encart du kit
+  de saison de l'app y porte 📋, 🛒 restant aux liens Amazon), boutons « Voir sur Amazon » de l'app, liens de Bob. Chaque clic
   est compté (go de Jordan du 17/11/2026 : « on doit pouvoir tout mesurer » ; prod le 22/11) : étape `amazon_clic` de
   `funnel_events`, `meta.origine` « article » (article et catégorie : colonne « Clics Amazon » du tableau de pilotage),
   « app » (catégorie, écran) ou « bob ».

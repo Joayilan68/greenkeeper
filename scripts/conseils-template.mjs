@@ -38,7 +38,7 @@ blockquote{margin:18px 0;padding:12px 16px;background:#e8f5e9;border-left:4px so
 .grille>.btn{display:inline-block;margin-top:16px;font-size:16px;padding:12px 22px}.fixe{display:none}.cards{display:grid;gap:12px}
 .shop{margin:32px 0 0;padding:18px;border:1px solid #dfe8e1;border-radius:16px;background:#fff}.shop h2{margin:0 0 4px;font-size:19px}
 .shop a{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid #eef3ef;text-decoration:none;color:#1f2d24;font-size:15px}
-.shop a span:last-child{white-space:nowrap;color:#2e7d32;font-weight:700}.shop .kit{margin:10px 0 0;font-size:14px}.shop small{display:block;font-size:12px;color:#5b6f61;margin-top:8px;line-height:1.5}
+.shop a span:last-child{white-space:nowrap;color:#2e7d32;font-weight:700;text-align:right}.shop a b{display:block;margin-top:4px;padding:3px 9px;border-radius:999px;background:#2e7d32;color:#fff;font-size:12px;font-weight:600}.shop .kit{margin:10px 0 0;font-size:14px}.shop small{display:block;font-size:12px;color:#5b6f61;margin-top:8px;line-height:1.5}
 article img{max-width:100%;height:auto;border-radius:12px;display:block}.hero{margin:0 0 22px}figure{margin:22px 0}
 .duo{display:grid;grid-template-columns:1fr 1fr;gap:8px}figcaption{grid-column:1/-1;font-size:13px;color:#5b6f61;margin-top:4px}
 .card{display:block;background:#fff;border:1px solid #dfe8e1;border-radius:14px;padding:16px;text-decoration:none;color:#1f2d24}.card b{color:#1a4731;font-size:17px}
@@ -196,14 +196,15 @@ function avecEncarts(html, [haut, milieu], campagne) {
 }
 
 // Encadré « Le matériel conseillé » : catégories du catalogue listées dans l'en-tête de l'article
-// (produits: engraisAutomne, antiMousse), 3 gammes par catégorie et 4 produits au plus, liens partenaires Amazon,
-// et renvoi vers le kit de saison de l'app
+// (produits: engraisAutomne, antiMousse), 3 gammes par catégorie et 4 produits au plus, liens partenaires Amazon
+// (« Voir sur Amazon › » sur chaque ligne, constat de Jordan du 17/11/2026 : sans lui, les lignes ne ressemblaient pas à
+// des liens), et renvoi vers le kit de saison de l'app
 function encadreProduits(cles, produits, campagne) {
   const lignes = cles.flatMap(cle => Object.values(produits[cle]?.tiers || {}).slice(0, 3).map(p => ({ ...p, cle }))).slice(0, 4);
   if (!lignes.length) return "";
   const prix = (n) => `${Number(n).toFixed(2).replace(".", ",")} €`;
   return `<div class="shop"><h2>🛒 Le matériel conseillé</h2>${lignes.map(p =>
-    `<a href="${esc(p.url)}" target="_blank" rel="sponsored noopener noreferrer" data-amazon="${esc(p.cle)}"><span>${esc(p.label)} — ${esc(p.marque)}</span><span>~${prix(p.prix)}</span></a>`).join("")}
+    `<a href="${esc(p.url)}" target="_blank" rel="sponsored noopener noreferrer" data-amazon="${esc(p.cle)}"><span>${esc(p.label)} — ${esc(p.marque)}</span><span>~${prix(p.prix)}<b>Voir sur Amazon ›</b></span></a>`).join("")}
 <p class="kit">📱 Dans l'app Mongazon360 : le <b>kit de saison</b> calculé pour votre surface et votre budget. <a href="${lien(THEME.achats.cible, "achats-produits", campagne)}">Essayer l'app gratuitement</a></p>
 <small>Liens partenaires Amazon : en tant que Partenaire Amazon, Mongazon360® perçoit une commission sur les achats éligibles, sans surcoût pour vous. Prix indicatifs.</small></div>`;
 }

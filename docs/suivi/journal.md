@@ -1276,3 +1276,8 @@ du premier onglet).
   boutons « Voir sur Amazon » de l'app et liens de Bob, jusque-là seulement gardés dans le téléphone (STA le 17/11, recette
   n° 79 et 80). Compte Partenaires Amazon inactif, les liens marchent toujours (sans commission) : Jordan le réactivera dès
   que des clics seront enregistrés ; nouvel identifiant de suivi éventuel à changer dans amazonProducts.js et AIAssistant.jsx.
+- 17/11/2026 — Test de Jordan sur STA des clics vers Amazon : clics de l'app (page Printemps) et de Bob comptés ; depuis
+  l'article, il avait d'abord touché l'encart du kit de saison (même icône 🛒, il mène à l'inscription), puis le vrai lien :
+  compté (origine « article »). Corrections décidées (« Oui corrige ») : bouton « Voir sur Amazon › » sur chaque produit de
+  l'encadré « Le matériel conseillé » (les lignes ne ressemblaient pas à des liens) et icône 📋 pour l'encart du kit de
+  saison ; STA le 17/11, prod le 22/11 avec le comptage (recette n° 81).
