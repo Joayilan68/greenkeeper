@@ -1288,4 +1288,5 @@ du premier onglet).
 - 17/11/2026 — Hunter (Hydrawise) : message envoyé par Jordan sur leur chat. Réponse de leur assistant, tirée des conditions
   d'utilisation de l'API Hydrawise : aucune nouvelle connexion API commerciale acceptée pour l'instant (accès réservé aux
   licenciés approuvés). Aucun connecteur Hydrawise dans l'app (ni STA ni prod) : rien à retirer ; demande close, à revoir
-  seulement si Hunter rouvre les connexions. Arrosage connecté : Gardena et Rachio.
+  seulement si Hunter rouvre les connexions. Arrosage connecté : Gardena et Rachio. Jordan a demandé à être accepté :
+  réponse générique de l'assistant automatique ; décision de Jordan : « on s'arrête là pour Hydrawise ».

@@ -335,6 +335,8 @@
 - Robot Mammotion : usage commercial refusé par Mammotion le 13/11/2026 (produits et services réservés à l'usage
   personnel et résidentiel) ; connecteur retiré de la STA le 13/11 (go de Jordan), jamais parti en prod. Ne pas le
   remettre sans leur autorisation écrite ; son code se retrouve dans l'historique (dernier état : commit `7f8ce04`).
+- Hydrawise (Hunter) : pas de nouvelle connexion API commerciale acceptée (conditions d'utilisation de leur API, chat du
+  17/11/2026) ; décision de Jordan du 17/11/2026 : on s'arrête là. Aucun connecteur Hydrawise sans leur autorisation écrite.
 - Arrosage : Gardena par la même connexion Husqvarna Group (l'API « GARDENA smart system » doit être rattachée à
   l'application Husqvarna ; 700 requêtes/semaine pour toute l'app : lecture au plus toutes les 10 min) ; Rachio par la clé
   API de l'utilisateur. Lancement d'une zone seulement le matin (heures de la base, src/lib/arrosageConnecte.js).
