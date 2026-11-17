@@ -65,7 +65,9 @@ const PLAY = "https://play.google.com/store/apps/details?id=fr.mongazon360.app";
 // 2. page lue comptée dans funnel_events (« conseils_vue », 1 par page et par onglet) avec l'identifiant de visite de l'app
 //    (sessionStorage « mg360_visite ») : relie la lecture d'un article à l'entrée dans l'app au cours de la même visite ;
 // 3. visite comptée dans site_visits (1 par appareil et par jour, clé partagée avec l'app, comptes
-//    connectés et robots exclus) si l'URL et la clé publique Supabase sont fournies au build.
+//    connectés et robots exclus) si l'URL et la clé publique Supabase sont fournies au build ;
+// 4. clic vers Amazon de l'encadré « Le matériel conseillé » compté dans funnel_events (« amazon_clic », avec l'article
+//    et la catégorie du catalogue), mêmes exclusions.
 // Valeurs nettoyées : un saut de ligne en fin de variable Vercel (constaté le 3/11/2026 sur les préversions) casserait les
 // scripts des pages
 const SUPABASE_URL  = (process.env.VITE_SUPABASE_URL || "").trim();
@@ -84,6 +86,7 @@ var H={apikey:A,Authorization:"Bearer "+A,"Content-Type":"application/json",Pref
 try{vis=sessionStorage.getItem("mg360_visite");if(!vis){vis=window.crypto&&crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+"-"+Math.random().toString(36).slice(2);sessionStorage.setItem("mg360_visite",vis);}
 if(!sessionStorage.getItem(L)){sessionStorage.setItem(L,"1");
 fetch(U+"/rest/v1/funnel_events",{method:"POST",headers:H,body:JSON.stringify({step:"conseils_vue",meta:{page:"${campagne}",source:String(cap.source).slice(0,40)},path:location.pathname,visite:vis})}).catch(function(){});}}catch(e){}
+document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a[data-amazon]");if(a)fetch(U+"/rest/v1/funnel_events",{method:"POST",keepalive:true,headers:H,body:JSON.stringify({step:"amazon_clic",meta:{page:"${campagne}",produit:a.getAttribute("data-amazon"),source:String(cap.source).slice(0,40)},path:location.pathname,visite:vis})}).catch(function(){});});
 if(localStorage.getItem(V))return;
 localStorage.setItem(V,"1");
 var ua=navigator.userAgent||"",ios=/iPhone|iPad|iPod/i.test(ua)||(/Macintosh/i.test(ua)&&navigator.maxTouchPoints>1);
@@ -196,11 +199,11 @@ function avecEncarts(html, [haut, milieu], campagne) {
 // (produits: engraisAutomne, antiMousse), 3 gammes par catégorie et 4 produits au plus, liens partenaires Amazon,
 // et renvoi vers le kit de saison de l'app
 function encadreProduits(cles, produits, campagne) {
-  const lignes = cles.flatMap(cle => Object.values(produits[cle]?.tiers || {}).slice(0, 3)).slice(0, 4);
+  const lignes = cles.flatMap(cle => Object.values(produits[cle]?.tiers || {}).slice(0, 3).map(p => ({ ...p, cle }))).slice(0, 4);
   if (!lignes.length) return "";
   const prix = (n) => `${Number(n).toFixed(2).replace(".", ",")} €`;
   return `<div class="shop"><h2>🛒 Le matériel conseillé</h2>${lignes.map(p =>
-    `<a href="${esc(p.url)}" target="_blank" rel="sponsored noopener noreferrer"><span>${esc(p.label)} — ${esc(p.marque)}</span><span>~${prix(p.prix)}</span></a>`).join("")}
+    `<a href="${esc(p.url)}" target="_blank" rel="sponsored noopener noreferrer" data-amazon="${esc(p.cle)}"><span>${esc(p.label)} — ${esc(p.marque)}</span><span>~${prix(p.prix)}</span></a>`).join("")}
 <p class="kit">📱 Dans l'app Mongazon360 : le <b>kit de saison</b> calculé pour votre surface et votre budget. <a href="${lien(THEME.achats.cible, "achats-produits", campagne)}">Essayer l'app gratuitement</a></p>
 <small>Liens partenaires Amazon : en tant que Partenaire Amazon, Mongazon360® perçoit une commission sur les achats éligibles, sans surcoût pour vous. Prix indicatifs.</small></div>`;
 }

@@ -7,14 +7,15 @@
 import fs from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
-const [depot, fichierSql, fichierRequete, debut, fin, sortie] = process.argv.slice(2);
+const [dossier, fichierSql, fichierRequete, debut, fin, sortie] = process.argv.slice(2);
+const depot = path.resolve(dossier);
 const { SITE, LECTURE, jeton } = createRequire(import.meta.url)(path.join(depot, "api/searchConsole.cjs"));
 
 // Articles publiés : en-têtes des fichiers content/conseils/*.md
 const articles = fs.readdirSync(path.join(depot, "content/conseils")).filter(f => f.endsWith(".md")).map(f => {
   const texte = fs.readFileSync(path.join(depot, "content/conseils", f), "utf8");
   const tete = Object.fromEntries(texte.split("---")[1].trim().split("\n").map(l => [l.slice(0, l.indexOf(":")).trim(), l.slice(l.indexOf(":") + 1).trim()]));
-  return { slug: f.slice(0, -3), titre: tete.title, saison: tete.saison, publie: tete.date };
+  return { slug: f.slice(0, -3), titre: tete.title, saison: tete.saison, publie: tete.date, produits: tete.produits };
 });
 
 // Search Console, par page, sur la période
@@ -28,10 +29,12 @@ const parPage = Object.fromEntries(((await res.json()).rows ?? []).map(r => [r.k
 const sql = JSON.parse(fs.readFileSync(fichierSql, "utf8"));
 const rows = articles.map(a => {
   const g = parPage[`https://mongazon360.fr/conseils/${a.slug}`] ?? { clicks: 0, impressions: 0 };
-  const [lectures, lectures_google, lectures_facebook, lectures_autres, passages_app, essais_diagnostic, inscriptions] = sql[a.slug] ?? [0, 0, 0, 0, 0, 0, 0];
+  const [lectures, lectures_google, lectures_facebook, lectures_autres, passages_app, essais_diagnostic, inscriptions, clics_amazon = 0] =
+    sql[a.slug] ?? [0, 0, 0, 0, 0, 0, 0, 0];
   return { slug: a.slug, article: a.titre, saison: a.saison, publie_le: a.publie,
     clics_google: g.clicks, affichages_google: g.impressions, position_google: g.position ? Math.round(g.position * 10) / 10 : null,
-    lectures, lectures_google, lectures_facebook, lectures_autres, passages_app, essais_diagnostic, inscriptions };
+    lectures, lectures_google, lectures_facebook, lectures_autres, passages_app, essais_diagnostic, inscriptions,
+    produits_amazon: Boolean(a.produits), clics_amazon };
 }).sort((x, y) => y.clics_google - x.clics_google || y.lectures - x.lectures || x.slug.localeCompare(y.slug));
 
 // Période en toutes lettres pour la page (« du 1er au 15 novembre 2026 »)
@@ -46,4 +49,4 @@ const meta = [
   { label: "construire.mjs", value: fs.readFileSync(new URL(import.meta.url), "utf8"), type: "code", lang: "javascript" },
 ];
 fs.writeFileSync(sortie, JSON.stringify({ rows, meta }, null, 1));
-console.log(`${rows.length} articles ; clics Google ${rows.reduce((n, r) => n + r.clics_google, 0)} ; lectures ${rows.reduce((n, r) => n + r.lectures, 0)} ; passages ${rows.reduce((n, r) => n + r.passages_app, 0)}`);
+console.log(`${rows.length} articles ; clics Google ${rows.reduce((n, r) => n + r.clics_google, 0)} ; lectures ${rows.reduce((n, r) => n + r.lectures, 0)} ; passages ${rows.reduce((n, r) => n + r.passages_app, 0)} ; clics Amazon ${rows.reduce((n, r) => n + r.clics_amazon, 0)}`);

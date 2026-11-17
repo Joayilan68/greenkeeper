@@ -12,6 +12,7 @@
 //   • page_view, tuile  → mesure d'usage des pages et des tuiles (voir mesure.js)
 //   • premium_souscrit  → abonnement payant pris (écrit par le webhook Stripe, api/webhook.js)
 //   • conseils_vue      → page Conseils lue (écrit par les pages Conseils, scripts/conseils-template.mjs)
+//   • amazon_clic       → clic vers Amazon dans l'encadré « Le matériel conseillé » d'un article (mêmes pages)
 //
 // Les vues (landing_view, auth_screen_view) sont limitées à 1 par SESSION de
 // navigateur pour que l'entonnoir soit comparable étape par étape. Les clics
