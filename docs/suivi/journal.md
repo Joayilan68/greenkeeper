@@ -1256,3 +1256,8 @@ du premier onglet).
   entretien d'hiver, feuilles mortes, hivernage du matériel, mousse, hauteur de tonte, pelouse jaune, désherber sans
   chimie, scarifier) ; « Première tonte de printemps » le 17/11 (quota du jour atteint, rappel programmé) ; robot tondeuse
   et canicule en février (point des stats du 10/02/2027).
+- 16/11/2026 (soir) — Points ouverts de Jordan : Hydrawise (chat) et indexation de « Première tonte de printemps » le 17/11
+  (rappels programmés) ; publication du 27/11 « En décembre, laisse ta pelouse tranquille » refaite avec une photo d'hiver
+  (herbe sous une première neige, photo CC0 notée dans photos-libres.md ; main 3f23937, ancien visuel retiré), repassée
+  « à valider » dans Pilotage → Réseaux ; contrôle de la vidéo de Bob du 18/11 et validation du lot du 29/11 le 21/11 : OK.
+- 17/11/2026 — Test de Jordan sur STA du quiz de la ligue d'hiver de la semaine 5 (en prod le dimanche 29/11) : OK.
