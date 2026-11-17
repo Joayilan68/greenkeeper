@@ -127,7 +127,7 @@ Ce n'est pas indispensable : l'essentiel est que les graines touchent le sol. Un
 
 ### Combien de temps pour voir le résultat d'un regarnissage ?
 
-La levée prend 1 à 3 semaines selon les graminées ; comptez environ 6 semaines pour retrouver un gazon dense. C'est le délai qu'il a fallu à notre propre pelouse (photo en haut de l'article).
+La levée prend 1 à 3 semaines selon les graminées ; comptez environ 6 semaines pour retrouver un gazon dense. C'est le délai qu'il a fallu à notre propre pelouse (photo en haut de l'article). Les délais en détail, et pourquoi la pousse ralentit en novembre : [temps de pousse du gazon](/conseils/temps-pousse-gazon).
 
 ### Combien de temps arroser après un regarnissage ?
 
