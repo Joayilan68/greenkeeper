@@ -1285,3 +1285,7 @@ du premier onglet).
   honnêtes, mention « Collaboration commerciale ») vers son équipe partenariats, « Co-operation Email » de la page contact
   de mammotion.com (Marketing Collaboration) ; email complet préparé, envoyé par Jordan le 17/11. Le connecteur reste retiré tant qu'il
   n'y a pas d'autorisation écrite.
+- 17/11/2026 — Hunter (Hydrawise) : message envoyé par Jordan sur leur chat. Réponse de leur assistant, tirée des conditions
+  d'utilisation de l'API Hydrawise : aucune nouvelle connexion API commerciale acceptée pour l'instant (accès réservé aux
+  licenciés approuvés). Aucun connecteur Hydrawise dans l'app (ni STA ni prod) : rien à retirer ; demande close, à revoir
+  seulement si Hunter rouvre les connexions. Arrosage connecté : Gardena et Rachio.
