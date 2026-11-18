@@ -1290,3 +1290,6 @@ du premier onglet).
   licenciés approuvés). Aucun connecteur Hydrawise dans l'app (ni STA ni prod) : rien à retirer ; demande close, à revoir
   seulement si Hunter rouvre les connexions. Arrosage connecté : Gardena et Rachio. Jordan a demandé à être accepté :
   réponse générique de l'assistant automatique ; décision de Jordan : « on s'arrête là pour Hydrawise ».
+- 18/11/2026 — Vidéo de Bob « Mousse : chaux ou sulfate de fer ? » (1re à voix de synthèse, déclarée « Infos sur l'IA ») publiée
+  à 16 h 30 sur Facebook et Instagram, sans erreur. Search Console : indexation demandée par Jordan pour 3 articles, dont
+  « Première tonte de printemps » et « Temps de pousse du gazon » (amélioré le 17/11).
