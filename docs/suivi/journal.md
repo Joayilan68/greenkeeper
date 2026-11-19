@@ -1298,3 +1298,7 @@ du premier onglet).
   (+800 %, 1re des 10 dernières publications de la page), 8 interactions, 0 abonné gagné. Visites du site venues de la vidéo
   (campagne video-chaux-mousse, Facebook et Instagram) : 0 à cette heure : dans un Reel, le lien du texte n'est en général
   pas cliquable. Repères pour le bilan du 14/12.
+- 19/11/2026 — Jordan a ajouté sous le Reel Facebook « Mousse » un commentaire avec le lien suivi de la vidéo (campagne
+  video-chaux-mousse) ; visites vérifiées le 23/11, avant de proposer un commentaire automatique sous les vidéos suivantes.
+  Mammotion : le support relance pour savoir si son mail est bien arrivé ; Jordan a répondu (proposition envoyée le 17/11 à
+  l'équipe partenariats, pas d'autre question).
