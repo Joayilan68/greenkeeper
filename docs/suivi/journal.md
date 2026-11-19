@@ -1294,3 +1294,7 @@ du premier onglet).
   à 16 h 30 sur Facebook et Instagram, sans erreur ; étiquette « Infos sur l'IA » de Meta bien affichée (vérifié par
   Jordan). Search Console : indexation demandée par Jordan pour 2 articles,
   « Première tonte de printemps » et « Temps de pousse du gazon » (amélioré le 17/11).
+- 19/11/2026 — Vidéo de Bob « Mousse » (18/11, 16 h 30), chiffres Facebook donnés par Jordan le lendemain vers midi : 226 vues
+  (+800 %, 1re des 10 dernières publications de la page), 8 interactions, 0 abonné gagné. Visites du site venues de la vidéo
+  (campagne video-chaux-mousse, Facebook et Instagram) : 0 à cette heure : dans un Reel, le lien du texte n'est en général
+  pas cliquable. Repères pour le bilan du 14/12.
