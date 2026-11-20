@@ -1302,3 +1302,9 @@ du premier onglet).
   video-chaux-mousse) ; visites vérifiées le 23/11, avant de proposer un commentaire automatique sous les vidéos suivantes.
   Mammotion : le support relance pour savoir si son mail est bien arrivé ; Jordan a répondu (proposition envoyée le 17/11 à
   l'équipe partenariats, pas d'autre question).
+- 20/11/2026 — Article du vendredi : la liste de départ est épuisée (chaux, pH, tondre en hiver, décembre, mousse, janvier
+  et février déjà couverts). La fusariose, seul sujet sans article, est décalée au vendredi 4/12 : c'est le thème du quiz
+  de la ligue du 22 au 28/11, et un article publié avant ou pendant cette semaine donnerait les réponses. À la place,
+  « Dernière tonte » renforcé (« tondre en hiver ») : environ 160 affichages en 28 jours sur « quand arrêter de tondre »,
+  « tondre en novembre », « tondre en février », envoyés vers « Quand tondre la pelouse » (0 clic). Nouvelle liste du
+  vendredi proposée à Jordan : articles du mois écrits en avance pour le printemps (mars, avril, mai).
