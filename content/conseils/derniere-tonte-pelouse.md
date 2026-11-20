@@ -1,21 +1,22 @@
 ---
-title: Dernière tonte avant l'hiver : quand et à quelle hauteur ?
-description: La dernière tonte se fait en novembre, un jour sec et doux, à 5-6 cm. Quand arrêter de tondre, à quelle hauteur, et quoi faire ensuite jusqu'au printemps.
+title: Dernière tonte : quand arrêter de tondre la pelouse ?
+description: En novembre, un jour sec à 10 °C au moins, à 5-6 cm, puis plus de tonte jusqu'au printemps : quand arrêter de tondre la pelouse, et quoi faire ensuite.
 saison: automne
 date: 2026-10-11
+maj: 2026-11-20
 ---
 
-En automne, la pelouse pousse de moins en moins, et une question revient chaque année : **quand faire la dernière tonte, et à quelle hauteur ?** Ce n'est pas un détail. Un gazon laissé trop long ou coupé trop court aborde l'hiver affaibli, et on le paie au printemps en mousse, en plaques jaunes et en maladies.
+En automne, la pelouse pousse de moins en moins, et une question revient chaque année : **jusqu'à quand tondre la pelouse, et à quelle hauteur faire la dernière tonte ?** Ce n'est pas un détail. Un gazon laissé trop long ou coupé trop court aborde l'hiver affaibli, et on le paie au printemps en mousse, en plaques jaunes et en maladies.
 
 > **En bref**
 > - **Quand ?** En novembre, quand l'herbe ne pousse presque plus, un jour sec avec au moins 10 °C.
 > - **À quelle hauteur ?** 5 à 6 cm pour un gazon universel, jamais plus d'un tiers de la hauteur retiré en une fois.
 > - **Comment ?** Sur une herbe sèche, avec une lame affûtée, en ramassant l'herbe coupée et les feuilles.
-> - **Et ensuite ?** Plus de tonte de décembre à février : on hiverne la tondeuse.
+> - **Et ensuite ?** Plus de tonte de décembre à février : on hiverne la tondeuse. La reprise vient en mars ou début avril, selon votre région.
 
-## Quand faire la dernière tonte de l'année ?
+## Quand arrêter de tondre ? La dernière tonte de l'année
 
-La pousse du gazon suit la température du sol : sous 8 °C, l'herbe pousse de moins en moins ; sous 5 °C, elle s'arrête. En automne, on espace donc les tontes au rythme de la pousse : une à deux fois par semaine en septembre-octobre, une fois par semaine en novembre.
+La pousse du gazon suit la température du sol : sous 8 °C, l'herbe pousse de moins en moins ; sous 5 °C, elle s'arrête. En automne, on espace donc les tontes au rythme de la pousse : une à deux fois par semaine en septembre-octobre, une fois par semaine en novembre. Tondre en novembre est donc normal (le rythme de toute l'année : [quand tondre la pelouse](/conseils/quand-tondre-pelouse)).
 
 **La dernière tonte se fait en novembre**, quand l'herbe ne pousse presque plus. Choisissez le bon jour :
 
@@ -68,11 +69,36 @@ Un robot tond un peu chaque jour : il n'a pas de « dernière tonte » à propre
 
 Tout le programme de l'hiver est détaillé dans notre article [entretien du gazon en hiver](/conseils/preparer-gazon-hiver).
 
+## Peut-on tondre en hiver ?
+
+Non : de décembre à février, la tondeuse reste au garage. L'herbe pousse à peine, et le sol est souvent gelé ou détrempé : une tonte arracherait des brins et tasserait le sol.
+
+| Mois | Tondre ? | Le repère |
+|---|---|---|
+| **Novembre** | Oui, une dernière fois | Un jour sec avec au moins 10 °C, à 5-6 cm |
+| **Décembre et janvier** | Non | Le gazon est au repos (voir [la pelouse en décembre](/conseils/pelouse-en-decembre)) |
+| **Février** | Non, sauf sol déjà à 8 °C | La première tonte vient en mars ou début avril |
+| **Mars-avril** | Oui, la première tonte | Du 1er mars (Sud, Corse) au 1er avril (Nord-Est), plus tôt si le sol atteint 8 °C |
+
+Même si l'hiver est doux et que l'herbe a un peu poussé, attendez la reprise : au printemps, la première tonte se fera en hauteur, en respectant la règle du tiers (voir [la première tonte de printemps](/conseils/premiere-tonte-printemps)).
+
 ## Questions fréquentes
 
 ### Peut-on tondre la pelouse en décembre ?
 
 Non : on ne tond pas de décembre à février. Le gazon est au repos, souvent gelé ou détrempé, et une tonte l'abîmerait. La reprise se fait au printemps (voir [la première tonte](/conseils/premiere-tonte-printemps)).
+
+### Jusqu'à quand peut-on tondre la pelouse ?
+
+Jusqu'en novembre. La dernière tonte se fait quand l'herbe ne pousse presque plus, un jour sec avec au moins 10 °C ; ensuite, plus de tonte avant le printemps.
+
+### Peut-on tondre en février ?
+
+En général non : la première tonte vient en mars, du 1er mars dans le Sud et en Corse au 1er avril dans le Nord-Est, un peu plus tôt seulement si le sol atteint déjà 8 °C (voir [la pelouse en février](/conseils/pelouse-en-fevrier)).
+
+### Quand la pelouse arrête-t-elle de pousser ?
+
+Quand le sol passe sous 8 °C, l'herbe pousse de moins en moins ; sous 5 °C, elle s'arrête. C'est pourquoi la dernière tonte tombe en novembre (voir [temps de pousse du gazon](/conseils/temps-pousse-gazon)).
 
 ### Faut-il tondre court avant l'hiver ?
 
