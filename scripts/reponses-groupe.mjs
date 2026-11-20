@@ -73,6 +73,7 @@ const MOTS_CLES = {
 const mot = (s) => new RegExp(`(?<!\\p{L})${s}(?!\\p{L})`, "gu");
 const TUTOIEMENT = [
   [mot("de votre région"), "de ta région"],
+  [mot("selon votre région"), "selon ta région"],
   [mot("pour votre gazon"), "pour ton gazon"],
   [mot("Mesurez votre hauteur réelle"), "Mesure ta hauteur réelle"],
   [mot("surveillez-la"), "surveille-la"],
