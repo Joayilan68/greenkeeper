@@ -17,7 +17,7 @@ Tondre au bon moment compte presque autant que tondre à la bonne hauteur. Une t
 ## Quand commencer et quand arrêter de tondre ?
 
 - **La première tonte** se fait à la sortie de l'hiver, à une date qui dépend de la région : du 1er mars dans le Sud et en Corse au 1er avril dans le Nord-Est, plus tôt si le sol atteint 8 °C (voir [la première tonte](/conseils/premiere-tonte-printemps)).
-- **La dernière tonte** a lieu en novembre, un jour sec avec au moins 10 °C, à 5-6 cm (voir [la dernière tonte avant l'hiver](/conseils/derniere-tonte-pelouse)).
+- **La dernière tonte** a lieu en novembre, un jour sec avec au moins 10 °C, à 5-6 cm (voir [quand arrêter de tondre la pelouse](/conseils/derniere-tonte-pelouse)).
 - **De décembre à février**, on ne tond pas : le gazon est au repos.
 
 ## À quelle fréquence tondre ?
@@ -72,7 +72,7 @@ Deux à trois fois en pleine pousse, de mai à août. En sécheresse, la pousse 
 
 ### Faut-il tondre en hiver ?
 
-Non : pas de tonte de décembre à février. La dernière tonte se fait en novembre, la première à la sortie de l'hiver.
+Non : pas de tonte de décembre à février. La dernière tonte se fait en novembre (voir [la dernière tonte avant l'hiver](/conseils/derniere-tonte-pelouse)), la première à la sortie de l'hiver.
 
 ### Faut-il tondre avant ou après l'engrais ?
 
