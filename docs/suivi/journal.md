@@ -1308,3 +1308,7 @@ du premier onglet).
   « Dernière tonte » renforcé (« tondre en hiver ») : environ 160 affichages en 28 jours sur « quand arrêter de tondre »,
   « tondre en novembre », « tondre en février », envoyés vers « Quand tondre la pelouse » (0 clic). Nouvelle liste du
   vendredi proposée à Jordan : articles du mois écrits en avance pour le printemps (mars, avril, mai).
+- 20/11/2026 — Décision de Jordan (« Ok pour ta propo des prochains vendredis ») : les articles du vendredi deviennent les
+  articles du mois écrits en avance pour le printemps, publiés d'ici fin janvier : « Pelouse en mars » le 27/11, la
+  fusariose le 4/12 (après la semaine du quiz), « Pelouse en avril » le 11/12, « Pelouse en mai » le 18/12 ; la suite sera
+  proposée à Jordan. Indexation de « Dernière tonte » demandée par Jordan le jour même.
