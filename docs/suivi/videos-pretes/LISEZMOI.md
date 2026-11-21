@@ -8,41 +8,6 @@ insérer la ligne du mercredi avec les textes ci-dessous (`video`, `visuel` = co
 images de chaque scène : page « Voix de Bob », collection `textes`. Jordan a vu ces vidéos dans la conversation le 15/11 ;
 il les valide dans Pilotage → Réseaux.
 
-## Mercredi 2/12/2026 à 16:30 — lot 2026-11-29 — « Pelouse gelée : on n'y marche pas »
-
-Fichiers : `2026-11-29/3-video-pelouse-gelee.mp4` et `2026-11-29/3-video-pelouse-gelee-couverture.jpg` (texte `pelouse-gelee`).
-Titre de la ligne : « Vidéo de Bob : pelouse gelée, on n'y marche pas ».
-
-Texte Facebook :
-
-```
-🎬 Pelouse blanche de givre ce matin ? Bob t'explique en 45 secondes pourquoi il ne faut pas y marcher.
-
-❄️ Quand il gèle, les brins d'herbe deviennent rigides et cassants, comme du verre.
-🚫 Si tu marches dessus, ils cassent : tes traces de pas apparaissent en brun quelques jours plus tard, parfois pour plusieurs semaines.
-✅ Attends le dégel complet, souvent en fin de matinée.
-🚫 Pas de tonte sur un gazon gelé ou givré, et pas de sel de déneigement près de la pelouse.
-
-Rassure-toi : le gel ne tue pas le gazon. Et dans l'app, tu reçois une alerte dès qu'une nuit de gel s'annonce 👇
-https://mongazon360.fr/conseils/gel-pelouse?utm_source=facebook&utm_medium=reel&utm_campaign=video-pelouse-gelee
-
-🎙️ Voix de synthèse (Kyutai TTS).
-```
-
-Légende Instagram :
-
-```
-🎬 Pelouse gelée : Bob t'explique en 45 secondes pourquoi on n'y marche pas.
-
-Quand il gèle, les brins d'herbe deviennent cassants comme du verre : si tu marches dessus, tes traces apparaissent en brun quelques jours plus tard. Attends le dégel complet, souvent en fin de matinée. Pas de tonte ni de sel de déneigement sur un gazon gelé.
-
-L'app t'alerte dès qu'une nuit de gel s'annonce (lien en bio).
-
-🎙️ Voix de synthèse (Kyutai TTS).
-
-#pelouse #gazon #jardinage #jardin #gel #givre #hiver #mongazon360
-```
-
 ## Mercredi 9/12/2026 à 16:30 — lot 2026-12-06 — « Tondre en hiver : faut-il encore tondre ? »
 
 Fichiers : `2026-12-06/3-video-tondre-en-hiver.mp4` et `2026-12-06/3-video-tondre-en-hiver-couverture.jpg` (texte `tondre-en-hiver`).
