@@ -650,7 +650,8 @@ async function fetchGeoPoints() {
 
 // ── Helper : parcours d'acquisition (Pilotage → Activité, carte « Parcours d'acquisition ») ──────────────────────────
 // Lignes brutes des 60 derniers jours : visites des visiteurs non connectés (site_visits), entrées dans l'app, lectures
-// d'articles et abonnements payants (funnel_events) ; calcul dans parcoursAcquisition.
+// d'articles, abonnements payants et mesures de la mise en prod du 22/11 (funnel_events), liste d'attente « Besoin d'un
+// pro ? » (pros_attente) ; calcul dans parcoursAcquisition.
 async function fetchParcours() {
   try {
     const sb = createClient(SB_URL, SB_KEY);
@@ -664,12 +665,13 @@ async function fetchParcours() {
         if (data.length < 1000) return lignes;
       }
     };
-    const [visites, evenements] = await Promise.all([
+    const [visites, evenements, attente] = await Promise.all([
       lire(() => sb.from("site_visits").select("path, source, created_at").eq("signed_in", false).gte("created_at", depuis).order("created_at")),
       lire(() => sb.from("funnel_events").select("step, path, meta, visite, created_at")
-        .in("step", ["page_view", "conseils_vue", "premium_souscrit"]).gte("created_at", depuis).order("created_at")),
+        .in("step", ["page_view", "conseils_vue", "premium_souscrit", ...ETAPES_2211]).gte("created_at", depuis).order("created_at")),
+      lire(() => sb.from("pros_attente").select("source, created_at").gte("created_at", depuis).order("created_at")),
     ]);
-    return { visites, evenements };
+    return { visites, evenements, attente };
   } catch (e) {
     console.warn("stats-users parcours:", e.message);
     return null;
@@ -682,7 +684,10 @@ async function fetchParcours() {
 // d'un compte dans daily_active_users, admins et comptes de test exclus) → abonnements Premium payants (premium_souscrit).
 // Une mesure née pendant la période précédente n'a pas de comparaison (« avant » vide).
 const ENTREES_APP = ["/essai", "/signup", "/demo"];
-const MESURE_DEPUIS = { entrees: "2026-10-09", niveau: "2026-10-09", premium: "2026-10-31", articles: "2026-10-31" };
+const MESURE_DEPUIS = { entrees: "2026-10-09", niveau: "2026-10-09", premium: "2026-10-31", articles: "2026-10-31", nouveautes: "2026-11-22" };
+// Mesures de la mise en prod du 22/11 : photo d'exemple et ce qu'elle donne, partages en image, clics vers Amazon
+const ETAPES_2211 = ["anon_diag_exemple", "anon_diag_started", "signup_from_teaser", "partage_score", "partage_quiz", "amazon_clic"];
+const plusFrequents = (o, n = 6) => Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, n);
 function parcoursAcquisition(brut, presence, comptes) {
   if (!brut || !presence) return null;
   const jour = (t) => new Date(t).toLocaleDateString("fr-CA", { timeZone: "Europe/Paris" });
@@ -722,7 +727,50 @@ function parcoursAcquisition(brut, presence, comptes) {
   for (const [id, j] of premiers) if (comptes.has(id)) ajouter(inscriptions, periode(j));
 
   return { debut, visites: { ...visites, sources: Object.entries(visites.sources).sort((a, b) => b[1] - a[1]).slice(0, 5) },
-    entrees, inscriptions, premium, niveau, articles };
+    entrees, inscriptions, premium, niveau, articles, nouveautes: nouveautes2211(brut, periode, jour) };
+}
+
+// Mesures nouvelles de la mise en prod du 22/11, sur les 30 derniers jours (pas encore de comparaison) : clics des encarts
+// de l'app (page_view avec « encart » : <thème>-<position> depuis les pages web, lire-<thème>-<position> depuis la lecture
+// dans l'app), articles lus dans l'app (/lire/<slug>) par les visiteurs et les comptes, liste d'attente « Besoin d'un pro ? »
+// par source, photo d'exemple du diagnostic d'essai (vues, essai lancé ensuite dans la même visite, création de compte
+// depuis l'exemple), partages en image par canal, clics vers Amazon par origine
+function nouveautes2211(brut, periode, jour) {
+  const n = { depuis: MESURE_DEPUIS.nouveautes, encarts: { total: 0, site: 0, app: 0, themes: {}, positions: {} },
+    lire: { visiteurs: 0, comptes: 0, articles: {} }, pro: { total: 0, sources: {} },
+    exemple: { vues: 0, essais: 0, comptes: 0 }, partages: { score: {}, quiz: {} }, amazon: {} };
+  const exemples = new Map(), essais = [];
+  for (const e of brut.evenements) {
+    if (periode(jour(e.created_at)) !== "n") continue;
+    const m = e.meta || {};
+    if (e.step === "page_view" && m.encart) {
+      const app = m.encart.startsWith("lire-"), valeur = app ? m.encart.slice(5) : m.encart, tiret = valeur.lastIndexOf("-");
+      n.encarts.total++; n.encarts[app ? "app" : "site"]++;
+      const theme = tiret > 0 ? valeur.slice(0, tiret) : valeur, position = tiret > 0 ? valeur.slice(tiret + 1) : "?";
+      n.encarts.themes[theme] = (n.encarts.themes[theme] || 0) + 1;
+      n.encarts.positions[position] = (n.encarts.positions[position] || 0) + 1;
+    }
+    if (e.step === "page_view" && e.path?.startsWith("/lire/")) {
+      n.lire[m.niveau === "visiteur" ? "visiteurs" : "comptes"]++;
+      const slug = e.path.slice(6);
+      n.lire.articles[slug] = (n.lire.articles[slug] || 0) + 1;
+    }
+    if (e.step === "anon_diag_exemple") { n.exemple.vues++; if (e.visite && !exemples.has(e.visite)) exemples.set(e.visite, e.created_at); }
+    if (e.step === "anon_diag_started" && e.visite) essais.push(e);
+    if (e.step === "signup_from_teaser" && m.from === "exemple") n.exemple.comptes++;
+    if (e.step === "partage_score" || e.step === "partage_quiz") {
+      const c = n.partages[e.step === "partage_score" ? "score" : "quiz"], canal = m.canal || "?";
+      c[canal] = (c[canal] || 0) + 1;
+    }
+    if (e.step === "amazon_clic") n.amazon[m.origine || "?"] = (n.amazon[m.origine || "?"] || 0) + 1;
+  }
+  n.exemple.essais = new Set(essais.filter(e => exemples.has(e.visite) && e.created_at >= exemples.get(e.visite)).map(e => e.visite)).size;
+  for (const a of brut.attente || []) {
+    if (periode(jour(a.created_at)) !== "n") continue;
+    n.pro.total++; n.pro.sources[a.source || "?"] = (n.pro.sources[a.source || "?"] || 0) + 1;
+  }
+  return { ...n, encarts: { ...n.encarts, themes: plusFrequents(n.encarts.themes), positions: plusFrequents(n.encarts.positions) },
+    lire: { ...n.lire, articles: plusFrequents(n.lire.articles, 5) }, pro: { ...n.pro, sources: plusFrequents(n.pro.sources) } };
 }
 
 // ── Lecture complète d'une table par pages de 1 000 lignes (plafond d'une requête Supabase) ──
