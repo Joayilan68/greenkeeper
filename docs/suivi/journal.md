@@ -1333,3 +1333,9 @@ du premier onglet).
   tout de suite dans Stripe ; le compte affiche ensuite l'essai de 7 jours d'un compte neuf (gratuit le 29/11). Clics
   Amazon de l'app et de Bob vus dans la base, email de la liste d'attente reçu sur contact@ ; aucune erreur. Le test
   (visite, abonnement, clics) a été retiré des statistiques. Recette « Déjà en prod » : n° 88, 89, 90, 92 et 96 OK.
+- 22/11/2026 — Partage du résultat du quiz testé par Jordan sur Facebook (Android) : image, texte et lien suivi OK (recette
+  n° 82) ; les 3 lignes partage_quiz de 10 h 25-10 h 26 sont son test. Le thème de la semaine 4, affiché sur l'image, dans
+  l'app, la notification et les articles, donnait la réponse de la question 1 : thème « Maladies du gazon » prêt sur une
+  copie de la prod, en attente du go de Jordan (seule semaine concernée sur les 13). Compte de test de l'achat : traces de
+  l'essai sans compte effacées (diagnostic d'essai, 2 compteurs anti-abus, 1 ligne du journal des erreurs) ; suppression du
+  compte à faire par Jordan dans l'app (recette n° 94).
