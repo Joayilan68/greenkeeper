@@ -83,10 +83,10 @@ export default function Subscribe() {
         body: JSON.stringify({
           plan:  selected,
           email: user?.primaryEmailAddress?.emailAddress,
-          // Traces des consentements pour conformité légale (récupérables côté serveur si besoin)
+          // Les deux cases cochées : le serveur refuse le paiement sans elles, puis garde leur date et la version des
+          // CGV avec l'abonnement dans Stripe (api/create-checkout.js)
           cgv_accepted_at:           new Date().toISOString(),
           retractation_waived_at:    new Date().toISOString(),
-          cgv_version:               "1.0",
         }),
       });
       if (!res.ok) throw new Error("Erreur serveur");
@@ -209,7 +209,7 @@ export default function Subscribe() {
         {/* Récap de la commande */}
         <div style={{ background:"rgba(0,0,0,0.2)", borderRadius:10, padding:"10px 12px", marginBottom:14, fontSize:12, color:"#e8f5e9" }}>
           Vous allez souscrire à <strong style={{ color:"#a5d6a7" }}>Mongazon360<sup style={{ fontSize:7 }}>®</sup> Premium {selectedPlan.label}</strong> au prix de <strong style={{ color:"#a5d6a7" }}>{selectedPlan.price}{selectedPlan.period}</strong>{selected === "yearly" && offre && <>, puis {enEuros(OFFRE.prixAnnuel)}/an</>}.
-          {selected === "monthly" ? " Renouvellement automatique chaque mois." : " Renouvellement automatique chaque année."} Résiliable à tout moment.
+          {selected === "monthly" ? " Renouvellement automatique chaque mois." : " Renouvellement automatique chaque année."} Résiliable à tout moment : Premium reste actif jusqu'à la fin de la période payée.
         </div>
 
         {/* ── Case 1 : CGV ────────────────────────────────────────────────── */}

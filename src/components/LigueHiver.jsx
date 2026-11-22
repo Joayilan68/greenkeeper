@@ -10,6 +10,8 @@ import { LIGUE, periodeLigue, datesSemaine, dateLongue } from "../lib/ligueHiver
 import { useLigueHiver } from "../lib/useLigueHiver";
 import { useGreenPoints } from "../lib/useGreenPoints";
 import { useProfile } from "../lib/useProfile";
+import { carteQuiz } from "../lib/cartesPartage";
+import { trackFunnel } from "../lib/funnel";
 
 const clair = "#F1F8F2", vert = "#a5d6a7", doux = "#81c784";
 const plein = { border:"none", borderRadius:12, padding:"11px 16px", fontSize:13, fontWeight:800, cursor:"pointer",
@@ -17,18 +19,26 @@ const plein = { border:"none", borderRadius:12, padding:"11px 16px", fontSize:13
 const leger = { border:"1px solid rgba(165,214,167,0.3)", borderRadius:12, padding:"10px 14px", fontSize:13, fontWeight:700, cursor:"pointer",
   background:"rgba(255,255,255,0.06)", color:"#e8f5e9", textDecoration:"none", display:"inline-block" };
 const givre = { ...card(), background:"linear-gradient(135deg,rgba(100,181,246,0.14),rgba(13,43,26,0.55))", border:"1px solid rgba(144,202,249,0.3)" };
-const article = (slug) => `/conseils/${slug}`;
 const semaineDu = (n) => { const { debut, fin } = datesSemaine(n); return `du ${dateLongue(debut)} au ${dateLongue(fin)}`; };
 
-// Partage du quiz (Partager du téléphone, sinon lien copié) : message à afficher, ou null si annulé ou impossible.
+// Article lié (défi, explication du quiz), lu dans l'app (Conseils en mode app, chantier du 22/11)
+function LienArticle({ slug, style, children }) {
+  const navigate = useNavigate();
+  return <a href={`/lire/${slug}`} onClick={(e) => { e.preventDefault(); navigate(`/lire/${slug}`); }} style={style}>{children}</a>;
+}
+
+// Partage du quiz ou de son résultat (Partager du téléphone, avec l'image du résultat quand le téléphone sait la partager ;
+// sinon lien copié) : message à afficher, ou null si annulé ou impossible.
 // Facebook et Instagram ne reprennent pas le texte d'un partage : le message est copié avant l'ouverture du menu de
 // partage, pour être collé dans la publication (comme pour le partage du score)
-async function partagerQuiz() {
-  const { texte, url } = LIGUE.partage;
+async function partagerQuiz({ texte = LIGUE.partage.texte, image = null } = {}) {
+  const { url } = LIGUE.partage;
   const copie = navigator.clipboard ? navigator.clipboard.writeText(`${texte} ${url}`).then(() => true, () => false) : Promise.resolve(false);
   if (navigator.share) {
-    try { await navigator.share({ title: "Quiz gazon Mongazon360", text: texte, url }); return "Merci pour le partage !"; }
-    catch (e) { if (e?.name === "AbortError") return null; }
+    try {
+      await navigator.share(image ? { files: [image], text: `${texte} ${url}` } : { title: "Quiz gazon Mongazon360", text: texte, url });
+      return "Merci pour le partage !";
+    } catch (e) { if (e?.name === "AbortError") return null; }
   }
   return (await copie) ? "Lien copié : colle-le dans un message." : null;
 }
@@ -77,7 +87,7 @@ function Question({ q, i, choisi, corrige, onChoix }) {
       </div>
       {corrige && (
         <div style={{ fontSize:12, color:vert, marginTop:6, lineHeight:1.5 }}>
-          {q.explication} <a href={article(q.article)} style={{ color:"#90caf9" }}>Lire l'article</a>
+          {q.explication} <LienArticle slug={q.article} style={{ color:"#90caf9" }}>Lire l'article</LienArticle>
         </div>
       )}
     </div>
@@ -101,7 +111,7 @@ function CarteDefi({ n, fait, onFait }) {
       <div style={{ fontSize:15, fontWeight:800, color:clair, marginBottom:6 }}>{d.titre}</div>
       <div style={{ fontSize:13, color:vert, lineHeight:1.55, marginBottom:12 }}>{d.texte}</div>
       <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
-        {d.article && <a href={article(d.article)} style={leger}>📖 Lire l'article</a>}
+        {d.article && <LienArticle slug={d.article} style={leger}>📖 Lire l'article</LienArticle>}
         {d.lien && <button onClick={() => navigate(d.lien)} style={leger}>Ouvrir</button>}
         {!fait && (d.partage
           ? <button onClick={partager} disabled={envoi} style={plein}>📤 Partager le quiz</button>
@@ -124,6 +134,7 @@ function CarteQuiz({ n, resultat, onDemarrer, onRepondre }) {
   const [envoi, setEnvoi] = useState(false);
   const [msg, setMsg] = useState("");
   const [reste, setReste] = useState(0);
+  const [image, setImage] = useState(null); // image du résultat, si le téléphone sait partager une image
   const choixFaits = useRef([]), envoye = useRef(false);
   choixFaits.current = choix;
   const enCours = !!resultat && resultat.restant > 0;
@@ -158,7 +169,24 @@ function CarteQuiz({ n, resultat, onDemarrer, onRepondre }) {
     return () => clearInterval(minuteur);
   }, [enCours]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const partager = async () => { const info = await partagerQuiz(); if (info) setMsg(info); };
+  // Image du résultat préparée dès la correction : le partage doit partir aussitôt le bouton touché
+  useEffect(() => {
+    if (!corrige) return undefined;
+    let actif = true;
+    const fichier = (contenu) => new File([contenu], "quiz-gazon-mongazon360.jpg", { type: "image/jpeg" });
+    if (typeof File === "undefined" || !navigator.canShare?.({ files: [fichier("")] })) return undefined;
+    carteQuiz({ bonnes: resultat.bonnes, total: quiz.length, semaine: n, theme, duree })
+      .then(blob => { if (actif) setImage(fichier(blob)); }).catch(() => {});
+    return () => { actif = false; };
+  }, [corrige]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Partage du résultat (jamais des réponses : une seule tentative par semaine)
+  const partager = async () => {
+    trackFunnel("partage_quiz", { canal: image ? "image" : "texte", semaine: n, bonnes: resultat.bonnes });
+    const texte = LIGUE.partage.resultat.replaceAll("{bonnes}", resultat.bonnes).replaceAll("{total}", quiz.length).replaceAll("{duree}", duree);
+    const info = await partagerQuiz({ texte, image });
+    if (info) setMsg(info);
+  };
   return (
     <div style={card()}>
       <div style={cardTitle}>
@@ -199,7 +227,7 @@ function CarteQuiz({ n, resultat, onDemarrer, onRepondre }) {
             {!resultat.reponses.length ? "⏱️ Temps écoulé : aucune réponse envoyée."
               : resultat.bonnes === quiz.length ? "Sans faute, bravo !" : "Les bonnes réponses sont en vert."}
           </div>
-          <button onClick={partager} style={leger}>📤 Partager le quiz</button>
+          <button onClick={partager} style={leger}>📤 Partager mon résultat</button>
         </div>
       )}
       {corrige && <NoteCopie />}

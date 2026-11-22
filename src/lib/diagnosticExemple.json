@@ -1,0 +1,32 @@
+{
+  "photo": "/images/conseils/pelouse-avant.jpg",
+  "analysis": {
+    "etat_general": "moyen",
+    "score_visuel": 55,
+    "emoji": "😐",
+    "resume": "Le gazon présente des zones clairsemées et des taches de terre nue, indiquant un manque de densité et un stress probable. La couleur est inégale, avec des zones plus vertes et d'autres plus ternes ou brunes.",
+    "problemes": [
+      {
+        "nom": "Zones clairsemées",
+        "description": "Taches de terre nue visibles, indiquant une perte de densité du gazon.",
+        "solution": "Ressemer les zones clairsemées avec des graines adaptées et aérer le sol pour favoriser la reprise."
+      },
+      {
+        "nom": "Couleur inégale",
+        "description": "Alternance de zones vertes et de zones plus ternes ou brunes, signe de stress ou de carence.",
+        "solution": "Apporter un engrais organique équilibré et vérifier le pH du sol pour uniformiser la couleur."
+      }
+    ],
+    "points_positifs": [
+      "Présence d'herbe verte sur une grande partie de la surface",
+      "Pas de signes de maladie fongique visible"
+    ],
+    "confiance": "moyenne",
+    "observations": [
+      "Zones de terre nue visibles au centre et à droite",
+      "Couleur inégale avec des taches plus claires",
+      "Densité d'herbe variable selon les zones"
+    ],
+    "photo_exploitable": true
+  }
+}

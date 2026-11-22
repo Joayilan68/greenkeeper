@@ -291,7 +291,7 @@ export default function Register() {
         </button>
 
         <div style={{ fontSize:10, color:"#4a7c5c", textAlign:"center", marginTop:12, lineHeight:1.5 }}>
-          Vous pouvez modifier vos consentements à tout moment dans Paramètres → Mes données
+          Vous pouvez modifier vos consentements à tout moment dans Paramètres → Mes consentements
         </div>
 
         {/* ── Mention marque déposée EUIPO (cohérence avec reste de l'app) ─ */}

@@ -1,5 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { card, scroll, btn } from "../lib/styles";
+import MAJ from "../lib/textesLegaux.json";
+import EDITEUR from "../lib/editeur.json";
 
 // ════════════════════════════════════════════════════════════════════════════
 // DOCUMENTS JURIDIQUES MONGAZON360®
@@ -18,6 +20,10 @@ import { card, scroll, btn } from "../lib/styles";
 //   - Suppression mentions "[à confirmer avec le client]"
 //   - Page Cookies : version simple basée sur fonctionnement réel app
 // ════════════════════════════════════════════════════════════════════════════
+
+// Date de mise à jour de chaque texte : src/lib/textesLegaux.json (celle des CGV est aussi la version notée avec chaque
+// abonnement, api/create-checkout.js)
+const miseAJour = (texte) => "Mise à jour : " + new Date(MAJ[texte] + "T12:00:00").toLocaleDateString("fr-FR", { day:"numeric", month:"long", year:"numeric" });
 
 // ── Composants communs ────────────────────────────────────────────────────────
 function PageHeader({ emoji, title, subtitle }) {
@@ -67,15 +73,16 @@ function BackToSettings() {
 export function MentionsLegales() {
   return (
     <div>
-      <PageHeader emoji="📋" title="Mentions Légales" subtitle="Mise à jour : 23 septembre 2026" />
+      <PageHeader emoji="📋" title="Mentions Légales" subtitle={miseAJour("mentionsLegales")} />
       <div style={scroll}>
 
         <Section title="Identité de l'éditeur du site internet">
-          L'éditeur du site internet est : <strong style={{ color:"#a5d6a7" }}>Krebs Ayfer</strong> exerçant en entreprise individuelle.<br/><br/>
+          L'éditeur du site internet est : <strong style={{ color:"#a5d6a7" }}>{EDITEUR.nom}</strong> exerçant en {EDITEUR.forme}.<br/><br/>
           Nom de l'entreprise : <strong>Mongazon360</strong><br/>
-          Numéro d'immatriculation professionnelle (SIRET) : 442 546 594<br/>
-          Adresse officielle de l'entreprise : 55 rue Pierre Pflimlin, 68510 Sierentz, France<br/>
-          Email de contact : contact@mongazon360.fr<br/><br/>
+          Numéro d'immatriculation professionnelle (SIRET) : {EDITEUR.siret}<br/>
+          Adresse officielle de l'entreprise : {EDITEUR.adresse}<br/>
+          Email de contact : {EDITEUR.email}<br/>
+          Téléphone : {EDITEUR.telephone}<br/><br/>
           L'éditeur du site n'est pas assujetti à la TVA (article 293B du Code général des impôts).<br/><br/>
           Mongazon360<sup style={{ fontSize:8 }}>®</sup> est une marque de l'Union européenne n° 019373252, déposée le 30 mai 2026 et enregistrée le 22 septembre 2026 à l'EUIPO (European Union Intellectual Property Office) — Classes 9, 42, 44 — protection sur 27 pays de l'Union européenne.
         </Section>
@@ -87,14 +94,15 @@ export function MentionsLegales() {
         </Section>
 
         <Section title="Directeur de la publication">
-          Le Directeur de la publication est : <strong style={{ color:"#a5d6a7" }}>Krebs Ayfer</strong>
+          Le Directeur de la publication est : <strong style={{ color:"#a5d6a7" }}>{EDITEUR.nom}</strong>
         </Section>
 
         <Section title="Hébergement du site internet">
           Le site internet est hébergé par :<br/><br/>
           <strong style={{ color:"#a5d6a7" }}>Vercel Inc.</strong><br/>
-          340 Pine Street, Suite 701<br/>
-          San Francisco, California 94104, USA<br/>
+          440 N Barranca Avenue #4133<br/>
+          Covina, California 91723, États-Unis<br/>
+          Téléphone : +1 559 288 7060<br/>
           Site internet : vercel.com
         </Section>
 
@@ -129,11 +137,9 @@ export function MentionsLegales() {
           Pour plus de détails, consultez notre Politique de confidentialité.
         </Section>
 
-        <Section title="Démarche téléphonique">
-          Le consommateur qui ne souhaite pas faire l'objet de prospection commerciale par voie téléphonique peut gratuitement s'inscrire sur une liste d'opposition au démarchage téléphonique :<br/><br/>
-          <a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000042155931" target="_blank" rel="noopener noreferrer" style={{ color:"#a5d6a7", textDecoration:"underline" }}>
-            Article L223-1 du Code de la consommation
-          </a>
+        <Section title="Démarchage téléphonique">
+          Mongazon360 ne demande pas leur numéro de téléphone aux utilisateurs de l'Application et ne pratique aucun démarchage téléphonique auprès des consommateurs.<br/><br/>
+          Depuis le 11 août 2026, le démarchage téléphonique d'un consommateur qui n'a pas donné son accord au préalable est interdit (article L. 223-1 du Code de la consommation).
         </Section>
 
         <BackToSettings />
@@ -148,7 +154,7 @@ export function MentionsLegales() {
 export function Confidentialite() {
   return (
     <div>
-      <PageHeader emoji="🔒" title="Politique de confidentialité" subtitle="Mise à jour : 10 novembre 2026" />
+      <PageHeader emoji="🔒" title="Politique de confidentialité" subtitle={miseAJour("confidentialite")} />
       <div style={scroll}>
 
         <Section title="1. Préambule">
@@ -174,9 +180,9 @@ export function Confidentialite() {
         <Section title="4. Responsable du traitement">
           Le responsable du traitement est, au sens du RGPD, la personne qui détermine les moyens et les finalités du traitement.<br/><br/>
           <strong style={{ color:"#a5d6a7" }}>Mongazon360<sup style={{ fontSize:8 }}>®</sup></strong> est le responsable du traitement.<br/>
-          Siège : 55 rue Pierre Pflimlin, 68510 Sierentz, France<br/>
-          SIRET : 442 546 594<br/>
-          Email de contact : contact@mongazon360.fr
+          Siège : {EDITEUR.adresse}<br/>
+          SIRET : {EDITEUR.siret}<br/>
+          Email de contact : {EDITEUR.email}
         </Section>
 
         <Section title="5. Traitements de données personnelles réalisés">
@@ -195,7 +201,6 @@ export function Confidentialite() {
             • <strong>Partage de données anonymisées avec partenaires jardinage</strong> — Base légale : consentement<br/>
             • <strong>Mesure d'audience anonyme</strong> (Vercel Web Analytics et compteurs internes, sans cookie ; identifiant de visite effacé à la fermeture de l'onglet) — Base légale : intérêt légitime<br/>
             • <strong>Mesure de l'efficacité de nos messages</strong> (ouverture des notifications et clics sur les liens de nos emails, rattachés au compte, pour améliorer leur contenu et leur fréquence) — Base légale : intérêt légitime<br/>
-            • <strong>Mesure de l'efficacité de nos publicités</strong> (Meta Pixel, cf. Politique de cookies) — Base légale : consentement<br/>
             • <strong>Gestion des demandes RGPD</strong> (accès, rectification, suppression) — Base légale : obligation légale<br/>
             • <strong>Lutte contre la fraude et sécurité</strong> — Base légale : intérêt légitime
           </SubSection>
@@ -216,12 +221,13 @@ export function Confidentialite() {
             • <strong>Données de facturation :</strong> 10 ans (obligation comptable)<br/>
             • <strong>Données de prospection commerciale :</strong> 3 ans à compter du dernier contact<br/>
             • <strong>Logs techniques :</strong> 1 an<br/>
+            • <strong>Compteurs d'utilisation</strong> (questions posées à Bob, diagnostics photo) : 1 an, et supprimés avec le compte<br/>
             • <strong>Ligue d'hiver :</strong> défis faits et réponses au quiz jusqu'au 31 juillet qui suit la fin de la saison, puis suppression automatique<br/>
             • <strong>Historique des messages envoyés</strong> (et de leur ouverture ou clic) : tant que le compte existe, puis supprimé avec lui<br/>
             • <strong>Photos de diagnostic :</strong> 90 jours, puis suppression automatique (le résultat de l'analyse reste attaché au compte)<br/>
+            • <strong>Diagnostic photo d'essai sans compte :</strong> photo, résultat et identifiant de l'appareil 90 jours, puis suppression automatique (le résultat est rattaché au compte s'il est créé) ; adresse IP, utilisée pour limiter les essais : 48 heures<br/>
             • <strong>Équipements connectés :</strong> jusqu'à leur déconnexion ou la suppression du compte ; seule la dernière mesure est conservée (chaque relevé remplace le précédent)<br/>
-            • <strong>Statistiques de mesure d'audience (anonymes) :</strong> 25 mois<br/>
-            • <strong>Cookies et choix de consentement :</strong> cookies Meta 90 jours maximum, choix concernant les cookies de mesure 6 mois (cf. Politique de cookies)
+            • <strong>Statistiques de mesure d'audience (anonymes) :</strong> 25 mois
           </SubSection>
 
           <SubSection title="5.4 Origine et modalités de collecte des données">
@@ -234,6 +240,13 @@ export function Confidentialite() {
             <strong>Finalité :</strong> étudier la demande, y répondre avec nos conditions et nos tarifs, puis gérer le partenariat — Base légale : mesures précontractuelles prises à la demande du professionnel.<br/><br/>
             <strong>Conservation :</strong> 3 ans à compter de la demande, puis suppression automatique ; si le partenariat est conclu, pendant sa durée, puis selon nos obligations légales (factures : 10 ans).<br/><br/>
             <strong>Destinataires :</strong> l'équipe Mongazon360 uniquement, avec ses prestataires techniques Supabase (base de données) et Resend (envoi des emails).
+          </SubSection>
+
+          <SubSection title="5.6 Liste d'attente « Trouver un pro »">
+            Les personnes qui demandent à être prévenues de l'ouverture de « Trouver un pro » (encart « Besoin d'un pro ? » des articles Conseils ou du résultat d'un diagnostic) nous transmettent : adresse email, code postal, travaux souhaités, page d'origine et, si elles sont connectées, l'identifiant de leur compte.<br/><br/>
+            <strong>Finalités :</strong> les prévenir par email de l'ouverture du service, et compter les demandes par département et par type de travaux (chiffres globaux, sans coordonnées) pour recruter des professionnels là où ils sont attendus — Base légale : consentement (inscription volontaire, retirable à tout moment en répondant à l'email de confirmation ou en écrivant à contact@mongazon360.fr).<br/><br/>
+            <strong>Conservation :</strong> jusqu'à l'ouverture du service, et 12 mois au plus après l'inscription, puis suppression automatique.<br/><br/>
+            <strong>Destinataires :</strong> l'équipe Mongazon360 uniquement, avec ses prestataires techniques Supabase (base de données) et Resend (envoi des emails). Les coordonnées ne sont jamais transmises à un professionnel : à l'ouverture, chacun fait lui-même sa demande.
           </SubSection>
         </Section>
 
@@ -250,7 +263,9 @@ export function Confidentialite() {
             • <strong>Plus Five Five Inc. (Resend)</strong> (envoi des emails transactionnels)<br/>
             • <strong>Vercel Inc.</strong> (hébergement frontend et mesure d'audience anonyme sans cookie)<br/>
             • <strong>Open-Meteo</strong> (données météorologiques)<br/>
-            • <strong>Google LLC</strong> (authentification Google, support email)
+            • <strong>OpenStreetMap Foundation</strong> (service Nominatim : nom de votre commune à partir de votre position, uniquement si vous activez la géolocalisation ; la position est transmise sans lien avec votre compte)<br/>
+            • <strong>Google LLC</strong> (authentification Google, support email)<br/><br/>
+            Mongazon360 utilise aussi l'assistant d'intelligence artificielle <strong>Claude</strong> d'<strong>Anthropic, PBC</strong> (États-Unis) pour la maintenance de l'application et le calcul de ses statistiques : il peut accéder ponctuellement à la base de données, avec le réglage qui exclut l'utilisation de ces échanges pour entraîner ses modèles.
           </SubSection>
 
           <SubSection title="6.2 Tiers responsables de traitement">
@@ -263,19 +278,14 @@ export function Confidentialite() {
             Si vous connectez un équipement (par exemple une station météo <strong style={{ color:"#a5d6a7" }}>Ecowitt</strong> , un robot tondeuse <strong style={{ color:"#a5d6a7" }}>Husqvarna</strong> ou un arrosage <strong style={{ color:"#a5d6a7" }}>Gardena</strong> ou <strong style={{ color:"#a5d6a7" }}>Rachio</strong>), Mongazon360 interroge le service en ligne du fabricant avec l'accès que vous lui avez donné (clés créées sur votre compte, ou connexion sur le site du fabricant), pour lire l'état et les mesures de votre appareil et, pour un robot ou un arrosage, lui transmettre les commandes que vous validez (mise au repos ou reprise du robot ; arrosage d'une zone, suspension ou reprise des programmes). Le fabricant traite les données de votre appareil en qualité de responsable de traitement indépendant, selon sa propre politique de confidentialité, et ses serveurs peuvent être situés hors de l'Union européenne. Vous pouvez déconnecter l'équipement à tout moment dans « Mes équipements » : ses clés d'accès sont alors effacées ; vous pouvez aussi les révoquer directement sur votre compte chez le fabricant.
           </SubSection>
 
-          <SubSection title="6.4 Meta Platforms Ireland Limited (Meta Pixel)">
-            Uniquement si vous l'avez accepté via le bandeau cookies, l'application transmet à <strong style={{ color:"#a5d6a7" }}>Meta Platforms Ireland Limited</strong> des données de navigation (identifiant du cookie Meta, page visitée, adresse IP, informations sur le navigateur et l'appareil) ainsi que les événements « début d'inscription » et « inscription finalisée », afin de mesurer l'efficacité de nos publicités sur Facebook et Instagram. Aucune donnée de votre compte (nom, email, profil gazon) n'est transmise.<br/><br/>
-            Mongazon360 et Meta sont responsables conjoints de la collecte et de la transmission de ces données ; Meta en est seul responsable pour tout traitement ultérieur, conformément à sa propre politique de confidentialité. Vous pouvez retirer votre consentement à tout moment depuis <em>Paramètres → Mes consentements</em> (détails dans la Politique de cookies).
-          </SubSection>
-
-          <SubSection title="6.5 Autorités compétentes">
+          <SubSection title="6.4 Autorités compétentes">
             En cas d'obligation légale, vos données peuvent être communiquées aux autorités compétentes, notamment l'administration fiscale, les juridictions, les forces de l'ordre et la Commission Nationale de l'Informatique et des Libertés (CNIL).
           </SubSection>
         </Section>
 
         <Section title="7. Transferts de données hors Union européenne">
           Les données personnelles des Utilisateurs sont stockées en Union européenne (Supabase, Irlande).<br/><br/>
-          Des transferts de données personnelles en dehors de l'Union européenne ne peuvent cependant être totalement exclus dans le cadre de l'utilisation de l'application, par l'intermédiaire des sous-traitants suivants notamment : <strong>Clerk Inc.</strong> (authentification), <strong>Stripe LLC</strong> (paiement), <strong>Groq Inc.</strong> (inférence IA : assistant conversationnel, analyse des photos de diagnostic, recommandations personnalisées), <strong>Cloudinary Ltd</strong> (traitement d'images), <strong>Plus Five Five, Inc./Resend</strong> (envoi d'emails), <strong>Vercel Inc.</strong> (hébergement frontend et mesure d'audience), <strong>Google LLC/Gmail</strong> (support email) et, si vous y avez consenti, <strong>Meta Platforms, Inc.</strong> (mesure publicitaire, via Meta Platforms Ireland Limited). Des données personnelles pourraient alors être stockées et/ou des transferts de données pourraient intervenir en dehors de l'Union européenne, notamment aux États-Unis.<br/><br/>
+          Des transferts de données personnelles en dehors de l'Union européenne ne peuvent cependant être totalement exclus dans le cadre de l'utilisation de l'application, par l'intermédiaire des sous-traitants suivants notamment : <strong>Clerk Inc.</strong> (authentification), <strong>Stripe LLC</strong> (paiement), <strong>Groq Inc.</strong> (inférence IA : assistant conversationnel, analyse des photos de diagnostic, recommandations personnalisées), <strong>Cloudinary Ltd</strong> (traitement d'images), <strong>Plus Five Five, Inc./Resend</strong> (envoi d'emails), <strong>Vercel Inc.</strong> (hébergement frontend et mesure d'audience), <strong>Google LLC/Gmail</strong> (support email) et <strong>Anthropic, PBC</strong> (assistant d'intelligence artificielle de maintenance). Des données personnelles pourraient alors être stockées et/ou des transferts de données pourraient intervenir en dehors de l'Union européenne, notamment aux États-Unis.<br/><br/>
           De plus, <strong>Supabase Inc.</strong> est une société de droit américain. Bien que les données soient hébergées en Union européenne (Irlande), un accès distant depuis les États-Unis ou Singapour ne peut être exclu (support, maintenance).<br/><br/>
           Le responsable de traitement s'engage à ce que ces transferts soient réalisés :<br/>
           • vers des pays présentant un niveau de protection dit adéquat au sens des autorités européennes de protection des données, ou<br/>
@@ -332,7 +342,7 @@ export function CGU() {
   const navigate = useNavigate();
   return (
     <div>
-      <PageHeader emoji="📜" title="Conditions Générales d'Utilisation" subtitle="Mise à jour : 10 novembre 2026" />
+      <PageHeader emoji="📜" title="Conditions Générales d'Utilisation" subtitle={miseAJour("cgu")} />
       <div style={scroll}>
 
         <div style={{ ...card(), background:"rgba(33,150,243,0.06)", border:"1px solid rgba(33,150,243,0.2)" }}>
@@ -348,8 +358,9 @@ export function CGU() {
         </Section>
 
         <Section title="2. Éditeur de l'Application">
-          L'Application Mongazon360 est éditée par <strong style={{ color:"#a5d6a7" }}>Krebs Ayfer</strong>, dont le siège est situé 55 rue Pierre Pflimlin, 68510 Sierentz, immatriculé sous le numéro SIRET 442 546 594.<br/><br/>
-          Email de contact : contact@mongazon360.fr
+          L'Application Mongazon360 est éditée par <strong style={{ color:"#a5d6a7" }}>{EDITEUR.nom}</strong> ({EDITEUR.forme}), dont le siège est situé {EDITEUR.adresse}, immatriculé sous le numéro SIRET {EDITEUR.siret}.<br/><br/>
+          Email de contact : {EDITEUR.email}<br/>
+          Téléphone : {EDITEUR.telephone}
         </Section>
 
         <Section title="3. Compte utilisateur">
@@ -537,7 +548,7 @@ export function CGV() {
   const navigate = useNavigate();
   return (
     <div>
-      <PageHeader emoji="💳" title="Conditions Générales de Vente" subtitle="Mise à jour : 31 octobre 2026" />
+      <PageHeader emoji="💳" title="Conditions Générales de Vente" subtitle={miseAJour("cgv")} />
       <div style={scroll}>
 
         <div style={{ ...card(), background:"rgba(33,150,243,0.06)", border:"1px solid rgba(33,150,243,0.2)" }}>
@@ -565,10 +576,10 @@ export function CGV() {
             L'Utilisateur reconnaît avoir pris connaissance, avant de s'engager, du contenu du présent Contrat, lequel prévoit les informations précontractuelles obligatoires visées à l'article L. 221-5 du Code de la consommation.<br/><br/>
             L'Utilisateur accepte de recevoir un exemplaire du présent Contrat de manière électronique.<br/><br/>
             <strong style={{ color:"#a5d6a7" }}>Lorsque l'abonnement est souscrit depuis le site web ou l'application web</strong>, les étapes de la commande sont les suivantes :<br/><br/>
-            1° Depuis son espace utilisateur, sélection de l'abonnement souhaité et la durée (mensuelle ou annuelle) ;<br/>
-            2° Renseignement des informations de paiement ;<br/>
-            3° Prise de connaissance et acceptation des présentes CGU/CGV et de la politique de confidentialité ;<br/>
-            4° Confirmation de la commande en cliquant sur le bouton <strong>« 💳 S'abonner — [montant][période] »</strong>.<br/><br/>
+            1° Depuis la page « Choisir son niveau », sélection de l'abonnement Premium et de sa durée (mensuelle ou annuelle) ;<br/>
+            2° Prise de connaissance et acceptation des présentes CGV, et demande expresse de fourniture immédiate du service (cases à cocher), les CGU et la politique de confidentialité ayant été acceptées à la création du compte ;<br/>
+            3° Clic sur le bouton <strong>« 💳 S'abonner — [montant][période] »</strong>, qui ouvre la page de paiement sécurisée de Stripe ;<br/>
+            4° Saisie des informations de paiement et confirmation du paiement sur cette page.<br/><br/>
             Jusqu'à l'étape du paiement, l'Utilisateur peut modifier sa commande, notamment les éventuelles erreurs commises lors de la saisie de ses données, en retournant sur les écrans précédents. L'acceptation définitive de la commande s'effectue en confirmant le paiement.<br/><br/>
             <strong style={{ color:"#a5d6a7" }}>Lorsque l'abonnement est souscrit par l'intermédiaire de l'Apple App Store ou du Google Play Store :</strong><br/><br/>
             L'Utilisateur sélectionne l'abonnement souhaité et sa durée depuis l'Application. La souscription est finalisée par l'Utilisateur via l'interface de paiement native de la plateforme concernée (Apple In-App Purchase ou Google Play Billing). En confirmant l'achat sur cette interface, l'Utilisateur accepte les présentes CGU/CGV et la politique de confidentialité de MONGAZON360. La transaction est traitée et encaissée par la plateforme, conformément aux conditions générales propres à celle-ci. MONGAZON360 n'a pas accès aux données de paiement de l'Utilisateur dans le cadre de cette transaction.<br/><br/>
@@ -591,21 +602,21 @@ export function CGV() {
           </SubSection>
 
           <SubSection title="c. Durée et renouvellement">
-            L'abonnement Premium prend effet à compter de la date du paiement et a une durée de 1 mois ou d'un an suivant la formule choisie par l'Utilisateur.<br/><br/>
-            À l'issue de la période initiale, l'abonnement se renouvelle automatiquement pour des périodes de même durée, sauf résiliation par l'Utilisateur dans les conditions prévues à l'article 5d des présentes.<br/><br/>
-            Toute résiliation notifiée après l'expiration du délai de préavis ne prendra effet qu'à l'issue de la période de renouvellement suivante.<br/><br/>
+            L'abonnement Premium prend effet à la date du paiement.<br/><br/>
+            <strong style={{ color:"#a5d6a7" }}>Abonnement mensuel :</strong> sans durée minimale d'engagement, il se renouvelle automatiquement chaque mois, à la même date, jusqu'à sa résiliation.<br/><br/>
+            <strong style={{ color:"#a5d6a7" }}>Abonnement annuel :</strong> conclu pour une durée d'un an, il se renouvelle automatiquement par périodes d'un an, sauf résiliation. Le renouvellement est facturé au tarif annuel en vigueur, sans l'éventuel tarif préférentiel de la première année (article 5 b).<br/><br/>
             <strong style={{ color:"#a5d6a7" }}>Lorsque l'abonnement est souscrit depuis le site web ou l'application web (PWA) :</strong><br/>
-            L'Utilisateur peut s'opposer au renouvellement en respectant un préavis d'au moins quarante-huit (48) heures avant la date de renouvellement pour l'abonnement mensuel, et d'au moins quinze (15) jours avant la date de renouvellement pour l'abonnement annuel. Toute résiliation notifiée après l'expiration du délai de préavis ne prendra effet qu'à l'issue de la période de renouvellement suivante.<br/><br/>
+            L'Utilisateur peut résilier son abonnement à tout moment, sans préavis, jusqu'à la date de son renouvellement. La résiliation prend effet à la fin de la période en cours, déjà payée, et l'abonnement n'est pas renouvelé (article 5 d).<br/><br/>
             <strong style={{ color:"#a5d6a7" }}>Lorsque l'abonnement est souscrit par l'intermédiaire de l'Apple App Store ou du Google Play Store :</strong><br/>
-            Le renouvellement automatique peut être désactivé par l'Utilisateur à tout moment depuis les réglages de la plateforme concernée (Réglages &gt; [identifiant Apple] &gt; Abonnements sur iOS, ou Google Play &gt; Paiements et abonnements sur Android). La désactivation du renouvellement automatique prend effet à l'issue de la période d'abonnement en cours. Pour les abonnements souscrits via l'Apple App Store, les conditions d'utilisation de la plateforme imposent que le renouvellement automatique soit désactivé avant un délai défini par Apple précédant la fin de la période en cours, faute de quoi la période suivante sera facturée. L'Utilisateur est invité à consulter les conditions d'utilisation de l'App Store pour connaître le délai exact applicable. Les préavis contractuels prévus ci-dessus pour le canal web ne s'appliquent pas aux abonnements souscrits via les stores.<br/><br/>
-            <strong>Notification de fin de période :</strong> conformément à l'article L. 215-1 du Code de la consommation, Mongazon360 informera l'Utilisateur, par email, au plus tôt trois mois et au plus tard un mois avant le terme de chaque période d'abonnement, de la possibilité de ne pas reconduire l'abonnement et de la date limite de non-reconduction.
+            Le renouvellement automatique peut être désactivé par l'Utilisateur à tout moment depuis les réglages de la plateforme concernée (Réglages &gt; [identifiant Apple] &gt; Abonnements sur iOS, ou Google Play &gt; Paiements et abonnements sur Android). La désactivation du renouvellement automatique prend effet à l'issue de la période d'abonnement en cours. Pour les abonnements souscrits via l'Apple App Store, les conditions d'utilisation de la plateforme imposent que le renouvellement automatique soit désactivé avant un délai défini par Apple précédant la fin de la période en cours, faute de quoi la période suivante sera facturée. L'Utilisateur est invité à consulter les conditions d'utilisation de l'App Store pour connaître le délai exact applicable. Les modalités de résiliation prévues ci-dessus pour le canal web ne s'appliquent pas aux abonnements souscrits via les stores.<br/><br/>
+            <strong>Rappel avant le renouvellement de l'abonnement annuel :</strong> conformément à l'article L. 215-1 du Code de la consommation, Mongazon360 informe l'Utilisateur par email, au plus tôt trois mois et au plus tard un mois avant la fin de chaque période annuelle, de la possibilité de ne pas reconduire l'abonnement et de la date jusqu'à laquelle il peut le résilier.
           </SubSection>
 
           <SubSection title="d. Résiliation de l'abonnement par l'Utilisateur">
             L'Utilisateur peut résilier son abonnement Premium à tout moment. La résiliation prend effet à la fin de la période d'abonnement en cours. L'Utilisateur conserve l'accès aux fonctionnalités Premium jusqu'à cette date.<br/><br/>
             <strong style={{ color:"#a5d6a7" }}>Modalités de résiliation :</strong><br/><br/>
-            • depuis l'espace utilisateur de l'Application, via la fonctionnalité de résiliation en ligne accessible ;<br/>
-            • par courrier électronique adressé à : contact@mongazon360.fr ;<br/>
+            • depuis l'Application : <em>Paramètres → Gérer ou résilier mon abonnement</em> (portail sécurisé de Stripe) ;<br/>
+            • par courrier électronique adressé à : {EDITEUR.email} ;<br/>
             • lorsque l'abonnement a été souscrit par l'intermédiaire de l'Apple App Store, depuis les réglages de l'appareil (Réglages &gt; [identifiant Apple] &gt; Abonnements), conformément aux conditions de la plateforme ;<br/>
             • lorsque l'abonnement a été souscrit par l'intermédiaire du Google Play Store, depuis l'application Google Play (Paiements et abonnements &gt; Abonnements), conformément aux conditions de la plateforme.<br/><br/>
             L'Utilisateur est informé que, pour les abonnements souscrits via l'Apple App Store ou le Google Play Store, la résiliation effectuée depuis l'espace utilisateur de l'Application ou par courrier électronique ne dispense pas de la désactivation du renouvellement automatique depuis les réglages de la plateforme concernée, cette dernière étant seule compétente pour interrompre le prélèvement.<br/><br/>
@@ -622,8 +633,8 @@ export function CGV() {
           L'Utilisateur a le droit de se rétracter du Contrat sans donner de motif dans un délai de <strong>quatorze (14) jours</strong> à compter de la conclusion du contrat d'abonnement Premium.<br/><br/>
           Pour exercer le droit de rétractation, l'Utilisateur doit notifier au Prestataire sa décision de rétractation du Contrat au moyen d'une déclaration dénuée d'ambiguïté (par exemple, lettre envoyée par la poste ou courrier électronique). L'Utilisateur peut utiliser le modèle de formulaire de rétractation ci-dessous mais ce n'est pas obligatoire.<br/><br/>
           <strong style={{ color:"#a5d6a7" }}>Destinataire :</strong><br/>
-          Krebs Ayfer — 55 rue Pierre Pflimlin, 68510 Sierentz<br/>
-          Email de contact : contact@mongazon360.fr<br/><br/>
+          {EDITEUR.nom} — {EDITEUR.adresse}<br/>
+          Email de contact : {EDITEUR.email}<br/><br/>
           Pour que le délai de rétractation soit respecté, il suffit que l'Utilisateur transmette sa communication relative à l'exercice du droit de rétractation avant l'expiration du délai de quatorze (14) jours.<br/><br/>
           En cas de rétractation, le Prestataire remboursera l'Utilisateur de tous les paiements reçus de lui, sans retard excessif et, en tout état de cause, au plus tard quatorze (14) jours à compter du jour où le Prestataire est informé de sa décision de rétractation du Contrat. Le Prestataire procèdera au remboursement en utilisant le même moyen de paiement que celui que le Client aura utilisé pour la transaction initiale, sauf si l'Utilisateur convient expressément d'un moyen différent ; en tout état de cause, ce remboursement n'occasionnera pas de frais pour l'Utilisateur.<br/><br/>
           Lorsque l'abonnement Premium a été souscrit par l'intermédiaire de l'Apple App Store ou du Google Play Store, le remboursement en cas de rétractation est traité par la plateforme concernée, selon ses propres procédures. L'Utilisateur est invité à adresser sa demande de remboursement directement auprès d'Apple (via l'historique des achats accessible depuis https://reportaproblem.apple.com) ou de Google (via le Centre d'aide Google Play), selon la plateforme utilisée. MONGAZON360 s'engage à coopérer avec la plateforme concernée pour garantir l'effectivité du droit de rétractation de l'Utilisateur.<br/><br/>
@@ -636,7 +647,7 @@ export function CGV() {
 
           <SubSection title="Modèle de formulaire de rétractation">
             <em>(Veuillez compléter et renvoyer le présent formulaire uniquement si vous souhaitez vous rétracter du contrat.)</em><br/><br/>
-            À l'attention de Krebs Ayfer – contact@mongazon360.fr<br/><br/>
+            À l'attention de {EDITEUR.nom} – {EDITEUR.adresse} – {EDITEUR.email}<br/><br/>
             Je/nous (*) vous notifie/notifions (*) par la présente ma/notre (*) rétractation du contrat portant sur la fourniture de contenus numériques ci-dessous :<br/><br/>
             Commandé le (*) :<br/>
             Nom du (des) consommateur(s) :<br/>
@@ -696,12 +707,12 @@ export function CGV() {
 export function Cookies() {
   return (
     <div>
-      <PageHeader emoji="🍪" title="Politique de cookies" subtitle="Mise à jour : 31 octobre 2026" />
+      <PageHeader emoji="🍪" title="Politique de cookies" subtitle={miseAJour("cookies")} />
       <div style={scroll}>
 
         <Section title="Qu'est-ce qu'un cookie ?">
           Un cookie est un petit fichier texte déposé sur votre terminal (ordinateur, téléphone, tablette) lors de votre visite sur un site web ou d'une utilisation d'une application. Il permet au site ou à l'application de mémoriser des informations relatives à votre navigation.<br/><br/>
-          L'application Mongazon360<sup style={{ fontSize:8 }}>®</sup> utilise des cookies ainsi que des <strong>technologies similaires</strong> stockées localement sur votre appareil (<em>localStorage</em>, <em>sessionStorage</em>). Seuls les traceurs de mesure publicitaire (Meta) nécessitent votre consentement préalable ; ils ne sont jamais déposés avant votre accord.
+          L'application Mongazon360<sup style={{ fontSize:8 }}>®</sup> utilise des cookies ainsi que des <strong>technologies similaires</strong> stockées localement sur votre appareil (<em>localStorage</em>, <em>sessionStorage</em>). Elle n'utilise aucun cookie publicitaire ni de réseau social : aucun de ses traceurs ne demande votre consentement.
         </Section>
 
         <Section title="Technologies utilisées par Mongazon360®">
@@ -709,25 +720,15 @@ export function Cookies() {
           <SubSection title="🔒 Technologies strictement nécessaires (sans consentement)">
             Ces technologies sont indispensables au fonctionnement de l'application ou au service que vous demandez, et ne nécessitent pas votre consentement :<br/><br/>
             • <strong>Authentification (Clerk)</strong> : cookies de session permettant de vous maintenir connecté à votre compte ;<br/>
-            • <strong>Préférences utilisateur</strong> : mémorisation de votre profil gazon, des consentements acceptés, de votre choix concernant les cookies de mesure et de la complétion de l'onboarding ;<br/>
+            • <strong>Préférences utilisateur</strong> : mémorisation de votre profil gazon, des consentements acceptés et de la complétion de l'onboarding ;<br/>
             • <strong>Suivi technique</strong> : capture de la source d'arrivée (UTM, referer) pour mesurer la performance des campagnes (anonymisé).
           </SubSection>
 
           <SubSection title="📈 Mesure d'audience anonyme (sans consentement)">
             Pour connaître la fréquentation de l'application et améliorer son fonctionnement, Mongazon360<sup style={{ fontSize:7 }}>®</sup> utilise des outils de mesure d'audience qui <strong>ne déposent aucun cookie</strong> et ne permettent pas de vous identifier :<br/><br/>
             • <strong>Vercel Web Analytics</strong> (Vercel Inc.) : statistiques agrégées de fréquentation (pages vues, page de provenance, pays, type d'appareil et de navigateur). Aucun identifiant persistant n'est stocké sur votre terminal ; les visites sont regroupées à l'aide d'une empreinte technique renouvelée chaque jour ;<br/>
-            • <strong>Compteurs internes</strong> : comptage anonyme du nombre de visites par jour, du type d'appareil (iPhone, Android ou ordinateur), de la source d'arrivée (lien suivi ou site d'origine) et des étapes du parcours d'inscription, sans lien avec votre identité. Pour compter des visiteurs distincts, un identifiant de visite tiré au hasard est gardé dans le stockage de session de votre navigateur : il relie les étapes d'une même visite, n'est rattaché à aucun compte et disparaît à la fermeture de l'onglet.<br/><br/>
+            • <strong>Compteurs internes</strong> : comptage anonyme du nombre de visites par jour, du type d'appareil (iPhone, Android ou ordinateur), de la source d'arrivée (lien suivi ou site d'origine) et des étapes du parcours d'inscription, sans lien avec votre identité. Pour ne compter qu'une visite par jour et par appareil, un simple marqueur « déjà compté aujourd'hui », sans identifiant, est gardé dans le stockage local de votre navigateur. Pour compter des visiteurs distincts, un identifiant de visite tiré au hasard est gardé dans le stockage de session de votre navigateur : il relie les étapes d'une même visite, n'est rattaché à aucun compte et disparaît à la fermeture de l'onglet.<br/><br/>
             Ces mesures sont strictement limitées à la production de statistiques anonymes pour notre propre compte et ne sont ni recoupées avec d'autres traitements, ni transmises à des tiers à d'autres fins.
-          </SubSection>
-
-          <SubSection title="🎯 Cookies de mesure publicitaire — Meta Pixel (avec consentement)">
-            Avec votre accord, l'application utilise le <strong>Meta Pixel</strong> de Meta Platforms Ireland Limited (Facebook, Instagram) afin de <strong>mesurer l'efficacité de nos publicités</strong> diffusées sur ces réseaux : savoir combien de personnes arrivent sur l'application après avoir vu une publicité et combien créent ensuite un compte.<br/><br/>
-            <strong>Événements transmis :</strong> visite d'une page, début d'inscription, inscription finalisée.<br/>
-            <strong>Données transmises à Meta :</strong> identifiant du cookie Meta, adresse de la page visitée, adresse IP, informations techniques sur le navigateur et l'appareil. Aucune donnée de votre compte (nom, email, profil gazon) n'est transmise.<br/>
-            <strong>Cookies déposés :</strong> <em>_fbp</em> (et <em>_fbc</em> si vous arrivez depuis une publicité), d'une durée de vie de 90 jours.<br/><br/>
-            Mongazon360 et Meta Platforms Ireland Limited sont <strong>responsables conjoints</strong> de la collecte et de la transmission de ces données ; Meta est seul responsable de leur utilisation ultérieure, conformément à sa 
-            <a href="https://www.facebook.com/privacy/policy/" target="_blank" rel="noopener noreferrer" style={{ color:"#a5d6a7", textDecoration:"underline" }}>politique de confidentialité</a>. Ces données peuvent être transférées aux États-Unis (Meta Platforms, Inc.), dans le cadre du Data Privacy Framework UE–États-Unis.<br/><br/>
-            <strong>Sans votre accord, aucun de ces cookies n'est déposé</strong> et aucune donnée n'est envoyée à Meta. Refuser n'a aucune conséquence sur l'utilisation de l'application.
           </SubSection>
 
           <SubSection title="🔔 Autres autorisations soumises à consentement">
@@ -748,16 +749,11 @@ export function Cookies() {
         </Section>
 
         <Section title="Gérer vos préférences">
-          <strong>Cookies de mesure publicitaire (Meta) :</strong> lors de votre première visite, un bandeau vous permet d'<strong>accepter</strong> ou de <strong>refuser</strong>, aussi simplement l'un que l'autre. Vous pouvez modifier ce choix à tout moment, sur chaque appareil, depuis :<br/><br/>
-          <strong style={{ color:"#a5d6a7" }}>Paramètres → Mes consentements → Cookies de mesure (Meta)</strong><br/><br/>
-          Le retrait de votre consentement arrête immédiatement l'envoi de données à Meta et supprime les cookies Meta de votre terminal. Votre choix (acceptation ou refus) est conservé <strong>6 mois</strong>, après quoi il vous est à nouveau demandé.<br/><br/>
-          <strong>Autres consentements :</strong> vous pouvez les activer ou les désactiver depuis <strong style={{ color:"#a5d6a7" }}>Paramètres → Mes consentements</strong>, avec effet immédiat.<br/><br/>
+          Vous pouvez activer ou désactiver les autorisations ci-dessus (notifications, géolocalisation, partage de données anonymisées, emails) depuis <strong style={{ color:"#a5d6a7" }}>Paramètres → Mes consentements</strong>, avec effet immédiat.<br/><br/>
           Vous pouvez également supprimer toutes les données stockées localement sur votre appareil depuis <strong style={{ color:"#a5d6a7" }}>Paramètres → Supprimer mes données locales</strong>, ou via les réglages de votre navigateur.
         </Section>
 
         <Section title="Durée de conservation">
-          • <strong>Cookies Meta</strong> (<em>_fbp</em>, <em>_fbc</em>) : 90 jours maximum, supprimés dès le retrait de votre consentement ;<br/>
-          • <strong>Choix concernant les cookies de mesure</strong> : 6 mois ;<br/>
           • <strong>Statistiques anonymes des compteurs internes</strong> : 25 mois ;<br/>
           • <strong>Autres données stockées localement</strong> sur votre appareil : jusqu'à leur suppression par vos soins depuis les Paramètres, la suppression du cache de votre navigateur, la désinstallation de l'application ou la suppression de votre compte (cf. Politique de confidentialité, article 5.3).
         </Section>

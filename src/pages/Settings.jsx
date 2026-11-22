@@ -7,8 +7,6 @@ import { useProfile } from "../lib/useProfile";
 import { useWeather } from "../lib/useWeather";
 import { usePushNotifications } from "../lib/usePushNotifications";
 import { useConsents } from "../lib/useConsents";
-import { getCookieConsent, setCookieConsent, CONSENT_EVENT } from "../lib/cookieConsent";
-import { loadMetaPixel, revokeMetaPixel } from "../lib/metaPixel";
 import { card, cardTitle, btn, scroll } from "../lib/styles";
 
 export default function Settings() {
@@ -28,13 +26,6 @@ export default function Settings() {
   const [deleted, setDeleted] = useState(false);
   const [accountDeleted, setAccountDeleted] = useState(false);
   const [geoStatus, setGeoStatus]   = useState("unknown");
-  // Cookies de mesure (Meta Pixel) : même consentement que le bandeau, par appareil
-  const [cookieConsent, setCookieConsentState] = useState(() => getCookieConsent());
-  useEffect(() => {
-    const onChange = (e) => setCookieConsentState(e.detail ?? getCookieConsent());
-    window.addEventListener(CONSENT_EVENT, onChange);
-    return () => window.removeEventListener(CONSENT_EVENT, onChange);
-  }, []);
   const [exportLoading, setExportLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [accountDeleteLoading, setAccountDeleteLoading] = useState(false);
@@ -64,13 +55,6 @@ export default function Settings() {
     } else {
       await updateConsent("notifications", false);
     }
-  };
-
-  const toggleCookieConsent = () => {
-    const grant = cookieConsent !== "granted";
-    setCookieConsent(grant ? "granted" : "denied");
-    if (grant) loadMetaPixel(); else revokeMetaPixel();
-    updateConsent("cookies", grant); // trace du choix dans user_consents
   };
 
   const revokeGeolocation = () => {
@@ -428,12 +412,10 @@ export default function Settings() {
             { key:"notifications", label:"🔔 Conseils quotidiens", desc:"Conseils de Bob (météo, arrosage, tonte…) — jusqu'à 2/jour, par notification ou à défaut par email" },
             { key:"data_resale",   label:"📊 Données anonymisées", desc:"Partage avec partenaires jardinage — jamais nom/email" },
             { key:"marketing",     label:"📧 Emails Mongazon360", desc:"Conseils saisonniers et nouveautés" },
-            { key:"cookies",       label:"🍪 Cookies de mesure (Meta)", desc:"Mesure de l'efficacité de nos publicités — sur cet appareil" },
           ].map(({ key, label, desc }) => {
             const isNotif = key === "notifications";
             const notifGranted = isNotif && permission === "granted";
-            const isCookies = key === "cookies";
-            const isOn = isCookies ? cookieConsent === "granted" : (consents[key] ?? false);
+            const isOn = consents[key] ?? false;
             return (
               <div key={key} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
                 <div style={{ flex:1 }}>
@@ -450,7 +432,7 @@ export default function Settings() {
                   )}
                 </div>
                 <div
-                  onClick={() => isNotif ? handleNotifToggle() : isCookies ? toggleCookieConsent() : updateConsent(key, !consents[key])}
+                  onClick={() => isNotif ? handleNotifToggle() : updateConsent(key, !consents[key])}
                   style={{
                     width:44, height:24, borderRadius:12,
                     cursor:"pointer", flexShrink:0, marginLeft:8,
@@ -581,7 +563,7 @@ export default function Settings() {
                 opacity: portalLoading ? 0.6 : 1,
               }}
             >
-              {portalLoading ? "⏳ Ouverture..." : "🔑 Gérer mon abonnement"}
+              {portalLoading ? "⏳ Ouverture..." : "🔑 Gérer ou résilier mon abonnement"}
             </button>
 
             <div style={{ fontSize:10, color:"#4a7c5c", marginTop:8, textAlign:"center", lineHeight:1.5 }}>

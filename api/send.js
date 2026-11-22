@@ -1252,6 +1252,12 @@ module.exports = async function handler(req, res) {
   if (type === "partenaire") return require("./partenaires.cjs").handler(req, res);
 
   // ════════════════════════════════════════════════════════════════════════
+  // TROUVER UN PRO — liste d'attente (encart « Besoin d'un pro ? » des articles et du diagnostic) : api/trouverUnPro.cjs
+  // POST /api/send?type=pro-attente { email, code_postal, travaux[], source, page, campagne } — public (Bearer Clerk facultatif)
+  // ════════════════════════════════════════════════════════════════════════
+  if (type === "pro-attente") return require("./trouverUnPro.cjs").handler(req, res);
+
+  // ════════════════════════════════════════════════════════════════════════
   // CUSTOMER-PORTAL — Lien Stripe Customer Portal (mention 10 avocat)
   // POST /api/send?type=customer-portal — Bearer Clerk obligatoire
   // ════════════════════════════════════════════════════════════════════════
@@ -1293,7 +1299,8 @@ module.exports = async function handler(req, res) {
 
       return res.json({ url: portalSession.url });
     } catch (e) {
-      console.error("[customer-portal]", e.message);
+      // Le portail est la résiliation en ligne promise par les CGV (article 5 d) : une panne doit être connue
+      await require("./alerting.cjs").reportServerError("Abonnement — portail de gestion et de résiliation indisponible", e);
       return res.status(500).json({ error: e.message });
     }
   }

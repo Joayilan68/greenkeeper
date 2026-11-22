@@ -2,6 +2,7 @@
 // Mesure d'usage anonyme des pages et des tuiles, pour décider de la refonte de décembre 2026 (décision du 09/10/2026).
 // Une ligne par page ouverte (« page_view ») et par tuile touchée (« tuile », repérée par l'attribut data-tuile) dans
 // `funnel_events`, sans identifiant d'utilisateur, avec le niveau d'accès. Comptes admin non mesurés.
+// Une page ouverte depuis un encart des pages Conseils garde son thème et sa position (paramètre « encart »).
 // Couvert par la politique de confidentialité (mesure d'audience anonyme sans cookie).
 
 import { useEffect, useRef } from "react";
@@ -16,7 +17,8 @@ export function useMesureUsage(niveau) {
   useEffect(() => {
     if (!niveau || dernierePage.current === pathname) return;
     dernierePage.current = pathname;
-    trackFunnel("page_view", { niveau });
+    const encart = new URLSearchParams(window.location.search).get("encart");
+    trackFunnel("page_view", encart ? { niveau, encart: encart.slice(0, 40) } : { niveau });
   }, [pathname, niveau]);
 
   useEffect(() => {

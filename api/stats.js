@@ -46,6 +46,7 @@ module.exports = async function handler(req, res) {
 
   if (type === "guests") return handleGuests(req, res);
   if (type === "publications") return handlePublications(req, res);
+  if (type === "trouver_un_pro") return handleTrouverUnPro(req, res);
   // Réseaux sociaux : lecture (GET ?type=social) + écriture (POST)
   if (type === "social" || req.method === "POST") return handleSocial(req, res);
   if (type === "revenue") return handleRevenue(req, res);
@@ -55,8 +56,32 @@ module.exports = async function handler(req, res) {
   if (type === "services") return handleServices(req, res);
   if (type === "seo")      return handleSeo(req, res);
 
-  return res.status(400).json({ error: 'Paramètre ?type=revenue|users|social|errors|services|seo|guests|publications requis' });
+  return res.status(400).json({ error: 'Paramètre ?type=revenue|users|social|errors|services|seo|guests|publications|trouver_un_pro requis' });
 };
+
+// ── « Trouver un pro » : particuliers en liste d'attente et demandes des pros, par département (Pilotage → Activité) ──
+// Montre où recruter des pros et sert d'argument face à eux (« N particuliers de votre secteur attendent »)
+async function handleTrouverUnPro(req, res) {
+  try {
+    const sb = createClient(SB_URL, SB_KEY);
+    const [attente, pros] = await Promise.all([
+      sb.from("pros_attente").select("departement, travaux").limit(5000),
+      sb.from("partenaires_demandes").select("departement, statut").limit(5000),
+    ]);
+    if (attente.error || pros.error) throw attente.error || pros.error;
+    const parDep = {};
+    const ligne = (d) => (parDep[d] ||= { departement: d, particuliers: 0, pros: 0, prosAcceptes: 0 });
+    for (const a of attente.data) ligne(a.departement).particuliers++;
+    for (const p of pros.data) { const l = ligne(p.departement); l.pros++; if (p.statut === "acceptee") l.prosAcceptes++; }
+    const travaux = {};
+    for (const a of attente.data) for (const t of a.travaux) travaux[t] = (travaux[t] || 0) + 1;
+    return res.json({ success: true, particuliers: attente.data.length, pros: pros.data.length, travaux,
+      departements: Object.values(parDep).sort((a, b) => b.particuliers - a.particuliers || b.pros - a.pros) });
+  } catch (e) {
+    await require("./alerting.cjs").reportServerError("Pilotage — Trouver un pro", e);
+    return res.status(500).json({ success: false, error: e.message });
+  }
+}
 
 // ── Référencement Google : position moyenne de toutes nos pages, par mois (Pilotage → Activité) ──
 async function handleSeo(req, res) {

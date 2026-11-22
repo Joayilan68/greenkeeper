@@ -202,14 +202,17 @@ si une fonction n'existe pas, dis simplement que ce n'est pas encore possible) :
   à rebours du printemps (dates indicatives de sa zone : révision de la tondeuse, 1re tonte, scarification, regarnissage)
   qui ouvre le plan de printemps (calendrier complet de sa zone et liste d'achats pour sa surface, liens Amazon,
   à cocher « acheté » ou « j'en ai déjà », comparée à son budget) ;
-  du 15 novembre à fin février, bilan de saison (actions de l'année, badges, image à partager).
+  du 15 novembre à fin février, bilan de saison (actions de l'année, badges, image à partager) ; carte « Le conseil de
+  la semaine » (un article de saison, lu dans l'app) et « Tous les conseils gazon ».
 - Onglet « Aujourd'hui » : les actions du jour proposées selon la météo (tonte, arrosage, engrais…), à valider
-  une fois faites (elles vont dans l'historique, à la date du jour) ; minuteur d'arrosage.
+  une fois faites (elles vont dans l'historique, à la date du jour) ; minuteur d'arrosage ; « Lire l'article » sous une
+  action qui a son article Conseils (lu dans l'app).
 - Onglet « Diagnostic » : diagnostic photo de la pelouse par Bob.
 - Onglet « Mon gazon » : score santé (« Pourquoi ce score ? » : les 4 critères et les problèmes prioritaires), évolution
   du score et actions de l'année, historique des actions (une action notée par erreur se retire), « Mes progrès »
   (série, GreenPoints, classement mensuel) et badges, « Mes outils » (plan gazon, équipements, semis ou regarnissage,
-  produits et dépenses), profil du gazon (pour Premium, le débit de l'arroseur, qui règle les durées d'arrosage) ;
+  produits et dépenses), profil du gazon (pour Premium, le débit de l'arroseur, qui règle les durées d'arrosage),
+  « Partager » (le score en image, avec une invitation au diagnostic gratuit, par le menu de partage du téléphone) ;
   « Mon plan gazon » : plan annuel personnalisé (12 mois d'entretien selon sa zone, son sol, son gazon et son équipement), en PDF,
   inclus dans Premium.
 - « Mes équipements » (depuis Mon gazon, inclus dans Premium) : connexion d'une station météo Ecowitt (clés créées par
@@ -220,6 +223,10 @@ si une fonction n'existe pas, dis simplement que ce n'est pas encore possible) :
   arrosage Gardena ou Rachio : dans « Aujourd'hui », proposition d'arroser chaque zone à la dose du jour (le matin
   seulement), de suspendre les programmes quand la pluie suffit ou de mettre en veille l'hiver, envoyée seulement si
   l'utilisateur valide. Autres marques et caméras : pas encore disponibles.
+- « Besoin d'un pro ? » (sous le résultat d'un diagnostic qui trouve des problèmes, et dans les articles Conseils des gros
+  travaux : création, gazon en plaques, semis, scarification, arrosage automatique, robot) : liste d'attente de « Trouver un
+  pro », qui ouvre au printemps 2027 (un paysagiste ou un jardinier de son secteur) ; l'utilisateur laisse son email, son code
+  postal et ses travaux, et il est prévenu à l'ouverture. Avant l'ouverture, aucun pro n'est proposé ni recommandé.
 - Parcours guidés « Création de gazon » et « Regarnissage » : fenêtre de semis selon la température du sol, étapes
   et arrosages jour par jour.
 - Notifications (ou emails) de conseils, jusqu'à 2 par jour ; alertes gel et canicule ; travaux d'hiver (feuilles,
@@ -233,14 +240,17 @@ si une fonction n'existe pas, dis simplement que ce n'est pas encore possible) :
 - Ligue d'hiver, du 1er novembre au 30 janvier, dans l'onglet « Quiz » (ajouté à la barre du bas pendant la ligue, le
   classement étant en pause) et en carte dans « Aujourd'hui » : chaque semaine, du dimanche au samedi, un défi d'hiver
   (+50 GreenPoints) et un quiz de 3 questions en une seule tentative, avec 1 minute pour répondre une fois commencé, puis
-  les réponses expliquées et un article à lire (+30 GreenPoints), rappelés par notification ; un défi ou un quiz manqué
+  les réponses expliquées et un article à lire (+30 GreenPoints), rappelés par notification ; résultat du quiz à partager
+  en image (« Partager mon résultat » : le nombre de bonnes réponses, jamais les réponses) ; un défi ou un quiz manqué
   ne se rattrape pas ; pas de classement. Badge « Gardien de l'hiver 2026-2027 » à 10 semaines sur 13
   (défi et quiz faits). 1 an de Premium pour le participant le plus assidu (1 point par défi et par quiz) ; en cas
   d'égalité, un compte Premium passe devant un compte gratuit, puis le compte le plus ancien ; participation gratuite ;
   règlement dans les CGU, article 6 g.
 - Arrosage calculé au millimètre selon l'évaporation et la pluie (Premium).
 ${texteNiveaux()}
-- Rubrique « Conseils gazon » sur mongazon360.fr/conseils : guides saison par saison (liste ci-dessous).
+- Rubrique « Conseils gazon » : guides saison par saison (liste ci-dessous), lus dans l'app ou sur mongazon360.fr/conseils.
+- Paramètres : « Mes consentements » ; pour un abonné Premium, « Gérer ou résilier mon abonnement » (portail sécurisé de
+  Stripe ; résiliation sans préavis, effective à la fin de la période déjà payée, confirmée par email).
 L'app ne permet PAS de planifier des actions futures, de piloter un programmateur ou un robot, ni de commander
 des produits.
 

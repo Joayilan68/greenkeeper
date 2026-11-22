@@ -272,6 +272,7 @@ module.exports = async function handler(req, res) {
         "classement",          // ajout 21/08 — ligue / classement
         "daily_active_users",  // ajout 21/08 — journal d'activité
         "equipements",         // ajout 28/09 — équipements connectés et leurs clés d'accès chiffrées
+        "rate_limits",         // ajout 16/11 — compteurs d'utilisation (Bob, diagnostics)
       ];
 
       const tableResults = await Promise.allSettled(

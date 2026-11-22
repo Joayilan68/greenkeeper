@@ -5,7 +5,16 @@ import { ROBOT_UA } from "../src/lib/platform.js";
 import { RESEAUX } from "../src/lib/reseaux.js";
 import { blocQuiz, CSS_QUIZ } from "./quizArticle.mjs";
 const SITE = "https://mongazon360.fr";
+const ARGUMENTS = JSON.parse(readFileSync(new URL("../src/lib/argumentsApp.json", import.meta.url), "utf8"));
 export const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+
+// Typographie française du texte affiché : espace insécable avant ? ! : ; » et après «, et entre un nombre et son unité,
+// pour qu'un signe ou une unité ne passe jamais seul à la ligne sur téléphone. Les balises (adresses comprises) ne sont
+// pas touchées ; à n'appliquer qu'à du texte ou à du contenu sans script.
+const INSECABLE = "\u00a0";
+export const typo = (html) => String(html).split(/(<[^>]*>)/).map(s => s.startsWith("<") ? s : s
+  .replace(/ ([?!:;»])/g, `${INSECABLE}$1`).replace(/« /g, `«${INSECABLE}`)
+  .replace(/(\d) (°C|%|€|m²|km\/h|mm\/h|mm|cm|km|kg|L|h|g|m)(?![\wÀ-ÿ²/])/g, `$1${INSECABLE}$2`)).join("");
 
 const CSS = `
 *{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:#1f2d24;background:#f6f8f4;line-height:1.7}
@@ -17,21 +26,38 @@ h1{font-size:32px;line-height:1.2;margin:8px 0 12px;color:#1a4731}h2{font-size:2
 .meta{font-size:13px;color:#5b6f61;margin-bottom:24px}article p,article li{font-size:17px}article ul,article ol{padding-left:22px}
 article table{border-collapse:collapse;width:100%;margin:16px 0;font-size:15px}article th,article td{border:1px solid #d7e3d9;padding:8px 10px;text-align:left}article th{background:#e8f5e9}
 blockquote{margin:18px 0;padding:12px 16px;background:#e8f5e9;border-left:4px solid #43a047;border-radius:6px}blockquote p{margin:0}
-.cta{margin:36px 0;padding:22px;border-radius:16px;background:#1a4731;color:#e8f5e9;text-align:center}.cta strong{display:block;font-size:20px;color:#fff;margin-bottom:6px}
-.cta .btn{display:inline-block;margin-top:14px;font-size:16px;padding:12px 22px}.cards{display:grid;gap:12px}
+.app{display:flex;gap:14px;margin:28px 0;padding:18px;border-radius:16px;background:#fff;border:1px solid #cfe3d3;border-left:5px solid #43a047}
+.app .ico{font-size:28px;line-height:1.2}.app strong{display:block;font-size:18px;line-height:1.35;color:#1a4731}.app p{margin:6px 0 12px;font-size:15px;color:#3b4d41}
+.app .btn{display:inline-block}.app small{display:block;margin-top:10px;font-size:12px}.app small a{color:#5b6f61}
+.app.fin{background:#1a4731;border:none;color:#e8f5e9}.app.fin strong{font-size:20px;color:#fff}.app.fin p{color:#d7ead9}.app.fin small a{color:#a5d6a7}
+.bandeau{margin:0 0 22px;padding:14px 16px;border-radius:14px;background:#e8f5e9;border:1px solid #c5e1c9}.bandeau p{margin:0 0 10px;font-size:15px;line-height:1.5}
+.bandeau div{display:flex;flex-wrap:wrap;gap:8px}.bandeau .play{background:#fff;color:#1a4731;border:1px solid #1a4731}
+.grille{margin:36px 0;padding:22px;border-radius:16px;background:#1a4731;color:#e8f5e9}.grille h2{margin:0 0 14px;font-size:21px;color:#fff}
+.grille div{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}.grille .item{display:block;padding:12px;border-radius:12px;background:rgba(255,255,255,.08);color:#e8f5e9;text-decoration:none}
+.grille .item b{display:block;margin-top:4px;font-size:15px;color:#fff}.grille .item small{display:block;margin-top:2px;font-size:13px;line-height:1.4;color:#cfe3d3}
+.grille>.btn{display:inline-block;margin-top:16px;font-size:16px;padding:12px 22px}.fixe{display:none}.cards{display:grid;gap:12px}
 .shop{margin:32px 0 0;padding:18px;border:1px solid #dfe8e1;border-radius:16px;background:#fff}.shop h2{margin:0 0 4px;font-size:19px}
 .shop a{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid #eef3ef;text-decoration:none;color:#1f2d24;font-size:15px}
-.shop a span:last-child{white-space:nowrap;color:#2e7d32;font-weight:700}.shop .kit{margin:10px 0 0;font-size:14px}.shop small{display:block;font-size:12px;color:#5b6f61;margin-top:8px;line-height:1.5}
+.shop a span:last-child{white-space:nowrap;color:#2e7d32;font-weight:700;text-align:right}.shop a b{display:block;margin-top:4px;padding:3px 9px;border-radius:999px;background:#2e7d32;color:#fff;font-size:12px;font-weight:600}.shop .kit{margin:10px 0 0;font-size:14px}.shop small{display:block;font-size:12px;color:#5b6f61;margin-top:8px;line-height:1.5}
 article img{max-width:100%;height:auto;border-radius:12px;display:block}.hero{margin:0 0 22px}figure{margin:22px 0}
 .duo{display:grid;grid-template-columns:1fr 1fr;gap:8px}figcaption{grid-column:1/-1;font-size:13px;color:#5b6f61;margin-top:4px}
 .card{display:block;background:#fff;border:1px solid #dfe8e1;border-radius:14px;padding:16px;text-decoration:none;color:#1f2d24}.card b{color:#1a4731;font-size:17px}
 .card span{display:block;font-size:14px;color:#5b6f61;margin-top:4px}.season{font-size:12px;font-weight:700;color:#2e7d32;text-transform:uppercase;letter-spacing:.06em;margin:26px 0 8px}
 footer{border-top:1px solid #dfe8e1;background:#fff}footer div{max-width:760px;margin:0 auto;padding:18px 20px;font-size:12px;color:#5b6f61}footer a{color:#5b6f61;margin-right:12px}
-@media(max-width:520px){h1{font-size:26px}.bar .btn{padding:8px 12px;font-size:13px}}`;
+@media(max-width:520px){h1{font-size:26px}.bar .btn{padding:8px 12px;font-size:13px}.app{flex-direction:column;gap:8px}article table{display:block;overflow-x:auto}
+body{padding-bottom:76px}.fixe{display:block;position:fixed;left:12px;right:12px;bottom:12px;z-index:10;padding:14px;border-radius:14px;font-size:16px;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.25)}}`;
 
-// Liens vers l'essai gratuit balisés : l'inscription est attribuée à la source « conseils »
-// (et à l'article d'origine) dans Pilotage → Activité, au lieu de « autre ».
-const essai = (campagne) => `/essai?utm_source=conseils&amp;utm_medium=article&amp;utm_campaign=${campagne}`;
+// ── L'app dans les pages Conseils (chantier « l'app sur toutes les pages », décision de Jordan du 28/10/2026) ──
+// Arguments du catalogue unique src/lib/argumentsApp.json. Chaque lien vers l'app est balisé : « encart » = thème et
+// position (enregistré avec la page_view de l'app, src/lib/mesure.js), et l'inscription est attribuée à la source
+// « conseils » et à l'article d'origine dans Pilotage → Activité.
+const aujourdhui = new Date().toISOString().slice(0, 10);
+export const THEMES = ARGUMENTS.themes.filter(t => !t.fin || t.fin >= aujourdhui);
+const THEME = Object.fromEntries(ARGUMENTS.themes.map(t => [t.id, t]));
+export const IDS_APP = new Set(Object.keys(THEME));
+const lien = (cible, encart, campagne) =>
+  `${cible}?encart=${encart}&amp;utm_source=conseils&amp;utm_medium=article&amp;utm_campaign=${campagne}`;
+const PLAY = "https://play.google.com/store/apps/details?id=fr.mongazon360.app";
 
 // Mesure d'audience des pages Conseils (même logique que l'app, sans cookie ni donnée personnelle) :
 // 1. origine du visiteur conservée jusqu'à l'inscription : même clé sessionStorage que useUTMCapture
@@ -39,7 +65,9 @@ const essai = (campagne) => `/essai?utm_source=conseils&amp;utm_medium=article&a
 // 2. page lue comptée dans funnel_events (« conseils_vue », 1 par page et par onglet) avec l'identifiant de visite de l'app
 //    (sessionStorage « mg360_visite ») : relie la lecture d'un article à l'entrée dans l'app au cours de la même visite ;
 // 3. visite comptée dans site_visits (1 par appareil et par jour, clé partagée avec l'app, comptes
-//    connectés et robots exclus) si l'URL et la clé publique Supabase sont fournies au build.
+//    connectés et robots exclus) si l'URL et la clé publique Supabase sont fournies au build ;
+// 4. clic vers Amazon de l'encadré « Le matériel conseillé » compté dans funnel_events (« amazon_clic », avec l'article
+//    et la catégorie du catalogue), mêmes exclusions.
 // Valeurs nettoyées : un saut de ligne en fin de variable Vercel (constaté le 3/11/2026 sur les préversions) casserait les
 // scripts des pages
 const SUPABASE_URL  = (process.env.VITE_SUPABASE_URL || "").trim();
@@ -58,6 +86,7 @@ var H={apikey:A,Authorization:"Bearer "+A,"Content-Type":"application/json",Pref
 try{vis=sessionStorage.getItem("mg360_visite");if(!vis){vis=window.crypto&&crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+"-"+Math.random().toString(36).slice(2);sessionStorage.setItem("mg360_visite",vis);}
 if(!sessionStorage.getItem(L)){sessionStorage.setItem(L,"1");
 fetch(U+"/rest/v1/funnel_events",{method:"POST",headers:H,body:JSON.stringify({step:"conseils_vue",meta:{page:"${campagne}",source:String(cap.source).slice(0,40)},path:location.pathname,visite:vis})}).catch(function(){});}}catch(e){}
+document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a[data-amazon]");if(a)fetch(U+"/rest/v1/funnel_events",{method:"POST",keepalive:true,headers:H,body:JSON.stringify({step:"amazon_clic",meta:{origine:"article",page:"${campagne}",produit:a.getAttribute("data-amazon"),source:String(cap.source).slice(0,40)},path:location.pathname,visite:vis})}).catch(function(){});});
 if(localStorage.getItem(V))return;
 localStorage.setItem(V,"1");
 var ua=navigator.userAgent||"",ios=/iPhone|iPad|iPod/i.test(ua)||(/Macintosh/i.test(ua)&&navigator.maxTouchPoints>1);
@@ -71,8 +100,11 @@ const frDate = (d) => new Date(d).toLocaleDateString("fr-FR", { day: "numeric", 
 // Image de partage : photo de l'article (1200 × 800) si elle existe, sinon l'image générale du site
 const IMAGE_SITE = { src: "/og-image.jpg", largeur: 1200, hauteur: 630 };
 
-// style : CSS propre à la page. pro : page destinée aux professionnels, bouton d'en-tête vers son formulaire (#demande)
-// et sans la mesure d'audience de l'app (site_visits, conseils_vue), pour ne pas fausser la mesure de la refonte.
+// Bouton Google Play montré seulement dans le navigateur d'un téléphone Android (pas dans l'app installée)
+const SCRIPT_PLAY = `<script>(function(){var u=navigator.userAgent||"";if(/Android/i.test(u)&&!matchMedia("(display-mode: standalone)").matches&&(document.referrer||"").indexOf("android-app://")!==0)document.querySelectorAll(".play").forEach(function(e){e.hidden=false;});})();</script>`;
+
+// style : CSS propre à la page. pro : page destinée aux professionnels : bouton d'en-tête vers son formulaire (#demande),
+// sans bouton de l'app ni mesure d'audience de l'app (site_visits, conseils_vue), pour ne pas fausser la mesure de la refonte.
 function page({ title, description, path, ogType, jsonLd, body, campagne, image = IMAGE_SITE, style = "", pro = false }) {
   const url = SITE + path;
   return `<!DOCTYPE html>
@@ -105,37 +137,76 @@ function page({ title, description, path, ogType, jsonLd, body, campagne, image 
 </head>
 <body>
 <header><div class="bar"><a class="logo" href="/"><img src="/icon-192.png" alt="" />Mongazon360<sup>®</sup></a>${pro
-  ? `<a class="btn" href="#demande">Devenir partenaire</a>` : `<a class="btn" href="${essai(campagne)}">Diagnostic gratuit</a>`}</div></header>
+  ? `<a class="btn" href="#demande">Devenir partenaire</a>` : `<a class="btn" href="${lien("/essai", "diagnostic-entete", campagne)}">Diagnostic gratuit</a>`}</div></header>
 <main>${body}</main>
-${pro ? "" : suivi(campagne)}
+${pro ? "" : `<a class="btn fixe" href="${lien("/", "app-bouton", campagne)}">📱 Ouvrir l'app gratuite</a>
+${body.includes('class="btn play"') ? SCRIPT_PLAY : ""}${suivi(campagne)}`}
 <footer><div><a href="/conseils">Conseils gazon</a><a href="/a-propos">Qui sommes-nous</a><a href="/partenaires">Paysagistes, jardiniers : devenez partenaire</a><a href="/mentions-legales">Mentions légales</a><a href="/confidentialite">Confidentialité</a><a href="/cookies">Cookies</a><br />Suivez-nous : ${RESEAUX.map(r => `<a href="${esc(r.url)}" rel="me noopener" target="_blank">${r.nom}</a>`).join("")}<br />© ${new Date().getFullYear()} Mongazon360® — marque déposée et enregistrée à l'EUIPO</div></footer>
 </body>
 </html>
 `;
 }
 
-const cta = (campagne) => `<div class="cta"><strong>Votre gazon mérite un vrai diagnostic</strong>Prenez votre pelouse en photo : Bob repère mousse, carences et maladies, et vous dit quoi faire selon votre météo.<br /><a class="btn" href="${essai(campagne)}">Essayer gratuitement</a></div>`;
+// avantQuiz : encart caché pendant la ligue d'hiver, quand la question de la semaine prend sa place (scripts/quizArticle.mjs)
+const encart = (t, position, campagne, fin = false, avantQuiz = false) => `<aside class="app${fin ? " fin" : ""}"${avantQuiz ? " data-avant-quiz" : ""}><span class="ico" aria-hidden="true">${t.icone}</span><div>
+<strong>${typo(esc(t.titre))}</strong><p>${typo(esc(t.texte))}</p><a class="btn" href="${lien(t.cible, `${t.id}-${position}`, campagne)}">${esc(t.bouton)}</a>${
+  t.mention ? `<small><a href="${esc(t.mention.lien)}">${esc(t.mention.texte)}</a></small>` : ""}</div></aside>`;
+
+// Bandeau sous le titre d'un article, sans cacher le texte (version validée par Jordan le 31/10/2026)
+const bandeau = (campagne) => `<div class="bandeau"><p>📱 <b>Dans l'app, ces conseils deviennent votre plan</b> : quoi faire chez vous cette semaine, selon la météo de votre commune.</p><div><a class="btn" href="${lien("/", "app-bandeau", campagne)}">Ouvrir l'app</a><a class="btn play" hidden href="${PLAY}&amp;referrer=utm_source%3Dconseils%26utm_medium%3Dbandeau%26utm_campaign%3D${campagne}">Télécharger sur Google Play</a></div></div>`;
+
+// Grille « Ce que fait l'app » : rubrique Conseils et Qui sommes-nous
+const grille = (campagne) => `<section class="grille"><h2>Ce que fait l'app Mongazon360</h2><div>${THEMES.map(t =>
+  `<a class="item" href="${lien(t.cible, `${t.id}-grille`, campagne)}"><span aria-hidden="true">${t.icone}</span><b>${esc(t.court)}</b><small>${esc(t.ligne)}</small></a>`).join("")}</div>
+<a class="btn" href="${lien("/", "app-grille", campagne)}">Ouvrir l'app gratuite</a></section>`;
+
+// 3 thèmes par article : ceux de l'en-tête « app », puis 2 au plus trouvés par mots-clés (le sujet, adresse et titre,
+// compte triple), puis une rotation propre à l'article pour varier les arguments sur l'ensemble du site
+const sansAccent = (s) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+export function themesArticle(a) {
+  const choisis = (a.app || "").split(",").map(x => THEMES.find(t => t.id === x.trim())).filter(Boolean);
+  const sujet = sansAccent(`${a.slug} ${a.title}`), resume = sansAccent(a.description);
+  const score = (t) => t.motsCles.reduce((n, m) => n + (sujet.includes(sansAccent(m)) ? 3 : resume.includes(sansAccent(m)) ? 1 : 0), 0);
+  const trouves = THEMES.filter(t => !choisis.includes(t) && score(t) > 0).sort((x, y) => score(y) - score(x));
+  choisis.push(...trouves.slice(0, Math.max(0, 2 - choisis.length)));
+  const reste = THEMES.filter(t => !choisis.includes(t));
+  let h = [...a.slug].reduce((n, c) => (n * 31 + c.charCodeAt(0)) >>> 0, 7);
+  while (choisis.length < 3 && reste.length) { choisis.push(reste.splice(h % reste.length, 1)[0]); h = Math.floor(h / 7); }
+  // Le quiz d'hiver en 1er (place après « En bref ») : la question de la semaine le remplace pendant la ligue
+  const quiz = choisis.findIndex(t => t.id === "quiz");
+  if (quiz > 0) choisis.unshift(choisis.splice(quiz, 1)[0]);
+  return choisis.slice(0, 3);
+}
+
+// Places des encarts dans un article (pages web et lecture dans l'app) : après le bloc « En bref », puis avant
+// l'intertitre du milieu s'il y a au moins 2 intertitres ; le 3e encart suit l'article
+export function decouper(html) {
+  const bref = html.search(/<blockquote>\s*<p><strong>En bref<\/strong>/);
+  const apresBref = bref >= 0 ? html.indexOf("</blockquote>", bref) + "</blockquote>".length : html.indexOf("</p>") + 4;
+  const h2 = [...html.matchAll(/<h2[ >]/g)].map(m => m.index).filter(i => i > apresBref);
+  const centre = h2.length >= 2 ? h2[Math.floor(h2.length / 2)] : -1;
+  return centre > 0 ? [html.slice(0, apresBref), html.slice(apresBref, centre), html.slice(centre)]
+    : [html.slice(0, apresBref), html.slice(apresBref)];
+}
+
+function avecEncarts(html, [haut, milieu], campagne) {
+  const [debut, suite, fin] = decouper(html);
+  const quiz = blocQuiz({ lienJouer: lien("/signup", "quiz-question", campagne), url: SUPABASE_URL, anon: SUPABASE_ANON, page: campagne });
+  return debut + encart(haut, "haut", campagne, false, true) + quiz + suite + (fin === undefined ? "" : encart(milieu, "milieu", campagne) + fin);
+}
 
 // Encadré « Le matériel conseillé » : catégories du catalogue listées dans l'en-tête de l'article
-// (produits: engraisAutomne, antiMousse), 3 gammes par catégorie et 4 produits au plus, liens partenaires Amazon,
-// et renvoi vers le kit de saison de l'app
+// (produits: engraisAutomne, antiMousse), 3 gammes par catégorie et 4 produits au plus, liens partenaires Amazon
+// (« Voir sur Amazon › » sur chaque ligne, constat de Jordan du 17/11/2026 : sans lui, les lignes ne ressemblaient pas à
+// des liens), et renvoi vers le kit de saison de l'app
 function encadreProduits(cles, produits, campagne) {
-  const lignes = cles.flatMap(cle => Object.values(produits[cle]?.tiers || {}).slice(0, 3)).slice(0, 4);
+  const lignes = cles.flatMap(cle => Object.values(produits[cle]?.tiers || {}).slice(0, 3).map(p => ({ ...p, cle }))).slice(0, 4);
   if (!lignes.length) return "";
   const prix = (n) => `${Number(n).toFixed(2).replace(".", ",")} €`;
   return `<div class="shop"><h2>🛒 Le matériel conseillé</h2>${lignes.map(p =>
-    `<a href="${esc(p.url)}" target="_blank" rel="sponsored noopener noreferrer"><span>${esc(p.label)} — ${esc(p.marque)}</span><span>~${prix(p.prix)}</span></a>`).join("")}
-<p class="kit">📱 Dans l'app Mongazon360 : le <b>kit de saison</b> calculé pour votre surface et votre budget. <a href="${essai(campagne)}">Essayer l'app gratuitement</a></p>
+    `<a href="${esc(p.url)}" target="_blank" rel="sponsored noopener noreferrer" data-amazon="${esc(p.cle)}"><span>${esc(p.label)} — ${esc(p.marque)}</span><span>~${prix(p.prix)}<b>Voir sur Amazon ›</b></span></a>`).join("")}
+<p class="kit">📱 Dans l'app Mongazon360 : le <b>kit de saison</b> calculé pour votre surface et votre budget. <a href="${lien(THEME.achats.cible, "achats-produits", campagne)}">Essayer l'app gratuitement</a></p>
 <small>Liens partenaires Amazon : en tant que Partenaire Amazon, Mongazon360® perçoit une commission sur les achats éligibles, sans surcoût pour vous. Prix indicatifs.</small></div>`;
-}
-
-// La question de la semaine du quiz d'hiver juste après « En bref » (scripts/quizArticle.mjs), avec le lien de création
-// de compte balisé encart=quiz-question
-function avecQuiz(html, campagne) {
-  const bref = html.search(/<blockquote>\s*<p><strong>En bref<\/strong>/);
-  const apres = bref >= 0 ? html.indexOf("</blockquote>", bref) + "</blockquote>".length : html.indexOf("</p>") + 4;
-  const jouer = `/signup?encart=quiz-question&amp;utm_source=conseils&amp;utm_medium=article&amp;utm_campaign=${campagne}`;
-  return html.slice(0, apres) + blocQuiz({ lienJouer: jouer, url: SUPABASE_URL, anon: SUPABASE_ANON, page: campagne }) + html.slice(apres);
 }
 
 // Photo d'article (en-tête « image » et « image_alt ») : public/images/conseils, 1200 × 800 px, sans métadonnées
@@ -153,13 +224,14 @@ export function articlePage(a, autres, produits = {}) {
       { "@type": "ListItem", position: 2, name: "Conseils gazon", item: `${SITE}/conseils` },
       { "@type": "ListItem", position: 3, name: a.title, item: `${SITE}${path}` } ] } ] };
   const lies = autres.length ? `<h2>À lire aussi</h2><div class="cards">${autres.map(o =>
-    `<a class="card" href="/conseils/${o.slug}"><b>${esc(o.title)}</b><span>${esc(o.description)}</span></a>`).join("")}</div>` : "";
+    `<a class="card" href="/conseils/${o.slug}"><b>${typo(esc(o.title))}</b><span>${typo(esc(o.description))}</span></a>`).join("")}</div>` : "";
+  const themes = themesArticle(a);
   const body = `<div class="crumb"><a href="/">Accueil</a> › <a href="/conseils">Conseils gazon</a></div>
-<article><h1>${esc(a.title)}</h1><div class="meta">${SAISONS[a.saison] || ""} · Mis à jour le ${frDate(a.maj || a.date)} · Par <a href="/a-propos">l'équipe Mongazon360</a></div>
-${a.image ? `<img class="hero" src="${esc(a.image)}" alt="${esc(a.image_alt)}" width="1200" height="800" fetchpriority="high" />` : ""}
-${avecQuiz(a.html, a.slug)}</article>${encadreProduits(a.produits ? a.produits.split(",").map(x => x.trim()) : [], produits, a.slug)}${cta(a.slug)}${lies}`;
+<article><h1>${typo(esc(a.title))}</h1><div class="meta">${SAISONS[a.saison] || ""} · Mis à jour le ${frDate(a.maj || a.date)} · Par <a href="/a-propos">l'équipe Mongazon360</a></div>
+${bandeau(a.slug)}${a.image ? `<img class="hero" src="${esc(a.image)}" alt="${esc(a.image_alt)}" width="1200" height="800" fetchpriority="high" />` : ""}
+${avecEncarts(a.html, themes, a.slug)}</article>${encartPro(a.slug)}${encadreProduits(a.produits ? a.produits.split(",").map(x => x.trim()) : [], produits, a.slug)}${encart(themes[2], "fin", a.slug, true)}${lies}`;
   return page({ title: `${a.title} — Mongazon360®`, description: a.description, path, ogType: "article", jsonLd, body, campagne: a.slug, image,
-    style: CSS_QUIZ });
+    style: CSS_QUIZ + (TROUVER_UN_PRO.articles[a.slug] ? CSS_PRO : "") });
 }
 
 // Page « Qui sommes-nous » (content/a-propos.md) : qui édite Mongazon360 et d'où viennent ses conseils
@@ -167,7 +239,7 @@ export function aProposPage(html) {
   const jsonLd = { "@context": "https://schema.org", "@type": "AboutPage", name: "Qui sommes-nous", url: `${SITE}/a-propos`,
     inLanguage: "fr", about: { "@type": "Organization", name: "Mongazon360", url: SITE, email: "contact@mongazon360.fr",
       logo: `${SITE}/icon-512x512.png`, founder: { "@type": "Person", name: "Jordan" }, sameAs: RESEAUX.map(r => r.url) } };
-  const body = `<div class="crumb"><a href="/">Accueil</a> › Qui sommes-nous</div><article>${html}</article>${cta("a-propos")}`;
+  const body = `<div class="crumb"><a href="/">Accueil</a> › Qui sommes-nous</div><article>${html}</article>${grille("a-propos")}`;
   return page({ title: "Qui sommes-nous ? — Mongazon360®",
     description: "Mongazon360, application française d'entretien du gazon : qui l'édite, comment sont construits ses conseils et sa base agronomique, comment nous contacter.",
     path: "/a-propos", ogType: "website", jsonLd, body, campagne: "a-propos" });
@@ -178,9 +250,9 @@ export function indexPage(articles) {
   const groupes = Object.entries(SAISONS).map(([k, label]) => {
     const liste = articles.filter(a => a.saison === k);
     return liste.length ? `<div class="season">${label}</div><div class="cards">${liste.map(a =>
-      `<a class="card" href="/conseils/${a.slug}"><b>${esc(a.title)}</b><span>${esc(a.description)}</span></a>`).join("")}</div>` : "";
+      `<a class="card" href="/conseils/${a.slug}"><b>${typo(esc(a.title))}</b><span>${typo(esc(a.description))}</span></a>`).join("")}</div>` : "";
   }).join("");
-  const body = `<h1>Conseils gazon</h1><p>Tonte, arrosage, semis, mousse, engrais : les bons gestes au bon moment, expliqués simplement par l'équipe Mongazon360.</p>${groupes}${cta("rubrique")}`;
+  const body = `<h1>Conseils gazon</h1><p>Tonte, arrosage, semis, mousse, engrais : les bons gestes au bon moment, expliqués simplement par l'équipe Mongazon360.</p>${groupes}${grille("rubrique")}`;
   return page({ title: "Conseils gazon : entretien de la pelouse saison par saison — Mongazon360®",
     description: "Guides pratiques pour une belle pelouse toute l'année : regarnissage, scarification, mousse, engrais, tonte et arrosage, saison par saison.",
     path: "/conseils", ogType: "website", jsonLd, body, campagne: "rubrique" });
@@ -262,4 +334,45 @@ ${champ("telephone", "Téléphone *", 'type="tel" required minlength="10" maxlen
 ${scriptPartenaires()}`;
   return page({ title: "Paysagistes, jardiniers : recevez des demandes de travaux — Mongazon360®", description,
     path: "/partenaires", ogType: "website", jsonLd, body, style: CSS_PARTENAIRES, pro: true });
+}
+
+// ── « Besoin d'un pro ? » : liste d'attente de « Trouver un pro » (go de Jordan du 31/10/2026) ─────────────────────────
+// Dans les articles listés dans src/lib/trouverUnPro.json (travaux de l'article cochés) : email, code postal et travaux
+// → /api/send?type=pro-attente (api/trouverUnPro.cjs) ; source = origine de la visite, campagne = utm_campaign.
+const TROUVER_UN_PRO = JSON.parse(readFileSync(new URL("../src/lib/trouverUnPro.json", import.meta.url), "utf8"));
+const CSS_PRO = `
+[hidden]{display:none!important}.pro{margin:28px 0;padding:18px;border-radius:16px;background:#fffdf5;border:1px solid #ecd9a8;border-left:5px solid #f9a825}
+.pro strong{display:block;font-size:18px;line-height:1.35;color:#5d4300}.pro p{margin:6px 0 12px;font-size:15px;color:#4a4636}
+.pro-champs{display:grid;grid-template-columns:2fr 1fr;gap:10px}.pro-champs input{font:inherit;font-size:16px;padding:10px 12px;border:1px solid #d9cfa8;border-radius:10px;width:100%;background:#fff;color:#1f2d24}
+.pro-travaux{display:flex;flex-wrap:wrap;gap:6px 18px;margin:10px 0 12px}.pro-travaux label{display:flex;align-items:center;gap:7px;font-size:14px;color:#3b3a2e}
+.pro-travaux input{width:18px;height:18px;margin:0}.pro .piege{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.pro button{border:0;cursor:pointer;font-size:15px;padding:11px 18px}.pro button:disabled{opacity:.6}.pro .pro-etat{margin:8px 0 0;font-size:14px;color:#b3261e}
+.pro .pro-etat:empty{display:none}.pro small{display:block;margin-top:10px;font-size:12px;line-height:1.5;color:#6b6754}.pro small a{color:#6b6754}
+.pro .pro-merci{margin:8px 0 0;font-weight:700;color:#2e7d32}@media(max-width:520px){.pro-champs{grid-template-columns:1fr}}`;
+
+function encartPro(slug) {
+  const travaux = TROUVER_UN_PRO.articles[slug];
+  if (!travaux) return "";
+  return `<aside class="pro" data-page="conseils/${slug}"><strong>🧑‍🌾 Pas le temps ou pas l'envie de le faire vous-même ?</strong>
+<p>« Trouver un pro » ouvre ${TROUVER_UN_PRO.ouverture} dans Mongazon360 : un paysagiste ou un jardinier de votre secteur pour ces travaux. Laissez votre email, on vous prévient à l'ouverture.</p>
+<form><div class="pro-champs"><input type="email" name="email" placeholder="Votre email" aria-label="Votre email" required maxlength="120" autocomplete="email" />
+<input name="code_postal" placeholder="Code postal" aria-label="Code postal" required inputmode="numeric" maxlength="5" pattern="[0-9]{5}" autocomplete="postal-code" /></div>
+<div class="pro-travaux">${travaux.map(t => `<label><input type="checkbox" name="travaux" value="${t}" checked />${esc(SERVICES_PARTENAIRES[t])}</label>`).join("")}</div>
+<label class="piege" aria-hidden="true">Ne pas remplir<input name="piege" tabindex="-1" autocomplete="off" /></label>
+<button class="btn" type="submit">Être prévenu</button><p class="pro-etat" role="status" aria-live="polite"></p>
+<small>Une confirmation maintenant, puis un email à l'ouverture, rien d'autre. Vos coordonnées ne sont jamais transmises à un pro sans votre demande. <a href="/confidentialite">Confidentialité</a></small></form>
+<p class="pro-merci" hidden>✅ C'est noté : on vous prévient dès l'ouverture de « Trouver un pro ».</p></aside>
+<script>(function(){
+var a=document.querySelector(".pro"),f=a.querySelector("form"),etat=a.querySelector(".pro-etat"),b=f.querySelector("button"),ouvert=Date.now();
+var p=new URLSearchParams(location.search),cap=null;try{cap=JSON.parse(sessionStorage.getItem("mg360_utm_capture"));}catch(e){}
+f.addEventListener("submit",function(ev){ev.preventDefault();var d=new FormData(f);
+var corps={email:String(d.get("email")||"").trim(),code_postal:String(d.get("code_postal")||"").trim(),travaux:d.getAll("travaux"),piege:String(d.get("piege")||""),
+duree:Date.now()-ouvert,source:String((cap&&cap.source)||p.get("utm_source")||"direct").slice(0,40),page:a.getAttribute("data-page"),campagne:p.get("utm_campaign")||null};
+if(!corps.travaux.length){etat.textContent="Cochez au moins un type de travaux.";return;}
+b.disabled=true;etat.textContent="Envoi en cours…";
+fetch("/api/send?type=pro-attente",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(corps)})
+.then(function(r){return r.json().catch(function(){return {};}).then(function(j){if(!r.ok||!j.ok)throw new Error(j.error||"");});})
+.then(function(){f.hidden=true;a.querySelector(".pro-merci").hidden=false;})
+.catch(function(e){b.disabled=false;etat.textContent=e.message||"L'inscription n'a pas abouti. Réessayez dans un instant.";});
+});})();</script>`;
 }

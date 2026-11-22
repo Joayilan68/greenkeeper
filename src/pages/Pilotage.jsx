@@ -7,6 +7,7 @@ import { card, cardTitle, btn, scroll, header, appShell } from "../lib/styles";
 import RoadmapTab from "../components/RoadmapTab";
 import PremiumOffertsCard from "../components/PremiumOffertsCard";
 import PublicationsCard from "../components/PublicationsCard";
+import TrouverUnProCard from "../components/TrouverUnProCard";
 import { CHARGES_ACTIVES, CHARGES_PREVUES, STRIPE_FEES, URSSAF_RATE, montant } from "../lib/charges";
 import LigueHiverCard from "../components/LigueHiverCard";
 import Agrandir from "../components/Agrandir";
@@ -889,6 +890,7 @@ export default function Pilotage() {
             {loadingUsers && (
               <div style={{ textAlign:"center", color:"#81c784", fontSize:12, padding:16 }}>🔄 Chargement données Clerk...</div>
             )}
+            <TrouverUnProCard getToken={getToken} />
           </>
         )}
 

@@ -10,7 +10,8 @@
   "dotation": "1 an d'abonnement Premium",
   "partage": {
     "texte": "❄️ Le quiz gazon de la semaine : 3 questions pour tester tes connaissances, sur Mongazon360 (gratuit).",
-    "url": "https://mongazon360.fr/?utm_source=partage&utm_medium=quiz&utm_campaign=ligue-hiver"
+    "url": "https://mongazon360.fr/?utm_source=partage&utm_medium=quiz&utm_campaign=ligue-hiver",
+    "resultat": "🧠 J'ai eu {bonnes}/{total} au quiz gazon de la semaine sur Mongazon360. Et toi ? C'est gratuit : {total} questions en {duree}."
   },
   "programme": [
     {

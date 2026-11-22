@@ -1,5 +1,5 @@
 // src/App.jsx
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { SignedIn, SignedOut, RedirectToSignIn, useUser, useAuth } from "@clerk/clerk-react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Analytics } from "@vercel/analytics/react";
@@ -24,6 +24,8 @@ import Printemps from "./pages/Printemps";
 import Equipements from "./pages/Equipements";
 import PlanAnnuel from "./pages/PlanAnnuel";
 import { MentionsLegales, Confidentialite, CGU, CGV, Cookies } from "./pages/Legal";
+// Conseils en mode app : chargés à la demande (pas de poids en plus au premier chargement)
+const ConseilsApp = lazy(() => import("./pages/ConseilsApp"));
 import Layout from "./components/Layout";
 import { WeatherProvider } from "./lib/WeatherContext";
 import { usePilotage }     from "./lib/usePilotage";
@@ -35,9 +37,6 @@ import { useMesureUsage }  from "./lib/mesure";          // mesure anonyme des p
 import { deviceInfo, isRobot } from "./lib/platform";
 import { usePageMeta }     from "./lib/usePageMeta";      // titre / description / canonique par page
 import { isAnonPending, getAnonIdIfAny, setAnonPending } from "./lib/anonId"; // ✅ rattachement diagnostic anonyme
-import CookieBanner        from "./components/CookieBanner"; // ✅ consentement cookies (RGPD)
-import { getCookieConsent } from "./lib/cookieConsent";
-import { loadMetaPixel, pixelTrack } from "./lib/metaPixel"; // ✅ Meta Pixel (après consentement)
 
 // ── Emails admin — accès permanent garanti ────────────────────────────────────
 const ADMIN_EMAILS = ["mongazon360@gmail.com", "jordankrebs1@gmail.com"];
@@ -95,8 +94,6 @@ function AppWithWeather({ children }) {
   useUTMCapture();   // capte les UTM dès l'arrivée sur le site
   useUTMInjection(); // ✅ FIX 01/06/2026 — injecte les UTM dans Clerk unsafeMetadata (first-touch)
 
-  // Meta Pixel : charger dès le démarrage SI le visiteur a déjà accepté les cookies.
-  useEffect(() => { if (getCookieConsent() === "granted") loadMetaPixel(); }, []);
 
   // Compteur de visites = haut d'entonnoir : UNIQUEMENT les visiteurs NON connectés
   // (les prospects qui arrivent sur la landing). Les connectés sont déjà comptés
@@ -121,7 +118,6 @@ function AppWithWeather({ children }) {
       const isFresh = createdMs && (Date.now() - createdMs) < 10 * 60 * 1000;
       if (isFresh) {
         trackFunnel("signup_completed");
-        pixelTrack("CompleteRegistration"); // remonte l'inscription à Meta (si pixel chargé)
         localStorage.setItem(key, "1");
       }
     } catch { /* non bloquant */ }
@@ -238,6 +234,8 @@ function AppRoutes() {
       <Route path="/pilotage"          element={<AdminRoute><Layout><Pilotage /></Layout></AdminRoute>} />
 
       <Route path="/"                  element={<><SignedIn><Layout><Dashboard /></Layout></SignedIn><SignedOut><AccueilVisiteur /></SignedOut></>} />
+      <Route path="/lire"              element={<Suspense fallback={null}><SignedIn><Layout><ConseilsApp /></Layout></SignedIn><SignedOut><ConseilsApp visiteur /></SignedOut></Suspense>} />
+      <Route path="/lire/:slug"        element={<Suspense fallback={null}><SignedIn><Layout><ConseilsApp /></Layout></SignedIn><SignedOut><ConseilsApp visiteur /></SignedOut></Suspense>} />
       <Route path="/diagnostic"        element={<PrivateRoute><Layout><Diagnostic /></Layout></PrivateRoute>} />
       <Route path="/my-lawn"           element={<PrivateRoute><Layout><MyLawn /></Layout></PrivateRoute>} />
       <Route path="/parcours"          element={<PrivateRoute><Layout><Parcours /></Layout></PrivateRoute>} />
@@ -260,7 +258,6 @@ export default function App() {
       <AppWithWeather>
         <AppRoutes />
       </AppWithWeather>
-      <CookieBanner />
       <Analytics />
     </BrowserRouter>
   );

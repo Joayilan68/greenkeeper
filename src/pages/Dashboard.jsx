@@ -12,6 +12,7 @@ import { isIOS, isStandalone, isAndroidTWA } from "../lib/platform";
 import { OFFRE, offreEnCours } from "../lib/offreSaison";
 import { useConsents } from "../lib/useConsents";
 import { useReminders } from "../lib/useReminders";
+import ConseilSemaine from "../components/ConseilSemaine";
 import AlertBanner from "../components/AlertBanner";
 import OnboardingModal from "../components/OnboardingModal";
 import GreenScoreModal from "../components/GreenScoreModal";
@@ -158,8 +159,8 @@ export default function Dashboard() {
 
       <div style={scroll}>
 
-        {/* ── NOUVEAUTÉS DE LA REFONTE (comptes créés avant la nouvelle version) ── */}
-        <CarteNouveautes isPaid={isPaid} />
+        {/* ── NOUVEAUTÉS DU 22/11 (comptes créés avant cette mise en prod) ── */}
+        <CarteNouveautes />
 
         {/* ── NOTIF PUSH ────────────────────────────────────────────────────── */}
         {isSupported && showPushBanner && (
@@ -414,15 +415,8 @@ export default function Dashboard() {
           </div>
         ) : !subLoading && !isAndroidTWA() && <AvecPremium tuile="accueil-avec-premium" />}
 
-        {/* ── CONSEILS GAZON (rubrique statique /conseils, hors de l'app) ───── */}
-        <a data-tuile="accueil-conseils" href="/conseils" style={{ ...card(), display:"flex", alignItems:"center", gap:12, textDecoration:"none", color:"inherit" }}>
-          <span style={{ fontSize:24 }}>📚</span>
-          <div style={{ flex:1 }}>
-            <div style={{ fontSize:13, fontWeight:800, color:"#F1F8F2" }}>Conseils gazon</div>
-            <div style={{ fontSize:12, color:"#81c784", lineHeight:1.5 }}>Nos guides saison par saison : tonte, arrosage, mousse, semis…</div>
-          </div>
-          <span style={{ color:"#81c784", fontSize:18 }}>›</span>
-        </a>
+        {/* ── LE CONSEIL DE LA SEMAINE et tous les conseils, lus dans l'app (/lire) ─── */}
+        <ConseilSemaine />
 
         {/* ── LIENS LÉGAUX ──────────────────────────────────────────────────── */}
         <div style={{ display:"flex", justifyContent:"center", flexWrap:"wrap", gap:12, padding:"8px 0" }}>
