@@ -1355,3 +1355,7 @@ du premier onglet).
   effacées par Claude, comme les traces de l'essai sans compte ; les 3 partages de test du quiz (10 h 25-10 h 26) sont
   retirés des statistiques ; 26 tables vérifiées : plus aucune trace du compte. La suppression depuis Paramètres (recette
   n° 94) reste à tester.
+- 22/11/2026 — Go de Jordan : section « Supprimer le compte » du profil Clerk (photo de l'accueil → « Gérer le compte »)
+  masquée en prod ; la suppression d'un compte ne se fait plus que depuis Paramètres, qui efface aussi les données de la
+  base et les photos (règle ajoutée dans CLAUDE.md). Le compte de test de l'achat avait été supprimé dans le tableau de bord
+  de Clerk (réponse de Jordan) : ses données restées ont été effacées à la main.

@@ -48,6 +48,10 @@
   solde « Points plus anciens ». Toute règle changée = migration sur les deux projets. Copie de la table d'avant le passage :
   `greenpoints_sauvegarde_20261110` (PROD, serveur uniquement), à supprimer le 24/11/2026. Journal compris dans l'export
   et la suppression des données (`api/rgpd-data.js`).
+- Suppression d'un compte : seulement depuis Paramètres → « Supprimer définitivement mon compte » (`api/rgpd-data.js` :
+  photos, base, compte Clerk). Section « Supprimer le compte » du profil Clerk masquée (`APPARENCE_CLERK`, `src/main.jsx`,
+  go de Jordan du 22/11/2026) : elle effaçait le compte sans ses données. Un compte supprimé dans le tableau de bord de
+  Clerk garde ses données dans la base : les effacer ensuite (toutes les tables qui portent son identifiant).
 
 ## Textes légaux
 - Décision de Jordan du 10/11/2026 : plus de relecture par un avocat ; les textes (`src/pages/Legal.jsx` : mentions légales,
