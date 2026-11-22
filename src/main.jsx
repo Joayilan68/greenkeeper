@@ -6,6 +6,9 @@ import { sendBugAlert } from "./lib/usePilotage";
 import "./index.css";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+// Suppression du compte : seulement depuis Paramètres, qui efface aussi les données de la base (api/rgpd-data.js) ;
+// la section « Supprimer le compte » du profil Clerk (menu de la photo, « Gérer le compte ») est masquée.
+const APPARENCE_CLERK = { elements: { profileSection__danger: { display: "none" } } };
 
 // ── Guard global — Notification API ──────────────────────────────────────────
 // Safari iOS, WebViews Messenger/Facebook/Instagram/TikTok/WhatsApp
@@ -212,7 +215,7 @@ if ("serviceWorker" in navigator) {
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <ErrorBoundary>
-      <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/login">
+      <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/login" appearance={APPARENCE_CLERK}>
         <ErrorBoundary>
           <App />
         </ErrorBoundary>
