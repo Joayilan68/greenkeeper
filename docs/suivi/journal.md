@@ -1359,3 +1359,8 @@ du premier onglet).
   masquée en prod ; la suppression d'un compte ne se fait plus que depuis Paramètres, qui efface aussi les données de la
   base et les photos (règle ajoutée dans CLAUDE.md). Le compte de test de l'achat avait été supprimé dans le tableau de bord
   de Clerk (réponse de Jordan) : ses données restées ont été effacées à la main.
+- 22/11/2026 — Décisions de Jordan sur le bilan de l'inscrit du 23/10 : inscriptions comptées à la date de création du compte
+  (Pilotage → Parcours d'acquisition en prod, mesure invisible, et point du lundi) : le compte revenu le 27/10, créé en mai,
+  n'est plus une inscription ; repère « avant » (2/10 → 31/10) : 5 comptes créés, 1,2 par semaine au lieu de 1,4. Comptes
+  créés les 30 et 31/10 (absents de Clerk, données restées dans la base) : Jordan ne se souvient pas si c'étaient ses tests,
+  rien n'y est touché.
