@@ -372,7 +372,7 @@ async function handleUsers(req, res) {
     const acquisition = acquisitionStats(sourceVisits, allUsers);
     const relances = statsRelances(allUsers);
     const retention = presence && retentionCohortes(allUsers, presence);
-    const parcours = parcoursAcquisition(parcoursBrut, presence, new Set(allUsersRaw.filter(u => !compteExclu(u)).map(u => u.id)));
+    const parcours = parcoursAcquisition(parcoursBrut, new Map(allUsersRaw.filter(u => !compteExclu(u)).map(u => [u.id, u.created_at])));
 
     res.json({
       success: true,
@@ -680,16 +680,17 @@ async function fetchParcours() {
 
 // Parcours d'acquisition des 30 derniers jours (aujourd'hui compris, heure de Paris), comparé aux 30 jours d'avant, avec les
 // définitions du point KPI du lundi (CLAUDE.md « Mesure de la refonte ») : visites des visiteurs non connectés (1 par appareil
-// et par jour) → entrées dans l'app (essai du diagnostic, création de compte, démo avant le 1/11) → inscriptions (premier jour
-// d'un compte dans daily_active_users, admins et comptes de test exclus) → abonnements Premium payants (premium_souscrit).
+// et par jour) → entrées dans l'app (essai du diagnostic, création de compte, démo avant le 1/11) → inscriptions (date de
+// création du compte Clerk, admins et comptes de test exclus ; un ancien compte qui revient n'en est pas une) → abonnements
+// Premium payants (premium_souscrit).
 // Une mesure née pendant la période précédente n'a pas de comparaison (« avant » vide).
 const ENTREES_APP = ["/essai", "/signup", "/demo"];
 const MESURE_DEPUIS = { entrees: "2026-10-09", niveau: "2026-10-09", premium: "2026-10-31", articles: "2026-10-31", nouveautes: "2026-11-22" };
 // Mesures de la mise en prod du 22/11 : photo d'exemple et ce qu'elle donne, partages en image, clics vers Amazon
 const ETAPES_2211 = ["anon_diag_exemple", "anon_diag_started", "signup_from_teaser", "partage_score", "partage_quiz", "amazon_clic"];
 const plusFrequents = (o, n = 6) => Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, n);
-function parcoursAcquisition(brut, presence, comptes) {
-  if (!brut || !presence) return null;
+function parcoursAcquisition(brut, comptes) {
+  if (!brut) return null;
   const jour = (t) => new Date(t).toLocaleDateString("fr-CA", { timeZone: "Europe/Paris" });
   const debut = jour(Date.now() - 29 * 864e5), debutAvant = jour(Date.now() - 59 * 864e5);
   const periode = (j) => (j >= debut ? "n" : j >= debutAvant ? "avant" : null);
@@ -721,10 +722,8 @@ function parcoursAcquisition(brut, presence, comptes) {
   // Articles qui mènent à l'app : visite qui lit un article puis entre dans l'app (même identifiant de visite)
   const articles = { lecteurs: lectures.size, versApp: [...lectures].filter(([v, t]) => entreesParVisite.get(v) >= t).length, depuis: MESURE_DEPUIS.articles };
 
-  const premiers = new Map();
-  for (const r of presence) if (!premiers.has(r.user_id) || r.day < premiers.get(r.user_id)) premiers.set(r.user_id, r.day);
   const inscriptions = compteur(null);
-  for (const [id, j] of premiers) if (comptes.has(id)) ajouter(inscriptions, periode(j));
+  for (const creeLe of comptes.values()) ajouter(inscriptions, periode(jour(creeLe)));
 
   return { debut, visites: { ...visites, sources: Object.entries(visites.sources).sort((a, b) => b[1] - a[1]).slice(0, 5) },
     entrees, inscriptions, premium, niveau, articles, nouveautes: nouveautes2211(brut, periode, jour) };
