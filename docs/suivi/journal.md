@@ -1339,3 +1339,14 @@ du premier onglet).
   copie de la prod, en attente du go de Jordan (seule semaine concernée sur les 13). Compte de test de l'achat : traces de
   l'essai sans compte effacées (diagnostic d'essai, 2 compteurs anti-abus, 1 ligne du journal des erreurs) ; suppression du
   compte à faire par Jordan dans l'app (recette n° 94).
+- 22/11/2026 — Suivi de l'inscrit du 23/10 clos (bilan J+30) : un seul jour d'utilisation (23/10, ordinateur), 1 tonte
+  notée ; conseils, offres et notifications refusés ; email de bienvenue puis 6 emails de démarrage (24 au 29/10), 0 clic ;
+  rien depuis, comme prévu ; jamais revenu ; aucune erreur, données gardées. A marché : la mécanique (envois, arrêt, trace,
+  mesure des clics). N'a pas marché : la réactivation. Constats en comparant avec les comptes suivants (date de création
+  lue dans l'identifiant du compte) : le compte compté comme inscription le 27/10 a été créé en mai (ancien utilisateur
+  revenu les 27 et 28/10, pas une inscription ; 29 notifications depuis, aucune ouverte) ; les comptes créés les 30 et
+  31/10 n'ont plus reçu aucun message après l'email de bienvenue, sans erreur : très probablement supprimés dans Clerk hors
+  de l'app, leurs données restées dans la base. La référence « avant » des inscriptions (1,4 par semaine) compte ces 3
+  comptes. À décider par Jordan : inscriptions comptées à la date de création du compte (Pilotage et point du lundi) ;
+  sort des données restées (tests de Jordan ?) ; suppression du compte depuis le menu Clerk de l'accueil, qui n'efface pas
+  les données de la base.
