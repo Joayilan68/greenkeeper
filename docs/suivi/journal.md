@@ -1327,3 +1327,9 @@ du premier onglet).
   d'acquisition » de Pilotage complétée avec les mesures du 22/11. Recette : 18 lignes passées dans « Déjà en prod » (n° 80
   à 97 ; clics Amazon des articles et encadré Amazon OK) ; à faire par Jordan : achat réel de test puis résiliation depuis
   l'app (n° 88 à 90 et 92), clics Amazon de l'app et de Bob (n° 96), tests sur téléphone.
+- 22/11/2026 — Test de bout en bout de Jordan en prod (compte neuf à adresse « + », exclu des statistiques) : achat réel du
+  Premium annuel à 12,99 € (offre d'hiver), preuve des 2 cases vue dans les métadonnées Stripe de l'abonnement, emails
+  d'abonnement et de résiliation reçus, résiliation à la fin de la période payée, paiement remboursé puis abonnement annulé
+  tout de suite dans Stripe ; le compte affiche ensuite l'essai de 7 jours d'un compte neuf (gratuit le 29/11). Clics
+  Amazon de l'app et de Bob vus dans la base, email de la liste d'attente reçu sur contact@ ; aucune erreur. Le test
+  (visite, abonnement, clics) a été retiré des statistiques. Recette « Déjà en prod » : n° 88, 89, 90, 92 et 96 OK.
