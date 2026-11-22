@@ -1364,3 +1364,7 @@ du premier onglet).
   n'est plus une inscription ; repère « avant » (2/10 → 31/10) : 5 comptes créés, 1,2 par semaine au lieu de 1,4. Comptes
   créés les 30 et 31/10 (absents de Clerk, données restées dans la base) : Jordan ne se souvient pas si c'étaient ses tests,
   rien n'y est touché.
+- 22/11/2026 — Go de Jordan : thème de la semaine 4 de la ligue d'hiver renommé « Maladies du gazon » en prod (il était
+  « Fusariose », réponse de la question 1) : titre du quiz dans l'app, image de partage du résultat, notification du quiz
+  et question de la semaine des articles ; questions, réponses et résultats inchangés. La notification du quiz de ce matin
+  est partie avec l'ancien thème. Les 13 semaines vérifiées : seule la semaine 4 était concernée.
