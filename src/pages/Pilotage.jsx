@@ -782,8 +782,25 @@ export default function Pilotage() {
                     🧭 Vues de « Choisir son niveau » : {p.niveau.n} {p.niveau.avant != null && <span style={{ color:"#4a7c5c" }}>({p.niveau.avant} avant)</span>}<br />
                     💳 Abonnés Premium payants actifs aujourd'hui : {revenue?.totalPremium ?? "—"}{p.premium.offre > 0 && ` · ${p.premium.offre} pris avec l'offre de saison (30 j)`}
                   </div>
+                  {p.nouveautes && (() => {
+                    // Mesures de la mise en prod du 22/11 (30 derniers jours, sans comparaison : mesurées depuis le 22/11)
+                    const nv = p.nouveautes;
+                    const liste = (l) => l.map(([k, v]) => `${k} ${v}`).join(" · ") || "—";
+                    const parCle = (o) => Object.entries(o).map(([k, v]) => `${k} ${v}`).join(", ") || "0";
+                    return (
+                      <div style={{ fontSize:11.5, color:"#cfe8d4", lineHeight:1.7, marginTop:10, paddingTop:8, borderTop:"1px solid rgba(255,255,255,0.08)" }}>
+                        <div style={{ fontWeight:700, color:"#a5d6a7" }}>Depuis la mise en prod du 22/11</div>
+                        🧩 Clics des encarts de l'app : {nv.encarts.total} (pages web {nv.encarts.site} · lecture dans l'app {nv.encarts.app}) — thèmes : {liste(nv.encarts.themes)} — positions : {liste(nv.encarts.positions)}<br />
+                        📚 Articles lus dans l'app : {nv.lire.visiteurs} par des visiteurs · {nv.lire.comptes} par des comptes — {liste(nv.lire.articles)}<br />
+                        🧑‍🌾 Liste d'attente « Besoin d'un pro ? » : {nv.pro.total} — {liste(nv.pro.sources)}<br />
+                        👀 Photo d'exemple du diagnostic d'essai : {nv.exemple.vues} vue{nv.exemple.vues > 1 ? "s" : ""} · {nv.exemple.essais} essai{nv.exemple.essais > 1 ? "s" : ""} lancé{nv.exemple.essais > 1 ? "s" : ""} ensuite · {nv.exemple.comptes} création{nv.exemple.comptes > 1 ? "s" : ""} de compte depuis l'exemple<br />
+                        📤 Partages en image : score {parCle(nv.partages.score)} · quiz {parCle(nv.partages.quiz)}<br />
+                        🛒 Clics vers Amazon : {parCle(nv.amazon)}
+                      </div>
+                    );
+                  })()}
                   <div style={{ fontSize:10, color:"#4a7c5c", marginTop:8, lineHeight:1.5 }}>
-                    30 derniers jours (depuis le {new Date(p.debut).toLocaleDateString("fr-FR")}) comparés aux 30 jours d'avant, mêmes calculs que le point KPI du lundi. Visites : 1 par appareil et par jour, comptes connectés exclus. Entrées : ouverture de l'essai du diagnostic ou de la création de compte (démo avant le 1/11). Inscriptions : premier jour d'utilisation d'un compte, admins et comptes de test exclus. Abonnements : souscriptions payantes de la période (mesurées depuis le 31/10).
+                    30 derniers jours (depuis le {new Date(p.debut).toLocaleDateString("fr-FR")}) comparés aux 30 jours d'avant, mêmes calculs que le point KPI du lundi. Visites : 1 par appareil et par jour, comptes connectés exclus. Entrées : ouverture de l'essai du diagnostic ou de la création de compte (démo avant le 1/11). Inscriptions : premier jour d'utilisation d'un compte, admins et comptes de test exclus. Abonnements : souscriptions payantes de la période (mesurées depuis le 31/10). Mesures du 22/11 : encarts (lien balisé « encart » ouvert), articles lus dans l'app (/lire), liste d'attente (inscriptions par source), photo d'exemple (essai lancé ensuite dans la même visite), partages par canal (image ou texte), clics Amazon par origine (article, app, Bob).
                   </div>
                 </div>
               );
