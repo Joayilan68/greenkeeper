@@ -1312,3 +1312,18 @@ du premier onglet).
   articles du mois écrits en avance pour le printemps, publiés d'ici fin janvier : « Pelouse en mars » le 27/11, la
   fusariose le 4/12 (après la semaine du quiz), « Pelouse en avril » le 11/12, « Pelouse en mai » le 18/12 ; la suite sera
   proposée à Jordan. Indexation de « Dernière tonte » demandée par Jordan le jour même.
+- 22/11/2026 — Mise en prod du 22/11 (go de Jordan : « go sprint du 22.11 »), en ligne à 8 h 43 : l'app dans les articles
+  Conseils (bandeau, encarts, bouton fixe, grille « Ce que fait l'app ») et les conseils lus dans l'app (/lire, « Le conseil
+  de la semaine », « Lire l'article »), partages du score et du quiz en image, liste d'attente « Besoin d'un pro ? », photo
+  d'exemple du diagnostic d'essai, carte « Nouveautés », textes légaux datés du 22/11 (téléphone, résiliation sans préavis,
+  durées, assistant Claude) avec la preuve des 2 cases dans Stripe et les emails d'abonnement et de résiliation, Meta Pixel
+  et bandeau cookies retirés, clics Amazon comptés (articles, app, Bob) ; consignes de Bob complétées (conseils dans l'app,
+  partages, gestion de l'abonnement). Restent sur la STA pour décembre : parrainage et codes créateurs (et le code dans les
+  partages), diagnostic de suivi et niveau de confiance, stations Netatmo et Davis, robot Automower (hauteur), capteurs de
+  sol, notifications proposées après la première aide. Bancs au vert sur la version de prod ; en prod : 59 pages publiques
+  inchangées pour Google (titre, description, canonique, plan du site), noindex sur /lire seulement, aucune requête vers
+  Facebook, inscription de test à la liste d'attente et clic Amazon de test (effacés ensuite), aucune erreur. Tâche pg_cron
+  mongazon360-retention-anti-abus créée sur la PROD (contrôle de son premier passage le 23/11). Carte « Parcours
+  d'acquisition » de Pilotage complétée avec les mesures du 22/11. Recette : 18 lignes passées dans « Déjà en prod » (n° 80
+  à 97 ; clics Amazon des articles et encadré Amazon OK) ; à faire par Jordan : achat réel de test puis résiliation depuis
+  l'app (n° 88 à 90 et 92), clics Amazon de l'app et de Bob (n° 96), tests sur téléphone.

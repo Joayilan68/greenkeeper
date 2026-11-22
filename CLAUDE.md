@@ -70,14 +70,14 @@
   Même module, email de confirmation de la résiliation (article L. 215-1-1) : date de la demande, date de fin et effets ;
   envoyé quand le client programme la fin de son abonnement (portail Stripe réglé par Jordan le 16/11/2026 : annulation à
   la fin de la période de facturation), ou quand l'abonnement est arrêté tout de suite à sa demande.
-- Meta Pixel et bandeau cookies retirés (décision de Jordan du 16/11/2026, prod le 22/11) : le script était bloqué par la
+- Meta Pixel et bandeau cookies retirés (décision de Jordan du 16/11/2026, en prod depuis le 22/11/2026) : le script était bloqué par la
   politique de sécurité du site depuis le 26/09. À remettre, réparé (`Content-Security-Policy` de `vercel.json` :
   connect.facebook.net et www.facebook.com), quand une publicité Meta mènera vers l'app ; dernier état : commit `b3754e8`.
   La colonne `user_consents.cookies` garde les choix passés.
 - Registre des traitements (article 30 du RGPD) : fichier Excel de l'avocate, tenu hors du dépôt (données internes) ; V6 du
   16/11/2026 envoyée à Jordan (onglets « Registre RT » et « Suivi des modifications », ajouts notés « [MàJ JJ/MM/AAAA] »).
   À mettre à jour, avec la politique de confidentialité, à chaque nouveau traitement, sous-traitant, donnée ou durée.
-- Durées ajoutées le 16/11/2026 (décision de Jordan, alignées sur les règles existantes ; prod le 22/11) : diagnostic d'essai
+- Durées ajoutées le 16/11/2026 (décision de Jordan, alignées sur les règles existantes ; en prod depuis le 22/11/2026, tâche créée sur les deux projets) : diagnostic d'essai
   sans compte (photo, résultat, identifiant de l'appareil) 90 jours comme les photos, adresse IP de l'anti-abus 48 h (la
   règle ne compte que le jour même), compteurs d'utilisation (`rate_limits`) 1 an comme les journaux techniques et supprimés
   avec le compte (`api/rgpd-data.js`) ; suppression chaque nuit par la tâche pg_cron `mongazon360-retention-anti-abus`.
@@ -110,13 +110,13 @@
   Photo d'article facultative (en-tête `image` et `image_alt`, fichier dans `public/images/conseils`, 1200 × 800, sans
   métadonnées) ; « À lire aussi » = les articles les plus liés entre eux. Page « Qui sommes-nous » : `content/a-propos.md`,
   générée par `scripts/seo-build.mjs` (règle dans `vercel.json`).
-- L'app dans les pages Conseils (chantier du 22/11, décisions de Jordan des 28, 30 et 31/10/2026) : catalogue unique
+- L'app dans les pages Conseils (en prod depuis le 22/11/2026, décisions de Jordan des 28, 30 et 31/10/2026) : catalogue unique
   `src/lib/argumentsApp.json` (fonctions en prod seulement, textes en « vous », jamais de promesse fausse) ; dans chaque
   article, un bandeau sous le titre qui ne cache pas le texte, 3 encarts (après « En bref », au milieu, à la fin) et un
   bouton fixe sur téléphone ; grille « Ce que fait l'app » sur la rubrique et Qui sommes-nous ; thèmes choisis par
   l'en-tête `app` de l'article, sinon par mots-clés ; liens balisés `encart=<thème>-<position>`, enregistré avec la
   page_view de l'app (`src/lib/mesure.js`).
-- Conseils en mode app (chantier du 22/11, demandes de Jordan des 29 et 30/10/2026) : liste et lecture des articles dans
+- Conseils en mode app (en prod depuis le 22/11/2026, demandes de Jordan des 29 et 30/10/2026) : liste et lecture des articles dans
   l'app, avec la barre du bas (`/lire`, `/lire/<slug>` : `src/pages/ConseilsApp.jsx`, chargée à la demande) ; contenu écrit
   au build dans `dist/conseils-app` (`scripts/seo-build.mjs`) ; encarts : visiteur, les 3 du site aux mêmes places (textes du
   catalogue, lien `encart=lire-<thème>-<position>`) ; compte connecté, un seul, à la fin de l'article, qui ouvre la page
@@ -135,7 +135,7 @@
   profils déclarés à Google), même liste dans les données structurées de `index.html`.
 - Partages en image (décisions de Jordan du 31/10/2026) : Facebook et Instagram ne reprennent pas le texte, le message
   est copié pour être collé (score, et quiz depuis le correctif du 1/11 : copié avant l'ouverture du menu de partage) ; images 1080 × 1350 (`src/lib/cartesPartage.js`, fond commun : notre pelouse et Bob)
-  partagées par le menu de partage du téléphone quand il sait partager une image (prod le 22/11) : score santé (Mon
+  partagées par le menu de partage du téléphone quand il sait partager une image : score santé (Mon
   gazon → Partager : jauge, libellé, invitation au diagnostic gratuit) et résultat du quiz de la ligue d'hiver (bonnes
   réponses, jamais les réponses ; texte `partage.resultat` de `src/lib/ligueHiver.json`) ; chaque partage compté dans
   `funnel_events` (`partage_score` et `partage_quiz`, avec le canal).
@@ -217,7 +217,7 @@
   33 articles : catégories de l'en-tête `produits`, conformes à la base de connaissances, pas de produit qu'un article
   déconseille ; bouton « Voir sur Amazon › » sur chaque produit ; mention Partenaire Amazon, `rel="sponsored"` ; l'encart du kit
   de saison de l'app y porte 📋, 🛒 restant aux liens Amazon), boutons « Voir sur Amazon » de l'app, liens de Bob. Chaque clic
-  est compté (go de Jordan du 17/11/2026 : « on doit pouvoir tout mesurer » ; prod le 22/11) : étape `amazon_clic` de
+  est compté (go de Jordan du 17/11/2026 : « on doit pouvoir tout mesurer » ; en prod depuis le 22/11/2026) : étape `amazon_clic` de
   `funnel_events`, `meta.origine` « article » (article et catégorie : colonne « Clics Amazon » du tableau de pilotage),
   « app » (catégorie, écran) ou « bob ».
 - Articles (décision de Jordan du 17/11/2026, tâche « Articles d'hiver ») : le mardi, un article existant amélioré (pages vues
@@ -268,7 +268,7 @@
   Accueil visiteur (`src/pages/AccueilVisiteur.jsx`, remplace la présentation et la démo, `/demo` redirigée vers `/`) :
   météo du jour de sa commune, conseil de Bob du jour (`src/lib/conseilsBob.json`, partagé avec les notifications),
   diagnostic d'essai (avec une photo d'exemple : notre pelouse et sa vraie analyse par Bob, `src/lib/diagnosticExemple.json`,
-  sans diagnostic gratuit utilisé, étape `anon_diag_exemple` ; décision de Jordan du 7/11/2026, prod le 22/11), articles de saison ; barre visiteur Accueil, Conseils, Diagnostic, Compte (aussi sur l'essai du
+  sans diagnostic gratuit utilisé, étape `anon_diag_exemple` ; décision de Jordan du 7/11/2026, en prod depuis le 22/11/2026), articles de saison ; barre visiteur Accueil, Conseils, Diagnostic, Compte (aussi sur l'essai du
   diagnostic, la création de compte et la connexion).
 - Parrainage et codes créateurs : `api/parrainage.cjs` (tables `codes` et `parrainages`, serveur uniquement), conditions
   dans les CGV (article 7 ter) ; filleul 1 mois offert, parrain 1 mois par filleul actif (tâche du matin) ; codes
@@ -293,7 +293,7 @@
   (« répondre » va à l'entreprise) et accusé de réception (réponse promise sous 2 jours ouvrés, avec conditions et tarifs).
 - Modèle : aucune gratuité ; fournisseur de leads payant au contact, puis commission au contrat signé ; tarifs envoyés avec la
   réponse, jamais sur la page ni dans le dépôt public (grille validée par Jordan le 31/10/2026). « Trouver un pro » annoncé aux pros pour le printemps 2027, pour tous les comptes.
-- Liste d'attente « Trouver un pro » (go de Jordan du 31/10/2026, prod le 22/11 avec le chantier) : encart « Besoin d'un pro ? »
+- Liste d'attente « Trouver un pro » (go de Jordan du 31/10/2026, en prod depuis le 22/11/2026) : encart « Besoin d'un pro ? »
   dans les articles listés dans `src/lib/trouverUnPro.json` (travaux de l'article cochés ; date d'ouverture annoncée) et sous le
   résultat du diagnostic d'un compte connecté qui trouve des problèmes (`src/components/BesoinPro.jsx`, travaux cochés d'après
   les problèmes) ; `POST /api/send?type=pro-attente` (`api/trouverUnPro.cjs`) : table `pros_attente` (serveur uniquement, RLS
@@ -365,9 +365,12 @@
   Conseils avec l'identifiant de visite de l'app : lecture d'un article puis entrée dans l'app au cours de la même visite).
 - Pilotage → Activité, carte « Parcours d'acquisition » (refaite le 31/10/2026, constat de Jordan) : les 4 indicateurs sur les
   30 derniers jours comparés aux 30 d'avant, mêmes définitions que le point du lundi (`parcoursAcquisition`, `api/stats.js`),
-  taux entre étapes (objectif visite → inscription : 3 %), articles qui mènent à l'app, vues de « Choisir son niveau ».
+  taux entre étapes (objectif visite → inscription : 3 %), articles qui mènent à l'app, vues de « Choisir son niveau » ;
+  depuis le 22/11/2026, aussi les mesures de la mise en prod (`nouveautes2211`) : clics des encarts de l'app par thème et
+  position, articles lus dans l'app (visiteurs, comptes), liste d'attente « Besoin d'un pro ? » par source, photo d'exemple
+  du diagnostic d'essai et ce qu'elle donne, partages en image par canal, clics vers Amazon par origine.
 - Point chaque lundi matin (tâche programmée « Point KPI du lundi ») pour Jordan, noté dans `docs/suivi/journal.md`.
-- Gel du 31/10 au 21/11/2026 inclus : en prod, aucun changement visible des utilisateurs hors correctifs (les articles
+- Gel du 31/10 au 21/11/2026 inclus (terminé : mise en prod groupée du 22/11, go de Jordan) : en prod, aucun changement visible des utilisateurs hors correctifs (les articles
   Conseils, les lots de comm et les mesures invisibles continuent ; les évolutions restent sur STA).
 - Retour arrière en quelques minutes : déploiement précédent remis en production dans Vercel (Instant Rollback) ou revert
   sur `main`, avec les anciens identifiants de prix Stripe remis dans Vercel Production.
