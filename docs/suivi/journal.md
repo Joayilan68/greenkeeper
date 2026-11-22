@@ -1350,3 +1350,8 @@ du premier onglet).
   comptes. À décider par Jordan : inscriptions comptées à la date de création du compte (Pilotage et point du lundi) ;
   sort des données restées (tests de Jordan ?) ; suppression du compte depuis le menu Clerk de l'accueil, qui n'efface pas
   les données de la base.
+- 22/11/2026 — Compte de test de l'achat supprimé par Jordan hors de l'app (Clerk) : 9 lignes étaient restées dans la
+  base (profil, consentements, rappels, GreenPoints et leur journal, série, classement, jour d'activité, compteur de Bob),
+  effacées par Claude, comme les traces de l'essai sans compte ; les 3 partages de test du quiz (10 h 25-10 h 26) sont
+  retirés des statistiques ; 26 tables vérifiées : plus aucune trace du compte. La suppression depuis Paramètres (recette
+  n° 94) reste à tester.
