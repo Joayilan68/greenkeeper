@@ -1368,3 +1368,8 @@ du premier onglet).
   « Fusariose », réponse de la question 1) : titre du quiz dans l'app, image de partage du résultat, notification du quiz
   et question de la semaine des articles ; questions, réponses et résultats inchangés. La notification du quiz de ce matin
   est partie avec l'ancien thème. Les 13 semaines vérifiées : seule la semaine 4 était concernée.
+- 22/11/2026 — Nouvel inscrit à 14 h 06 (iPhone) : arrivé à 14 h 05 par le lien du partage du quiz (source « partage »,
+  campagne « ligue-hiver », publié par Jordan sur Facebook le matin), compte créé depuis l'accueil visiteur, arrêté à
+  l'écran suivant de l'inscription (/register) : ni consentements ni profil pour l'instant. Ce n'est pas le compte de test
+  de l'achat (créé à 9 h 43, entièrement supprimé) : rien n'est supprimé, Jordan confirme s'il connaît cette inscription.
+  Première inscription venue d'un partage en image.
