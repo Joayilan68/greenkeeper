@@ -42,7 +42,7 @@
       ]
     },
     {
-      "theme": "Fusariose",
+      "theme": "Maladies du gazon",
       "defi": { "titre": "Découvre ton bilan de saison", "texte": "Ouvre ton bilan 2026 dans l'app : tontes, arrosages, badges. Partage-le avec tes proches si tu veux.", "lien": "/bilan" },
       "quiz": [
         { "q": "Des plaques rondes beige-rosé de 2 à 20 cm, par temps froid et humide ?", "choix": ["La rouille", "Des vers blancs", "La fusariose"], "bonne": 2, "explication": "La fusariose (moisissure des neiges) forme des plaques rondes beige-rosé de 2 à 20 cm, d'octobre à avril, par temps froid et humide.", "article": "maladies-gazon" },
