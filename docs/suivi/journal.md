@@ -1373,3 +1373,16 @@ du premier onglet).
   l'écran suivant de l'inscription (/register) : ni consentements ni profil pour l'instant. Ce n'est pas le compte de test
   de l'achat (créé à 9 h 43, entièrement supprimé) ni Jordan (confirmé par lui) : vraie inscription, gardée.
   Première inscription venue d'un partage en image.
+- 23/11/2026 — Tâche pg_cron mongazon360-retention-anti-abus (PROD) : premier passage cette nuit à 3 h 25 UTC réussi ;
+  les 6 lignes anon_ip de plus de 48 h effacées et rien d'autre (diag 13, bob 5, bob_free 3, anon_device 6, diagnostics
+  d'essai 5 : tous de moins de 90 jours, les premiers partiront le 20/12). Le message « DELETE 0 » de cron.job_run_details
+  est celui de la 2e instruction (diagnostics d'essai), pas de rate_limits.
+- 23/11/2026 — Point KPI du lundi (semaine du 16 au 22/11 ; inscriptions comptées à la date de création du compte depuis le
+  22/11 : repère « avant » 1,2 par semaine au lieu de 1,4) : 88 visites (118 la semaine d'avant ; moyenne depuis le 1/11 :
+  115 par semaine, 87 avant ; 77 % sur les articles ; Google 41, direct 22, Facebook 12), 4 entrées dans l'app (8 par
+  semaine depuis le 1/11, 16 avant), 1 inscription (le 22/11, venue du partage du quiz de Jordan ; 0,3 par semaine depuis
+  le 1/11, 1,2 avant), 0 abonnement (objectif 10 au 15/02/2027) ; visites → inscriptions 1,1 % (objectif 3 %). 76 visites
+  ont lu un article, 1 est entrée dans l'app ensuite. Premier jour de la mise en prod du 22/11 (dimanche, 12 visites) :
+  0 clic d'encart, 0 photo d'exemple, 0 inscription à la liste d'attente, 0 clic Amazon, 1 article lu dans l'app par un
+  compte connecté ; trop tôt pour juger. « Choisir son niveau » : 0 vue (5 depuis le 1/11) ; /partenaires : 1 vue,
+  0 demande.
