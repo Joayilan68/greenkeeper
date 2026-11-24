@@ -1,8 +1,9 @@
 ---
-title: Quand tondre la pelouse ? Saison, fréquence, météo et heure
-description: De mars à novembre, 1 à 3 fois par semaine selon la pousse, jamais sous la pluie ni par gel : quand tondre la pelouse, et quand surtout s'abstenir.
+title: Quand tondre la pelouse ? Mois par mois, fréquence et météo
+description: À partir de quand tondre au printemps, jusqu'à quand en automne, à quel rythme et à quelle hauteur selon le mois, et les jours où s'abstenir.
 saison: printemps
 date: 2026-10-11
+maj: 2026-11-24
 produits: tonte
 ---
 
@@ -16,20 +17,37 @@ Tondre au bon moment compte presque autant que tondre à la bonne hauteur. Une t
 
 ## Quand commencer et quand arrêter de tondre ?
 
-- **La première tonte** se fait à la sortie de l'hiver, à une date qui dépend de la région : du 1er mars dans le Sud et en Corse au 1er avril dans le Nord-Est, plus tôt si le sol atteint 8 °C (voir [la première tonte](/conseils/premiere-tonte-printemps)).
+- **La première tonte** se fait à la sortie de l'hiver, à une date qui dépend de la région (tableau ci-dessous), un jour sec avec au moins 10 °C, à 6 cm pour un gazon universel (voir [la première tonte](/conseils/premiere-tonte-printemps)).
 - **La dernière tonte** a lieu en novembre, un jour sec avec au moins 10 °C, à 5-6 cm (voir [quand arrêter de tondre la pelouse](/conseils/derniere-tonte-pelouse)).
 - **De décembre à février**, on ne tond pas : le gazon est au repos.
+
+## À partir de quand tondre au printemps ?
+
+La date de la première tonte dépend de votre région. Elle peut venir plus tôt si le sol atteint 8 °C : le gazon recommence alors à pousser.
+
+| Région | Première tonte, à partir du |
+|---|---|
+| Sud et Corse | 1er mars |
+| Sud-Ouest | 10 mars |
+| Ouest | 15 mars |
+| Centre | 20 mars |
+| Nord | 25 mars |
+| Nord-Est | 1er avril |
+
+Attendez un jour sec : un gazon qui sort de l'hiver gorgé d'eau se tond mal, et les roues marquent le sol.
 
 ## À quelle fréquence tondre ?
 
 C'est la pousse qui commande, et la **règle du tiers** : on tond quand l'herbe a gagné la moitié de la hauteur visée. Pour tondre à 6 cm, passez quand elle atteint environ 9 cm.
 
-| Période | Fréquence | Intervalle indicatif |
-|---|---|---|
-| Mars-avril | 1 à 2 fois par semaine | Environ 5 jours |
-| Mai à août | 2 à 3 fois par semaine | Environ 4 jours |
-| Septembre-octobre | 1 à 2 fois par semaine | Environ 7 jours |
-| Novembre | 1 fois par semaine, jusqu'à la dernière tonte | — |
+| Mois | Tontes par semaine | Intervalle | Hauteur |
+|---|---|---|---|
+| Mars-avril | 1 à 2 | 5 jours environ | 5-6 cm |
+| Mai à août | 2 à 3 | 4 jours environ | 6-7 cm, 7-8 en canicule |
+| Septembre-octobre | 1 à 2 | 7 jours environ | 5-6 cm |
+| Novembre, jusqu'à la dernière tonte | 1 | 7 jours environ | 5-6 cm |
+
+Hauteurs pour un gazon universel, 6 cm à la première tonte ; pour les autres gazons, voir [la hauteur de tonte](/conseils/hauteur-tonte-gazon).
 
 Le type de gazon change tout : un gazon d'ornement se tond tous les 4 à 5 jours en été, un gazon d'ombre tous les 10 à 12 jours, un gazon rustique toutes les 2 à 3 semaines (voir [quel gazon choisir](/conseils/quel-gazon-choisir)).
 
@@ -61,6 +79,14 @@ Jamais. Un brin gelé est cassant comme du verre : la tondeuse le broie, et les 
 Après des vacances ou une période de pluie, ne coupez pas tout d'un coup : **tondez en deux fois**. Par exemple, une herbe de 9 cm pour une hauteur visée de 6 cm : une première tonte à 7 cm, puis une seconde à 6 cm trois jours plus tard. Couper davantage d'un coup fait jaunir le gazon, fragilise les racines et ouvre la porte aux maladies.
 
 ## Questions fréquentes
+
+### À partir de quand peut-on tondre la pelouse ?
+
+À la sortie de l'hiver, du 1er mars dans le Sud et en Corse au 1er avril dans le Nord-Est, plus tôt si le sol atteint 8 °C. Choisissez un jour sec avec au moins 10 °C.
+
+### Jusqu'à quand tondre la pelouse ?
+
+Jusqu'en novembre : la dernière tonte se fait un jour sec avec au moins 10 °C, à 5-6 cm pour un gazon universel (voir [quand arrêter de tondre](/conseils/derniere-tonte-pelouse)).
 
 ### Peut-on tondre après la pluie ?
 
