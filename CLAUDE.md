@@ -45,8 +45,7 @@
   (`src/lib/useGreenPoints.js`). Points restés dans le navigateur repris une fois et vérifiés (`reprendre_greenpoints`),
   jamais ceux d'un autre compte (l'ancienne version copiait les points du navigateur dans chaque compte connecté sur le même
   appareil : copies du passé gardées, rien supprimé) ; historiques coupés à 200 lignes : points manquants gardés en un
-  solde « Points plus anciens ». Toute règle changée = migration sur les deux projets. Copie de la table d'avant le passage :
-  `greenpoints_sauvegarde_20261110` (PROD, serveur uniquement), à supprimer le 24/11/2026. Journal compris dans l'export
+  solde « Points plus anciens ». Toute règle changée = migration sur les deux projets. Journal compris dans l'export
   et la suppression des données (`api/rgpd-data.js`).
 - Suppression d'un compte : seulement depuis Paramètres → « Supprimer définitivement mon compte » (`api/rgpd-data.js` :
   photos, base, compte Clerk). Section « Supprimer le compte » du profil Clerk masquée (`APPARENCE_CLERK`, `src/main.jsx`,

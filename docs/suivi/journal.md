@@ -1394,3 +1394,11 @@ du premier onglet).
   semaine suivante (révision de la tondeuse, hauteur minimale). L'heure de la tonte (rosée, matin ou soir) n'est pas dans la
   base de connaissances : section existante laissée telle quelle, ajout à proposer à Jordan. Indexation à demander par
   Jordan (page d'actions).
+- 24/11/2026 — Sauvegarde des GreenPoints supprimée comme prévu (migration supprimer_greenpoints_sauvegarde_20261110, PROD)
+  après contrôle : journal greenpoints_events alimenté chaque jour depuis le 10/11, total = journal = historique pour les
+  55 comptes, aucun point perdu par rapport à la sauvegarde (53 comptes, aucun supprimé), aucune erreur liée, aucune
+  dépendance (vue, fonction, cron, contrainte, déclencheur). Phrase retirée de CLAUDE.md.
+- 24/11/2026 — Lien en commentaire sous le Reel « Mousse » du 18/11 (ajouté par Jordan le 19/11) : 0 visite avec la
+  campagne video-chaux-mousse au 24/11, et aucune visite venue d'une vidéo (campagnes video-…). Proposé à Jordan : refaire
+  le commentaire à la main sous la vidéo « Feuilles mortes » du 25/11 à 16 h 30, ou abandonner le lien (vidéos pour la
+  visibilité seulement).
