@@ -1386,3 +1386,11 @@ du premier onglet).
   0 clic d'encart, 0 photo d'exemple, 0 inscription à la liste d'attente, 0 clic Amazon, 1 article lu dans l'app par un
   compte connecté ; trop tôt pour juger. « Choisir son niveau » : 0 vue (5 depuis le 1/11) ; /partenaires : 1 vue,
   0 demande.
+- 24/11/2026 — Article du mardi : « Quand tondre la pelouse ? » renforcé (Search Console, 28 jours : 1 144 affichages,
+  1 clic, position 24,6 ; « quand tondre la pelouse » position 33, « tondre la pelouse » 28, « à partir de quand / jusqu'à
+  quand tondre » 13 à 25). Nouveau titre « Quand tondre la pelouse ? Mois par mois, fréquence et météo » et nouvelle
+  description ; tableau des dates de première tonte par région ; tableau mois par mois avec la hauteur (gazon universel) ;
+  2 questions (« À partir de quand… », « Jusqu'à quand… ») ; maj 24/11 ; « En bref » inchangé. Rien ajouté sur le quiz de la
+  semaine suivante (révision de la tondeuse, hauteur minimale). L'heure de la tonte (rosée, matin ou soir) n'est pas dans la
+  base de connaissances : section existante laissée telle quelle, ajout à proposer à Jordan. Indexation à demander par
+  Jordan (page d'actions).
