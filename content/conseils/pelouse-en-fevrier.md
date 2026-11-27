@@ -45,6 +45,8 @@ Février et mars sont la période de reproduction des taupes, très actives : de
 - **La mousse s'étend** : l'anti-mousse se passe en mars-avril (voir [mousse dans la pelouse](/conseils/mousse-pelouse)).
 - **Le gazon est clairsemé** : à regarnir quand le sol atteint 10 °C.
 
+Tout le programme du mois suivant : [la pelouse en mars](/conseils/pelouse-en-mars).
+
 ### 5. Dans le Sud : arroser si février est sec
 
 Dans le Sud, le Sud-Ouest et en Corse, l'arrosage peut reprendre dès février **si le temps est sec** : 8 à 12 mm par semaine dans le Sud, 8 à 10 mm dans le Sud-Ouest, environ 10 mm en Corse. Ailleurs, il attend mars (voir [combien arroser sa pelouse](/conseils/combien-arroser-pelouse)).
