@@ -1402,3 +1402,10 @@ du premier onglet).
   campagne video-chaux-mousse au 24/11, et aucune visite venue d'une vidéo (campagnes video-…). Proposé à Jordan : refaire
   le commentaire à la main sous la vidéo « Feuilles mortes » du 25/11 à 16 h 30, ou abandonner le lien (vidéos pour la
   visibilité seulement).
+- 24/11/2026 — Réponses de Jordan : indexation de « Quand tondre la pelouse ? » demandée (action cochée) ; heure de tonte
+  (rosée, matin ou soir) pas ajoutée à la base de connaissances : avec les robots connectés, elle variera selon la météo ;
+  option 1 pour la vidéo de Bob du 25/11 (commentaire avec le lien sous « Feuilles mortes », par Jordan) ; rappels des
+  chiffres Meta des vidéos du quiz programmés le vendredi 27/11 à 12 h 17 et le dimanche 29/11 à 10 h 43. Inquiétude de
+  Jordan sur les GreenPoints : seule la copie de sécurité du 10/11 a été supprimée, les points des 55 comptes sont intacts.
+- 26/11/2026 — Message « Manage AI » reçu sur Messenger par la page (faux badge « Meta Verified » gratuit) : hameçonnage ;
+  conseillé à Jordan de ne pas répondre, de le signaler comme arnaque, de bloquer l'expéditeur et de prévenir Ayfer.
