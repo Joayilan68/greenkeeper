@@ -88,6 +88,7 @@ const TUTOIEMENT = [
   [mot("attendez"), "attends"],
   [mot("semez"), "sème"],
   [mot("étalez-les"), "étale-les"],
+  [mot("si vous scarifiez"), "si tu scarifies"],
 ];
 const PERMIS = new Set(["chez", "assez", "nez", "rez"]);
 
