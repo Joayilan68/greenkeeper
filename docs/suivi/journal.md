@@ -1409,3 +1409,10 @@ du premier onglet).
   Jordan sur les GreenPoints : seule la copie de sécurité du 10/11 a été supprimée, les points des 55 comptes sont intacts.
 - 26/11/2026 — Message « Manage AI » reçu sur Messenger par la page (faux badge « Meta Verified » gratuit) : hameçonnage ;
   conseillé à Jordan de ne pas répondre, de le signaler comme arnaque, de bloquer l'expéditeur et de prévenir Ayfer.
+- 27/11/2026 — Article du vendredi : « Pelouse en mars : que faire ? Première tonte, engrais et mousse » publié
+  (saison printemps, mois dans l'adresse ; tout tiré de la base : Zones x Mois, Fenêtres Semis par Zone, Règles
+  complémentaires, Température Sol & ET0, Légende, Règles Objectifs) ; tableau région par région (première tonte, engrais
+  de démarrage, semis) ; épingle Pinterest ; lien depuis « Pelouse en février ». Rien sur la révision de la tondeuse
+  (réponse du quiz de la semaine 5, du 29/11 au 5/12) : à ajouter après le 5/12. Page « Réponses de groupe » republiée
+  avec le nouveau catalogue (tournure « si vous scarifiez » ajoutée au script). Indexation et import Pinterest à faire par
+  Jordan (page d'actions).
