@@ -1416,3 +1416,19 @@ du premier onglet).
   (réponse du quiz de la semaine 5, du 29/11 au 5/12) : à ajouter après le 5/12. Page « Réponses de groupe » republiée
   avec le nouveau catalogue (tournure « si vous scarifiez » ajoutée au script). Indexation et import Pinterest à faire par
   Jordan (page d'actions).
+- 28/11/2026 — Lot de comm du 6 au 12/12 préparé, à valider dans Pilotage → Réseaux : quiz de la ligue semaine 6 (dimanche
+  8 h, thème « la pelouse en hiver », question 1 sans la réponse), « Une question sur ta pelouse ? Pose-la à Bob » (lundi 7/12 :
+  Bob, 3 questions par mois en gratuit, 20 par jour en Premium et pendant l'essai), vidéo de Bob « Tondre en hiver » (mercredi
+  9/12, ia, sortie de docs/suivi/videos-pretes : plus aucune vidéo en attente), « Une pelouse neuve au printemps ? Pense au
+  gazon en plaques » (vendredi 11/12 ; photo CC0 de Wikimedia Commons, notée dans photos-libres.md). Aucune réponse des quiz
+  des semaines 6 et 7 dans la semaine. Visuels du lot du 1/11 retirés de main (main 5f6e414, 369a1a8) ; vidéo du 25/11 gardée
+  en ligne en attendant la décision de Jordan (Instagram). Lot du 29/11 (quiz du 29/11 à 8 h compris) pas encore validé.
+- 28/11/2026 — Vidéo de Bob « Feuilles mortes » du 25/11 : publiée sur Facebook, pas sur Instagram (statut « Publication
+  interrompue ») : le passage de 16 h 30 a dépassé la limite de 60 s de la fonction pendant l'attente du traitement de la
+  vidéo par Meta, la ligne est restée « en cours » et n'a pas été reprise. La vidéo du 18/11 (même taille) était passée au
+  2e passage : le temps de Meta varie d'un jour à l'autre, le risque vaut aussi pour les Reels du 2/12 et du 9/12. Correctif
+  proposé à Jordan (budget de temps par passage : le Reel passe « en traitement » et se termine au passage suivant ; alerte
+  quand une publication est interrompue). Question posée : republier la vidéo « Feuilles mortes » sur Instagram ou non.
+- 28/11/2026 — Question de Jordan sur une publicité (trycrush.ai, outil qui gère des pubs Facebook ; faux témoignage
+  « 212 abonnés payants ») : analysée ; plan inchangé (mesure de la mise en prod du 22/11, test payant en mars 2027 arrêté
+  au-delà de 5 € par inscription) ; idée proposée : recueillir 2 ou 3 vrais témoignages d'utilisateurs, avec leur accord.

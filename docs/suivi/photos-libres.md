@@ -8,6 +8,8 @@ Recherche : `https://api.openverse.org/v1/images/?q=<mots en anglais>&license=cc
 WordPress, toutes en CC0 ; la page de chaque photo affiche « CC0 licensed photo »). Les pages de StockSnap, de rawpixel, de
 Pexels et de Pixabay refusent la lecture automatique : licence invérifiable d'ici, à éviter.
 
+Sujet absent de WordPress (ex. gazon en rouleaux) : Wikimedia Commons, catégorie du sujet ou recherche ; licence CC0 ou domaine public lue sur la page du fichier (« Licensing »). Les serveurs de Wikimedia refusent les téléchargements automatiques sans contact : image récupérée par la lecture web de Claude.
+
 Maladies et ravageurs : iNaturalist (photos d'observations identifiées par la communauté). La page d'une photo refuse la
 lecture automatique, mais l'API du site donne la licence de chaque photo : recherche
 `https://api.inaturalist.org/v1/observations?photo_license=cc0&taxon_name=<nom latin>`, puis
@@ -21,5 +23,6 @@ observation au niveau « research » (identification confirmée).
 | 15/11/2026 | Vidéo de Bob « Tondre en hiver » du 9/12 (bas de l'image et couverture) | `scripts/video-bob/decors/pelouse-hiver.jpg` | CC0 1.0 | https://wordpress.org/photos/photo/56561d3179/ |
 | 16/11/2026 | Publication du 27/11 « En décembre, laisse ta pelouse tranquille » (herbe sous une première neige, feuilles mortes) | `public/images/reseaux/2026-11-22/4-pelouse-decembre-hiver.jpg` (main) | CC0 1.0 | https://wordpress.org/photos/photo/219620276e/ |
 | 21/11/2026 | Publication du 4/12 « Des plaques rondes beige-rosé ? C'est la fusariose » (plaques de fusariose, *Microdochium nivale*, observation iNaturalist 71176850 confirmée) | `public/images/reseaux/2026-11-29/4-fusariose.jpg` (main) | CC0 1.0 (lue par l'API d'iNaturalist) | https://www.inaturalist.org/photos/116013358 |
+| 28/11/2026 | Publication du 11/12 « Une pelouse neuve au printemps ? Pense au gazon en plaques » (rouleaux de gazon sur une palette, recadrés sans personne ni enseigne) | `public/images/reseaux/2026-12-06/4-gazon-en-plaques.jpg` (main) | CC0 1.0 (lue sur la page Wikimedia Commons) | https://commons.wikimedia.org/wiki/File:K%C3%B6nigsallee,_D%C3%BCsseldorf,_frischer_Rollrasen_M%C3%A4rz_2020_(1).jpg |
 
 Repérée pour la suite (CC0, mêmes vérifications) : tapis de feuilles https://wordpress.org/photos/photo/41061f40e8/.
