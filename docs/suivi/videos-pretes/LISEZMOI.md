@@ -8,40 +8,4 @@ insérer la ligne du mercredi avec les textes ci-dessous (`video`, `visuel` = co
 images de chaque scène : page « Voix de Bob », collection `textes`. Jordan a vu ces vidéos dans la conversation le 15/11 ;
 il les valide dans Pilotage → Réseaux.
 
-## Mercredi 9/12/2026 à 16:30 — lot 2026-12-06 — « Tondre en hiver : faut-il encore tondre ? »
-
-Fichiers : `2026-12-06/3-video-tondre-en-hiver.mp4` et `2026-12-06/3-video-tondre-en-hiver-couverture.jpg` (texte `tondre-en-hiver`).
-Titre de la ligne : « Vidéo de Bob : faut-il encore tondre en hiver ? ».
-La vidéo et ses textes ne donnent aucune réponse du quiz de la semaine 6 de la ligue (ni « 5 °C », ni « la pelouse pâlit :
-c'est normal ») : ne pas en ajouter. La voix dit « passer la tondeuse » : le moteur de voix articule mal le verbe « tondre »
-(12 prises sur 12), à éviter dans le texte dit des prochaines vidéos (« tondeuse » et « tonte » passent bien).
-
-Texte Facebook :
-
-```
-🎬 Faut-il encore tondre la pelouse en hiver ? La réponse de Bob en 45 secondes.
-
-🚫 Non : de décembre à février, l'herbe pousse à peine, il n'y a presque rien à couper.
-🚫 Et le sol est souvent gelé ou détrempé : la tondeuse casserait les brins, arracherait l'herbe et tasserait la terre.
-✅ Herbe encore haute ? Laisse-la : tu la raccourciras au printemps, en plusieurs fois, sans couper plus d'un tiers.
-✅ La tonte reprend au printemps, à partir de mars selon ta région, un jour sec et doux.
-
-Dans l'app, tu reçois le rappel de révision de la tondeuse, puis « C'est le moment de la 1re tonte » le bon jour 👇
-https://mongazon360.fr/conseils/derniere-tonte-pelouse?utm_source=facebook&utm_medium=reel&utm_campaign=video-tondre-en-hiver
-
-🎙️ Voix de synthèse (Kyutai TTS).
-```
-
-Légende Instagram :
-
-```
-🎬 Tondre en hiver : faut-il encore tondre ? La réponse de Bob en 45 secondes.
-
-Non : de décembre à février, l'herbe pousse à peine et le sol est souvent gelé ou détrempé. La tondeuse casserait les brins et tasserait la terre. Herbe encore haute ? Laisse-la jusqu'au printemps. La tonte reprend à partir de mars selon ta région, un jour sec et doux.
-
-L'app te prévient le jour de la première tonte (lien en bio).
-
-🎙️ Voix de synthèse (Kyutai TTS).
-
-#pelouse #gazon #jardinage #jardin #tonte #tondeuse #hiver #mongazon360
-```
+Aucune vidéo en attente : « Tondre en hiver » (9/12) est partie avec le lot du 6/12 (main, `public/images/reseaux/2026-12-06/`).
